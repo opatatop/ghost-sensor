@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ETERNITY v10 RESILIENCE</title>
+    <title>ETERNITY v11 FORCE LINK</title>
     <meta name="theme-color" content="#000000">
     <style>
         :root {
@@ -11,7 +11,6 @@
             --secondary: #d4af37;
             --danger: #ff0055;
             --bg: #030508;
-            --glass: rgba(0, 20, 30, 0.6);
         }
 
         body {
@@ -56,39 +55,47 @@
 
         .data-panel {
             pointer-events: auto;
-            background: var(--glass);
+            background: rgba(0, 20, 30, 0.6);
             margin: 5px 10px;
             border: 1px solid var(--primary);
             padding: 10px;
             backdrop-filter: blur(5px);
-            box-shadow: 0 0 20px rgba(0, 255, 204, 0.1);
         }
         .row { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.8rem; align-items: center; }
         
         .prob-container {
             width: 100%; height: 18px; background: #111; border: 1px solid #333; margin-top: 8px;
-            position: relative; overflow: hidden;
         }
         .prob-fill {
             height: 100%; width: 0%; 
             background: linear-gradient(90deg, var(--secondary), var(--danger));
             transition: width 0.5s ease-out; 
-            box-shadow: 0 0 15px var(--secondary);
         }
-        .prob-fill.pulsating { animation: eternal-pulse 1s infinite alternate; }
-        @keyframes eternal-pulse { from { opacity: 0.6; } to { opacity: 1; } }
 
         #spectrum-canvas {
             width: 100%; height: 120px; background: #000;
             border-top: 1px solid var(--primary); border-bottom: 1px solid var(--primary);
             position: relative;
+            display: flex; justify-content: center; align-items: center;
         }
-        #canvas-status {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            color: var(--danger); font-weight: bold; text-align: center; display: none;
-            background: rgba(0,0,0,0.8); padding: 5px; border: 1px solid var(--danger);
-            width: 90%; font-size: 0.8rem;
+        
+        canvas { width: 100%; height: 100%; display: block; }
+
+        /* BOUTON DE FORCE MICRO (Overlay) */
+        #mic-force-overlay {
+            position: absolute; z-index: 20; text-align: center;
+            background: rgba(0,0,0,0.9); padding: 20px;
+            border: 2px solid var(--danger);
+            max-width: 80%;
         }
+        .btn-force-mic {
+            background: var(--danger); color: white; border: none;
+            padding: 15px 30px; font-size: 1.2rem; font-weight: bold;
+            font-family: inherit; cursor: pointer; margin-top: 10px;
+            animation: pulse-red 1.5s infinite;
+        }
+        @keyframes pulse-red { 0% { transform: scale(1); box-shadow: 0 0 0 rgba(255,0,85,0.7); } 70% { transform: scale(1.05); box-shadow: 0 0 20px rgba(255,0,85,0); } 100% { transform: scale(1); box-shadow: 0 0 0 rgba(255,0,85,0.7); } }
+
 
         #ai-zone {
             flex: 1; margin: 10px;
@@ -118,17 +125,9 @@
         
         #btn-echo { border-color: #ff00ff; color: #ff00ff; }
         #btn-echo.active { background: #ff00ff; color: #fff; box-shadow: 0 0 15px #ff00ff; }
-
         .btn-sweep { border-color: var(--danger); color: var(--danger); }
         .btn-sweep.active { background: var(--danger); color: #fff; box-shadow: 0 0 15px var(--danger); }
 
-        input[type=range] { width: 100%; accent-color: var(--secondary); height: 4px; }
-
-        #alert-box {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background: rgba(0,0,0,0.95); border: 2px solid var(--secondary); color: var(--secondary);
-            padding: 25px; text-align: center; display: none; z-index: 200; max-width: 85%;
-        }
         @keyframes blink { 50% { opacity: 0; } }
         .live-dot { color: var(--danger); animation: blink 1.5s infinite; margin-right: 5px; font-weight: bold; }
 
@@ -140,27 +139,15 @@
     <div id="vignette-eternal"></div>
     <video id="camera-feed" autoplay playsinline muted></video>
 
-    <div id="alert-box">
-        <h3 style="margin-top:0; color:var(--secondary)">ERREUR AUDIO</h3>
-        <p id="alert-detail">Impossible d'accéder au microphone.</p>
-        <div style="font-size:0.8rem; text-align:left; margin-top:10px; color:#aaa; background:#111; padding:10px; border:1px dashed #555;">
-            <strong>Solution :</strong><br>
-            1. Vérifiez Paramètres > Applis > Chrome > Microphone.<br>
-            2. Fermez complètement Chrome et relancez.<br>
-            3. Assurez-vous qu'aucune autre app n'utilise le micro.
-        </div>
-        <button onclick="document.getElementById('alert-box').style.display='none'" style="margin-top:15px; width:100px;">OK</button>
-    </div>
-
     <div id="ui">
         <header>
             <div>
-                <h1 class="eternal-title">ETERNITY v10</h1>
-                <div class="sub-eternal">SYSTÈME RÉSILIENT</div>
+                <h1 class="eternal-title">ETERNITY v11</h1>
+                <div class="sub-eternal">FORCE LINK</div>
             </div>
             <div style="text-align: right;">
                 <div id="clock" style="font-size:1.1rem; color:var(--secondary)">00:00</div>
-                <div style="font-size:0.6rem; color:var(--primary)">∞ STABLE ∞</div>
+                <div style="font-size:0.6rem; color:var(--primary)">MIC STATUS: <span id="mic-status-text" style="color:var(--danger)">OFF</span></div>
             </div>
         </header>
 
@@ -179,8 +166,15 @@
         </div>
 
         <div id="spectrum-canvas">
-            <canvas id="viz-canvas" style="width:100%; height:100%;"></canvas>
-            <div id="canvas-status">AUDIO EN ATTENTE...</div>
+            <canvas id="viz-canvas"></canvas>
+            
+            <!-- L'OVERLAY QUI FORCE LA PERMISSION -->
+            <div id="mic-force-overlay">
+                <h3 style="margin:0 0 10px 0; color:var(--danger)">AUDIO DÉCONNECTÉ</h3>
+                <p style="font-size:0.8rem; color:#ccc;">Le micro n'est pas connecté.<br>Le Sweep fonctionne, mais l'IA et le Scope ont besoin d'écouter.</p>
+                <button class="btn-force-mic" onclick="forceMicConnection()">ACTIVER MICRO</button>
+                <p id="mic-error-msg" style="font-size:0.7rem; color:#ff5555; margin-top:5px; display:none;"></p>
+            </div>
         </div>
 
         <div id="ai-zone">
@@ -200,105 +194,88 @@
     </div>
 
     <script>
-        // --- SYSTÈME RÉSILIENT V10 ---
-        
-        // Variables Globales
-        let audioCtx, globalStream, globalSource;
-        let analyser, gainNode;
-        let sweepNodes = [];
-        let recognition, synth;
-        
+        // --- V11 FORCE LINK ---
+
+        let audioCtx, globalStream, globalSource, analyser, gainNode;
+        let sweepNodes = [], recognition, synth;
         let isVisualizer = false, isEcho = false, isSweep = false, isSensors = false;
         let emfVal = 0, motionVal = 0, audioLevel = 0;
         let lastAlpha = null, instability = 0, emfBase = 0;
 
-        // Fonction de réveil forcé de l'Audio Context (Android coupe souvent l'audio)
-        async function resumeAudioContext() {
-            if (audioCtx && audioCtx.state === 'suspended') {
-                await audioCtx.resume();
-            }
-        }
-
-        // 1. INIT AUDIO (Contraintes Standard pour compatibilité maximale)
-        async function initGlobalAudio() {
-            // Si le flux existe déjà, on vérifie qu'il est actif
-            if (globalStream) {
-                await resumeAudioContext();
-                return globalStream;
-            }
+        // 1. FONCTION FORCÉE (Le Bouton Rouge)
+        async function forceMicConnection() {
+            const errorMsg = document.getElementById('mic-error-msg');
+            const overlay = document.getElementById('mic-force-overlay');
+            const statusText = document.getElementById('mic-status-text');
+            
+            errorMsg.style.display = 'none';
+            errorMsg.innerText = "";
 
             try {
+                // Création du contexte si besoin
                 const AudioContext = window.AudioContext || window.webkitAudioContext;
-                // Création du contexte
                 if (!audioCtx) audioCtx = new AudioContext();
-                await resumeAudioContext();
+                if (audioCtx.state === 'suspended') await audioCtx.resume();
 
-                // REQUÊTE MICRO SIMPLIFIÉE (Compatibilité Realme)
-                // On utilise juste { audio: true } pour éviter les bugs de drivers
+                // DEMANDE EXPLICITE
+                overlay.innerHTML = "<h3 style='color:var(--primary)'>DEMANDE EN COURS...</h3>";
+                
                 globalStream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 
-                // Création des nœuds
+                // Si ça marche, on branche tout
                 globalSource = audioCtx.createMediaStreamSource(globalStream);
                 analyser = audioCtx.createAnalyser();
                 analyser.fftSize = 256;
                 analyser.smoothingTimeConstant = 0.85;
                 
                 gainNode = audioCtx.createGain();
-                gainNode.gain.value = 0.0; // Volume faible par défaut
+                gainNode.gain.value = 0.0;
 
-                // Connexion standard
                 globalSource.connect(analyser);
                 analyser.connect(gainNode);
                 gainNode.connect(audioCtx.destination);
 
-                log("Système Audio Connecté (Mode Standard).", "system");
-                document.getElementById('canvas-status').style.display = 'none';
-                return globalStream;
+                // Mise à jour UI
+                overlay.style.display = 'none'; // Cache l'overlay rouge
+                statusText.innerText = "ON";
+                statusText.style.color = "var(--primary)";
+                log("Microphone Connecté avec succès !", "system");
+                
+                // Lancer le scope automatiquement
+                isVisualizer = true;
+                document.getElementById('btn-audio').classList.add('active');
+                drawSymmetricSpectrum();
 
             } catch (e) {
-                console.error("Erreur Audio Détaillée:", e.name, e.message);
-                let errorMsg = "Erreur inconnue.";
-                if (e.name === 'NotAllowedError' || e.name === 'PermissionDeniedError') {
-                    errorMsg = "Permission Micro Refusée par le navigateur.";
-                } else if (e.name === 'NotFoundError') {
-                    errorMsg = "Aucun micro détecté.";
-                } else if (e.name === 'NotReadableError') {
-                    errorMsg = "Micro déjà utilisé par une autre app.";
-                }
-                
-                document.getElementById('canvas-status').style.display = 'block';
-                document.getElementById('canvas-status').innerText = "ERREUR: " + errorMsg;
-                document.getElementById('alert-detail').innerText = errorMsg + " (" + e.name + ")";
-                document.getElementById('alert-box').style.display = 'block';
-                
-                throw e; // Relancer l'erreur
+                console.error(e);
+                overlay.innerHTML = `
+                    <h3 style="margin:0 0 10px 0; color:var(--danger)">ÉCHEC</h3>
+                    <p style="font-size:0.8rem; color:#ccc;">Le téléphone a refusé l'accès.</p>
+                    <p id="mic-error-msg" style="font-size:0.7rem; color:#ff5555; margin-top:5px;">Erreur: ${e.message}</p>
+                    <button class="btn-force-mic" onclick="forceMicConnection()">RÉESSAYER</button>
+                `;
             }
         }
 
-        // 2. INIT TTS
-        function initTTS() {
-            if (!('speechSynthesis' in window)) return null;
-            return window.speechSynthesis;
-        }
-
-        // 3. VISUALISEUR
+        // 2. VISUALISEUR (Dépend du bouton rouge maintenant)
         async function toggleVisualizer() {
-            const btn = document.getElementById('btn-audio');
-            if (isVisualizer) {
-                isVisualizer = false; btn.classList.remove('active');
-            } else {
-                try {
-                    await initGlobalAudio();
-                    isVisualizer = true; btn.classList.add('active');
-                    drawSymmetricSpectrum();
-                } catch(e) {
-                    // Erreur gérée dans initGlobalAudio
-                }
+            if (!globalStream) {
+                // Si on clique sur Scope sans avoir validé le micro, on montre l'overlay
+                document.getElementById('mic-force-overlay').style.display = 'block';
+                return;
             }
+            const btn = document.getElementById('btn-audio');
+            isVisualizer = !isVisualizer;
+            btn.classList.toggle('active', isVisualizer);
+            if(isVisualizer) drawSymmetricSpectrum();
         }
 
-        // 4. MODE ECHO (Le cœur de la demande)
+        // 3. MODE ECHO (Dépend du bouton rouge)
         async function toggleEcho() {
+            if (!globalStream) {
+                document.getElementById('mic-force-overlay').style.display = 'block';
+                return;
+            }
             const btn = document.getElementById('btn-echo');
             const statusEl = document.getElementById('ai-status');
 
@@ -307,24 +284,16 @@
                 statusEl.innerText = "OFFLINE"; statusEl.style.color = "var(--danger)";
                 if(recognition) recognition.stop();
             } else {
-                // Init TTS
-                synth = initTTS();
-                if(!synth) return;
+                synth = window.speechSynthesis;
+                if (!synth) return alert("TTS indisponible");
 
-                // Init Audio (Obligatoire pour le flux micro)
-                try {
-                    await initGlobalAudio();
-                } catch(e) { return; }
-
-                if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-                    alert("IA Non Supportée par ce navigateur"); return;
-                }
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                if (!SpeechRecognition) return alert("IA indisponible");
                 
                 isEcho = true; btn.classList.add('active');
                 statusEl.innerHTML = '<span class="live-dot">●</span>ÉCOUTE ACTIVE';
                 statusEl.style.color = "var(--primary)";
 
-                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
                 recognition = new SpeechRecognition();
                 recognition.continuous = true;
                 recognition.interimResults = false; 
@@ -337,20 +306,14 @@
                 recognition.onresult = (event) => {
                     const transcript = event.results[event.results.length - 1][0].transcript;
                     const confidence = event.results[event.results.length - 1][0].confidence;
-
-                    // On vérifie que le texte n'est pas vide
                     if (transcript.trim().length > 0 && confidence > 0.5) {
                         eternalLog(transcript, "msg-final");
-                        speakText(transcript); // Répétition vocale
+                        speakText(transcript);
                     }
                 };
 
                 recognition.onerror = (e) => {
-                    if(e.error === 'not-allowed') { 
-                        isEcho = false; btn.classList.remove('active'); 
-                        statusEl.innerText = "BLOQUÉ"; 
-                        document.getElementById('alert-box').style.display = 'block';
-                    }
+                     if(e.error === 'not-allowed') { isEcho = false; btn.classList.remove('active'); statusEl.innerText = "BLOQUÉ"; }
                 };
 
                 recognition.onend = () => {
@@ -369,24 +332,18 @@
 
         function speakText(text) {
             if (!synth) return;
-            synth.cancel(); // Coupe la parole précédente
-
+            synth.cancel();
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.lang = 'fr-FR';
-            utterance.rate = 1.2;
-            utterance.pitch = 1.0;
-            utterance.volume = 1.0;
-
+            utterance.rate = 1.2; utterance.volume = 1.0;
             const voices = synth.getVoices();
             const frenchVoice = voices.find(v => v.lang.includes('fr'));
             if (frenchVoice) utterance.voice = frenchVoice;
-
             synth.speak(utterance);
         }
 
-        // 5. DESSIN SPECTRE
         function drawSymmetricSpectrum() {
-            if(!isVisualizer) return;
+            if(!isVisualizer || !analyser) return;
             requestAnimationFrame(drawSymmetricSpectrum);
 
             const cvs = document.getElementById('viz-canvas');
@@ -396,14 +353,11 @@
             const w = cvs.width, h = cvs.height;
             const cx = w / 2;
 
-            if(!analyser) return;
-
             const bufferLength = analyser.frequencyBinCount;
             const dataArray = new Uint8Array(bufferLength);
             analyser.getByteFrequencyData(dataArray);
 
             ctx.clearRect(0, 0, w, h);
-
             const barWidth = (cx / bufferLength) * 2.5;
             let totalVol = 0;
 
@@ -421,15 +375,14 @@
             updateProbability();
         }
 
-        // 6. SWEEP
+        // 4. SWEEP (Fonctionne indépendamment)
         async function toggleSweep() {
             const btn = document.getElementById('btn-sweep');
             if (isSweep) {
                 stopSweep(); isSweep = false; btn.classList.remove('active');
             } else {
-                // Pour le Sweep, on a juste besoin du contexte audio
-                if(!audioCtx) { try{ await initGlobalAudio() }catch(e){} }
-                if(!audioCtx) return;
+                if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if (audioCtx.state === 'suspended') await audioCtx.resume();
                 startSweep(); isSweep = true; btn.classList.add('active');
                 log("Sweep Activé.", "system");
             }
@@ -451,7 +404,7 @@
         }
         function stopSweep() { sweepNodes.forEach(n => { try{n.stop()}catch(e){} }); sweepNodes = []; }
 
-        // 7. CAPTEURS
+        // 5. CAPTEURS
         function toggleSensors() {
             const btn = document.getElementById('btn-sens');
             if (isSensors) {
@@ -521,11 +474,9 @@
             if (rawProb > 75) {
                 displayVal.style.color = "var(--danger)";
                 displayVal.style.textShadow = "0 0 15px var(--danger)";
-                fill.classList.add('pulsating');
             } else {
                 displayVal.style.color = "var(--secondary)";
                 displayVal.style.textShadow = "none";
-                fill.classList.remove('pulsating');
             }
         }
         setInterval(() => document.getElementById('clock').innerText = new Date().toLocaleTimeString(), 1000);
