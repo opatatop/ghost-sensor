@@ -2,8 +2,8 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width= initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ETERNITY v9 THE VOICE</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ETERNITY v10 RESILIENCE</title>
     <meta name="theme-color" content="#000000">
     <style>
         :root {
@@ -85,9 +85,9 @@
         }
         #canvas-status {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            color: var(--secondary); font-weight: bold; text-align: center; display: none;
-            background: rgba(0,0,0,0.8); padding: 5px; border: 1px solid var(--secondary);
-            width: 80%;
+            color: var(--danger); font-weight: bold; text-align: center; display: none;
+            background: rgba(0,0,0,0.8); padding: 5px; border: 1px solid var(--danger);
+            width: 90%; font-size: 0.8rem;
         }
 
         #ai-zone {
@@ -116,7 +116,6 @@
         button:active { transform: scale(0.96); }
         button.active { background: var(--secondary); color: #000; box-shadow: 0 0 15px var(--secondary); }
         
-        /* Bouton spécial Echo */
         #btn-echo { border-color: #ff00ff; color: #ff00ff; }
         #btn-echo.active { background: #ff00ff; color: #fff; box-shadow: 0 0 15px #ff00ff; }
 
@@ -142,20 +141,26 @@
     <video id="camera-feed" autoplay playsinline muted></video>
 
     <div id="alert-box">
-        <h3 style="margin-top:0; color:var(--secondary)">MODE ÉCHO</h3>
-        <p>Le téléphone répétera les mots entendus dans ton oreille (Casque recommandé).</p>
-        <button onclick="document.getElementById('alert-box').style.display='none'" style="margin-top:15px; width:100px;">COMPRIS</button>
+        <h3 style="margin-top:0; color:var(--secondary)">ERREUR AUDIO</h3>
+        <p id="alert-detail">Impossible d'accéder au microphone.</p>
+        <div style="font-size:0.8rem; text-align:left; margin-top:10px; color:#aaa; background:#111; padding:10px; border:1px dashed #555;">
+            <strong>Solution :</strong><br>
+            1. Vérifiez Paramètres > Applis > Chrome > Microphone.<br>
+            2. Fermez complètement Chrome et relancez.<br>
+            3. Assurez-vous qu'aucune autre app n'utilise le micro.
+        </div>
+        <button onclick="document.getElementById('alert-box').style.display='none'" style="margin-top:15px; width:100px;">OK</button>
     </div>
 
     <div id="ui">
         <header>
             <div>
-                <h1 class="eternal-title">ETERNITY v9</h1>
-                <div class="sub-eternal">VOICE TRANSLATOR</div>
+                <h1 class="eternal-title">ETERNITY v10</h1>
+                <div class="sub-eternal">SYSTÈME RÉSILIENT</div>
             </div>
             <div style="text-align: right;">
                 <div id="clock" style="font-size:1.1rem; color:var(--secondary)">00:00</div>
-                <div style="font-size:0.6rem; color:var(--primary)">∞ ECHO ∞</div>
+                <div style="font-size:0.6rem; color:var(--primary)">∞ STABLE ∞</div>
             </div>
         </header>
 
@@ -175,7 +180,7 @@
 
         <div id="spectrum-canvas">
             <canvas id="viz-canvas" style="width:100%; height:100%;"></canvas>
-            <div id="canvas-status">AUDIO DÉCONNECTÉ</div>
+            <div id="canvas-status">AUDIO EN ATTENTE...</div>
         </div>
 
         <div id="ai-zone">
@@ -195,58 +200,84 @@
     </div>
 
     <script>
-        // --- SYSTÈME UNIFIÉ V9 ---
+        // --- SYSTÈME RÉSILIENT V10 ---
         
         // Variables Globales
         let audioCtx, globalStream, globalSource;
         let analyser, gainNode;
         let sweepNodes = [];
-        let recognition, synth; // synth pour la voix (TTS)
+        let recognition, synth;
         
         let isVisualizer = false, isEcho = false, isSweep = false, isSensors = false;
         let emfVal = 0, motionVal = 0, audioLevel = 0;
         let lastAlpha = null, instability = 0, emfBase = 0;
 
-        // 1. INIT AUDIO
+        // Fonction de réveil forcé de l'Audio Context (Android coupe souvent l'audio)
+        async function resumeAudioContext() {
+            if (audioCtx && audioCtx.state === 'suspended') {
+                await audioCtx.resume();
+            }
+        }
+
+        // 1. INIT AUDIO (Contraintes Standard pour compatibilité maximale)
         async function initGlobalAudio() {
-            if (globalStream) return globalStream;
+            // Si le flux existe déjà, on vérifie qu'il est actif
+            if (globalStream) {
+                await resumeAudioContext();
+                return globalStream;
+            }
+
             try {
                 const AudioContext = window.AudioContext || window.webkitAudioContext;
-                audioCtx = new AudioContext();
-                if (audioCtx.state === 'suspended') await audioCtx.resume();
+                // Création du contexte
+                if (!audioCtx) audioCtx = new AudioContext();
+                await resumeAudioContext();
 
-                globalStream = await navigator.mediaDevices.getUserMedia({ 
-                    audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } 
-                });
+                // REQUÊTE MICRO SIMPLIFIÉE (Compatibilité Realme)
+                // On utilise juste { audio: true } pour éviter les bugs de drivers
+                globalStream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 
+                // Création des nœuds
                 globalSource = audioCtx.createMediaStreamSource(globalStream);
                 analyser = audioCtx.createAnalyser();
                 analyser.fftSize = 256;
                 analyser.smoothingTimeConstant = 0.85;
                 
                 gainNode = audioCtx.createGain();
-                gainNode.gain.value = 0.0;
+                gainNode.gain.value = 0.0; // Volume faible par défaut
 
+                // Connexion standard
                 globalSource.connect(analyser);
                 analyser.connect(gainNode);
                 gainNode.connect(audioCtx.destination);
 
-                log("Système Audio Connecté.", "system");
+                log("Système Audio Connecté (Mode Standard).", "system");
                 document.getElementById('canvas-status').style.display = 'none';
                 return globalStream;
+
             } catch (e) {
-                console.error(e);
+                console.error("Erreur Audio Détaillée:", e.name, e.message);
+                let errorMsg = "Erreur inconnue.";
+                if (e.name === 'NotAllowedError' || e.name === 'PermissionDeniedError') {
+                    errorMsg = "Permission Micro Refusée par le navigateur.";
+                } else if (e.name === 'NotFoundError') {
+                    errorMsg = "Aucun micro détecté.";
+                } else if (e.name === 'NotReadableError') {
+                    errorMsg = "Micro déjà utilisé par une autre app.";
+                }
+                
                 document.getElementById('canvas-status').style.display = 'block';
-                throw e;
+                document.getElementById('canvas-status').innerText = "ERREUR: " + errorMsg;
+                document.getElementById('alert-detail').innerText = errorMsg + " (" + e.name + ")";
+                document.getElementById('alert-box').style.display = 'block';
+                
+                throw e; // Relancer l'erreur
             }
         }
 
-        // 2. INIT TTS (Synthèse Vocale)
+        // 2. INIT TTS
         function initTTS() {
-            if (!('speechSynthesis' in window)) {
-                alert("Votre navigateur ne supporte pas la synthèse vocale.");
-                return null;
-            }
+            if (!('speechSynthesis' in window)) return null;
             return window.speechSynthesis;
         }
 
@@ -260,7 +291,9 @@
                     await initGlobalAudio();
                     isVisualizer = true; btn.classList.add('active');
                     drawSymmetricSpectrum();
-                } catch(e) {}
+                } catch(e) {
+                    // Erreur gérée dans initGlobalAudio
+                }
             }
         }
 
@@ -274,28 +307,27 @@
                 statusEl.innerText = "OFFLINE"; statusEl.style.color = "var(--danger)";
                 if(recognition) recognition.stop();
             } else {
-                // Initialisation TTS
+                // Init TTS
                 synth = initTTS();
                 if(!synth) return;
 
-                // Initialisation Audio
+                // Init Audio (Obligatoire pour le flux micro)
                 try {
                     await initGlobalAudio();
                 } catch(e) { return; }
 
                 if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-                    alert("IA Non Supportée"); return;
+                    alert("IA Non Supportée par ce navigateur"); return;
                 }
                 
                 isEcho = true; btn.classList.add('active');
                 statusEl.innerHTML = '<span class="live-dot">●</span>ÉCOUTE ACTIVE';
                 statusEl.style.color = "var(--primary)";
-                document.getElementById('alert-box').style.display = 'block'; // Aide info
 
                 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
                 recognition = new SpeechRecognition();
                 recognition.continuous = true;
-                recognition.interimResults = false; // On veut que le texte final pour la voix
+                recognition.interimResults = false; 
                 recognition.lang = 'fr-FR';
 
                 recognition.onstart = () => {
@@ -306,15 +338,19 @@
                     const transcript = event.results[event.results.length - 1][0].transcript;
                     const confidence = event.results[event.results.length - 1][0].confidence;
 
-                    // Seulement si le mot est clair (éviter les hallucinations)
-                    if (transcript.trim().length > 0 && confidence > 0.6) {
+                    // On vérifie que le texte n'est pas vide
+                    if (transcript.trim().length > 0 && confidence > 0.5) {
                         eternalLog(transcript, "msg-final");
-                        speakText(transcript); // LE MAGIC : Répéter le mot
+                        speakText(transcript); // Répétition vocale
                     }
                 };
 
                 recognition.onerror = (e) => {
-                     if(e.error === 'not-allowed') { isEcho = false; btn.classList.remove('active'); statusEl.innerText = "BLOQUÉ"; }
+                    if(e.error === 'not-allowed') { 
+                        isEcho = false; btn.classList.remove('active'); 
+                        statusEl.innerText = "BLOQUÉ"; 
+                        document.getElementById('alert-box').style.display = 'block';
+                    }
                 };
 
                 recognition.onend = () => {
@@ -327,24 +363,20 @@
                 };
 
                 recognition.start();
-                log("Mode Echo Vocal Activé.", "system");
+                log("Mode Echo Activé.", "system");
             }
         }
 
-        // FONCTION PARLER (Text to Speech)
         function speakText(text) {
             if (!synth) return;
-            
-            // Annuler la phrase précédente si elle n'est pas finie (pour la réactivité)
-            synth.cancel();
+            synth.cancel(); // Coupe la parole précédente
 
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.lang = 'fr-FR';
-            utterance.rate = 1.2; // Un peu plus rapide pour l'immersion
-            utterance.pitch = 1.0; // Voix normale
-            utterance.volume = 1.0; // Volume max
+            utterance.rate = 1.2;
+            utterance.pitch = 1.0;
+            utterance.volume = 1.0;
 
-            // Chercher une voix française spécifique si possible
             const voices = synth.getVoices();
             const frenchVoice = voices.find(v => v.lang.includes('fr'));
             if (frenchVoice) utterance.voice = frenchVoice;
@@ -352,7 +384,7 @@
             synth.speak(utterance);
         }
 
-        // 5. DESSIN
+        // 5. DESSIN SPECTRE
         function drawSymmetricSpectrum() {
             if(!isVisualizer) return;
             requestAnimationFrame(drawSymmetricSpectrum);
@@ -389,13 +421,14 @@
             updateProbability();
         }
 
-        // 6. SWEEP & CAPTEURS (Identiques à V8)
-        function toggleSweep() {
+        // 6. SWEEP
+        async function toggleSweep() {
             const btn = document.getElementById('btn-sweep');
             if (isSweep) {
                 stopSweep(); isSweep = false; btn.classList.remove('active');
             } else {
-                if(!audioCtx) { try{ initGlobalAudio() }catch(e){} }
+                // Pour le Sweep, on a juste besoin du contexte audio
+                if(!audioCtx) { try{ await initGlobalAudio() }catch(e){} }
                 if(!audioCtx) return;
                 startSweep(); isSweep = true; btn.classList.add('active');
                 log("Sweep Activé.", "system");
@@ -418,6 +451,7 @@
         }
         function stopSweep() { sweepNodes.forEach(n => { try{n.stop()}catch(e){} }); sweepNodes = []; }
 
+        // 7. CAPTEURS
         function toggleSensors() {
             const btn = document.getElementById('btn-sens');
             if (isSensors) {
