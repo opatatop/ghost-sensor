@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ETERNITY v11 FORCE LINK</title>
+    <title>ETERNITY v12 CLEAN LINK</title>
     <meta name="theme-color" content="#000000">
     <style>
         :root {
@@ -78,23 +78,25 @@
             position: relative;
             display: flex; justify-content: center; align-items: center;
         }
-        
         canvas { width: 100%; height: 100%; display: block; }
 
-        /* BOUTON DE FORCE MICRO (Overlay) */
+        /* Bouton Micro Simplifié */
         #mic-force-overlay {
             position: absolute; z-index: 20; text-align: center;
-            background: rgba(0,0,0,0.9); padding: 20px;
+            background: rgba(0,0,0,0.95); padding: 20px;
             border: 2px solid var(--danger);
-            max-width: 80%;
+            max-width: 85%;
         }
-        .btn-force-mic {
+        .btn-clean-mic {
             background: var(--danger); color: white; border: none;
-            padding: 15px 30px; font-size: 1.2rem; font-weight: bold;
+            padding: 12px 25px; font-size: 1rem; font-weight: bold;
             font-family: inherit; cursor: pointer; margin-top: 10px;
-            animation: pulse-red 1.5s infinite;
+            box-shadow: 0 0 15px var(--danger);
         }
-        @keyframes pulse-red { 0% { transform: scale(1); box-shadow: 0 0 0 rgba(255,0,85,0.7); } 70% { transform: scale(1.05); box-shadow: 0 0 20px rgba(255,0,85,0); } 100% { transform: scale(1); box-shadow: 0 0 0 rgba(255,0,85,0.7); } }
+        .mic-help-text {
+            font-size: 0.8rem; color: #ccc; margin-top:10px; text-align: left; line-height: 1.4;
+        }
+        .highlight { color: var(--secondary); font-weight: bold; }
 
 
         #ai-zone {
@@ -142,12 +144,12 @@
     <div id="ui">
         <header>
             <div>
-                <h1 class="eternal-title">ETERNITY v11</h1>
-                <div class="sub-eternal">FORCE LINK</div>
+                <h1 class="eternal-title">ETERNITY v12</h1>
+                <div class="sub-eternal">CLEAN LINK</div>
             </div>
             <div style="text-align: right;">
                 <div id="clock" style="font-size:1.1rem; color:var(--secondary)">00:00</div>
-                <div style="font-size:0.6rem; color:var(--primary)">MIC STATUS: <span id="mic-status-text" style="color:var(--danger)">OFF</span></div>
+                <div style="font-size:0.6rem; color:var(--primary)">MIC: <span id="mic-status-text" style="color:var(--danger)">OFF</span></div>
             </div>
         </header>
 
@@ -168,12 +170,18 @@
         <div id="spectrum-canvas">
             <canvas id="viz-canvas"></canvas>
             
-            <!-- L'OVERLAY QUI FORCE LA PERMISSION -->
             <div id="mic-force-overlay">
-                <h3 style="margin:0 0 10px 0; color:var(--danger)">AUDIO DÉCONNECTÉ</h3>
-                <p style="font-size:0.8rem; color:#ccc;">Le micro n'est pas connecté.<br>Le Sweep fonctionne, mais l'IA et le Scope ont besoin d'écouter.</p>
-                <button class="btn-force-mic" onclick="forceMicConnection()">ACTIVER MICRO</button>
-                <p id="mic-error-msg" style="font-size:0.7rem; color:#ff5555; margin-top:5px; display:none;"></p>
+                <h3 style="margin:0 0 10px 0; color:var(--danger)">CONNECTION REQUISE</h3>
+                <p style="font-size:0.9rem; color:#fff;">Pour activer le Scope et l'IA, le micro doit être connecté.</p>
+                <button class="btn-clean-mic" onclick="initAudioClean()">ACTIVER LE MICRO</button>
+                
+                <div class="mic-help-text">
+                    <p><strong>Si le bouton ne fonctionne pas :</strong></p>
+                    <p>1. Regarde la <span class="highlight">barre d'adresse</span> en haut.</p>
+                    <p>2. Clique sur le <span class="highlight">Cadenas (🔒)</span>.</p>
+                    <p>3. Change "Microphone" de <span class="highlight">Bloquer</span> à <span class="highlight">Autoriser</span>.</p>
+                    <p>4. Reviens ici et appuie sur le bouton rouge.</p>
+                </div>
             </div>
         </div>
 
@@ -194,7 +202,7 @@
     </div>
 
     <script>
-        // --- V11 FORCE LINK ---
+        // --- V12 CLEAN LINK ---
 
         let audioCtx, globalStream, globalSource, analyser, gainNode;
         let sweepNodes = [], recognition, synth;
@@ -202,65 +210,57 @@
         let emfVal = 0, motionVal = 0, audioLevel = 0;
         let lastAlpha = null, instability = 0, emfBase = 0;
 
-        // 1. FONCTION FORCÉE (Le Bouton Rouge)
-        async function forceMicConnection() {
-            const errorMsg = document.getElementById('mic-error-msg');
+        // 1. INITIALISATION CLEAN (Sans options complexes qui bloquent le Realme)
+        async function initAudioClean() {
             const overlay = document.getElementById('mic-force-overlay');
             const statusText = document.getElementById('mic-status-text');
             
-            errorMsg.style.display = 'none';
-            errorMsg.innerText = "";
-
             try {
-                // Création du contexte si besoin
+                // Création du contexte
                 const AudioContext = window.AudioContext || window.webkitAudioContext;
                 if (!audioCtx) audioCtx = new AudioContext();
+                
+                // Resume est crucial
                 if (audioCtx.state === 'suspended') await audioCtx.resume();
 
-                // DEMANDE EXPLICITE
-                overlay.innerHTML = "<h3 style='color:var(--primary)'>DEMANDE EN COURS...</h3>";
-                
+                // DEMANDE SIMPLE (C'est la clé : juste { audio: true })
+                // On ne force plus echoCancellation: false
                 globalStream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 
-                // Si ça marche, on branche tout
+                // Setup Graph
                 globalSource = audioCtx.createMediaStreamSource(globalStream);
                 analyser = audioCtx.createAnalyser();
                 analyser.fftSize = 256;
                 analyser.smoothingTimeConstant = 0.85;
                 
                 gainNode = audioCtx.createGain();
-                gainNode.gain.value = 0.0;
+                gainNode.gain.value = 0.0; // Volume bas par sécurité (Echo)
 
                 globalSource.connect(analyser);
                 analyser.connect(gainNode);
                 gainNode.connect(audioCtx.destination);
 
-                // Mise à jour UI
-                overlay.style.display = 'none'; // Cache l'overlay rouge
-                statusText.innerText = "ON";
+                // Succès : On cache l'overlay définitivement pour cette session
+                overlay.style.display = 'none';
+                statusText.innerText = "CONNECTÉ";
                 statusText.style.color = "var(--primary)";
-                log("Microphone Connecté avec succès !", "system");
+                log("Micro connecté avec succès (Mode Clean).", "system");
                 
-                // Lancer le scope automatiquement
+                // Auto-start le scope
                 isVisualizer = true;
                 document.getElementById('btn-audio').classList.add('active');
                 drawSymmetricSpectrum();
 
             } catch (e) {
                 console.error(e);
-                overlay.innerHTML = `
-                    <h3 style="margin:0 0 10px 0; color:var(--danger)">ÉCHEC</h3>
-                    <p style="font-size:0.8rem; color:#ccc;">Le téléphone a refusé l'accès.</p>
-                    <p id="mic-error-msg" style="font-size:0.7rem; color:#ff5555; margin-top:5px;">Erreur: ${e.message}</p>
-                    <button class="btn-force-mic" onclick="forceMicConnection()">RÉESSAYER</button>
-                `;
+                // Si erreur, on laisse l'overlay visible avec les instructions
+                alert("Erreur de connexion. Vérifiez le cadenas en haut de l'écran (Paramètres > Microphone).");
             }
         }
 
-        // 2. VISUALISEUR (Dépend du bouton rouge maintenant)
-        async function toggleVisualizer() {
+        // 2. VISUALISEUR
+        function toggleVisualizer() {
             if (!globalStream) {
-                // Si on clique sur Scope sans avoir validé le micro, on montre l'overlay
                 document.getElementById('mic-force-overlay').style.display = 'block';
                 return;
             }
@@ -270,7 +270,7 @@
             if(isVisualizer) drawSymmetricSpectrum();
         }
 
-        // 3. MODE ECHO (Dépend du bouton rouge)
+        // 3. MODE ECHO
         async function toggleEcho() {
             if (!globalStream) {
                 document.getElementById('mic-force-overlay').style.display = 'block';
@@ -375,7 +375,7 @@
             updateProbability();
         }
 
-        // 4. SWEEP (Fonctionne indépendamment)
+        // 4. SWEEP
         async function toggleSweep() {
             const btn = document.getElementById('btn-sweep');
             if (isSweep) {
