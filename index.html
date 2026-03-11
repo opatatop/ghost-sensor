@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ETERNITY v12 CLEAN LINK</title>
+    <title>ETERNITY v13 SYSTEM RESET</title>
     <meta name="theme-color" content="#000000">
     <style>
         :root {
@@ -80,18 +80,20 @@
         }
         canvas { width: 100%; height: 100%; display: block; }
 
-        /* Bouton Micro Simplifié */
+        /* Overlay Reset */
         #mic-force-overlay {
             position: absolute; z-index: 20; text-align: center;
-            background: rgba(0,0,0,0.95); padding: 20px;
+            background: rgba(0,0,0,0.98); padding: 20px;
             border: 2px solid var(--danger);
             max-width: 85%;
+            box-shadow: 0 0 30px var(--danger);
         }
-        .btn-clean-mic {
+        .btn-reset-mic {
             background: var(--danger); color: white; border: none;
-            padding: 12px 25px; font-size: 1rem; font-weight: bold;
+            padding: 15px 30px; font-size: 1.1rem; font-weight: bold;
             font-family: inherit; cursor: pointer; margin-top: 10px;
-            box-shadow: 0 0 15px var(--danger);
+            box-shadow: 0 0 20px var(--danger);
+            text-transform: uppercase;
         }
         .mic-help-text {
             font-size: 0.8rem; color: #ccc; margin-top:10px; text-align: left; line-height: 1.4;
@@ -144,8 +146,8 @@
     <div id="ui">
         <header>
             <div>
-                <h1 class="eternal-title">ETERNITY v12</h1>
-                <div class="sub-eternal">CLEAN LINK</div>
+                <h1 class="eternal-title">ETERNITY v13</h1>
+                <div class="sub-eternal">SYSTEM RESET</div>
             </div>
             <div style="text-align: right;">
                 <div id="clock" style="font-size:1.1rem; color:var(--secondary)">00:00</div>
@@ -171,16 +173,16 @@
             <canvas id="viz-canvas"></canvas>
             
             <div id="mic-force-overlay">
-                <h3 style="margin:0 0 10px 0; color:var(--danger)">CONNECTION REQUISE</h3>
-                <p style="font-size:0.9rem; color:#fff;">Pour activer le Scope et l'IA, le micro doit être connecté.</p>
-                <button class="btn-clean-mic" onclick="initAudioClean()">ACTIVER LE MICRO</button>
+                <h3 style="margin:0 0 10px 0; color:var(--danger)">VERROUILLAGE AUDIO</h3>
+                <p style="font-size:0.9rem; color:#fff;">Le Sweep a bloqué le canal Micro.</p>
+                <p style="font-size:0.8rem; color:#aaa; margin-bottom:15px;">Je dois éteindre le son, réinitialiser le système, puis le rallumer.</p>
+                <button class="btn-reset-mic" onclick="fullSystemReset()">RÉINITIALISER & ACTIVER</button>
                 
                 <div class="mic-help-text">
-                    <p><strong>Si le bouton ne fonctionne pas :</strong></p>
-                    <p>1. Regarde la <span class="highlight">barre d'adresse</span> en haut.</p>
-                    <p>2. Clique sur le <span class="highlight">Cadenas (🔒)</span>.</p>
-                    <p>3. Change "Microphone" de <span class="highlight">Bloquer</span> à <span class="highlight">Autoriser</span>.</p>
-                    <p>4. Reviens ici et appuie sur le bouton rouge.</p>
+                    <p><strong>Solution si ça échoue :</strong></p>
+                    <p>1. Clique sur le <span class="highlight">Cadenas (🔒)</span> en haut.</p>
+                    <p>2. Mets <span class="highlight">Microphone</span> sur <span class="highlight">Autoriser</span>.</p>
+                    <p>3. Reviens ici et réessaie.</p>
                 </div>
             </div>
         </div>
@@ -202,7 +204,7 @@
     </div>
 
     <script>
-        // --- V12 CLEAN LINK ---
+        // --- V13 SYSTEM RESET ---
 
         let audioCtx, globalStream, globalSource, analyser, gainNode;
         let sweepNodes = [], recognition, synth;
@@ -210,51 +212,78 @@
         let emfVal = 0, motionVal = 0, audioLevel = 0;
         let lastAlpha = null, instability = 0, emfBase = 0;
 
-        // 1. INITIALISATION CLEAN (Sans options complexes qui bloquent le Realme)
-        async function initAudioClean() {
-            const overlay = document.getElementById('mic-force-overlay');
-            const statusText = document.getElementById('mic-status-text');
-            
-            try {
-                // Création du contexte
-                const AudioContext = window.AudioContext || window.webkitAudioContext;
-                if (!audioCtx) audioCtx = new AudioContext();
-                
-                // Resume est crucial
-                if (audioCtx.state === 'suspended') await audioCtx.resume();
+        // Variable pour savoir si le sweep était allumé avant le reset
+        let wasSweepOn = false;
 
-                // DEMANDE SIMPLE (C'est la clé : juste { audio: true })
-                // On ne force plus echoCancellation: false
+        // 1. LA FONCTION MAGIQUE : RESET COMPLET
+        async function fullSystemReset() {
+            const overlay = document.getElementById('mic-force-overlay');
+            const btn = overlay.querySelector('button');
+            
+            // UI Feedback
+            btn.innerText = "ARRÊT SWEEP...";
+            btn.disabled = true;
+
+            try {
+                // ÉTAPE 1 : Arrêter le Sweep
+                if (isSweep) {
+                    wasSweepOn = true;
+                    stopSweep();
+                } else {
+                    wasSweepOn = false;
+                }
+
+                // ÉTAPE 2 : Fermer le Contexte Audio (Le Reset)
+                if (audioCtx) {
+                    await audioCtx.close();
+                    audioCtx = null;
+                }
+                
+                // Petite pause pour laisser le matériel se reposer
+                await new Promise(r => setTimeout(r, 500));
+
+                // ÉTAPE 3 : Créer NOUVEAU Contexte
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                audioCtx = new AudioContext();
+                
+                // ÉTAPE 4 : Demander Micro
+                btn.innerText = "DEMANDE MICRO...";
                 globalStream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 
-                // Setup Graph
+                // ÉTAPE 5 : Reconnecter le graph
                 globalSource = audioCtx.createMediaStreamSource(globalStream);
                 analyser = audioCtx.createAnalyser();
                 analyser.fftSize = 256;
                 analyser.smoothingTimeConstant = 0.85;
                 
                 gainNode = audioCtx.createGain();
-                gainNode.gain.value = 0.0; // Volume bas par sécurité (Echo)
+                gainNode.gain.value = 0.0;
 
                 globalSource.connect(analyser);
                 analyser.connect(gainNode);
                 gainNode.connect(audioCtx.destination);
 
-                // Succès : On cache l'overlay définitivement pour cette session
+                // Succès !
                 overlay.style.display = 'none';
-                statusText.innerText = "CONNECTÉ";
-                statusText.style.color = "var(--primary)";
-                log("Micro connecté avec succès (Mode Clean).", "system");
+                document.getElementById('mic-status-text').innerText = "CONNECTÉ";
+                document.getElementById('mic-status-text').style.color = "var(--primary)";
+                log("Système Audio Réinitialisé avec succès.", "system");
                 
-                // Auto-start le scope
+                // ÉTAPE 6 : Relancer les choses automatiquement
                 isVisualizer = true;
                 document.getElementById('btn-audio').classList.add('active');
                 drawSymmetricSpectrum();
 
+                if (wasSweepOn) {
+                    startSweep();
+                }
+
             } catch (e) {
                 console.error(e);
-                // Si erreur, on laisse l'overlay visible avec les instructions
-                alert("Erreur de connexion. Vérifiez le cadenas en haut de l'écran (Paramètres > Microphone).");
+                alert("Erreur système: " + e.message + "\nLe téléphone bloque toujours le micro.");
+                // Remettre le bouton
+                btn.innerText = "RÉESSAYER LE RESET";
+                btn.disabled = false;
             }
         }
 
