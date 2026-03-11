@@ -2,15 +2,15 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ETERNITY v14 REFINED</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>ETERNITY v16 CYBER NETWORK</title>
     <meta name="theme-color" content="#000000">
     <style>
         :root {
             --primary: #00ffcc;
-            --secondary: #d4af37;
+            --secondary: #0088ff; /* Bleu Cyber */
             --danger: #ff0055;
-            --bg: #030508;
+            --bg: #00050a; /* Bleu nuit très sombre */
         }
 
         body {
@@ -22,116 +22,108 @@
             display: flex;
             flex-direction: column;
             overflow: hidden;
+            touch-action: manipulation; 
         }
 
-        #cosmic-noise {
+        /* EFFET FOND RÉSEAU (Matrix) */
+        #network-bg {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0ibm9uZSIvPjxyZWN0IHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4wNSkiLz48L3N2Zz4=');
-            opacity: 0.3; pointer-events: none; z-index: 2;
+            z-index: 1; opacity: 0.1; pointer-events: none;
         }
-        #vignette-eternal {
+
+        #vignette-cyber {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: radial-gradient(circle, transparent 20%, #000 120%);
+            background: radial-gradient(circle, transparent 30%, #000 120%);
             pointer-events: none; z-index: 3;
+            box-shadow: inset 0 0 50px rgba(0, 136, 255, 0.2);
         }
         #camera-feed {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             object-fit: cover; z-index: 0; opacity: 0.3; 
-            filter: contrast(1.5) brightness(0.6) grayscale(100%) sepia(30%) hue-rotate(170deg);
+            filter: contrast(1.4) brightness(0.5) grayscale(100%) hue-rotate(180deg); /* Bleu */
         }
+
+        /* UI */
         #ui {
             position: relative; z-index: 10; height: 100%;
             display: flex; flex-direction: column; justify-content: space-between;
-            pointer-events: none;
         }
+
         header {
-            background: linear-gradient(180deg, rgba(0,0,0,0.9), transparent);
+            background: linear-gradient(180deg, rgba(0,0,0,0.95), transparent);
             padding: 10px;
             display: flex; justify-content: space-between; align-items: flex-start;
             border-bottom: 1px solid var(--secondary);
         }
-        .eternal-title { font-size: 1.1rem; font-weight: 900; letter-spacing: 3px; margin: 0; color: var(--secondary); }
-        .sub-eternal { font-size: 0.6rem; color: var(--primary); letter-spacing: 1px; }
+        .cyber-title { font-size: 1.1rem; font-weight: 900; letter-spacing: 2px; margin: 0; color: var(--secondary); text-shadow: 0 0 5px var(--secondary); }
+        .cyber-sub { font-size: 0.6rem; color: var(--primary); letter-spacing: 1px; }
 
+        /* Panneau Données Réseau */
         .data-panel {
-            pointer-events: auto;
-            background: rgba(0, 20, 30, 0.6);
+            background: rgba(0, 10, 20, 0.7);
             margin: 5px 10px;
-            border: 1px solid var(--primary);
-            padding: 10px;
-            backdrop-filter: blur(5px);
+            border: 1px solid var(--secondary);
+            padding: 8px;
+            backdrop-filter: blur(4px);
         }
-        .row { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.8rem; align-items: center; }
+        .data-row { display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 0.75rem; align-items: center; }
         
         .prob-container {
-            width: 100%; height: 18px; background: #111; border: 1px solid #333; margin-top: 8px;
+            width: 100%; height: 16px; background: #001122; border: 1px solid var(--secondary); margin-top: 6px;
+            position: relative; overflow: hidden;
         }
         .prob-fill {
             height: 100%; width: 0%; 
-            background: linear-gradient(90deg, var(--secondary), var(--danger));
-            transition: width 0.5s ease-out; 
+            background: linear-gradient(90deg, var(--secondary), var(--primary));
+            transition: width 0.3s ease-out; 
+            box-shadow: 0 0 10px var(--primary);
         }
 
         #spectrum-canvas {
             width: 100%; height: 120px; background: #000;
-            border-top: 1px solid var(--primary); border-bottom: 1px solid var(--primary);
+            border-top: 1px solid var(--secondary); border-bottom: 1px solid var(--secondary);
             position: relative;
             display: flex; justify-content: center; align-items: center;
+            overflow: hidden;
         }
         canvas { width: 100%; height: 100%; display: block; }
-
-        /* Overlay V14 */
-        #mic-force-overlay {
-            position: absolute; z-index: 20; text-align: center;
-            background: rgba(0,0,0,0.98); padding: 25px;
-            border: 2px solid var(--primary);
-            max-width: 90%;
-            box-shadow: 0 0 40px rgba(0, 255, 204, 0.1);
-        }
         
-        .btn-action-mic {
-            background: var(--primary); color: black; border: none;
-            padding: 15px 30px; font-size: 1rem; font-weight: bold;
-            font-family: inherit; cursor: pointer; margin-top: 15px;
-            box-shadow: 0 0 20px var(--primary);
-            text-transform: uppercase;
-            min-width: 200px;
-        }
-        .btn-action-mic:disabled {
-            background: #555; color: #888; box-shadow: none; cursor: wait;
-        }
-
-        .status-log {
-            font-family: monospace; font-size: 0.8rem; color: #aaa; margin-top: 15px;
-            text-align: left; background: #111; padding: 10px; border: 1px dashed #333;
-            min-height: 40px;
+        #error-text {
+            position: absolute; z-index: 5; text-align: center; pointer-events: none;
+            color: var(--secondary); font-weight: bold; font-size: 0.9rem;
+            padding: 10px; text-shadow: 0 0 5px var(--secondary);
         }
 
         #ai-zone {
             flex: 1; margin: 10px;
-            border: 1px solid var(--secondary); background: rgba(0,0,0,0.85);
+            border: 1px solid var(--secondary); background: rgba(0, 5, 10, 0.85);
             padding: 10px; padding-bottom: 110px;
-            overflow-y: auto; font-size: 0.9rem;
+            overflow-y: auto; font-size: 0.85rem;
             pointer-events: auto;
-            text-shadow: 0 0 3px var(--primary); position: relative;
+            text-shadow: 0 0 2px var(--secondary); position: relative;
         }
-        .msg-final { color: var(--secondary); border-bottom: 1px dashed #444; margin: 6px 0; padding: 4px; background: rgba(212, 175, 55, 0.1); }
-        .msg-system { color: #555; font-size: 0.7rem; border-left: 2px solid #333; padding-left: 5px; margin-bottom: 4px; }
+        .msg-final { color: var(--primary); border-bottom: 1px solid var(--secondary); margin: 4px 0; padding: 4px; background: rgba(0, 255, 204, 0.1); }
+        .msg-system { color: #446677; font-size: 0.7rem; margin-bottom: 4px; font-family: monospace; }
+        
+        .msg-prefix { color: var(--secondary); font-weight: bold; margin-right: 5px; }
 
         .controls {
             position: fixed; bottom: 0; left: 0; width: 100%;
             padding: 10px 10px 35px 10px;
             display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;
             background: linear-gradient(0deg, rgba(0,0,0,1), rgba(0,0,0,0.8));
-            pointer-events: auto; z-index: 100;
+            z-index: 100; 
         }
+
         button {
-            background: rgba(0, 20, 20, 0.8); border: 1px solid var(--secondary); color: var(--secondary);
+            background: rgba(0, 20, 40, 0.8); border: 1px solid var(--secondary); color: var(--secondary);
             padding: 14px 2px; font-family: inherit; font-weight: bold; cursor: pointer;
-            font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.5px; transition: 0.3s;
+            font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.5px; transition: 0.2s;
+            touch-action: manipulation; 
+            -webkit-tap-highlight-color: transparent;
         }
-        button:active { transform: scale(0.96); }
-        button.active { background: var(--secondary); color: #000; box-shadow: 0 0 15px var(--secondary); }
+        button:active { transform: scale(0.95); background: var(--secondary); color: #000; }
+        button.active { background: var(--secondary); color: #000; box-shadow: 0 0 15px var(--secondary); border-color: #fff; }
         
         #btn-echo { border-color: #ff00ff; color: #ff00ff; }
         #btn-echo.active { background: #ff00ff; color: #fff; box-shadow: 0 0 15px #ff00ff; }
@@ -145,58 +137,52 @@
 </head>
 <body>
 
-    <div id="cosmic-noise"></div>
-    <div id="vignette-eternal"></div>
+    <canvas id="network-bg"></canvas>
+    <div id="vignette-cyber"></div>
     <video id="camera-feed" autoplay playsinline muted></video>
 
     <div id="ui">
         <header>
             <div>
-                <h1 class="eternal-title">ETERNITY v14</h1>
-                <div class="sub-eternal">RESEAUX NEURONAUX</div>
+                <h1 class="cyber-title">ETERNITY v16</h1>
+                <div class="cyber-sub">CYBER NETWORK LINK</div>
             </div>
             <div style="text-align: right;">
                 <div id="clock" style="font-size:1.1rem; color:var(--secondary)">00:00</div>
-                <div style="font-size:0.6rem; color:var(--primary)">MIC: <span id="mic-status-text" style="color:var(--danger)">OFF</span></div>
+                <div style="font-size:0.6rem; color:var(--primary)">NET: <span id="net-status" style="color:var(--primary)">OFFLINE</span></div>
+                <div style="font-size:0.6rem; color:var(--secondary)">PING: <span id="ping-val">--</span>ms</div>
             </div>
         </header>
 
         <div class="data-panel">
-            <div class="row">
-                <span style="color:var(--secondary)">PROBABILITÉ PRÉSENCE</span>
-                <span id="prob-val" style="font-weight:bold; color:var(--secondary)">0.0%</span>
+            <div class="data-row">
+                <span style="color:var(--secondary)">LIAISON ENTITÉ (PACKETS)</span>
+                <span id="prob-val" style="font-weight:bold; color:var(--primary)">0.0%</span>
             </div>
             <div class="prob-container">
                 <div id="prob-fill" class="prob-fill"></div>
             </div>
-            <div class="row" style="margin-top:10px; font-size:0.7rem; color:#666; font-family: monospace;">
-                <span>[AUD: <span id="vol-disp">--</span>]</span>
+            <div class="data-row" style="margin-top:8px; font-size:0.7rem; color:#666; font-family: monospace;">
+                <span>[UPL: <span id="vol-disp">--</span>]</span>
                 <span>[EMF: <span id="emf-disp">--</span>]</span>
             </div>
         </div>
 
         <div id="spectrum-canvas">
             <canvas id="viz-canvas"></canvas>
-            
-            <div id="mic-force-overlay">
-                <h3 style="margin:0 0 10px 0; color:var(--primary)">CONNECTION AUDIO</h3>
-                <p style="font-size:0.9rem; color:#ccc;">Le système doit être réinitialisé pour activer le Scope.</p>
-                <button id="btn-reset" class="btn-action-mic" onclick="refinedSystemReset()">DÉMARRER LA PROCÉDURE</button>
-                
-                <div id="status-log" class="status-log">En attente d'action utilisateur...</div>
-            </div>
+            <div id="error-text">INITIALISER CONNEXION AUDIO (SCOPE)</div>
         </div>
 
         <div id="ai-zone">
             <div style="position:sticky; top:0; background:#000; padding-bottom:5px; border-bottom:1px solid var(--secondary); margin-bottom:5px; display:flex; justify-content:space-between; align-items:center;">
-                <span style="color:var(--primary)">> TRADUCTION VOCALE</span>
-                <span id="ai-status" style="color:var(--danger); font-size:0.7rem; font-weight:bold;">OFFLINE</span>
+                <span style="color:var(--primary)">> FLUX DE DONNÉES (IA)</span>
+                <span id="ai-status" style="color:var(--danger); font-size:0.7rem; font-weight:bold;">HORS LIGNE</span>
             </div>
             <div id="log-container"></div>
         </div>
 
         <div class="controls">
-            <button id="btn-audio" onclick="toggleVisualizer()">SCOPE</button>
+            <button id="btn-audio" onclick="initAudioSimple()">SCOPE</button>
             <button id="btn-echo" onclick="toggleEcho()">ECHO VOIX</button>
             <button id="btn-sweep" class="btn-sweep" onclick="toggleSweep()">SWEEP</button>
             <button id="btn-sens" onclick="toggleSensors()">SENSORS</button>
@@ -204,60 +190,38 @@
     </div>
 
     <script>
-        // --- V14 REFINED RESET ---
+        // --- V16 CYBER NETWORK ---
 
         let audioCtx, globalStream, globalSource, analyser, gainNode;
         let sweepNodes = [], recognition, synth;
         let isVisualizer = false, isEcho = false, isSweep = false, isSensors = false;
         let emfVal = 0, motionVal = 0, audioLevel = 0;
         let lastAlpha = null, instability = 0, emfBase = 0;
-        let wasSweepOn = false;
 
-        // Fonction utilitaire pour logger dans l'overlay
-        function logStatus(msg) {
-            const logEl = document.getElementById('status-log');
-            logEl.innerText = "> " + msg;
-        }
+        // 1. INITIALISATION (Identique à V15, stable)
+        async function initAudioSimple() {
+            const btn = document.getElementById('btn-audio');
+            const errorText = document.getElementById('error-text');
+            const statusText = document.getElementById('net-status');
 
-        // 1. PROCÉDURE DE RÉINITIALISATION AFFINÉE
-        async function refinedSystemReset() {
-            const btn = document.getElementById('btn-reset');
-            const logEl = document.getElementById('status-log');
-            
-            // Désactiver le bouton
-            btn.disabled = true;
+            if (globalStream) {
+                isVisualizer = !isVisualizer;
+                btn.classList.toggle('active', isVisualizer);
+                errorText.style.display = isVisualizer ? 'none' : 'block';
+                if(isVisualizer) drawSymmetricSpectrum();
+                return;
+            }
+
+            btn.innerText = "CONNEXION...";
+            errorText.innerText = "HANDSHAKE EN COURS...";
 
             try {
-                // ÉTAPE 1
-                logStatus("Arrêt des processus audio...");
-                if (isSweep) {
-                    wasSweepOn = true;
-                    stopSweep();
-                } else {
-                    wasSweepOn = false;
-                }
-
-                // ÉTAPE 2
-                logStatus("Fermeture du contexte Audio...");
-                if (audioCtx) {
-                    await audioCtx.close();
-                    audioCtx = null;
-                }
-                
-                // Pause pour le hardware
-                await new Promise(r => setTimeout(r, 800));
-
-                // ÉTAPE 3
-                logStatus("Création nouveau contexte Audio...");
                 const AudioContext = window.AudioContext || window.webkitAudioContext;
                 audioCtx = new AudioContext();
-                
-                // ÉTAPE 4
-                logStatus("Demande d'accès Microphone...");
+                if (audioCtx.state === 'suspended') await audioCtx.resume();
+
                 globalStream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 
-                // ÉTAPE 5
-                logStatus("Connexion des nœuds audio...");
                 globalSource = audioCtx.createMediaStreamSource(globalStream);
                 analyser = audioCtx.createAnalyser();
                 analyser.fftSize = 256;
@@ -270,130 +234,61 @@
                 analyser.connect(gainNode);
                 gainNode.connect(audioCtx.destination);
 
-                // SUCCÈS
-                logStatus("SUCCÈS ! Système Opérationnel.");
+                btn.innerText = "SCOPE";
+                btn.classList.add('active');
+                errorText.style.display = 'none';
+                statusText.innerText = "CONNECTÉ";
+                statusText.style.color = "var(--primary)";
                 
-                // Cacher l'overlay avec un petit délai pour lire le succès
-                setTimeout(() => {
-                    document.getElementById('mic-force-overlay').style.display = 'none';
-                    document.getElementById('mic-status-text').innerText = "CONNECTÉ";
-                    document.getElementById('mic-status-text').style.color = "var(--primary)";
-                    log("Système Audio v14 Réussi.", "system");
-                    
-                    isVisualizer = true;
-                    document.getElementById('btn-audio').classList.add('active');
-                    drawSymmetricSpectrum();
-
-                    if (wasSweepOn) {
-                        startSweep();
-                    }
-                }, 1000);
+                isVisualizer = true;
+                drawSymmetricSpectrum();
+                drawNetworkBg(); // Lancer le fond réseau
+                log("Connexion Audio Établie.", "system");
+                startPing(); // Simuler le ping
 
             } catch (e) {
                 console.error(e);
-                logStatus("ÉCHEC CRITIQUE : " + e.name);
-                
-                let userMsg = "";
-                if (e.name === 'NotAllowedError') {
-                    userMsg = "Le téléphone a refusé le micro. Vérifiez le cadenas en haut.";
-                } else if (e.name === 'NotReadableError') {
-                    userMsg = "Le micro est utilisé par une autre application.";
-                } else {
-                    userMsg = "Erreur inconnue : " + e.message;
-                }
-                
-                logEl.innerText += "\nERREUR: " + userMsg;
-                logEl.style.color = "var(--danger)";
-                
-                btn.disabled = false;
-                btn.innerText = "RÉESSAYER";
+                btn.innerText = "ERREUR";
+                btn.style.borderColor = "red";
+                errorText.innerText = "CONNEXION REFUSÉE\n(Vérifiez le cadenas)";
+                errorText.style.color = "red";
+                alert("Micro bloqué. Regardez le cadenas en haut.");
             }
         }
 
-        // 2. VISUALISEUR
-        function toggleVisualizer() {
-            if (!globalStream) {
-                document.getElementById('mic-force-overlay').style.display = 'block';
-                return;
+        // 2. FOND RÉSEAU (NOUVEAU)
+        function drawNetworkBg() {
+            const cvs = document.getElementById('network-bg');
+            const ctx = cvs.getContext('2d');
+            cvs.width = window.innerWidth;
+            cvs.height = window.innerHeight;
+            
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.1)'; // Effet de trainée
+            ctx.fillRect(0, 0, cvs.width, cvs.height);
+
+            ctx.fillStyle = 'rgba(0, 255, 204, 0.15)';
+            
+            // Simuler des paquets
+            for(let i=0; i<5; i++) {
+                const x = Math.random() * cvs.width;
+                const y = Math.random() * cvs.height;
+                const h = Math.random() * 20 + 5;
+                ctx.fillRect(x, y, 2, h);
             }
-            const btn = document.getElementById('btn-audio');
-            isVisualizer = !isVisualizer;
-            btn.classList.toggle('active', isVisualizer);
-            if(isVisualizer) drawSymmetricSpectrum();
+
+            requestAnimationFrame(drawNetworkBg);
         }
 
-        // 3. MODE ECHO
-        async function toggleEcho() {
-            if (!globalStream) {
-                document.getElementById('mic-force-overlay').style.display = 'block';
-                return;
-            }
-            const btn = document.getElementById('btn-echo');
-            const statusEl = document.getElementById('ai-status');
-
-            if (isEcho) {
-                isEcho = false; btn.classList.remove('active');
-                statusEl.innerText = "OFFLINE"; statusEl.style.color = "var(--danger)";
-                if(recognition) recognition.stop();
-            } else {
-                synth = window.speechSynthesis;
-                if (!synth) return alert("TTS indisponible");
-
-                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-                if (!SpeechRecognition) return alert("IA indisponible");
-                
-                isEcho = true; btn.classList.add('active');
-                statusEl.innerHTML = '<span class="live-dot">●</span>ÉCOUTE ACTIVE';
-                statusEl.style.color = "var(--primary)";
-
-                recognition = new SpeechRecognition();
-                recognition.continuous = true;
-                recognition.interimResults = false; 
-                recognition.lang = 'fr-FR';
-
-                recognition.onstart = () => {
-                    statusEl.innerHTML = '<span class="live-dot">●</span>ÉCOUTE ACTIVE';
-                };
-
-                recognition.onresult = (event) => {
-                    const transcript = event.results[event.results.length - 1][0].transcript;
-                    const confidence = event.results[event.results.length - 1][0].confidence;
-                    if (transcript.trim().length > 0 && confidence > 0.5) {
-                        eternalLog(transcript, "msg-final");
-                        speakText(transcript);
-                    }
-                };
-
-                recognition.onerror = (e) => {
-                     if(e.error === 'not-allowed') { isEcho = false; btn.classList.remove('active'); statusEl.innerText = "BLOQUÉ"; }
-                };
-
-                recognition.onend = () => {
-                    if (isEcho) {
-                        statusEl.innerText = "RECONNECTION...";
-                        setTimeout(() => { if (isEcho) recognition.start(); }, 1000);
-                    } else {
-                        statusEl.innerText = "OFFLINE";
-                    }
-                };
-
-                recognition.start();
-                log("Mode Echo Activé.", "system");
-            }
+        function startPing() {
+            setInterval(() => {
+                if(!isVisualizer) return;
+                // Ping aléatoire entre 12ms et 45ms
+                const ping = Math.floor(Math.random() * 33) + 12;
+                document.getElementById('ping-val').innerText = ping;
+            }, 2000);
         }
 
-        function speakText(text) {
-            if (!synth) return;
-            synth.cancel();
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = 'fr-FR';
-            utterance.rate = 1.2; utterance.volume = 1.0;
-            const voices = synth.getVoices();
-            const frenchVoice = voices.find(v => v.lang.includes('fr'));
-            if (frenchVoice) utterance.voice = frenchVoice;
-            synth.speak(utterance);
-        }
-
+        // 3. VISUALISEUR (Style Réseau)
         function drawSymmetricSpectrum() {
             if(!isVisualizer || !analyser) return;
             requestAnimationFrame(drawSymmetricSpectrum);
@@ -416,7 +311,7 @@
             for(let i = 0; i < bufferLength; i++) {
                 const barHeight = (dataArray[i] / 255) * (h/2);
                 totalVol += dataArray[i];
-                const hue = 40 + (i/bufferLength) * 160; 
+                const hue = 160 + (i/bufferLength) * 100; // Bleu -> Cyan
                 ctx.fillStyle = `hsl(${hue}, 100%, 50%)`;
                 ctx.fillRect(cx - (i * barWidth), (h/2) - barHeight, barWidth - 1, barHeight * 2);
                 ctx.fillRect(cx + (i * barWidth), (h/2) - barHeight, barWidth - 1, barHeight * 2);
@@ -427,7 +322,79 @@
             updateProbability();
         }
 
-        // 4. SWEEP
+        // 4. MODE ECHO (Identique mais log stylisé)
+        async function toggleEcho() {
+            if (!globalStream) {
+                alert("Activez SCOPE d'abord.");
+                return;
+            }
+            const btn = document.getElementById('btn-echo');
+            const statusEl = document.getElementById('ai-status');
+
+            if (isEcho) {
+                isEcho = false; btn.classList.remove('active');
+                statusEl.innerText = "HORS LIGNE"; statusEl.style.color = "var(--danger)";
+                if(recognition) recognition.stop();
+            } else {
+                synth = window.speechSynthesis;
+                if (!synth) return alert("TTS indisponible");
+
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                if (!SpeechRecognition) return alert("IA indisponible");
+                
+                isEcho = true; btn.classList.add('active');
+                statusEl.innerHTML = '<span class="live-dot">●</span>EN LIGNE';
+                statusEl.style.color = "var(--primary)";
+
+                recognition = new SpeechRecognition();
+                recognition.continuous = true;
+                recognition.interimResults = false; 
+                recognition.lang = 'fr-FR';
+
+                recognition.onstart = () => {
+                    statusEl.innerHTML = '<span class="live-dot">●</span>EN LIGNE';
+                };
+
+                recognition.onresult = (event) => {
+                    const transcript = event.results[event.results.length - 1][0].transcript;
+                    const confidence = event.results[event.results.length - 1][0].confidence;
+                    if (transcript.trim().length > 0 && confidence > 0.5) {
+                        cyberLog(transcript, "msg-final");
+                        speakText(transcript);
+                    }
+                };
+
+                recognition.onerror = (e) => {
+                     if(e.error === 'not-allowed') { isEcho = false; btn.classList.remove('active'); statusEl.innerText = "DÉCONNECTÉ"; }
+                };
+
+                recognition.onend = () => {
+                    if (isEcho) {
+                        statusEl.innerText = "RECONNECTION...";
+                        setTimeout(() => { if (isEcho) recognition.start(); }, 1000);
+                    } else {
+                        statusEl.innerText = "HORS LIGNE";
+                    }
+                };
+
+                recognition.start();
+                cyberLog("Mode Echo Activé.", "system");
+            }
+        }
+
+        function speakText(text) {
+            if (!synth) return;
+            synth.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'fr-FR';
+            utterance.rate = 1.2; utterance.volume = 1.0;
+            const voices = synth.getVoices();
+            const frenchVoice = voices.find(v => v.lang.includes('fr'));
+            if (frenchVoice) utterance.voice = frenchVoice;
+            synth.speak(utterance);
+        }
+
+        // 5. SWEEP
         async function toggleSweep() {
             const btn = document.getElementById('btn-sweep');
             if (isSweep) {
@@ -436,7 +403,7 @@
                 if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 if (audioCtx.state === 'suspended') await audioCtx.resume();
                 startSweep(); isSweep = true; btn.classList.add('active');
-                log("Sweep Activé.", "system");
+                cyberLog("Sweep Activé.", "system");
             }
         }
         function startSweep() {
@@ -456,7 +423,7 @@
         }
         function stopSweep() { sweepNodes.forEach(n => { try{n.stop()}catch(e){} }); sweepNodes = []; }
 
-        // 5. CAPTEURS
+        // 6. CAPTEURS
         function toggleSensors() {
             const btn = document.getElementById('btn-sens');
             if (isSensors) {
@@ -467,7 +434,7 @@
                 isSensors = true; btn.classList.add('active');
                 window.addEventListener('deviceorientationabsolute', handleOrientation);
                 window.addEventListener('devicemotion', handleMotion);
-                log("Capteurs Connectés.", "system");
+                cyberLog("Capteurs Connectés.", "system");
             }
         }
         function handleOrientation(e) {
@@ -487,24 +454,31 @@
             motionVal = Math.abs(acc.x||0) + Math.abs(acc.y||0) + Math.abs(acc.z||0);
         }
 
-        function eternalLog(text, className) {
+        // LOG STYLISÉ CYBER
+        function cyberLog(text, className) {
             const container = document.getElementById('log-container');
             const div = document.createElement('div');
             div.className = className;
-            const chars = "ΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ";
+            
+            // Prefixe style "Paquet"
+            const prefix = `<span class="msg-prefix">[PKT_RX]</span>`;
+
+            const chars = "01";
             let iterations = 0;
             const interval = setInterval(() => {
                 div.innerText = text.split("")
                     .map((letter, index) => {
-                        if(index < iterations) return text[index];
+                        if(index < iterations) return letter;
                         return chars[Math.floor(Math.random() * chars.length)];
                     })
                     .join("");
                 if(iterations >= text.length) clearInterval(interval);
-                iterations += 0.5;
-            }, 40);
+                iterations += 0.2; // Décryptage rapide
+            }, 20);
+
             const time = new Date().toLocaleTimeString().split(' ')[0];
-            div.innerHTML = `<span style="opacity:0.5; font-size:0.8em">[${time}]</span> ${div.innerHTML}`;
+            div.innerHTML = `<span style="opacity:0.5; font-size:0.7em">[${time}]</span> ${prefix} ${div.innerHTML}`;
+            
             container.prepend(div);
             if(container.children.length > 20) container.lastChild.remove();
         }
@@ -527,8 +501,8 @@
                 displayVal.style.color = "var(--danger)";
                 displayVal.style.textShadow = "0 0 15px var(--danger)";
             } else {
-                displayVal.style.color = "var(--secondary)";
-                displayVal.style.textShadow = "none";
+                displayVal.style.color = "var(--primary)";
+                displayVal.style.textShadow = "0 0 10px var(--primary)";
             }
         }
         setInterval(() => document.getElementById('clock').innerText = new Date().toLocaleTimeString(), 1000);
