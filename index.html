@@ -3,27 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>REAL SENSOR PRO v2</title>
+    <title>DEMONOLOGIST GOD MODE</title>
     <meta name="theme-color" content="#000000">
     <style>
+        :root {
+            --primary: #00ff9d; /* Vert Néon Cyber */
+            --secondary: #00b8ff; /* Bleu Glacial */
+            --danger: #ff0055; /* Rouge Laser */
+            --bg: #020202;
+            --glass: rgba(0, 20, 10, 0.7);
+        }
+
         body {
             margin: 0; padding: 0;
-            background-color: #000;
-            color: #0f0;
-            font-family: 'Courier New', monospace;
+            background-color: var(--bg);
+            color: var(--primary);
+            font-family: 'Consolas', 'Courier New', monospace;
             height: 100vh;
             display: flex;
             flex-direction: column;
             overflow: hidden;
         }
 
-        /* Caméra en fond */
-        #camera-feed {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            object-fit: cover; z-index: 0; opacity: 0.4; filter: grayscale(100%);
+        /* Effets d'ambiance */
+        #overlay-fx {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: repeating-linear-gradient(
+                0deg, rgba(0,0,0,0.15), rgba(0,0,0,0.15) 1px, transparent 1px, transparent 2px
+            );
+            pointer-events: none; z-index: 5;
+        }
+        
+        #vignette {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle, transparent 40%, black 100%);
+            pointer-events: none; z-index: 6;
+            box-shadow: inset 0 0 100px rgba(0,255,157,0.1);
         }
 
-        /* Interface au-dessus */
+        /* Caméra */
+        #camera-feed {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            object-fit: cover; z-index: 0; opacity: 0.25; filter: contrast(1.3) brightness(0.7) grayscale(100%) sepia(20%);
+        }
+
+        /* Interface */
         #ui {
             position: relative; z-index: 10; height: 100%;
             display: flex; flex-direction: column; justify-content: space-between;
@@ -31,309 +55,441 @@
         }
 
         header {
-            background: rgba(0,0,0,0.8); padding: 5px 10px;
-            display: flex; justify-content: space-between; border-bottom: 1px solid #0f0;
-            font-size: 0.8rem;
-        }
-
-        .sensor-panel {
-            pointer-events: auto;
-            background: rgba(0, 10, 0, 0.85);
-            margin: 10px;
-            border: 1px solid #0f0;
+            background: linear-gradient(180deg, rgba(0,0,0,0.95), transparent);
             padding: 10px;
+            display: flex; justify-content: space-between; align-items: flex-start;
+            border-bottom: 1px solid var(--primary);
+        }
+        
+        .god-title {
+            font-size: 1.1rem; font-weight: 900; letter-spacing: 3px;
+            text-shadow: 0 0 10px var(--primary); margin: 0;
+        }
+        .god-sub { font-size: 0.6rem; color: var(--secondary); letter-spacing: 1px; }
+
+        /* Panneaux de données */
+        .data-panel {
+            pointer-events: auto;
+            background: var(--glass);
+            margin: 5px 10px;
+            border: 1px solid var(--primary);
+            padding: 8px;
+            backdrop-filter: blur(4px);
+            box-shadow: 0 0 15px rgba(0,255,157,0.1);
         }
 
-        .data-row {
-            display: flex; justify-content: space-between; margin-bottom: 5px;
-            font-size: 0.9rem;
+        .row { display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 0.8rem; align-items: center; }
+        
+        /* Jauge "Probabilité Entité" */
+        .probability-bar-container {
+            width: 100%; height: 15px; background: #111; border: 1px solid #333; margin-top: 5px;
+            position: relative;
+        }
+        .probability-fill {
+            height: 100%; width: 0%; background: linear-gradient(90deg, var(--primary), var(--danger));
+            transition: width 0.3s; box-shadow: 0 0 10px var(--primary);
         }
 
-        .val { font-weight: bold; }
-        .val-red { color: #f00; text-shadow: 0 0 5px #f00; }
-        .val-green { color: #0f0; text-shadow: 0 0 5px #0f0; }
-
-        canvas {
-            width: 100%; height: 100px; background: #001100;
-            border-top: 1px solid #0f0; border-bottom: 1px solid #0f0;
+        /* Canvas Spectrogramme */
+        #spectrum-canvas {
+            width: 100%; height: 130px; background: #000;
+            border-top: 1px solid var(--secondary); border-bottom: 1px solid var(--secondary);
         }
 
-        /* Zone de texte pour l'IA */
-        #speech-zone {
+        /* Zone de transcription IA */
+        #ai-zone {
             flex: 1; margin: 10px;
-            border: 1px dashed #0f0; background: rgba(0,0,0,0.6);
-            padding: 10px; 
-            padding-bottom: 80px; /* Espace pour ne pas cacher le texte sous les boutons */
-            overflow-y: auto; font-size: 0.9rem;
+            border: 1px solid var(--primary); background: rgba(0,0,0,0.8);
+            padding: 10px; padding-bottom: 110px;
+            overflow-y: auto; font-size: 0.85rem;
             pointer-events: auto;
+            text-shadow: 0 0 2px var(--primary);
+            position: relative;
         }
+        
+        /* Types de messages IA */
+        .msg-final { color: var(--primary); border-bottom: 1px solid #004422; margin: 4px 0; }
+        .msg-interim { color: var(--secondary); font-style: italic; }
+        .msg-system { color: #555; font-size: 0.7rem; }
 
-        .speech-text { border-bottom: 1px solid #003300; padding: 2px 0; }
-
-        /* BOUTONS (CORRIGÉS ICI) */
+        /* Contrôles */
         .controls {
-            /* FIX : Pour que les boutons soient toujours en bas visibles */
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            padding: 15px 10px 30px 10px; /* Plus d'espace en bas pour la barre Android */
-            display: flex; 
-            gap: 10px; 
+            position: fixed; bottom: 0; left: 0; width: 100%;
+            padding: 10px 10px 35px 10px;
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
+            background: linear-gradient(0deg, rgba(0,0,0,1), rgba(0,0,0,0.8));
             pointer-events: auto;
-            background: rgba(0,0,0,0.95);
-            z-index: 100; /* Au-dessus de tout */
-            border-top: 2px solid #0f0;
+            z-index: 100;
         }
 
         button {
-            flex: 1; background: #002200; border: 1px solid #0f0; color: #0f0;
-            padding: 15px; font-family: inherit; font-weight: bold; cursor: pointer;
-            font-size: 0.9rem; /* Un peu plus petit pour tenir */
+            background: rgba(0, 40, 20, 0.8); border: 1px solid var(--primary); color: var(--primary);
+            padding: 14px 2px; font-family: inherit; font-weight: bold; cursor: pointer;
+            font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px;
+            transition: 0.2s;
         }
-        button.active { background: #0f0; color: #000; }
-        button:disabled { border-color: #555; color: #555; }
+        button:active { transform: scale(0.96); }
+        button.active { background: var(--primary); color: #000; box-shadow: 0 0 20px var(--primary); }
+        button.btn-sweep { border-color: var(--danger); color: var(--danger); }
+        button.btn-sweep.active { background: var(--danger); color: #fff; box-shadow: 0 0 20px var(--danger); }
 
-        /* Pop-up d'alerte */
-        #system-alert {
+        /* Sliders */
+        input[type=range] { width: 100%; accent-color: var(--primary); height: 4px; }
+
+        /* Alertes */
+        #alert-box {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background: rgba(50,0,0,0.9); border: 2px solid #f00; color: #f00;
-            padding: 20px; text-align: center; display: none; z-index: 200; max-width: 80%;
+            background: rgba(0,0,0,0.95); border: 2px solid var(--primary); color: var(--primary);
+            padding: 20px; text-align: center; display: none; z-index: 200; max-width: 85%;
+            box-shadow: 0 0 50px rgba(0,255,157,0.3);
         }
+
+        /* Animation de chargement texte */
+        @keyframes blink { 50% { opacity: 0; } }
+        .live-indicator { color: var(--danger); animation: blink 1s infinite; margin-right: 5px; }
+
     </style>
 </head>
 <body>
 
+    <div id="overlay-fx"></div>
+    <div id="vignette"></div>
     <video id="camera-feed" autoplay playsinline muted></video>
 
-    <div id="system-alert">
-        <h3>ERREUR</h3>
-        <p id="alert-msg">Accès refusé.</p>
-        <button onclick="this.parentElement.style.display='none'" style="margin-top:10px; width:100px;">OK</button>
+    <div id="alert-box">
+        <h3 style="margin-top:0; color:var(--primary)">SYSTÈME</h3>
+        <p id="alert-msg">...</p>
+        <button onclick="this.parentElement.style.display='none'" style="margin-top:15px; width:100px;">OK</button>
     </div>
 
     <div id="ui">
         <header>
-            <span>REAL SENSOR PRO v2</span>
-            <span id="https-status">SYS: READY</span>
+            <div>
+                <h1 class="god-title">GOD MODE v5</h1>
+                <div class="god-sub">NEURAL PARANORMAL INTERFACE</div>
+            </div>
+            <div style="text-align: right;">
+                <div id="clock" style="font-size:1.1rem;">00:00</div>
+                <div style="font-size:0.6rem; color:var(--primary)">ONLINE // SECURE</div>
+            </div>
         </header>
 
-        <div class="sensor-panel">
-            <div class="data-row">
-                <span>MAGNÉTISME (µT):</span>
-                <span id="emf-val" class="val">--.--</span>
+        <!-- Panneau de Calcul Probabilité -->
+        <div class="data-panel">
+            <div class="row">
+                <span>PROBABILITÉ ENTITÉ (ALGORITHME)</span>
+                <span id="prob-val" style="font-weight:bold; color:var(--primary)">0.0%</span>
             </div>
-            <div class="data-row">
-                <span>DÉCIBELS (dB):</span>
-                <span id="db-val" class="val">--.-</span>
+            <div class="probability-bar-container">
+                <div id="prob-fill" class="probability-fill"></div>
             </div>
-            <div class="data-row">
-                <span>MOUVEMENT (G):</span>
-                <span id="acc-val" class="val">--</span>
+            <div class="row" style="margin-top:8px; font-size:0.7rem; color:#888;">
+                <span>[ VOL: <span id="vol-disp">--</span> ]</span>
+                <span>[ EMF: <span id="emf-disp">--</span> ]</span>
+                <span>[ MOTION: <span id="mot-disp">--</span> ]</span>
             </div>
         </div>
 
-        <canvas id="viz-canvas"></canvas>
+        <!-- Visualiseur Spectral -->
+        <canvas id="spectrum-canvas"></canvas>
 
-        <div id="speech-zone">
-            <div style="color:#666; font-size:0.8rem; margin-bottom:5px;">TRANSCRIPTION EN DIRECT</div>
-            <div id="speech-log"></div>
+        <!-- Zone Décodeur IA -->
+        <div id="ai-zone">
+            <div style="position:sticky; top:0; background:#000; padding-bottom:5px; border-bottom:1px solid #333; margin-bottom:5px; display:flex; justify-content:space-between;">
+                <span style="color:var(--primary)">> DÉCODEUR IA ACTIF</span>
+                <span id="ai-status" style="color:var(--secondary); font-size:0.7rem;">STANDBY</span>
+            </div>
+            <div id="log-container"></div>
         </div>
 
         <div class="controls">
-            <button id="btn-mic" onclick="toggleAudio()">AUDIO</button>
-            <button id="btn-speech" onclick="toggleSpeech()">IA VOCAL</button>
-            <button id="btn-sensors" onclick="toggleSensors()">CAPTEURS</button>
+            <button id="btn-audio" onclick="toggleAudio()">AUDIO SCOPE</button>
+            <button id="btn-ai" class="active" onclick="toggleAI()" style="border-color:var(--secondary)">IA TRANSCRIPT</button>
+            <button id="btn-sweep" class="btn-sweep" onclick="toggleSweep()">SWEEP BOX</button>
+            <button id="btn-sens" onclick="toggleSensors()">CAPTEURS</button>
         </div>
     </div>
 
     <script>
-        // --- VARIABLES ---
-        let audioCtx, micSource, analyser, gainNode;
+        // --- NOYAU DU SYSTÈME (GOD MODE) ---
+        let audioCtx, micSource, analyser, gainNode, streamNode;
+        let sweepNodes = [];
         let recognition;
-        let isAudioRunning = false;
-        let isSpeechRunning = false;
-        let isSensorsRunning = false;
+        let isAudio = false, isAI = false, isSweep = false, isSensors = false;
         
-        // Variables pour la compatibilité Android (Boussole)
-        let lastAlpha = null;
-        let instability = 0;
+        // Données capteurs
+        let emfVal = 0, motionVal = 0, audioLevel = 0;
+        let lastAlpha = null, instability = 0, emfBase = 0;
 
-        // --- 1. SYSTÈME AUDIO ---
+        // --- 1. SYSTÈME AUDIO VISUALISÉ (Spectrogramme) ---
         async function toggleAudio() {
-            const btn = document.getElementById('btn-mic');
+            const btn = document.getElementById('btn-audio');
             
-            if (isAudioRunning) {
-                if(audioCtx) { try { audioCtx.close(); } catch(e){} }
-                isAudioRunning = false;
-                btn.classList.remove('active');
-                document.getElementById('db-val').innerText = "--.-";
+            if (isAudio) {
+                if(audioCtx) audioCtx.close();
+                isAudio = false; btn.classList.remove('active');
             } else {
                 try {
                     const AudioContext = window.AudioContext || window.webkitAudioContext;
                     audioCtx = new AudioContext();
-                    
-                    const stream = await navigator.mediaDevices.getUserMedia({ 
-                        audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } 
-                    });
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
                     
                     micSource = audioCtx.createMediaStreamSource(stream);
                     analyser = audioCtx.createAnalyser();
-                    analyser.fftSize = 256;
+                    analyser.fftSize = 512; // Haute résolution
+                    analyser.smoothingTimeConstant = 0.8; // Lissage pro
+                    
+                    // Gain pour le volume
+                    gainNode = audioCtx.createGain();
+                    gainNode.gain.value = 0.0; // On coupe le son par défaut pour éviter le larsen, l'utilisateur gère ça
                     
                     micSource.connect(analyser);
+                    analyser.connect(gainNode);
+                    gainNode.connect(audioCtx.destination);
                     
-                    isAudioRunning = true;
-                    btn.classList.add('active');
-                    drawViz();
-                } catch (e) {
-                    showAlert("Erreur Micro: " + e.message);
-                }
+                    isAudio = true; btn.classList.add('active');
+                    drawSpectrum();
+                    log("Audio Scope & Capture Initialisés.", "system");
+                } catch (e) { showAlert("Erreur Audio: " + e.message); }
             }
         }
 
-        function drawViz() {
-            if(!isAudioRunning) return;
-            requestAnimationFrame(drawViz);
+        // Dessin du Spectre (Style Barres Haute Densité)
+        function drawSpectrum() {
+            if(!isAudio) return;
+            requestAnimationFrame(drawSpectrum);
 
-            const cvs = document.getElementById('viz-canvas');
+            const cvs = document.getElementById('spectrum-canvas');
             const ctx = cvs.getContext('2d');
             cvs.width = cvs.clientWidth;
             cvs.height = cvs.clientHeight;
             const w = cvs.width, h = cvs.height;
 
-            const data = new Uint8Array(analyser.frequencyBinCount);
-            analyser.getByteFrequencyData(data);
+            const bufferLength = analyser.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+            analyser.getByteFrequencyData(dataArray);
 
-            ctx.clearRect(0,0,w,h);
-            
-            let sum = 0;
-            for(let i=0; i<data.length; i++) sum += data[i];
-            const avg = sum / data.length;
-            const db = avg > 0 ? 20 * Math.log10(avg/255) : -100;
-            
-            document.getElementById('db-val').innerText = db.toFixed(1) + " dB";
+            ctx.clearRect(0, 0, w, h);
 
-            const barW = w / data.length;
-            for(let i=0; i<data.length; i++) {
-                const barH = (data[i] / 255) * h;
-                ctx.fillStyle = `rgb(0, ${255 - data[i]}, 0)`;
-                ctx.fillRect(i*barW, h-barH, barW-1, barH);
+            const barWidth = (w / bufferLength) * 2.5;
+            let x = 0;
+            let totalVol = 0;
+
+            for(let i = 0; i < bufferLength; i++) {
+                const barHeight = (dataArray[i] / 255) * h;
+                totalVol += dataArray[i];
+
+                // Dégradé de couleur dynamique
+                const r = barHeight + (25 * (i/bufferLength));
+                const g = 250 * (i/bufferLength);
+                const b = 50;
+
+                ctx.fillStyle = `rgb(${r},${g},${b})`;
+                ctx.fillRect(x, h - barHeight, barWidth, barHeight);
+
+                x += barWidth + 1;
+            }
+
+            // Mise à jour variable globale pour l'algo de probabilité
+            audioLevel = totalVol / bufferLength;
+            document.getElementById('vol-disp').innerText = Math.round(audioLevel);
+            updateEntityProbability();
+        }
+
+        // --- 2. SWEEP BOX (Générateur de Balayage) ---
+        function toggleSweep() {
+            const btn = document.getElementById('btn-sweep');
+            if (isSweep) {
+                stopSweep(); isSweep = false; btn.classList.remove('active');
+            } else {
+                if(!audioCtx) toggleAudio();
+                startSweep(); isSweep = true; btn.classList.add('active');
+                log("Générateur Sweep Activé.", "system");
             }
         }
 
-        // --- 2. RECONNAISSANCE VOCALE ---
-        function toggleSpeech() {
-            const btn = document.getElementById('btn-speech');
-            
-            if (isSpeechRunning) {
+        function startSweep() {
+            const bufferSize = audioCtx.sampleRate * 2;
+            const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+
+            const noise = audioCtx.createBufferSource();
+            noise.buffer = buffer; noise.loop = true;
+
+            const filter = audioCtx.createBiquadFilter();
+            filter.type = 'bandpass'; filter.Q.value = 10; // Très étroit
+
+            const lfo = audioCtx.createOscillator();
+            lfo.frequency.value = 0.2; // Très lent
+            const lfoGain = audioCtx.createGain();
+            lfoGain.gain.value = 2000; 
+
+            lfo.connect(lfoGain); lfoGain.connect(filter.frequency);
+            filter.frequency.value = 1000;
+
+            const vol = audioCtx.createGain();
+            vol.gain.value = 0.8; // Volume du sweep
+
+            noise.connect(filter); filter.connect(vol); vol.connect(audioCtx.destination);
+            noise.start(); lfo.start();
+            sweepNodes = [noise, lfo];
+        }
+        function stopSweep() { sweepNodes.forEach(n => { try{n.stop()}catch(e){} }); sweepNodes = []; }
+
+        // --- 3. CAPTEURS (EMF & MOTION) ---
+        function toggleSensors() {
+            const btn = document.getElementById('btn-sens');
+            if (isSensors) {
+                window.removeEventListener('deviceorientationabsolute', handleOrientation);
+                window.removeEventListener('devicemotion', handleMotion);
+                isSensors = false; btn.classList.remove('active');
+            } else {
+                isSensors = true; btn.classList.add('active');
+                window.addEventListener('deviceorientationabsolute', handleOrientation);
+                window.addEventListener('devicemotion', handleMotion);
+                log("Capteurs EMF & Gyro Connectés.", "system");
+            }
+        }
+
+        function handleOrientation(e) {
+            const alpha = e.alpha;
+            if (lastAlpha !== null && alpha !== null) {
+                let diff = Math.abs(alpha - lastAlpha);
+                if (diff > 180) diff = 360 - diff;
+                instability = (instability * 0.9) + (diff * 0.1);
+            }
+            lastAlpha = alpha;
+            // Valeur EMF relative
+            emfVal = Math.max(0, (instability - emfBase) * 2);
+            document.getElementById('emf-disp').innerText = emfVal.toFixed(1);
+        }
+
+        function handleMotion(e) {
+            const acc = e.accelerationIncludingGravity;
+            if(!acc) return;
+            motionVal = Math.abs(acc.x||0) + Math.abs(acc.y||0) + Math.abs(acc.z||0);
+            document.getElementById('mot-disp').innerText = (motionVal/10).toFixed(1);
+        }
+
+        // --- 4. L'IA "DÉCODEUR" (THE CORE) ---
+        function toggleAI() {
+            const btn = document.getElementById('btn-ai');
+            if (isAI) {
                 if(recognition) recognition.stop();
-                isSpeechRunning = false;
-                btn.classList.remove('active');
+                isAI = false; btn.classList.remove('active');
+                document.getElementById('ai-status').innerText = "OFFLINE";
             } else {
                 if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-                    showAlert("Navigateur incompatible.");
-                    return;
+                    showAlert("IA Non Supportée"); return;
                 }
-
                 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
                 recognition = new SpeechRecognition();
                 recognition.continuous = true;
-                recognition.interimResults = false;
+                recognition.interimResults = true; // Clé pour le mode "Interim"
                 recognition.lang = 'fr-FR';
 
                 recognition.onresult = (event) => {
-                    const transcript = event.results[event.results.length-1][0].transcript;
-                    logSpeech(transcript);
+                    let interimTranscript = '';
+                    let finalTranscript = '';
+
+                    for (let i = event.resultIndex; i < event.results.length; ++i) {
+                        if (event.results[i].isFinal) {
+                            finalTranscript += event.results[i][0].transcript;
+                            if(finalTranscript.trim().length > 0) {
+                                // Effet Glitch lors de l'affichage final
+                                glitchLog(finalTranscript, "msg-final");
+                            }
+                        } else {
+                            interimTranscript += event.results[i][0].transcript;
+                        }
+                    }
+                    
+                    // Affichage en temps réel (Interim)
+                    if (interimTranscript) {
+                        document.getElementById('ai-status').innerHTML = `<span class="live-indicator">●</span>DÉCODAGE: ${interimTranscript}`;
+                    } else {
+                        document.getElementById('ai-status').innerText = "ÉCOUTE...";
+                    }
                 };
 
                 recognition.onerror = (e) => { console.error(e); };
                 recognition.start();
-                isSpeechRunning = true;
-                btn.classList.add('active');
-                logSpeech("[ÉCOUTE ACTIVE...]");
+                isAI = true; btn.classList.add('active');
+                document.getElementById('ai-status').innerText = "INITIALISATION NEURALE...";
             }
         }
 
-        function logSpeech(text) {
+        // Effet Visuel "Glitch" pour le texte décodé
+        function glitchLog(text, className) {
+            const container = document.getElementById('log-container');
             const div = document.createElement('div');
-            div.className = 'speech-text';
-            div.innerHTML = `> ${text}`;
-            const zone = document.getElementById('speech-log');
-            zone.prepend(div);
-            if(zone.children.length > 20) zone.lastChild.remove();
-        }
-
-        // --- 3. CAPTEURS (VERSION COMPATIBILITÉ ANDROID) ---
-        function toggleSensors() {
-            const btn = document.getElementById('btn-sensors');
-
-            if (isSensorsRunning) {
-                // Arrêt
-                window.removeEventListener('deviceorientationabsolute', handleOrientation);
-                window.removeEventListener('devicemotion', handleMotion);
-                isSensorsRunning = false;
-                btn.classList.remove('active');
-                document.getElementById('emf-val').innerText = "--.--";
-                document.getElementById('acc-val').innerText = "--";
-                document.getElementById('emf-val').className = "val";
-                return;
-            }
-
-            // Démarrage
-            isSensorsRunning = true;
-            btn.classList.add('active');
-
-            // On utilise la boussole (orientation) car le magnétomètre brut est bloqué
-            window.addEventListener('deviceorientationabsolute', handleOrientation);
+            div.className = className;
             
-            // On utilise l'accéléromètre classique
-            window.addEventListener('devicemotion', handleMotion);
-        }
-
-        function handleOrientation(event) {
-            // Alpha = Direction du Nord (0 à 360 degrés)
-            const alpha = event.alpha;
+            const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&";
+            let iterations = 0;
+            const maxIterations = 10; // Durée du glitch
             
-            if (lastAlpha !== null && alpha !== null) {
-                let diff = Math.abs(alpha - lastAlpha);
+            const interval = setInterval(() => {
+                div.innerText = text.split("")
+                    .map((letter, index) => {
+                        if(index < iterations) return text[index];
+                        return chars[Math.floor(Math.random() * chars.length)];
+                    })
+                    .join("");
                 
-                // Gestion du cercle (passage de 359° à 0°)
-                if (diff > 180) diff = 360 - diff;
+                if(iterations >= text.length) clearInterval(interval);
+                iterations += 1 / 2;
+            }, 30);
 
-                // On calcule l'instabilité (Lissage)
-                instability = (instability * 0.9) + (diff * 0.1);
-            }
-            lastAlpha = alpha;
+            // Ajouter la date
+            const time = new Date().toLocaleTimeString().split(' ')[0];
+            div.innerHTML = `<span style="opacity:0.5">[${time}]</span> ${div.innerHTML}`;
+            
+            container.prepend(div);
+            if(container.children.length > 20) container.lastChild.remove();
+        }
 
-            // Affichage : Plus l'instabilité est haute, plus l'EMF est haut
-            // C'est une dérivée réelle de la perturbation magnétique
-            const emfDisplay = (instability * 2).toFixed(2);
-            const el = document.getElementById('emf-val');
-            el.innerText = emfDisplay;
+        function log(msg, type) {
+            const div = document.createElement('div');
+            div.className = type || "msg-system";
+            const time = new Date().toLocaleTimeString().split(' ')[0];
+            div.innerHTML = `<span style="opacity:0.5">[${time}]</span> ${msg}`;
+            document.getElementById('log-container').prepend(div);
+        }
 
-            // Alerte si instabilité forte (Objet magnétique proche ?)
-            if (instability > 10) { 
-                el.className = "val val-red"; 
+        // --- ALGORITHME "PROBABILITÉ ENTITÉ" ---
+        function updateEntityProbability() {
+            // Formule simple pour le "God Mode" :
+            // Plus l'audio est fort, plus l'EMF est haut, plus c'est probable
+            // On lisse la valeur pour éviter sauts
+            let rawProb = (audioLevel * 0.5) + (emfVal * 2) + (motionVal * 0.1);
+            
+            // Limiter à 100%
+            if (rawProb > 100) rawProb = 100;
+            if (rawProb < 0) rawProb = 0;
+
+            const displayVal = document.getElementById('prob-val');
+            const fill = document.getElementById('prob-fill');
+            
+            displayVal.innerText = rawProb.toFixed(1) + "%";
+            fill.style.width = rawProb + "%";
+
+            // Changement de couleur si danger
+            if (rawProb > 70) {
+                displayVal.style.color = "var(--danger)";
+                displayVal.style.textShadow = "0 0 10px var(--danger)";
+                fill.style.background = "var(--danger)";
             } else {
-                el.className = "val val-green";
+                displayVal.style.color = "var(--primary)";
+                displayVal.style.textShadow = "none";
+                fill.style.background = "linear-gradient(90deg, var(--primary), var(--secondary))";
             }
         }
 
-        function handleMotion(event) {
-            const acc = event.accelerationIncludingGravity;
-            if (!acc) return;
+        function showAlert(msg) { document.getElementById('alert-msg').innerText = msg; document.getElementById('alert-box').style.display = 'block'; }
+        setInterval(() => document.getElementById('clock').innerText = new Date().toLocaleTimeString(), 1000);
 
-            // Calcul des G totaux
-            const totalG = Math.abs(acc.x || 0) + Math.abs(acc.y || 0) + Math.abs(acc.z || 0);
-            document.getElementById('acc-val').innerText = (totalG / 10).toFixed(2) + " G";
-        }
-
-        function showAlert(msg) {
-            const el = document.getElementById('system-alert');
-            document.getElementById('alert-msg').innerText = msg;
-            el.style.display = 'block';
-        }
     </script>
 </body>
 </html>
