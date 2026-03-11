@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>REAL SENSOR PRO</title>
+    <meta name="theme-color" content="#000000">
+    <style>
+        body {
+            margin: 0; padding: 0;
+            background-color: #000;
+            color: #0f0; /* Vert Matrix */
+            font-family: 'Courier New', monospace;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Caméra */
+        #camera-feed {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            object-fit: cover; z-index: 0; opacity: 0.4; filter: grayscale(100%);
+        }
+
+        /* Interface */
+        #ui {
+            position: relative; z-index: 10; height: 100%;
+            display: flex; flex-direction: column; justify-content: space-between;
+            pointer-events: none; /* Laisse passer les clics si besoin */
+        }
+
+        header {
+            background: rgba(0,0,0,0.8); padding: 5px 10px;
+            display: flex; justify-content: space-between; border-bottom: 1px solid #0f0;
+            font-size: 0.8rem;
+        }
+
+        .sensor-panel {
+            pointer-events: auto;
+            background: rgba(0, 10, 0, 0.85);
+            margin: 10px;
+            border: 1px solid #0f0;
+            padding: 10px;
+        }
+
+        .data-row {
+            display: flex; justify-content: space-between; margin-bottom: 5px;
+            font-size: 0.9rem;
+        }
+
+        .val { font-weight: bold; }
+        .val-red { color: #f00; text-shadow: 0 0 5px #f00; }
+        .val-green { color: #0f0; text-shadow: 0 0 5px #0f0; }
+
+        canvas {
+            width: 100%; height: 100px; background: #001100;
+            border-top: 1px solid #0f0; border-bottom: 1px solid #0f0;
+        }
+
+        /* Zone IA / Reconnaissance */
+        #speech-zone {
+            flex: 1; margin: 10px;
+            border: 1px dashed #0f0; background: rgba(0,0,0,0.6);
+            padding: 10px; overflow-y: auto; font-size: 0.9rem;
+            pointer-events: auto;
+        }
+
+        .speech-text { border-bottom: 1px solid #003300; padding: 2px 0; }
+
+        /* Boutons de contrôle */
+        .controls {
+            padding: 10px; display: flex; gap: 10px; pointer-events: auto;
+            background: rgba(0,0,0,0.9);
+        }
+
+        button {
+            flex: 1; background: #002200; border: 1px solid #0f0; color: #0f0;
+            padding: 15px; font-family: inherit; font-weight: bold; cursor: pointer;
+        }
+        button.active { background: #0f0; color: #000; }
+        button:disabled { border-color: #555; color: #555; }
+
+        /* Alertes */
+        #system-alert {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: rgba(50,0,0,0.9); border: 2px solid #f00; color: #f00;
+            padding: 20px; text-align: center; display: none; z-index: 100; max-width: 80%;
+        }
+
+    </style>
+</head>
+<body>
+
+    <video id="camera-feed" autoplay playsinline muted></video>
+
+    <div id="system-alert">
+        <h3>ERREUR CAPTEUR</h3>
+        <p id="alert-msg">Accès refusé.</p>
+        <button onclick="this.parentElement.style.display='none'" style="margin-top:10px; width:100px;">OK</button>
+    </div>
+
+    <div id="ui">
+        <header>
+            <span>REAL SENSOR PRO v1.0</span>
+            <span id="https-status">CONNECTION: CHECKING...</span>
+        </header>
+
+        <div class="sensor-panel">
+            <div class="data-row">
+                <span>MAGNÉTOMÈTRE (µT):</span>
+                <span id="emf-val" class="val">--.--</span>
+            </div>
+            <div class="data-row">
+                <span>DÉCIBELS (dB):</span>
+                <span id="db-val" class="val">--.-</span>
+            </div>
+            <div class="data-row">
+                <span>ACCELÉROMÈTRE (G):</span>
+                <span id="acc-val" class="val">--</span>
+            </div>
+        </div>
+
+        <canvas id="viz-canvas"></canvas>
+
+        <div id="speech-zone">
+            <div style="color:#666; font-size:0.8rem; margin-bottom:5px;">TRANSCRIPTION EN DIRECT (REELLE)</div>
+            <div id="speech-log"></div>
+        </div>
+
+        <div class="controls">
+            <button id="btn-mic" onclick="toggleAudio()">AUDIO</button>
+            <button id="btn-speech" onclick="toggleSpeech()">IA VOCAL</button>
+            <button id="btn-sensors" onclick="toggleSensors()">CAPTEURS</button>
+        </div>
+    </div>
+
+    <script>
+        // --- VARIABLES GLOBALES ---
+        let audioCtx, micSource, analyser, gainNode;
+        let magnetometer, accelerometer;
+        let recognition;
+        let isAudioRunning = false;
+        let isSpeechRunning = false;
+        let isSensorsRunning = false;
+
+        // --- VÉRIFICATION HTTPS (CRUCIAL POUR LA RÉALITÉ) ---
+        if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.protocol !== 'file:') {
+            document.getElementById('https-status').innerText = "SECURITÉ: FAIBLE (HTTPS REQUIS)";
+            document.getElementById('https-status').style.color = "red";
+            alert("ATTENTION: Pour accéder aux vrais capteurs, ce fichier doit être ouvert en HTTPS (sur un site web), et non en fichier local.");
+        } else {
+            document.getElementById('https-status').innerText = "SECURITÉ: OK";
+            document.getElementById('https-status').style.color = "#0f0";
+        }
+
+        // --- 1. SYSTÈME AUDIO (RÉEL) ---
+        async function toggleAudio() {
+            const btn = document.getElementById('btn-mic');
+            
+            if (isAudioRunning) {
+                // Stop
+                if(audioCtx) audioCtx.close();
+                isAudioRunning = false;
+                btn.classList.remove('active');
+                document.getElementById('db-val').innerText = "--.-";
+            } else {
+                // Start
+                try {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    audioCtx = new AudioContext();
+                    
+                    const stream = await navigator.mediaDevices.getUserMedia({ 
+                        audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } 
+                    });
+                    
+                    micSource = audioCtx.createMediaStreamSource(stream);
+                    analyser = audioCtx.createAnalyser();
+                    analyser.fftSize = 256;
+                    
+                    // Connecter pour monitoring (si désiré, sinon on analyse juste)
+                    micSource.connect(analyser);
+                    
+                    isAudioRunning = true;
+                    btn.classList.add('active');
+                    drawViz();
+                } catch (e) {
+                    showAlert("Erreur Micro: " + e.message);
+                }
+            }
+        }
+
+        function drawViz() {
+            if(!isAudioRunning) return;
+            requestAnimationFrame(drawViz);
+
+            const cvs = document.getElementById('viz-canvas');
+            const ctx = cvs.getContext('2d');
+            cvs.width = cvs.clientWidth;
+            cvs.height = cvs.clientHeight;
+            const w = cvs.width, h = cvs.height;
+
+            const data = new Uint8Array(analyser.frequencyBinCount);
+            analyser.getByteFrequencyData(data);
+
+            ctx.clearRect(0,0,w,h);
+            
+            // Calcul dB approx
+            let sum = 0;
+            for(let i=0; i<data.length; i++) sum += data[i];
+            const avg = sum / data.length;
+            const db = avg > 0 ? 20 * Math.log10(avg/255) : -100;
+            
+            document.getElementById('db-val').innerText = db.toFixed(1) + " dB";
+
+            // Dessin
+            const barW = w / data.length;
+            for(let i=0; i<data.length; i++) {
+                const barH = (data[i] / 255) * h;
+                ctx.fillStyle = `rgb(0, ${255 - data[i]}, 0)`;
+                ctx.fillRect(i*barW, h-barH, barW-1, barH);
+            }
+        }
+
+        // --- 2. RECONNAISSANCE VOCALE (IA RÉELLE) ---
+        function toggleSpeech() {
+            const btn = document.getElementById('btn-speech');
+            
+            if (isSpeechRunning) {
+                if(recognition) recognition.stop();
+                isSpeechRunning = false;
+                btn.classList.remove('active');
+            } else {
+                if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                    showAlert("Navigateur incompatible avec l'IA vocale.");
+                    return;
+                }
+
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                recognition = new SpeechRecognition();
+                recognition.continuous = true;
+                recognition.interimResults = false;
+                recognition.lang = 'fr-FR';
+
+                recognition.onresult = (event) => {
+                    const transcript = event.results[event.results.length-1][0].transcript;
+                    logSpeech(transcript);
+                };
+
+                recognition.onerror = (e) => {
+                    console.error(e);
+                    if(e.error === 'not-allowed') showAlert("Permission Micro refusée pour l'IA.");
+                };
+
+                recognition.start();
+                isSpeechRunning = true;
+                btn.classList.add('active');
+                logSpeech("[ÉCOUTE ACTIVE...]");
+            }
+        }
+
+        function logSpeech(text) {
+            const div = document.createElement('div');
+            div.className = 'speech-text';
+            div.innerHTML = `> ${text}`;
+            const zone = document.getElementById('speech-log');
+            zone.prepend(div);
+            if(zone.children.length > 20) zone.lastChild.remove();
+        }
+
+        // --- 3. CAPTEURS PHYSIQUES (RÉELS) ---
+        function toggleSensors() {
+            const btn = document.getElementById('btn-sensors');
+            
+            if (isSensorsRunning) {
+                if(magnetometer) magnetometer.stop();
+                if(accelerometer) accelerometer.stop();
+                isSensorsRunning = false;
+                btn.classList.remove('active');
+                document.getElementById('emf-val').innerText = "--.--";
+                document.getElementById('acc-val').innerText = "--";
+            } else {
+                // Magnétomètre
+                try {
+                    magnetometer = new Magnetometer({ frequency: 10 });
+                    magnetometer.addEventListener('reading', () => {
+                        const total = Math.sqrt(magnetometer.x**2 + magnetometer.y**2 + magnetometer.z**2);
+                        const el = document.getElementById('emf-val');
+                        el.innerText = total.toFixed(2);
+                        
+                        // Alerte si > 60µT (anomalie)
+                        if(total > 60) el.className = "val val-red";
+                        else el.className = "val val-green";
+                    });
+                    magnetometer.addEventListener('error', event => {
+                        if (event.error.name === 'NotReadableError') {
+                            showAlert("Magnétomètre non disponible ou bloqué.");
+                        }
+                    });
+                    magnetometer.start();
+                } catch (error) {
+                    showAlert("Ce téléphone ne supporte pas l'API Magnétomètre standard.");
+                }
+
+                // Accéléromètre
+                try {
+                    accelerometer = new Accelerometer({ frequency: 10 });
+                    accelerometer.addEventListener('reading', () => {
+                        const totalG = Math.abs(accelerometer.x) + Math.abs(accelerometer.y) + Math.abs(accelerometer.z);
+                        document.getElementById('acc-val').innerText = totalG.toFixed(2) + " G";
+                    });
+                    accelerometer.start();
+                } catch (error) {
+                    console.log("Accéléromètre erreur");
+                }
+
+                isSensorsRunning = true;
+                btn.classList.add('active');
+            }
+        }
+
+        function showAlert(msg) {
+            const el = document.getElementById('system-alert');
+            document.getElementById('alert-msg').innerText = msg;
+            el.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
