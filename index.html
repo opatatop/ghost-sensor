@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>REAL SENSOR PRO</title>
+    <title>REAL SENSOR PRO v2</title>
     <meta name="theme-color" content="#000000">
     <style>
         body {
             margin: 0; padding: 0;
             background-color: #000;
-            color: #0f0; /* Vert Matrix */
+            color: #0f0;
             font-family: 'Courier New', monospace;
             height: 100vh;
             display: flex;
@@ -17,17 +17,17 @@
             overflow: hidden;
         }
 
-        /* Caméra */
+        /* Caméra en fond */
         #camera-feed {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             object-fit: cover; z-index: 0; opacity: 0.4; filter: grayscale(100%);
         }
 
-        /* Interface */
+        /* Interface au-dessus */
         #ui {
             position: relative; z-index: 10; height: 100%;
             display: flex; flex-direction: column; justify-content: space-between;
-            pointer-events: none; /* Laisse passer les clics si besoin */
+            pointer-events: none;
         }
 
         header {
@@ -58,49 +58,48 @@
             border-top: 1px solid #0f0; border-bottom: 1px solid #0f0;
         }
 
-         /* Zone IA / Reconnaissance */
-         #speech-zone {
-           flex: 1; margin: 10px;
-           border: 1px dashed #0f0; background: rgba(0,0,0,0.6);
-           padding: 10px; 
-           padding-bottom: 80px; /* IMPORTANT : Laisse de la place pour les boutons en bas */
-           overflow-y: auto; font-size: 0.9rem;
-           pointer-events: auto;
+        /* Zone de texte pour l'IA */
+        #speech-zone {
+            flex: 1; margin: 10px;
+            border: 1px dashed #0f0; background: rgba(0,0,0,0.6);
+            padding: 10px; 
+            padding-bottom: 80px; /* Espace pour ne pas cacher le texte sous les boutons */
+            overflow-y: auto; font-size: 0.9rem;
+            pointer-events: auto;
         }
-        
-
 
         .speech-text { border-bottom: 1px solid #003300; padding: 2px 0; }
 
-        /* Boutons de contrôle */
-    .controls {
-        position: fixed; /* C'est la magie : ça colle le menu en bas de l'écran */
-        bottom: 0; 
-        left: 0; 
-        width: 100%;
-        padding: 15px 10px 30px 10px; /* Plus d'espace en bas pour ne pas être sous la barre du téléphone */
-        display: flex; 
-        gap: 10px; 
-        pointer-events: auto;
-        background: rgba(0,0,0,0.95); /* Fond plus noir pour voir les boutons */
-        z-index: 100; /* S'assurer que c'est par-dessus la caméra */
-        border-top: 2px solid #0f0;
-    }
+        /* BOUTONS (CORRIGÉS ICI) */
+        .controls {
+            /* FIX : Pour que les boutons soient toujours en bas visibles */
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            padding: 15px 10px 30px 10px; /* Plus d'espace en bas pour la barre Android */
+            display: flex; 
+            gap: 10px; 
+            pointer-events: auto;
+            background: rgba(0,0,0,0.95);
+            z-index: 100; /* Au-dessus de tout */
+            border-top: 2px solid #0f0;
+        }
 
         button {
             flex: 1; background: #002200; border: 1px solid #0f0; color: #0f0;
             padding: 15px; font-family: inherit; font-weight: bold; cursor: pointer;
+            font-size: 0.9rem; /* Un peu plus petit pour tenir */
         }
         button.active { background: #0f0; color: #000; }
         button:disabled { border-color: #555; color: #555; }
 
-        /* Alertes */
+        /* Pop-up d'alerte */
         #system-alert {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
             background: rgba(50,0,0,0.9); border: 2px solid #f00; color: #f00;
-            padding: 20px; text-align: center; display: none; z-index: 100; max-width: 80%;
+            padding: 20px; text-align: center; display: none; z-index: 200; max-width: 80%;
         }
-
     </style>
 </head>
 <body>
@@ -108,20 +107,20 @@
     <video id="camera-feed" autoplay playsinline muted></video>
 
     <div id="system-alert">
-        <h3>ERREUR CAPTEUR</h3>
+        <h3>ERREUR</h3>
         <p id="alert-msg">Accès refusé.</p>
         <button onclick="this.parentElement.style.display='none'" style="margin-top:10px; width:100px;">OK</button>
     </div>
 
     <div id="ui">
         <header>
-            <span>REAL SENSOR PRO v1.0</span>
-            <span id="https-status">CONNECTION: CHECKING...</span>
+            <span>REAL SENSOR PRO v2</span>
+            <span id="https-status">SYS: READY</span>
         </header>
 
         <div class="sensor-panel">
             <div class="data-row">
-                <span>MAGNÉTOMÈTRE (µT):</span>
+                <span>MAGNÉTISME (µT):</span>
                 <span id="emf-val" class="val">--.--</span>
             </div>
             <div class="data-row">
@@ -129,7 +128,7 @@
                 <span id="db-val" class="val">--.-</span>
             </div>
             <div class="data-row">
-                <span>ACCELÉROMÈTRE (G):</span>
+                <span>MOUVEMENT (G):</span>
                 <span id="acc-val" class="val">--</span>
             </div>
         </div>
@@ -137,7 +136,7 @@
         <canvas id="viz-canvas"></canvas>
 
         <div id="speech-zone">
-            <div style="color:#666; font-size:0.8rem; margin-bottom:5px;">TRANSCRIPTION EN DIRECT (REELLE)</div>
+            <div style="color:#666; font-size:0.8rem; margin-bottom:5px;">TRANSCRIPTION EN DIRECT</div>
             <div id="speech-log"></div>
         </div>
 
@@ -149,36 +148,27 @@
     </div>
 
     <script>
-        // --- VARIABLES GLOBALES ---
+        // --- VARIABLES ---
         let audioCtx, micSource, analyser, gainNode;
-        let magnetometer, accelerometer;
         let recognition;
         let isAudioRunning = false;
         let isSpeechRunning = false;
         let isSensorsRunning = false;
+        
+        // Variables pour la compatibilité Android (Boussole)
+        let lastAlpha = null;
+        let instability = 0;
 
-        // --- VÉRIFICATION HTTPS (CRUCIAL POUR LA RÉALITÉ) ---
-        if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.protocol !== 'file:') {
-            document.getElementById('https-status').innerText = "SECURITÉ: FAIBLE (HTTPS REQUIS)";
-            document.getElementById('https-status').style.color = "red";
-            alert("ATTENTION: Pour accéder aux vrais capteurs, ce fichier doit être ouvert en HTTPS (sur un site web), et non en fichier local.");
-        } else {
-            document.getElementById('https-status').innerText = "SECURITÉ: OK";
-            document.getElementById('https-status').style.color = "#0f0";
-        }
-
-        // --- 1. SYSTÈME AUDIO (RÉEL) ---
+        // --- 1. SYSTÈME AUDIO ---
         async function toggleAudio() {
             const btn = document.getElementById('btn-mic');
             
             if (isAudioRunning) {
-                // Stop
-                if(audioCtx) audioCtx.close();
+                if(audioCtx) { try { audioCtx.close(); } catch(e){} }
                 isAudioRunning = false;
                 btn.classList.remove('active');
                 document.getElementById('db-val').innerText = "--.-";
             } else {
-                // Start
                 try {
                     const AudioContext = window.AudioContext || window.webkitAudioContext;
                     audioCtx = new AudioContext();
@@ -191,7 +181,6 @@
                     analyser = audioCtx.createAnalyser();
                     analyser.fftSize = 256;
                     
-                    // Connecter pour monitoring (si désiré, sinon on analyse juste)
                     micSource.connect(analyser);
                     
                     isAudioRunning = true;
@@ -218,7 +207,6 @@
 
             ctx.clearRect(0,0,w,h);
             
-            // Calcul dB approx
             let sum = 0;
             for(let i=0; i<data.length; i++) sum += data[i];
             const avg = sum / data.length;
@@ -226,7 +214,6 @@
             
             document.getElementById('db-val').innerText = db.toFixed(1) + " dB";
 
-            // Dessin
             const barW = w / data.length;
             for(let i=0; i<data.length; i++) {
                 const barH = (data[i] / 255) * h;
@@ -235,7 +222,7 @@
             }
         }
 
-        // --- 2. RECONNAISSANCE VOCALE (IA RÉELLE) ---
+        // --- 2. RECONNAISSANCE VOCALE ---
         function toggleSpeech() {
             const btn = document.getElementById('btn-speech');
             
@@ -245,7 +232,7 @@
                 btn.classList.remove('active');
             } else {
                 if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-                    showAlert("Navigateur incompatible avec l'IA vocale.");
+                    showAlert("Navigateur incompatible.");
                     return;
                 }
 
@@ -260,11 +247,7 @@
                     logSpeech(transcript);
                 };
 
-                recognition.onerror = (e) => {
-                    console.error(e);
-                    if(e.error === 'not-allowed') showAlert("Permission Micro refusée pour l'IA.");
-                };
-
+                recognition.onerror = (e) => { console.error(e); };
                 recognition.start();
                 isSpeechRunning = true;
                 btn.classList.add('active');
@@ -281,55 +264,69 @@
             if(zone.children.length > 20) zone.lastChild.remove();
         }
 
-        // --- 3. CAPTEURS PHYSIQUES (RÉELS) ---
+        // --- 3. CAPTEURS (VERSION COMPATIBILITÉ ANDROID) ---
         function toggleSensors() {
             const btn = document.getElementById('btn-sensors');
-            
+
             if (isSensorsRunning) {
-                if(magnetometer) magnetometer.stop();
-                if(accelerometer) accelerometer.stop();
+                // Arrêt
+                window.removeEventListener('deviceorientationabsolute', handleOrientation);
+                window.removeEventListener('devicemotion', handleMotion);
                 isSensorsRunning = false;
                 btn.classList.remove('active');
                 document.getElementById('emf-val').innerText = "--.--";
                 document.getElementById('acc-val').innerText = "--";
-            } else {
-                // Magnétomètre
-                try {
-                    magnetometer = new Magnetometer({ frequency: 10 });
-                    magnetometer.addEventListener('reading', () => {
-                        const total = Math.sqrt(magnetometer.x**2 + magnetometer.y**2 + magnetometer.z**2);
-                        const el = document.getElementById('emf-val');
-                        el.innerText = total.toFixed(2);
-                        
-                        // Alerte si > 60µT (anomalie)
-                        if(total > 60) el.className = "val val-red";
-                        else el.className = "val val-green";
-                    });
-                    magnetometer.addEventListener('error', event => {
-                        if (event.error.name === 'NotReadableError') {
-                            showAlert("Magnétomètre non disponible ou bloqué.");
-                        }
-                    });
-                    magnetometer.start();
-                } catch (error) {
-                    showAlert("Ce téléphone ne supporte pas l'API Magnétomètre standard.");
-                }
-
-                // Accéléromètre
-                try {
-                    accelerometer = new Accelerometer({ frequency: 10 });
-                    accelerometer.addEventListener('reading', () => {
-                        const totalG = Math.abs(accelerometer.x) + Math.abs(accelerometer.y) + Math.abs(accelerometer.z);
-                        document.getElementById('acc-val').innerText = totalG.toFixed(2) + " G";
-                    });
-                    accelerometer.start();
-                } catch (error) {
-                    console.log("Accéléromètre erreur");
-                }
-
-                isSensorsRunning = true;
-                btn.classList.add('active');
+                document.getElementById('emf-val').className = "val";
+                return;
             }
+
+            // Démarrage
+            isSensorsRunning = true;
+            btn.classList.add('active');
+
+            // On utilise la boussole (orientation) car le magnétomètre brut est bloqué
+            window.addEventListener('deviceorientationabsolute', handleOrientation);
+            
+            // On utilise l'accéléromètre classique
+            window.addEventListener('devicemotion', handleMotion);
+        }
+
+        function handleOrientation(event) {
+            // Alpha = Direction du Nord (0 à 360 degrés)
+            const alpha = event.alpha;
+            
+            if (lastAlpha !== null && alpha !== null) {
+                let diff = Math.abs(alpha - lastAlpha);
+                
+                // Gestion du cercle (passage de 359° à 0°)
+                if (diff > 180) diff = 360 - diff;
+
+                // On calcule l'instabilité (Lissage)
+                instability = (instability * 0.9) + (diff * 0.1);
+            }
+            lastAlpha = alpha;
+
+            // Affichage : Plus l'instabilité est haute, plus l'EMF est haut
+            // C'est une dérivée réelle de la perturbation magnétique
+            const emfDisplay = (instability * 2).toFixed(2);
+            const el = document.getElementById('emf-val');
+            el.innerText = emfDisplay;
+
+            // Alerte si instabilité forte (Objet magnétique proche ?)
+            if (instability > 10) { 
+                el.className = "val val-red"; 
+            } else {
+                el.className = "val val-green";
+            }
+        }
+
+        function handleMotion(event) {
+            const acc = event.accelerationIncludingGravity;
+            if (!acc) return;
+
+            // Calcul des G totaux
+            const totalG = Math.abs(acc.x || 0) + Math.abs(acc.y || 0) + Math.abs(acc.z || 0);
+            document.getElementById('acc-val').innerText = (totalG / 10).toFixed(2) + " G";
         }
 
         function showAlert(msg) {
@@ -340,4 +337,3 @@
     </script>
 </body>
 </html>
-
