@@ -107,6 +107,12 @@ button:hover {
   z-index: 100;
 }
 
+.error-message {
+  color: var(--error-color);
+  margin-top: 20px;
+  text-align: center;
+}
+
 @media (max-width: 768px) {
   body {
     grid-template-areas:
@@ -132,8 +138,9 @@ button:hover {
 <body>
 <div class="loading" id="loadingScreen">
   <h2>ETERNITY LAB</h2>
-  <div class="progress">Chargement des modules...</div>
+  <div class="progress">Initialisation...</div>
   <div class="progress-bar" id="progressBar"></div>
+  <div class="error-message" id="errorMessage"></div>
 </div>
 
 <div id="panel">
@@ -170,12 +177,12 @@ button:hover {
 <div id="visualization"></div>
 
 <script>
-/**
- * ETERNITY v33 OMEGA ULTIMATE LAB
- * Application d'analyse audio avec visualisation 3D et IA
- * @version 1.0
- * @license MIT
- */
+// Configuration des URLs des bibliothèques
+const LIBRARIES = {
+  three: 'https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js',
+  tfjs: 'https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.11.0/dist/tf.min.js',
+  yamnet: 'https://cdn.jsdelivr.net/npm/@tensorflow-models/yamnet@1.0.5/dist/yamnet.min.js'
+};
 
 // ======================= STATE MANAGEMENT =======================
 const state = {
@@ -213,7 +220,12 @@ const state = {
     buffers: []
   },
   logs: [],
-  initialized: false
+  initialized: false,
+  librariesLoaded: {
+    three: false,
+    tfjs: false,
+    yamnet: false
+  }
 };
 
 // ======================= DOM ELEMENTS =======================
@@ -225,6 +237,7 @@ const elements = {
   visualization: document.getElementById('visualization'),
   loadingScreen: document.getElementById('loadingScreen'),
   progressBar: document.getElementById('progressBar'),
+  errorMessage: document.getElementById('errorMessage'),
   fftButtons: {
     large: document.getElementById('fftLarge'),
     medium: document.getElementById('fftMedium'),
@@ -252,6 +265,7 @@ function log(msg, color = "--ai-color") {
   }
 
   state.logs.unshift(div.textContent);
+  console.log(msg); // Also log to console for debugging
 }
 
 /**
@@ -263,29 +277,16 @@ function updateLoadingProgress(progress) {
 }
 
 /**
- * Sauvegarde automatique de l'état
+ * Affiche un message d'erreur
+ * @param {string} msg - Message d'erreur
  */
-function autoSaveState() {
-  const saveState = {
-    logs: state.logs,
-    config: {
-      fftSize: state.audio.fftSize,
-      autoRec: state.recording.auto,
-      evpMode: state.ai.evpMode,
-      spectro3D: state.visualization.spectro3D,
-      radar: state.visualization.radar,
-      evpThreshold: state.ai.evpThreshold
-    }
-  };
-  localStorage.setItem('eternityState', JSON.stringify(saveState));
-  log("État sauvegardé automatiquement", "--ai-color");
+function showError(msg) {
+  elements.errorMessage.textContent = msg;
+  log(`ERREUR: ${msg}`, "--error-color");
 }
 
 // ======================= AUDIO MODULE =======================
 const AudioModule = {
-  /**
-   * Initialise le contexte audio
-   */
   init: async function() {
     try {
       state.audio.context = new (window.AudioContext || window.webkitAudioContext)();
@@ -306,30 +307,21 @@ const AudioModule = {
       elements.micStatus.textContent = "ACTIVE";
       log("Système audio initialisé");
 
-      // Charger l'état précédent si disponible
-      this.loadPreviousState();
-
       // Démarrer la boucle audio
       this.audioLoop();
 
-      // Sauvegarde automatique périodique
-      setInterval(autoSaveState, 30000);
+      return true;
     } catch (error) {
       log(`Erreur audio: ${error.message}`, "--error-color");
+      showError(`Audio error: ${error.message}`);
+      return false;
     }
   },
 
-  /**
-   * Gère les données audio disponibles
-   * @param {Event} event - Événement MediaRecorder
-   */
   handleDataAvailable: function(event) {
     state.audio.chunks.push(event.data);
   },
 
-  /**
-   * Gère l'arrêt de l'enregistrement
-   */
   handleRecordingStop: function() {
     const blob = new Blob(state.audio.chunks, { type: "audio/webm" });
     const url = URL.createObjectURL(blob);
@@ -341,9 +333,6 @@ const AudioModule = {
     state.audio.chunks = [];
   },
 
-  /**
-   * Boucle principale de traitement audio
-   */
   audioLoop: function() {
     if (!state.audio.analyser) return;
 
@@ -362,9 +351,6 @@ const AudioModule = {
     requestAnimationFrame(this.audioLoop.bind(this));
   },
 
-  /**
-   * Démarre un enregistrement
-   */
   startRecording: function() {
     if (state.audio.recorder.state === "inactive") {
       state.audio.chunks = [];
@@ -377,38 +363,11 @@ const AudioModule = {
         }
       }, 3000);
     }
-  },
-
-  /**
-   * Charge l'état précédent si disponible
-   */
-  loadPreviousState: function() {
-    const savedState = localStorage.getItem('eternityState');
-    if (savedState) {
-      try {
-        const parsed = JSON.parse(savedState);
-        if (parsed.config) {
-          state.audio.fftSize = parsed.config.fftSize || 2048;
-          state.recording.auto = parsed.config.autoRec || false;
-          state.ai.evpMode = parsed.config.evpMode || false;
-          state.visualization.spectro3D = parsed.config.spectro3D !== false;
-          state.visualization.radar = parsed.config.radar !== false;
-          state.ai.evpThreshold = parsed.config.evpThreshold || 0.5;
-          elements.evpThresholdValue.textContent = state.ai.evpThreshold.toFixed(2);
-          log("État précédent restauré");
-        }
-      } catch (e) {
-        log("Erreur de chargement de l'état précédent", "--error-color");
-      }
-    }
   }
 };
 
 // ======================= VISUALIZATION MODULE =======================
 const VisualizationModule = {
-  /**
-   * Initialise le système de visualisation
-   */
   init: function() {
     // Créer la scène 3D
     this.init3D();
@@ -421,10 +380,12 @@ const VisualizationModule = {
     this.renderLoop();
   },
 
-  /**
-   * Initialise Three.js
-   */
   init3D: function() {
+    if (!window.THREE) {
+      log("Three.js non disponible", "--error-color");
+      return;
+    }
+
     state.visualization.scene = new THREE.Scene();
     state.visualization.camera = new THREE.PerspectiveCamera(
       75,
@@ -442,9 +403,6 @@ const VisualizationModule = {
     elements.visualization.appendChild(state.visualization.renderer.domElement);
   },
 
-  /**
-   * Crée le canvas pour le waterfall
-   */
   createWaterfall: function() {
     const canvas = document.createElement('canvas');
     canvas.id = 'waterfallCanvas';
@@ -457,9 +415,6 @@ const VisualizationModule = {
     this.waterfallCtx = canvas.getContext('2d');
   },
 
-  /**
-   * Crée le canvas pour le radar
-   */
   createRadar: function() {
     const canvas = document.createElement('canvas');
     canvas.id = 'radarCanvas';
@@ -472,11 +427,8 @@ const VisualizationModule = {
     this.radarCtx = canvas.getContext('2d');
   },
 
-  /**
-   * Dessine le waterfall
-   */
   drawWaterfall: function() {
-    if (!state.visualization.waterfall || !state.audio.dataArray) return;
+    if (!state.visualization.waterfall || !this.waterfallCtx || !state.audio.dataArray) return;
 
     const w = this.waterfallCtx.canvas.width;
     const h = this.waterfallCtx.canvas.height;
@@ -493,11 +445,8 @@ const VisualizationModule = {
     }
   },
 
-  /**
-   * Dessine le radar
-   */
   drawRadar: function() {
-    if (!state.visualization.radar || !this.radarCtx) return;
+    if (!state.visualization.radar || !this.radarCtx || !state.audio.dataArray) return;
 
     this.radarCtx.clearRect(0, 0, this.radarCtx.canvas.width, this.radarCtx.canvas.height);
     this.radarCtx.strokeStyle = "var(--primary-color)";
@@ -515,11 +464,8 @@ const VisualizationModule = {
     this.radarCtx.fillRect(x, y, 4, 4);
   },
 
-  /**
-   * Dessine le spectrogramme 3D
-   */
   draw3DSpectro: function() {
-    if (!state.visualization.spectro3D || !state.audio.dataArray) return;
+    if (!state.visualization.spectro3D || !state.audio.dataArray || !state.visualization.scene) return;
 
     for (let i = 0; i < state.audio.dataArray.length; i += 2) {
       const v = state.audio.dataArray[i] / 255;
@@ -545,9 +491,6 @@ const VisualizationModule = {
     }
   },
 
-  /**
-   * Boucle principale de rendu
-   */
   renderLoop: function() {
     requestAnimationFrame(this.renderLoop.bind(this));
 
@@ -557,7 +500,7 @@ const VisualizationModule = {
       this.drawWaterfall();
     }
 
-    if (state.visualization.renderer) {
+    if (state.visualization.renderer && state.visualization.scene && state.visualization.camera) {
       state.visualization.renderer.render(
         state.visualization.scene,
         state.visualization.camera
@@ -565,9 +508,6 @@ const VisualizationModule = {
     }
   },
 
-  /**
-   * Redimensionne les éléments lors du redimensionnement de la fenêtre
-   */
   handleResize: function() {
     if (state.visualization.camera) {
       state.visualization.camera.aspect =
@@ -590,62 +530,72 @@ const VisualizationModule = {
 
 // ======================= AI MODULE =======================
 const AIModule = {
-  /**
-   * Charge le modèle YAMNet
-   */
   loadModel: async function() {
+    if (!window.tf || !window.yamnet) {
+      log("TensorFlow.js ou YAMNet non disponible", "--error-color");
+      showError("TensorFlow.js ou YAMNet non chargé");
+      return false;
+    }
+
     try {
       log("Chargement du modèle YAMNet...");
-      updateLoadingProgress(70);
-      state.ai.model = await yamnet.load();
-      state.ai.status = 'ready';
-      elements.aiStatus.textContent = "READY";
-      log("Modèle IA chargé avec succès", "--ai-color");
-      updateLoadingProgress(90);
-      this.analyzeLoop();
+      state.ai.status = 'loading';
+
+      // Utiliser une version plus récente de YAMNet si disponible
+      if (window.yamnet && window.yamnet.load) {
+        state.ai.model = await window.yamnet.load();
+        state.ai.status = 'ready';
+        elements.aiStatus.textContent = "READY";
+        log("Modèle IA chargé avec succès", "--ai-color");
+        this.analyzeLoop();
+        return true;
+      } else {
+        throw new Error("YAMNet non disponible");
+      }
     } catch (error) {
       log(`Erreur chargement IA: ${error.message}`, "--error-color");
+      showError(`IA error: ${error.message}`);
+      state.ai.status = 'error';
+      return false;
     }
   },
 
-  /**
-   * Analyse le flux audio
-   */
   analyzeAudio: async function() {
-    if (!state.ai.model || !state.audio.dataArray || !state.ai.status === 'ready') return;
+    if (!state.ai.model || !state.audio.dataArray || state.ai.status !== 'ready') return;
 
-    // Normaliser les données
-    const floatData = new Float32Array(state.audio.dataArray.length);
-    for (let i = 0; i < state.audio.dataArray.length; i++) {
-      floatData[i] = (state.audio.dataArray[i] - 128) / 128;
-    }
-
-    const inputTensor = tf.tensor(floatData).reshape([floatData.length, 1]);
-    const scores = await state.ai.model.predict(inputTensor);
-
-    const topScores = Array.from(scores.dataSync())
-      .map((s, i) => ({ score: s, index: i }))
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 3);
-
-    state.ai.predictions = topScores.map(p =>
-      `${state.ai.model.classes[p.index]} (${(p.score * 100).toFixed(1)}%)`
-    );
-
-    elements.aiStatus.textContent = state.ai.predictions[0];
-
-    // Détection EVP
-    if (state.ai.evpMode && topScores[0].score < state.ai.evpThreshold) {
-      log(`EVP détecté: ${state.ai.predictions[0]}`, "--evp-color");
-      if (state.recording.auto) {
-        AudioModule.startRecording();
+    try {
+      // Normaliser les données
+      const floatData = new Float32Array(state.audio.dataArray.length);
+      for (let i = 0; i < state.audio.dataArray.length; i++) {
+        floatData[i] = (state.audio.dataArray[i] - 128) / 128;
       }
+
+      const inputTensor = tf.tensor(floatData).reshape([floatData.length, 1]);
+      const scores = await state.ai.model.predict(inputTensor);
+
+      const topScores = Array.from(scores.dataSync())
+        .map((s, i) => ({ score: s, index: i }))
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 3);
+
+      state.ai.predictions = topScores.map(p =>
+        `${state.ai.model.classes[p.index]} (${(p.score * 100).toFixed(1)}%)`
+      );
+
+      elements.aiStatus.textContent = state.ai.predictions[0];
+
+      // Détection EVP
+      if (state.ai.evpMode && topScores[0].score < state.ai.evpThreshold) {
+        log(`EVP détecté: ${state.ai.predictions[0]}`, "--evp-color");
+        if (state.recording.auto) {
+          AudioModule.startRecording();
+        }
+      }
+    } catch (error) {
+      log(`Erreur d'analyse IA: ${error.message}`, "--error-color");
     }
   },
 
-  /**
-   * Boucle d'analyse périodique
-   */
   analyzeLoop: function() {
     if (state.ai.status === 'ready') {
       this.analyzeAudio();
@@ -656,9 +606,6 @@ const AIModule = {
 
 // ======================= RECORDING MODULE =======================
 const RecordingModule = {
-  /**
-   * Démarre l'enregistrement WAV
-   */
   startWAVRecording: function() {
     if (state.recording.wav) return;
 
@@ -670,9 +617,6 @@ const RecordingModule = {
     this.captureWAV();
   },
 
-  /**
-   * Arrête l'enregistrement WAV
-   */
   stopWAVRecording: function() {
     if (!state.recording.wav) return;
 
@@ -695,9 +639,6 @@ const RecordingModule = {
     log("Fichier WAV sauvegardé", "--voice-color");
   },
 
-  /**
-   * Capture les données audio pour l'enregistrement WAV
-   */
   captureWAV: function() {
     if (!state.recording.wav || !state.audio.dataArray) return;
 
@@ -712,9 +653,6 @@ const RecordingModule = {
     }
   },
 
-  /**
-   * Encode les données audio en WAV
-   */
   encodeWAV: function(samples, sampleRate) {
     const buffer = new ArrayBuffer(44 + samples.length * 2);
     const view = new DataView(buffer);
@@ -751,9 +689,6 @@ const RecordingModule = {
     return new Blob([view], { type: "audio/wav" });
   },
 
-  /**
-   * Exporte le journal
-   */
   exportLog: function() {
     const blob = new Blob(state.logs, { type: "text/plain" });
     const url = URL.createObjectURL(blob);
@@ -767,9 +702,6 @@ const RecordingModule = {
 
 // ======================= UI MODULE =======================
 const UIModule = {
-  /**
-   * Initialise les gestionnaires d'événements
-   */
   init: function() {
     // Boutons FFT
     elements.fftButtons.large.onclick = () => this.setFFTSize(4096);
@@ -791,10 +723,6 @@ const UIModule = {
     window.addEventListener('resize', VisualizationModule.handleResize);
   },
 
-  /**
-   * Définit la taille FFT
-   * @param {number} size - Taille FFT (1024, 2048, 4096)
-   */
   setFFTSize: function(size) {
     state.audio.fftSize = size;
     if (state.audio.analyser) {
@@ -804,9 +732,6 @@ const UIModule = {
     log(`Taille FFT définie à ${size}`);
   },
 
-  /**
-   * Active/désactive l'enregistrement automatique
-   */
   toggleAutoRec: function() {
     state.recording.auto = !state.recording.auto;
     document.getElementById('autoRec').style.backgroundColor =
@@ -814,9 +739,6 @@ const UIModule = {
     log(`Enregistrement automatique ${state.recording.auto ? "ACTIF" : "INACTIF"}`);
   },
 
-  /**
-   * Active/désactive le mode EVP
-   */
   toggleEVPMode: function() {
     state.ai.evpMode = !state.ai.evpMode;
     document.getElementById('evpMode').style.backgroundColor =
@@ -824,9 +746,6 @@ const UIModule = {
     log(`Mode EVP ${state.ai.evpMode ? "ACTIF" : "INACTIF"}`);
   },
 
-  /**
-   * Active/désactive la visualisation 3D
-   */
   toggle3D: function() {
     state.visualization.spectro3D = !state.visualization.spectro3D;
     document.getElementById('toggle3D').style.backgroundColor =
@@ -834,9 +753,6 @@ const UIModule = {
     log(`Visualisation 3D ${state.visualization.spectro3D ? "ACTIVE" : "INACTIVE"}`);
   },
 
-  /**
-   * Active/désactive le radar
-   */
   toggleRadar: function() {
     state.visualization.radar = !state.visualization.radar;
     document.getElementById('toggleRadar').style.backgroundColor =
@@ -844,19 +760,20 @@ const UIModule = {
     log(`Radar ${state.visualization.radar ? "ACTIF" : "INACTIF"}`);
   },
 
-  /**
-   * Active/désactive l'analyse IA
-   */
   toggleAI: function() {
-    state.ai.status = state.ai.status === 'ready' ? 'off' : 'ready';
-    document.getElementById('toggleAI').style.backgroundColor =
-      state.ai.status === 'ready' ? "var(--ai-color)" : "var(--button-bg)";
-    log(`Analyse IA ${state.ai.status === 'ready' ? "ACTIVE" : "INACTIVE"}`);
+    if (state.ai.status === 'ready') {
+      state.ai.status = 'off';
+      document.getElementById('toggleAI').style.backgroundColor = "var(--button-bg)";
+      log("Analyse IA INACTIVE");
+    } else if (state.ai.status === 'error') {
+      log("Analyse IA indisponible", "--error-color");
+    } else {
+      state.ai.status = 'ready';
+      document.getElementById('toggleAI').style.backgroundColor = "var(--ai-color)";
+      log("Analyse IA ACTIVE");
+    }
   },
 
-  /**
-   * Active/désactive l'enregistrement WAV
-   */
   toggleWavRecord: function() {
     if (state.recording.wav) {
       RecordingModule.stopWAVRecording();
@@ -867,10 +784,6 @@ const UIModule = {
     }
   },
 
-  /**
-   * Ajuste le seuil EVP
-   * @param {number} amount - Montant de l'ajustement
-   */
   adjustEVPThreshold: function(amount) {
     state.ai.evpThreshold = Math.min(1, Math.max(0, state.ai.evpThreshold + amount));
     elements.evpThresholdValue.textContent = state.ai.evpThreshold.toFixed(2);
@@ -880,45 +793,21 @@ const UIModule = {
 
 // ======================= MAIN APPLICATION =======================
 /**
- * Charge les dépendances dans l'ordre requis
- */
-function loadDependencies() {
-  updateLoadingProgress(10);
-  log("Initialisation de l'application...");
-
-  // Charger Three.js
-  updateLoadingProgress(20);
-  loadScript('https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js', () => {
-    updateLoadingProgress(40);
-
-    // Charger TensorFlow.js
-    loadScript('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.9.0/dist/tf.min.js', () => {
-      updateLoadingProgress(60);
-
-      // Charger YAMNet
-      loadScript('https://cdn.jsdelivr.net/npm/@tensorflow-models/yamnet@0.1.0/dist/yamnet.min.js', () => {
-        updateLoadingProgress(80);
-
-        // Tout est chargé, démarrer l'application
-        initApplication();
-      });
-    });
-  });
-}
-
-/**
- * Charge un script externe
+ * Charge un script externe avec gestion d'erreur
  * @param {string} url - URL du script
- * @param {function} callback - Fonction de rappel
+ * @returns {Promise<boolean>} - True si chargé avec succès
  */
-function loadScript(url, callback) {
-  const script = document.createElement('script');
-  script.src = url;
-  script.onload = callback;
-  script.onerror = () => {
-    log(`Erreur de chargement: ${url}`, "--error-color");
-  };
-  document.head.appendChild(script);
+function loadScript(url) {
+  return new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = url;
+    script.onload = () => resolve(true);
+    script.onerror = () => {
+      log(`Erreur de chargement: ${url}`, "--error-color");
+      resolve(false);
+    };
+    document.head.appendChild(script);
+  });
 }
 
 /**
@@ -926,30 +815,57 @@ function loadScript(url, callback) {
  */
 async function initApplication() {
   try {
+    // Charger les bibliothèques dans l'ordre
+    updateLoadingProgress(10);
+    log("Chargement des bibliothèques...");
+
+    // Charger Three.js
+    const threeLoaded = await loadScript(LIBRARIES.three);
+    state.librariesLoaded.three = threeLoaded;
+    updateLoadingProgress(30);
+    if (!threeLoaded) showError("Three.js non chargé");
+
+    // Charger TensorFlow.js
+    const tfjsLoaded = await loadScript(LIBRARIES.tfjs);
+    state.librariesLoaded.tfjs = tfjsLoaded;
+    updateLoadingProgress(50);
+    if (!tfjsLoaded) showError("TensorFlow.js non chargé");
+
+    // Charger YAMNet
+    const yamnetLoaded = await loadScript(LIBRARIES.yamnet);
+    state.librariesLoaded.yamnet = yamnetLoaded;
+    updateLoadingProgress(70);
+    if (!yamnetLoaded) showError("YAMNet non chargé");
+
     // Initialiser les modules
-    await AudioModule.init();
+    const audioInitialized = await AudioModule.init();
     VisualizationModule.init();
-    await AIModule.loadModel();
+
+    // Initialiser l'IA si disponible
+    if (yamnetLoaded && tfjsLoaded) {
+      await AIModule.loadModel();
+    } else {
+      log("Mode IA désactivé - bibliothèques manquantes", "--error-color");
+      state.ai.status = 'error';
+    }
+
     UIModule.init();
 
     // Cacher l'écran de chargement
     elements.loadingScreen.style.display = 'none';
     updateLoadingProgress(100);
 
-    log("Application ETERNITY v33 OMEGA prête", "--primary-color");
+    log("Application prête", "--primary-color");
     state.initialized = true;
 
-    // Vérifier les fonctionnalités Web Audio
-    if (!state.audio.context) {
-      log("Web Audio API non supporté", "--error-color");
-    }
   } catch (error) {
     log(`Erreur d'initialisation: ${error.message}`, "--error-color");
+    showError(`Initialization error: ${error.message}`);
   }
 }
 
 // Démarrer l'application
-loadDependencies();
+initApplication();
 </script>
 </body>
 </html>
