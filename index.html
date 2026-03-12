@@ -3,17 +3,18 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>ETERNITY MOBILE LAB BYE KOMAR</title>
+<title>ETERNITY MOBILE LAB PRO</title>
 <style>
 :root {
   --primary: #00ffd0;
   --bg: #000814;
-  --panel: rgba(0, 0, 0, 0.9);
+  --panel: rgba(0, 10, 20, 0.95);
   --button: #001f30;
   --voice: #ffaa00;
   --evp: #aa00ff;
   --error: #ff0000;
   --success: #55ff55;
+  --glass: rgba(0, 255, 208, 0.1);
 }
 
 body {
@@ -29,22 +30,55 @@ body {
   touch-action: manipulation;
 }
 
+/* HEADER */
 #header {
-  padding: 15px;
+  padding: 10px;
   text-align: center;
   background: var(--panel);
   border-bottom: 2px solid var(--primary);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
+#header h3 { margin: 0; font-size: 1.2rem; }
+
+/* CONTROLS AREA */
 #controls {
-  padding: 15px;
+  padding: 10px;
   background: var(--panel);
   border-bottom: 1px solid var(--primary);
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 10px;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  max-height: 40vh;
+  overflow-y: auto;
 }
 
+/* SETTINGS PANEL (Collapsible) */
+#settingsPanel {
+  grid-column: span 2;
+  background: rgba(0,0,0,0.5);
+  border: 1px solid var(--primary);
+  padding: 10px;
+  display: none; /* Caché par défaut */
+}
+#settingsPanel.open { display: block; }
+
+.setting-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 0.8rem;
+}
+
+input[type="range"] {
+  width: 50%;
+  accent-color: var(--primary);
+}
+
+/* VISUALIZATION */
 #visualization {
   flex: 1;
   position: relative;
@@ -52,284 +86,347 @@ body {
   background: #000;
 }
 
-#logZone {
-  height: 150px;
-  overflow-y: auto;
-  padding: 10px;
-  background: rgba(0, 0, 0, 0.6);
-  border-top: 1px solid var(--primary);
-  font-size: 0.9em;
+/* Video Background for Camera Mode */
+#cameraFeed {
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  object-fit: cover;
+  opacity: 0.3;
+  display: none;
+  z-index: 0;
 }
 
+/* LOGS */
+#logZone {
+  height: 120px;
+  overflow-y: auto;
+  padding: 8px;
+  background: rgba(0, 0, 0, 0.8);
+  border-top: 1px solid var(--primary);
+  font-size: 0.75rem;
+  z-index: 10;
+}
+
+/* BUTTONS */
 button {
   background: var(--button);
   border: 1px solid var(--primary);
   color: var(--primary);
-  padding: 12px;
-  margin: 5px 0;
-  border-radius: 5px;
+  padding: 10px;
+  margin: 0;
+  border-radius: 4px;
   font-weight: bold;
-  touch-action: manipulation;
-  width: 100%;
+  font-size: 0.8rem;
   cursor: pointer;
+  text-transform: uppercase;
 }
 
-button:active {
-  background: rgba(0, 31, 48, 0.8);
-}
+button:active { background: var(--primary); color: #000; }
+button:disabled { background: #222; color: #555; border-color: #444; }
+button.active-mode { background: var(--primary); color: #000; box-shadow: 0 0 10px var(--primary); }
 
-button:disabled {
-  background: #333;
-  color: #666;
-  cursor: not-allowed;
-}
-
-#voiceBar {
-  height: 12px;
-  width: 0%;
-  background: var(--voice);
-  margin: 5px 0;
-  transition: width 0.1s;
-}
-
-.status {
-  display: flex;
-  justify-content: space-between;
+/* STATUS BARS */
+.status-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px;
   margin-bottom: 10px;
-  font-size: 0.9em;
+  font-size: 0.8rem;
 }
-
-.error {
-  color: var(--error);
-}
-
-.success {
-  color: var(--success);
-}
-
-.loading {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: var(--bg);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-direction: column;
-  z-index: 100;
-}
-
-#waterfallCanvas {
-  position: absolute;
-  bottom: 0;
-  left: 0;
+.bar-container {
+  background: #222;
+  height: 10px;
   width: 100%;
-  height: 100px;
+  margin-top: 2px;
+  border: 1px solid #444;
+}
+.bar-fill { height: 100%; width: 0%; transition: width 0.1s; }
+#voiceBar { background: var(--voice); }
+#thresholdBar { background: var(--evp); }
+
+/* LOAD SCREEN */
+.loading {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: var(--bg);
+  display: flex; justify-content: center; align-items: center; flex-direction: column;
+  z-index: 1000;
 }
 
-#radarCanvas {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  width: 150px;
-  height: 150px;
-}
-
-@media (max-width: 768px) {
-  button {
-    padding: 10px;
-  }
-}
+/* Canvas elements */
+#waterfallCanvas { position: absolute; bottom: 0; left: 0; width: 100%; height: 80px; z-index: 1; }
+#radarCanvas { position: absolute; top: 10px; right: 10px; width: 100px; height: 100px; z-index: 2; opacity: 0.8; }
 </style>
 </head>
 <body>
+
 <div class="loading" id="loadingScreen">
-  <h2>ETERNITY LAB</h2>
-  <div class="progress">Prêt...</div>
-  <div id="initLog"></div>
+  <h2>ETERNITY LAB PRO</h2>
+  <div class="progress">Chargement des systèmes...</div>
 </div>
 
 <div id="header">
-  <h3>ETERNITY MOBILE LAB</h3>
+  <h3>ETERNITY LAB</h3>
+  <div style="font-size:0.8rem">
+    <span>MIC: <span id="micStatus" style="color:var(--error)">OFF</span></span> | 
+    <span>IA: <span id="aiStatus">OFF</span></span>
+  </div>
 </div>
 
 <div id="controls">
-  <div class="status">
-    <span>MIC: <span id="micStatus">OFF</span></span>
-    <span>IA: <span id="aiStatus">OFF</span></span>
-  </div>
+  <!-- BOUTON START / STOP -->
+  <button id="startBtn" style="grid-column: span 2; font-size: 1.2rem; background: var(--success); color: #000; border: none;">START SYSTEM</button>
 
-  <div>
-    <div>VOICE LEVEL:</div>
-    <div id="voiceBar"></div>
-  </div>
-
-  <button id="startBtn">START</button>
+  <!-- MODES -->
   <button id="fftBtn" disabled>FFT 1024</button>
-  <button id="recBtn" disabled>AUTO REC</button>
   <button id="evpBtn" disabled>EVP MODE</button>
   <button id="radarBtn" disabled>RADAR</button>
-  <button id="wavBtn" disabled>WAV REC</button>
+  <button id="recBtn" disabled>AUTO REC</button>
+  <button id="camBtn" disabled>CAMERA</button>
+  <button id="flashBtn" disabled>LAMPE</button>
+  <button id="settingsBtn" style="grid-column: span 2; background: #333;">⚙️ PARAMÈTRES</button>
+  <button id="wavBtn" disabled>SAVE WAV</button>
+
+  <!-- PANNEAU PARAMÈTRES CACHÉ -->
+  <div id="settingsPanel">
+    <div class="setting-row">
+      <span>GAIN (Volume Mic)</span>
+      <input type="range" id="gainSlider" min="0" max="5" step="0.1" value="1">
+    </div>
+    <div class="setting-row">
+      <span>SEUIL EVP (Trigger)</span>
+      <input type="range" id="thresholdSlider" min="0" max="100" step="1" value="30">
+    </div>
+    <div class="setting-row">
+      <span>VITESSE RADAR</span>
+      <input type="range" id="radarSpeedSlider" min="1" max="10" step="1" value="5">
+    </div>
+  </div>
 </div>
 
-<div id="visualization"></div>
+<div id="visualization">
+  <video id="cameraFeed" autoplay playsinline muted></video>
+  <canvas id="radarCanvas"></canvas>
+  <canvas id="waterfallCanvas"></canvas>
+</div>
+
+<div class="status-grid">
+  <div>
+    <div>VOICE INPUT</div>
+    <div class="bar-container"><div id="voiceBar" class="bar-fill"></div></div>
+  </div>
+  <div>
+    <div>TRIGGER LEVEL</div>
+    <div class="bar-container"><div id="thresholdBar" class="bar-fill" style="width: 30%"></div></div>
+  </div>
+</div>
+
 <div id="logZone"></div>
 
-<!-- Bibliothèques -->
+<!-- BIBLIOTHEQUES -->
 <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.11.0/dist/tf.min.js"></script>
 
 <script>
-// Configuration
+// --- CONFIGURATION & STATE ---
 const config = {
   fftSize: 1024,
   autoRec: false,
   evpMode: false,
   radar: false,
-  spectro3D: false,
-  aiEnabled: false
+  camera: false,
+  gain: 1.0,
+  threshold: 30,
+  radarSpeed: 0.05
 };
 
-// État
 const state = {
   audioContext: null,
   analyser: null,
+  gainNode: null,
   dataArray: null,
   stream: null,
+  videoStream: null,
   recorder: null,
   isRecording: false,
-  cubes: [],
-  scene: null,
-  camera: null,
-  renderer: null,
-  model: null,
   initialized: false,
-  librariesLoaded: { three: false, tfjs: false }
+  librariesLoaded: { three: false, tfjs: false },
+  radarAngle: 0
 };
 
-// DOM Elements
 const elements = {
+  loadingScreen: document.getElementById('loadingScreen'),
   micStatus: document.getElementById('micStatus'),
   aiStatus: document.getElementById('aiStatus'),
   voiceBar: document.getElementById('voiceBar'),
+  thresholdBar: document.getElementById('thresholdBar'),
   logZone: document.getElementById('logZone'),
+  visualization: document.getElementById('visualization'),
+  cameraFeed: document.getElementById('cameraFeed'),
+  // Buttons
   startBtn: document.getElementById('startBtn'),
   fftBtn: document.getElementById('fftBtn'),
   recBtn: document.getElementById('recBtn'),
   evpBtn: document.getElementById('evpBtn'),
   radarBtn: document.getElementById('radarBtn'),
+  camBtn: document.getElementById('camBtn'),
+  flashBtn: document.getElementById('flashBtn'),
   wavBtn: document.getElementById('wavBtn'),
-  loadingScreen: document.getElementById('loadingScreen'),
-  visualization: document.getElementById('visualization')
+  settingsBtn: document.getElementById('settingsBtn'),
+  settingsPanel: document.getElementById('settingsPanel'),
+  // Sliders
+  gainSlider: document.getElementById('gainSlider'),
+  thresholdSlider: document.getElementById('thresholdSlider'),
+  radarSpeedSlider: document.getElementById('radarSpeedSlider')
 };
 
-// Logs
+// --- LOGS ---
 function log(msg, type = 'info') {
   const div = document.createElement("div");
-  div.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+  div.textContent = `> ${msg}`;
   if (type === 'error') div.style.color = "var(--error)";
   if (type === 'success') div.style.color = "var(--success)";
+  if (type === 'warn') div.style.color = "var(--voice)";
   elements.logZone.appendChild(div);
   elements.logZone.scrollTop = elements.logZone.scrollHeight;
-  console.log(msg);
 }
 
-// --- FONCTIONS PRINCIPALES ---
-
-// 1. Bascule START / STOP
-async function toggleApp() {
-  if (state.initialized) {
-    // Arrêt
-    stopApplication();
-  } else {
-    // Démarrage
-    await startApplication();
-  }
-}
-
-// 2. Démarrage
+// --- AUDIO SYSTEM ---
 async function startApplication() {
   elements.loadingScreen.style.display = 'flex';
-  document.querySelector('#loadingScreen .progress').textContent = "Initialisation...";
-
   try {
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      throw new Error("Microphone non supporté");
-    }
-
-    // Audio
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    // 1. AUDIO
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
     state.stream = stream;
     state.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    
     const source = state.audioContext.createMediaStreamSource(stream);
     
+    // GAIN NODE (Volume Control)
+    state.gainNode = state.audioContext.createGain();
+    state.gainNode.gain.value = config.gain;
+    
+    // ANALYSER
     state.analyser = state.audioContext.createAnalyser();
     state.analyser.fftSize = config.fftSize;
     state.dataArray = new Uint8Array(state.analyser.frequencyBinCount);
-    source.connect(state.analyser);
+    
+    // Connect: Source -> Gain -> Analyser
+    source.connect(state.gainNode);
+    state.gainNode.connect(state.analyser);
+    // Note: On ne connecte PAS à destination pour éviter le feedback (larsen)
 
-    // Recorder
+    // RECORDER
     state.recorder = new MediaRecorder(stream);
     state.recorder.ondataavailable = (e) => {
-        const blob = new Blob([e.data], { type: "audio/webm" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `evp_${Date.now()}.webm`;
-        a.click();
+        if (e.data.size > 0) {
+            const blob = new Blob([e.data], { type: "audio/webm" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `EVP_Capture_${Date.now()}.webm`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            log("Fichier EVP sauvé", "success");
+        }
     };
 
-    // Viz
-    initVisualization();
-
-    // Boutons secondaires
-    enableControls(true);
-
-    state.initialized = true;
+    // UI UPDATE
     elements.micStatus.textContent = "ON";
-    elements.startBtn.textContent = "STOP";
+    elements.micStatus.style.color = "var(--success)";
+    elements.startBtn.textContent = "STOP SYSTEM";
+    elements.startBtn.style.background = "var(--error)";
     
-    updateVisual();
-    log("Système actif", "success");
+    enableControls(true);
+    initVisuals();
+    
+    state.initialized = true;
+    updateLoop();
+    log("Système actif. Micro OK.", "success");
 
   } catch (error) {
-    log(`Erreur: ${error.message}`, "error");
-    console.error(error);
+    log(`Erreur Start: ${error.message}`, "error");
   } finally {
     elements.loadingScreen.style.display = 'none';
   }
 }
 
-// 3. Arrêt
 function stopApplication() {
   if (state.stream) state.stream.getTracks().forEach(t => t.stop());
+  if (state.videoStream) stopCamera();
   if (state.audioContext) state.audioContext.close();
   
-  // Nettoyage viz
-  elements.visualization.innerHTML = ''; 
-  state.cubes = [];
-  state.scene = null;
-  state.renderer = null;
-
+  elements.visualization.innerHTML = ''; // Clear canvases
+  elements.visualization.appendChild(elements.cameraFeed); // Put video back
+  
   state.initialized = false;
   enableControls(false);
+  
   elements.micStatus.textContent = "OFF";
-  elements.startBtn.textContent = "START";
-  log("Système arrêté");
+  elements.micStatus.style.color = "var(--error)";
+  elements.startBtn.textContent = "START SYSTEM";
+  elements.startBtn.style.background = "var(--success)";
+  log("Système arrêté.");
 }
 
-// --- VISUALISATION ---
+// --- CAMERA & TOOLS ---
+async function toggleCamera() {
+  if (!state.camera) {
+    try {
+      log("Activation caméra...");
+      const vStream = await navigator.mediaDevices.getUserMedia({ 
+          video: { facingMode: 'environment' }, 
+          audio: false 
+      });
+      state.videoStream = vStream;
+      elements.cameraFeed.srcObject = vStream;
+      elements.cameraFeed.style.display = 'block';
+      state.camera = true;
+      elements.camBtn.classList.add('active-mode');
+    } catch(e) { log("Caméra refusée/erreur", "error"); }
+  } else {
+    stopCamera();
+  }
+}
 
-function initVisualization() {
+function stopCamera() {
+  if (state.videoStream) {
+    state.videoStream.getTracks().forEach(t => t.stop());
+    state.videoStream = null;
+  }
+  elements.cameraFeed.style.display = 'none';
+  state.camera = false;
+  elements.camBtn.classList.remove('active-mode');
+}
+
+async function toggleFlashlight() {
+  if (!state.videoStream) {
+    log("Activez la caméra d'abord", "warn");
+    return;
+  }
+  try {
+    const track = state.videoStream.getVideoTracks()[0];
+    const capabilities = track.getCapabilities();
+    if (!capabilities.torch) {
+      log("Lampe non supportée par cet appareil", "error");
+      return;
+    }
+    await track.applyConstraints({
+      advanced: [{ torch: !elements.flashBtn.classList.contains('active-mode') }]
+    });
+    elements.flashBtn.classList.toggle('active-mode');
+  } catch(e) { log("Erreur lampe", "error"); }
+}
+
+// --- VISUALIZATION ENGINE ---
+function initVisuals() {
   // Waterfall
   const canvas = document.createElement('canvas');
   canvas.id = 'waterfallCanvas';
   canvas.width = elements.visualization.clientWidth;
-  canvas.height = 100;
+  canvas.height = 80;
   elements.visualization.appendChild(canvas);
-  state.waterfallCtx = canvas.getContext('2d');
+  state.wfCtx = canvas.getContext('2d');
 
   // Radar
   const rCanvas = document.createElement('canvas');
@@ -337,164 +434,194 @@ function initVisualization() {
   rCanvas.width = 150; rCanvas.height = 150;
   elements.visualization.appendChild(rCanvas);
   state.radarCtx = rCanvas.getContext('2d');
-
-  // 3D
-  if (state.librariesLoaded.three) {
-    initThreeJS();
-  }
 }
 
-function initThreeJS() {
-  try {
-    state.scene = new THREE.Scene();
-    state.camera = new THREE.PerspectiveCamera(75, elements.visualization.clientWidth / elements.visualization.clientHeight, 0.1, 1000);
-    state.camera.position.z = 500;
-    state.renderer = new THREE.WebGLRenderer({ alpha: true });
-    state.renderer.setSize(elements.visualization.clientWidth, elements.visualization.clientHeight);
-    elements.visualization.insertBefore(state.renderer.domElement, elements.visualization.firstChild);
-  } catch(e) { console.error(e); }
-}
-
-function updateVisual() {
+function updateLoop() {
   if (!state.initialized) return;
-  requestAnimationFrame(updateVisual);
+  requestAnimationFrame(updateLoop);
 
   state.analyser.getByteFrequencyData(state.dataArray);
+
+  // Calcul Volume
+  const sum = state.dataArray.reduce((a,b)=>a+b,0);
+  const avg = sum / state.dataArray.length;
   
-  // Volume bar
-  const avg = state.dataArray.reduce((a,b)=>a+b,0) / state.dataArray.length;
+  // UI Bars
   elements.voiceBar.style.width = Math.min(100, avg) + '%';
+  elements.thresholdBar.style.width = config.threshold + '%';
 
-  // Auto Rec
-  if (config.autoRec && avg > 30 && !state.isRecording) {
-    state.recorder.start();
-    state.isRecording = true;
-    log("Enregistrement automatique...");
-    setTimeout(() => { if(state.isRecording) { state.recorder.stop(); state.isRecording = false; }}, 3000);
+  // AUTO REC Logic
+  if (config.autoRec && avg > config.threshold && !state.isRecording) {
+    startRecording();
   }
 
-  // Draw Waterfall
-  if (state.waterfallCtx) {
-    const w = state.waterfallCtx.canvas.width;
-    const h = state.waterfallCtx.canvas.height;
-    const img = state.waterfallCtx.getImageData(0, 0, w, h-1);
-    state.waterfallCtx.putImageData(img, 0, 1);
-    for(let i=0; i<state.dataArray.length; i++) {
-        state.waterfallCtx.fillStyle = `hsl(${200 - state.dataArray[i]}, 100%, 50%)`;
-        state.waterfallCtx.fillRect(i * (w/state.dataArray.length), 0, 2, 1);
-    }
-  }
+  // Visuals
+  drawWaterfall();
+  if (config.radar) drawRadar(avg);
+}
 
-  // Draw Radar
-  if (config.radar && state.radarCtx) {
-    state.radarCtx.clearRect(0,0,150,150);
-    state.radarCtx.strokeStyle = "var(--primary)";
-    state.radarCtx.beginPath(); state.radarCtx.arc(75,75,60,0,Math.PI*2); state.radarCtx.stroke();
-    
-    const energy = state.dataArray.reduce((a,b)=>a+b,0);
-    const angle = Math.random() * Math.PI * 2;
-    const r = (energy/1000) * 60;
-    state.radarCtx.fillStyle = "var(--primary)";
-    state.radarCtx.beginPath(); state.radarCtx.arc(75 + Math.cos(angle)*r, 75 + Math.sin(angle)*r, 3, 0, Math.PI*2); state.radarCtx.fill();
-  }
+function startRecording() {
+  state.isRecording = true;
+  state.recorder.start();
+  log(">>> ANOMALIE DÉTECTÉE - ENREGISTREMENT <<<", "warn");
+  elements.recBtn.classList.add('active-mode');
+  
+  setTimeout(() => {
+    if (state.isRecording) {
+      state.recorder.stop();
+      state.isRecording = false;
+      elements.recBtn.classList.remove('active-mode');
+    }
+  }, 5000); // 5 sec d'enregistrement
+}
 
-  // Draw 3D
-  if (config.spectro3D && state.renderer) {
-    if (state.cubes.length > 1000) {
-        const old = state.cubes.shift();
-        state.scene.remove(old);
-    }
-    for(let i=0; i<state.dataArray.length; i+=10) {
-        const h = state.dataArray[i];
-        const geo = new THREE.BoxGeometry(4, 4, h);
-        const mat = new THREE.MeshBasicMaterial({ color: config.evpMode ? 0xaa00ff : 0x00ffd0 });
-        const cube = new THREE.Mesh(geo, mat);
-        cube.position.set(i - 100, -50, h/2);
-        state.scene.add(cube);
-        state.cubes.push(cube);
-    }
-    state.renderer.render(state.scene, state.camera);
+function drawWaterfall() {
+  const w = state.wfCtx.canvas.width;
+  const h = state.wfCtx.canvas.height;
+  
+  // Scroll down
+  const img = state.wfCtx.getImageData(0, 0, w, h-1);
+  state.wfCtx.putImageData(img, 0, 1);
+  
+  // Draw new line
+  for(let i=0; i<state.dataArray.length; i+=2) {
+    const v = state.dataArray[i];
+    const hue = config.evpMode ? 280 : 180; // Violet si EVP, Cyan sinon
+    state.wfCtx.fillStyle = `hsl(${hue - v}, 100%, 50%)`;
+    state.wfCtx.fillRect(i * (w/state.dataArray.length), 0, 2, 1);
   }
 }
 
-// --- GESTION BOUTONS ---
+function drawRadar(intensity) {
+  const ctx = state.radarCtx;
+  const cx = 75, cy = 75;
+  
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.1)'; // Fade effect
+  ctx.fillRect(0, 0, 150, 150);
 
+  // Grid
+  ctx.strokeStyle = '#004455';
+  ctx.beginPath(); ctx.arc(cx, cy, 70, 0, Math.PI*2); ctx.stroke();
+  ctx.beginPath(); ctx.arc(cx, cy, 35, 0, Math.PI*2); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(0,cy); ctx.lineTo(150,cy); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx,0); ctx.lineTo(cx,150); ctx.stroke();
+
+  // Scanner
+  state.radarAngle += config.radarSpeed;
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(state.radarAngle);
+  
+  const grad = ctx.createLinearGradient(0, 0, 75, 0);
+  grad.addColorStop(0, 'rgba(0, 255, 208, 0)');
+  grad.addColorStop(1, 'rgba(0, 255, 208, 0.8)');
+  ctx.fillStyle = grad;
+  ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0, 70, -0.2, 0.2); ctx.lineTo(0,0); ctx.fill();
+  ctx.restore();
+
+  // Blips (Simulated based on audio intensity)
+  if (intensity > config.threshold && Math.random() > 0.9) {
+      const r = Math.random() * 60 + 5;
+      const a = Math.random() * Math.PI * 2;
+      const bx = cx + Math.cos(a) * r;
+      const by = cy + Math.sin(a) * r;
+      ctx.fillStyle = '#ff0000';
+      ctx.beginPath(); ctx.arc(bx, by, 3, 0, Math.PI*2); ctx.fill();
+  }
+}
+
+// --- UI HELPERS ---
 function enableControls(enabled) {
-  elements.fftBtn.disabled = !enabled;
-  elements.recBtn.disabled = !enabled;
-  elements.evpBtn.disabled = !enabled;
-  elements.radarBtn.disabled = !enabled;
-  elements.wavBtn.disabled = !enabled;
+  const btns = [elements.fftBtn, elements.recBtn, elements.evpBtn, elements.radarBtn, elements.camBtn, elements.flashBtn, elements.wavBtn];
+  btns.forEach(b => b.disabled = !enabled);
 }
 
-// Event Listeners pour les boutons secondaires
-elements.fftBtn.onclick = () => {
+// --- EVENT LISTENERS ---
+
+// Toggle Buttons
+elements.startBtn.onclick = () => state.initialized ? stopApplication() : startApplication();
+
+elements.fftBtn.onclick = function() {
   config.fftSize = config.fftSize === 1024 ? 2048 : 1024;
-  state.analyser.fftSize = config.fftSize;
-  state.dataArray = new Uint8Array(state.analyser.frequencyBinCount);
-  elements.fftBtn.textContent = `FFT ${config.fftSize}`;
+  if(state.analyser) state.analyser.fftSize = config.fftSize;
+  if(state.analyser) state.dataArray = new Uint8Array(state.analyser.frequencyBinCount);
+  this.textContent = `FFT ${config.fftSize}`;
+  this.classList.toggle('active-mode');
   log(`FFT: ${config.fftSize}`);
 };
 
-elements.recBtn.onclick = () => {
-  config.autoRec = !config.autoRec;
-  elements.recBtn.style.background = config.autoRec ? "var(--primary)" : "";
-  log(`Auto REC: ${config.autoRec ? "ON" : "OFF"}`);
-};
-
-elements.evpBtn.onclick = () => {
+elements.evpBtn.onclick = function() {
   config.evpMode = !config.evpMode;
-  config.spectro3D = config.evpMode;
-  elements.evpBtn.style.background = config.evpMode ? "var(--evp)" : "";
-  log(`EVP Mode: ${config.evpMode ? "ON" : "OFF"}`);
+  this.classList.toggle('active-mode');
+  log(`Mode EVP: ${config.evpMode ? 'ON' : 'OFF'}`);
 };
 
-elements.radarBtn.onclick = () => {
+elements.radarBtn.onclick = function() {
   config.radar = !config.radar;
-  elements.radarBtn.style.background = config.radar ? "var(--primary)" : "";
-  log(`Radar: ${config.radar ? "ON" : "OFF"}`);
+  this.classList.toggle('active-mode');
+  // Show/Hide canvas
+  const c = document.getElementById('radarCanvas');
+  if(c) c.style.display = config.radar ? 'block' : 'none';
+  log(`Radar: ${config.radar ? 'ON' : 'OFF'}`);
 };
 
-elements.wavBtn.onclick = () => log("WAV REC non implémenté");
+elements.recBtn.onclick = function() {
+  config.autoRec = !config.autoRec;
+  this.classList.toggle('active-mode');
+  log(`Auto-Rec: ${config.autoRec ? 'ON' : 'OFF'} (Seuil: ${config.threshold})`);
+};
 
-// Initialisation au chargement de la page
+elements.camBtn.onclick = toggleCamera;
+elements.flashBtn.onclick = toggleFlashlight;
+elements.wavBtn.onclick = () => log("Export WAV complet non implémenté", "warn");
+
+// Settings Panel
+elements.settingsBtn.onclick = () => {
+  elements.settingsPanel.classList.toggle('open');
+  elements.settingsBtn.textContent = elements.settingsPanel.classList.contains('open') ? "FERMER PARAMÈTRES" : "⚙️ PARAMÈTRES";
+};
+
+// Sliders
+elements.gainSlider.oninput = function() {
+  config.gain = parseFloat(this.value);
+  if(state.gainNode) state.gainNode.gain.value = config.gain;
+};
+
+elements.thresholdSlider.oninput = function() {
+  config.threshold = parseInt(this.value);
+  elements.thresholdBar.style.width = config.threshold + '%';
+};
+
+elements.radarSpeedSlider.oninput = function() {
+  config.radarSpeed = parseInt(this.value) / 100;
+};
+
+// --- INIT ---
 window.onload = () => {
-  // Vérification libs
   state.librariesLoaded.three = typeof THREE !== 'undefined';
   state.librariesLoaded.tfjs = typeof tf !== 'undefined';
   
-  if(state.librariesLoaded.three) log("Three.js OK", "success");
-  else log("Three.js absent", "error");
-
-  if(state.librariesLoaded.tfjs) {
-      log("TensorFlow.js OK", "success");
-      // Chargement modèle (simplifié pour éviter latence au start)
-      tf.loadLayersModel('https://storage.googleapis.com/tfjs-models/tfjs/speech-commands/v1/tiny_speech_command_model.json')
-        .then(m => { state.model = m; elements.aiStatus.textContent = "READY"; log("IA Ready"); })
-        .catch(e => log("IA Load fail", "error"));
+  if (state.librariesLoaded.tfjs) {
+      elements.aiStatus.textContent = "READY";
+      elements.aiStatus.style.color = "var(--success)";
+      log("IA Module: CHARGÉ", "success");
+      // On lance un calcul bidon pour "réveiller" TensorFlow et le GPU
+      tf.tidy(() => { const x = tf.tensor1d([1,2,3]); x.mul(2); });
   } else {
-      log("TF.js absent", "error");
+      elements.aiStatus.textContent = "ERR";
+      elements.aiStatus.style.color = "var(--error)";
+      log("IA Module: ABSENT", "error");
   }
 
-  // CACHER L'ÉCRAN DE CHARGEMENT
   elements.loadingScreen.style.display = 'none';
-  log("En attente de démarrage...");
-
-  // ATTACHER L'ÉVÉNEMENT START ICI !!!
-  elements.startBtn.onclick = toggleApp;
+  log("ETERNITY LAB PRÊT. Appuyez sur START.");
+  
+  // Resize listener
+  window.addEventListener('resize', () => {
+    const w = elements.visualization.clientWidth;
+    if(state.wfCtx) state.wfCtx.canvas.width = w;
+  });
 };
-
-// Resize
-window.addEventListener('resize', () => {
-  if(state.renderer) {
-      state.renderer.setSize(elements.visualization.clientWidth, elements.visualization.clientHeight);
-      state.camera.aspect = elements.visualization.clientWidth / elements.visualization.clientHeight;
-      state.camera.updateProjectionMatrix();
-  }
-  if(state.waterfallCtx) state.waterfallCtx.canvas.width = elements.visualization.clientWidth;
-});
-
 </script>
 </body>
 </html>
-
