@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>ETERNITY v20 REVOKE</title>
+    <title>ETERNITY v21 CLEAN SLATE</title>
     <meta name="theme-color" content="#000000">
     <style>
         :root {
@@ -98,7 +98,7 @@
             pointer-events: auto;
             text-shadow: 0 0 2px var(--secondary); position: relative;
         }
-        .msg-final { color: var(--primary); border-bottom: 1px solid var(--primary); margin: 4px 0; padding: 4px; background: rgba(0, 255, 204, 0.1); font-size: 1rem; font-weight: bold;}
+        .msg-final { color: var(--primary); border-bottom: 1px solid var(--primary); margin: 4px 0; padding: 4px; background: rgba(0, 255, 204, 0.1); font-size: 1.1rem; font-weight: bold; }
         .msg-system { color: #446677; font-size: 0.7rem; margin-bottom: 4px; font-family: monospace; }
         .msg-prefix { color: var(--secondary); font-weight: bold; margin-right: 5px; }
 
@@ -120,9 +120,9 @@
         button:active { transform: scale(0.95); background: var(--secondary); color: #000; }
         button.active { background: var(--secondary); color: #000; box-shadow: 0 0 15px var(--secondary); border-color: #fff; }
         
-        /* Bouton Magique */
-        #btn-force { border-color: #ffff00; color: #ffff00; font-weight: 900; }
-        #btn-force:active { background: #ffff00; color: #000; }
+        /* Bouton Aide */
+        #btn-help { border-color: #ffff00; color: #ffff00; font-weight: 900; }
+        #btn-help:active { background: #ffff00; color: #000; }
 
         #btn-echo { border-color: #ff00ff; color: #ff00ff; }
         #btn-echo.active { background: #ff00ff; color: #fff; box-shadow: 0 0 15px #ff00ff; }
@@ -132,6 +132,20 @@
         @keyframes blink { 50% { opacity: 0; } }
         .live-dot { color: var(--danger); animation: blink 1.5s infinite; margin-right: 5px; font-weight: bold; }
 
+        /* Modal Aide */
+        #help-modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95); z-index: 200;
+            display: none; flex-direction: column; justify-content: center; align-items: center;
+            padding: 20px; text-align: center;
+        }
+        .help-content {
+            background: #111; border: 1px solid var(--secondary); padding: 20px; max-width: 90%; text-align: left; font-size: 0.8rem; color: #ddd;
+            line-height: 1.6;
+        }
+        .step { margin-bottom: 10px; display: flex; gap: 10px; align-items: center; }
+        .btn-close { background: var(--danger); color: white; border: none; padding: 10px 20px; font-family: inherit; font-weight: bold; cursor: pointer; margin-top: 20px; }
+
     </style>
 </head>
 <body>
@@ -140,11 +154,47 @@
     <div id="vignette-cyber"></div>
     <video id="camera-feed" autoplay playsinline muted></video>
 
+    <!-- Modal d'aide (Solution au blocage) -->
+    <div id="help-modal">
+        <h2 style="color:var(--primary); margin-top:0;">DIAGNOSTIC SYSTÈME</h2>
+        <div class="help-content">
+            <p><strong>PROBLÈME :</strong> Le micro est bloqué par le système même si les paramètres disent "Autoriser".</p>
+            <p><strong>SOLUTION (Manuelle) :</strong></p>
+            
+            <div class="step">
+                <div>1.</div>
+                <div>Cliquez dans la barre d'adresse tout en haut (là où est écrit l'adresse).</div>
+            </div>
+            <div class="step">
+                <div>2.</div>
+                <div>Efface l'adresse (le lien github) et tape exactement : </div>
+                <code style="background:#000; color:#0f0; padding:2px;">chrome://settings/content</code>
+            </div>
+            <div class="step">
+                <div>3.</div>
+                <div>Dans la liste, touchez l'entrée <strong>Microphone</strong>.</div>
+            </div>
+            <div class="step">
+                <div>4.</div>
+                <div>Change <strong>Bloquer</strong> en <strong>Autoriser</strong>.</div>
+            </div>
+            <div class="step">
+                <div>5.</div>
+                <div>Ferme l'onglet et réessayer.</div>
+            </div>
+            
+            <p style="font-size: 0.7rem; color:#888; margin-top:10px;">
+                *Note : C'est le seul moyen de contourner le blocage d'Android 15 sur les pages web.*
+            </p>
+        </div>
+        <button class="btn-close" onclick="closeHelp()">FERMER</button>
+    </div>
+
     <div id="ui">
         <header>
             <div>
-                <h1 class="cyber-title">ETERNITY v20</h1>
-                <div class="cyber-sub">PERMISSION REVOKE CORE</div>
+                <h1 class="clean-title">ETERNITY v21</h1>
+                <div class="clean-sub">CLEAN SLATE (NO REVOKE)</div>
             </div>
             <div style="text-align: right;">
                 <div id="clock" style="font-size:1.1rem; color:var(--secondary)">00:00</div>
@@ -154,7 +204,7 @@
 
         <div class="data-panel">
             <div class="data-row">
-                <span style="color:var(--secondary)">ANOMALIE (CAPTEURS)</span>
+                <span style="color:var(--secondary)">ANOMALIE (HARDWARE)</span>
                 <span id="prob-val" style="font-weight:bold; color:var(--primary)">0.0%</span>
             </div>
             <div class="prob-container">
@@ -173,14 +223,14 @@
 
         <div id="ai-zone">
             <div style="position:sticky; top:0; background:#000; padding-bottom:5px; border-bottom:1px solid var(--secondary); margin-bottom:5px; display:flex; justify-content:space-between; align-items:center;">
-                <span style="color:var(--primary)">> CANAL IA DÉDIQUÉ</span>
+                <span style="color:var(--primary)">> TRAITEMENT SIGNAL (RÉEL)</span>
                 <span id="ai-status" style="color:var(--danger); font-size:0.7rem; font-weight:bold;">OFFLINE</span>
             </div>
             <div id="log-container"></div>
         </div>
 
         <div class="controls">
-            <button id="btn-force" onclick="forcePermissionRevoke()">FORCER PERMISSION</button>
+            <button id="btn-help" onclick="showHelp()">DIAGNOSTIC</button>
             <button id="btn-echo" onclick="initDedicatedAI()">ECHO VOIX</button>
             <button id="btn-sweep" class="btn-sweep" onclick="toggleSweep()">SWEEP</button>
             <button id="btn-sens" onclick="toggleSensors()">SENSORS</button>
@@ -188,7 +238,7 @@
     </div>
 
     <script>
-        // --- V20 PERMISSION REVOKE ---
+        // --- V21 CLEAN SLATE (NO REVOKE) ---
 
         let audioCtx, globalStream, globalSource, analyser, gainNode;
         let sweepNodes = [], recognition, synth;
@@ -196,101 +246,86 @@
         let emfVal = 0, motionVal = 0, audioLevel = 0;
         let lastAlpha = null, instability = 0, emfBase = 0;
 
-        // 1. LA FONCTION MAGIQUE (Revoke)
-        async function forcePermissionRevoke() {
-            const btn = document.getElementById('btn-force');
-            const statusEl = document.getElementById('ai-state');
+        // 1. AFFICHER L'AIDE
+        function showHelp() {
+            document.getElementById('help-modal').style.display = 'flex';
+        }
+
+        function closeHelp() {
+            document.getElementById('help-modal').style.display = 'none';
+        }
+
+        // 2. INIT AUDIO (Simplifié et Robuste)
+        async function initAudioSimple() {
+            const btn = document.getElementById('btn-audio'); // Note: Le bouton SCOPE n'est plus le principal, c'est le bouton DIAGNOSTIC
+            const errorText = document.getElementById('error-text');
             
-            btn.innerText = "ANALYSE...";
-            statusEl.innerText = "DIAGNOSTIC...";
-            statusEl.style.color = "yellow";
+            if (globalStream) {
+                isVisualizer = !isVisualizer;
+                // On simule l'état du bouton Scope
+                const scopeBtn = document.getElementById('btn-echo'); // On utilise le bouton Echo pour l'indicateur visuel
+                if(isVisualizer) {
+                    document.getElementById('btn-echo').classList.add('active');
+                } else {
+                    document.getElementById('btn-echo').classList.remove('active');
+                }
+                errorText.style.display = isVisualizer ? 'none' : 'block';
+                if(isVisualizer) {
+                    drawSymmetricSpectrum();
+                    drawNetworkBg();
+                    document.getElementById('sys-status').innerText = "AUDIO ACTIF";
+                    document.getElementById('sys-status').style.color = "var(--primary)";
+                } else {
+                    document.getElementById('sys-status').innerText = "STANDBY";
+                    document.getElementById('sys-status').style.color = "#666";
+                }
+                return;
+            }
+
+            errorText.innerText = "CONNEXION AUDIO...";
 
             try {
-                // ÉTAPE 1 : Nettoyage (Arrêt total pour éviter conflits)
-                stopSweep();
-                if (globalStream) {
-                    globalStream.getTracks().forEach(track => track.stop());
-                    globalStream = null;
-                }
-                if (audioCtx) {
-                    await audioCtx.close();
-                    audioCtx = null;
-                }
+                // IMPORTANT : On demande l'audio SANS contraintes complexes pour ne pas bloquer le Realme
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                audioCtx = new AudioContext();
+                if (audioCtx.state === 'suspended') await audioCtx.resume();
 
-                // Pause pour laisser le matériel se reposer
-                await new Promise(r => setTimeout(r, 500));
-
-                // ÉTAPE 2 : Le "Revoke" (L'oubli forcé)
-                statusEl.innerText = "RÉINITIALISATION PERMISSION...";
-                await navigator.permissions.revoke({ name: 'microphone' });
-                
-                // ÉTAPE 3 : Redemande immédiate
-                statusEl.innerText = "NOUVELLE DEMANDE...";
                 globalStream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 
-                // SUCCÈS
-                btn.innerText = "PERMISSION OK";
-                btn.style.borderColor = "var(--primary)";
-                btn.style.background = "#004400";
-                btn.style.color = "#fff";
-                statusEl.innerText = "AUTORISÉ";
-                statusEl.style.color = "var(--primary)";
+                globalSource = audioCtx.createMediaStreamSource(globalStream);
+                analyser = audioCtx.createAnalyser();
+                analyser.fftSize = 256;
+                analyser.smoothingTimeConstant = 0.85;
                 
-                // Relancer le Scope Audio
-                initAudioContext(globalStream);
-                cyberLog("Permission réinitialisée et Micro connecté.", "system");
+                gainNode = audioCtx.createGain();
+                gainNode.gain.value = 0.0;
+
+                globalSource.connect(analyser);
+                analyser.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+
+                errorText.style.display = 'none';
+                
+                isVisualizer = true;
+                drawSymmetricSpectrum();
+                cyberLog("Audio Connecté (Hardware Réel).", "system");
 
             } catch (e) {
                 console.error(e);
-                btn.innerText = "ECHEC";
-                alert("Erreur: " + e.message);
+                errorText.innerText = "ACCÈS REFUSÉ";
+                errorText.style.color = "red";
+                document.getElementById('sys-status').innerText = "BLOQUÉ";
+                document.getElementById('sys-status').style.color = "red";
+                
+                // Ouvrir l'aide automatiquement si erreur
+                showHelp();
             }
         }
 
-        // 2. Fonction utilitaire pour créer le contexte
-        function initAudioContext(stream) {
-            const AudioContext = window.AudioContext || window.webkitAudioContext;
-            audioCtx = new AudioContext();
-            
-            globalSource = audioCtx.createMediaStreamSource(stream);
-            analyser = audioCtx.createAnalyser();
-            analyser.fftSize = 256;
-            analyser.smoothingTimeConstant = 0.85;
-            
-            gainNode = audioCtx.createGain();
-            gainNode.gain.value = 0.0;
-
-            globalSource.connect(analyser);
-            analyser.connect(gainNode);
-            gainNode.connect(audioCtx.destination);
-
-            isVisualizer = true;
-            document.getElementById('btn-audio').classList.add('active'); // Simuler bouton Scope actif
-            document.getElementById('error-text').style.display = 'none';
-            
-            drawSymmetricSpectrum();
-            drawNetworkBg();
-        }
-
-        // 3. INIT CLASSIQUE (Si bouton Scope utilisé)
-        async function initAudioSimple() {
-            if (globalStream) {
-                isVisualizer = !isVisualizer;
-                const btn = document.getElementById('btn-audio');
-                btn.classList.toggle('active', isVisualizer);
-                document.getElementById('error-text').style.display = isVisualizer ? 'none' : 'block';
-                if(isVisualizer) drawSymmetricSpectrum();
-                return;
-            }
-            // Redirige vers le bouton magique
-            alert("Utilisez le bouton JAUNE 'FORCER PERMISSION' pour régler le problème de blocage.");
-        }
-
-        // 4. IA DÉDIÉE
+        // 3. IA DÉDIÉE
         async function initDedicatedAI() {
             const btn = document.getElementById('btn-echo');
             const statusEl = document.getElementById('ai-status');
-            const recInd = document.getElementById('rec-indicator'); // Ajout si manquant
 
             if (isEcho) {
                 isEcho = false; btn.classList.remove('active');
@@ -302,48 +337,64 @@
             try {
                 statusEl.innerText = "INIT..."; statusEl.style.color = "yellow";
                 
-                // Utilise le flux global (ou force revoke d'abord si problème)
-                if(!globalStream) {
-                    alert("Le Scope (Micro) doit être actif d'abord (bouton FORCER PERMISSION).");
-                    return;
-                }
-
                 synth = window.speechSynthesis;
                 if (!synth) throw new Error("TTS indisponible");
 
                 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
                 if (!SpeechRecognition) throw new Error("IA indisponible");
 
+                if (!globalStream) {
+                    alert("Le Scope doit être actif (Micro vert) pour que l'IA fonctionne.");
+                    return;
+                }
+
                 recognition = new SpeechRecognition();
                 recognition.continuous = true;
                 recognition.interimResults = false; 
                 recognition.lang = 'fr-FR';
 
-                // Utilisation du flux cloné pour éviter conflit
+                // Utilisation du flux cloné (Standard Chrome)
                 const aiStreamClone = globalStream.clone();
 
                 recognition.onstart = () => {
                     isEcho = true; btn.classList.add('active');
-                    statusEl.innerHTML = '<span class="live-dot">●</span>ONLINE';
+                    statusEl.innerHTML = '<span class="live-dot">●</span>ONLINE (ÉCOUTE ACTIVE)';
                     statusEl.style.color = "var(--primary)";
-                    cyberLog("Canal IA Connecté.", "system");
+                    cyberLog("IA Connectée. (Mode Écoute Réelle).", "system");
                 };
 
-                recognition.onresult = (event) => {
+                recognition.onresult = (event) {
                     const transcript = event.results[event.results.length - 1][0].transcript;
                     const confidence = event.results[event.results.length - 1][0].confidence;
+                    
+                    // Afficher même si c'est bas (Confidence > 0.1) pour capter les chuchotements
                     if (transcript.trim().length > 0 && confidence > 0.1) {
                         cyberLog(transcript, "msg-final");
                         speakText(transcript);
                     }
                 };
 
-                recognition.onerror = (e) => {
-                    console.error("Erreur IA:", e.error);
-                    isEcho = false; btn.classList.remove('active'); 
-                    statusEl.innerText = "ERR: " + e.error;
-                    statusEl.style.color = "red";
-                    if(e.error === 'not-allowed') alert("IA Bloquée par Android. Même si 'Autorisé', le navigateur a le dernier mot.");
+                recognition.onerror = (event) => {
+                    console.error("Erreur IA:", event.error);
+                    let msg = "ERREUR INCONNUE";
+                    
+                    if (event.error === 'not-allowed') {
+                        msg = "BLOQUÉ PAR ANDROID";
+                        // Le système t'indique de faire la procédure manuelle
+                        statusEl.innerText = "ERREUR SYSTÈME";
+                        statusEl.style.color = "red";
+                        showHelp(); // Afficher la fenêtre d'aide
+                    } else if (event.error === 'no-speech') {
+                        msg = "AUCUN SON (Parle plus fort !)";
+                    }
+
+                    // Affichage temporaire de l'erreur
+                    setTimeout(() => {
+                        if (isEcho) {
+                            statusEl.innerText = msg;
+                            statusEl.style.color = "orange";
+                        }
+                    }, 3000);
                 };
 
                 recognition.onend = () => {
@@ -359,7 +410,9 @@
 
             } catch (e) {
                 console.error(e);
-                alert("Erreur Initialisation IA : " + e.message);
+                alert("Erreur Init IA : " + e.message);
+                statusEl.innerText = "ECHEC INIT";
+                statusEl.style.color = "red";
             }
         }
 
@@ -376,7 +429,7 @@
             synth.speak(utterance);
         }
 
-        // 5. VISUALISEUR
+        // 4. VISUALISEUR
         function drawSymmetricSpectrum() {
             if(!isVisualizer || !analyser) return;
             requestAnimationFrame(drawSymmetricSpectrum);
@@ -410,7 +463,7 @@
             updateProbability();
         }
 
-        // 6. SWEEP
+        // 5. SWEEP
         async function toggleSweep() {
             const btn = document.getElementById('btn-sweep');
             if (isSweep) {
@@ -439,7 +492,7 @@
         }
         function stopSweep() { sweepNodes.forEach(n => { try{n.stop()}catch(e){} }); sweepNodes = []; }
 
-        // 7. CAPTEURS
+        // 6. CAPTEURS
         function toggleSensors() {
             const btn = document.getElementById('btn-sens');
             if (isSensors) {
