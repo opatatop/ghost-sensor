@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>ETERNITY LAB ULTRA</title>
+<title>ETERNITY LAB ULTRA VOICE</title>
 <style>
 :root {
   --primary: #00ffd0;
@@ -25,7 +25,7 @@ body {
   height: 100vh;
   display: flex;
   flex-direction: column;
-  overflow: hidden; /* Empêche le scroll global, on scroll les zones internes */
+  overflow: hidden;
 }
 
 /* HEADER COMPACT */
@@ -39,25 +39,50 @@ body {
   font-size: 0.8rem;
   flex-shrink: 0;
 }
-#header span { margin: 0 5px; }
 
-/* ZONE VISUALISATION (Prend l'espace restant) */
+/* ZONE VISUALISATION */
 #vizContainer {
   flex: 1;
   position: relative;
   background: #000;
   overflow: hidden;
-}
-#cameraFeed {
-  position: absolute; width: 100%; height: 100%; object-fit: cover; opacity: 0.4; display: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-/* ZONE CONTROLES (Déroulable) */
+/* TEXTE IA DETECTE */
+#iaBox {
+  position: absolute;
+  top: 20%; left: 0; right: 0;
+  text-align: center;
+  z-index: 10;
+  pointer-events: none;
+}
+#iaText {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #fff;
+  text-shadow: 0 0 10px var(--primary);
+  background: rgba(0,0,0,0.6);
+  padding: 5px 10px;
+  display: inline-block;
+  min-width: 50%;
+}
+#iaLabel {
+  font-size: 0.7rem; color: var(--secondary); text-transform: uppercase; letter-spacing: 2px;
+}
+
+#cameraFeed {
+  position: absolute; width: 100%; height: 100%; object-fit: cover; opacity: 0.4; display: none; z-index: 0;
+}
+
+/* ZONE CONTROLES */
 #controlsArea {
   background: var(--panel);
   border-top: 2px solid var(--primary);
-  max-height: 45vh; /* Limite la hauteur pour laisser voir la suite */
-  overflow-y: auto; /* Scroll actif ici */
+  max-height: 45vh;
+  overflow-y: auto;
   padding: 10px;
   flex-shrink: 0;
   display: flex;
@@ -65,7 +90,7 @@ body {
   gap: 10px;
 }
 
-/* GRILLE BOUTONS (3 colonnes pour Note 60) */
+/* GRILLE BOUTONS */
 .button-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -90,14 +115,8 @@ button.active {
   color: var(--btn-active-text);
   box-shadow: 0 0 8px var(--primary);
 }
-button.danger {
-  border-color: red; color: red;
-}
-button.danger.active {
-  background: red; color: white;
-}
 
-/* PARAMÈTRES SLIDERS */
+/* SLIDERS */
 .sliders {
   background: rgba(0,0,0,0.5);
   padding: 8px;
@@ -109,7 +128,7 @@ button.danger.active {
 }
 input[type="range"] { width: 50%; accent-color: var(--primary); }
 
-/* BARS DE NIVEAU */
+/* BARS */
 #barsArea {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -117,12 +136,12 @@ input[type="range"] { width: 50%; accent-color: var(--primary); }
   margin-bottom: 5px;
   font-size: 0.7rem;
 }
-.bar-box { background: #111; height: 8px; width: 100%; border: 1px solid #333; margin-top:2px; position: relative;}
+.bar-box { background: #111; height: 8px; width: 100%; border: 1px solid #333; margin-top:2px; }
 .bar-fill { height: 100%; width: 0%; transition: width 0.1s; }
 
 /* LOGS */
 #logZone {
-  height: 100px;
+  height: 90px;
   background: #000;
   border-top: 1px solid var(--primary);
   padding: 5px;
@@ -134,6 +153,7 @@ input[type="range"] { width: 50%; accent-color: var(--primary); }
 .log-warn { color: yellow !important; }
 .log-err { color: red !important; }
 .log-suc { color: #0f0 !important; }
+.log-ia { color: #ff00ff !important; font-weight: bold; }
 
 /* CANVAS */
 canvas { position: absolute; }
@@ -154,24 +174,24 @@ canvas { position: absolute; }
   <div id="loadMsg">Initialisation...</div>
 </div>
 
-<!-- HEADER -->
 <div id="header">
   <div>MIC: <span id="micStatus" style="color:red">OFF</span></div>
-  <div>IA: <span id="aiStatus" style="color:orange">CHECK</span></div>
+  <div>IA: <span id="aiStatus" style="color:orange">STANDBY</span></div>
   <div>BAT: <span id="wakeStatus">OFF</span></div>
 </div>
 
-<!-- VISUALISATION -->
 <div id="vizContainer">
+  <div id="iaBox">
+    <div id="iaLabel">DÉTECTION VOCALE</div>
+    <div id="iaText">...</div>
+  </div>
   <video id="cameraFeed" autoplay playsinline muted></video>
   <canvas id="radarCanvas"></canvas>
   <canvas id="waterfallCanvas"></canvas>
 </div>
 
-<!-- CONTROLES (Scrollable) -->
 <div id="controlsArea">
-  
-  <!-- Barres de niveau -->
+  <!-- Bars -->
   <div id="barsArea">
     <div>
       <div>INPUT</div>
@@ -183,15 +203,16 @@ canvas { position: absolute; }
     </div>
   </div>
 
-  <!-- BOUTON PRINCIPAL -->
   <button id="startBtn" style="font-size:1rem; padding:15px; background:var(--success); color:black; border:none;">START SYSTEM</button>
 
-  <!-- GRILLE DE COMMANDES -->
   <div class="button-grid">
     <!-- AUDIO -->
     <button id="monitorBtn" disabled>🎧 MONITOR</button>
     <button id="filterBtn" disabled>🔇 FILTRE HP</button>
     <button id="recBtn" disabled>⏺ AUTO REC</button>
+    
+    <!-- IA -->
+    <button id="voiceRecoBtn" disabled>🗣 IA VOICE</button>
     
     <!-- VISUALS -->
     <button id="fftBtn" disabled>FFT 1024</button>
@@ -203,10 +224,9 @@ canvas { position: absolute; }
     <button id="flashBtn" disabled>🔦 TORCHE</button>
     <button id="wakeBtn">📱 SCREEN ON</button>
     <button id="themeBtn">🎨 THEME</button>
-    <button id="clearBtn">🗑 CLEAR LOG</button>
+    <button id="clearBtn">🗑 CLEAR</button>
   </div>
 
-  <!-- SLIDERS -->
   <div class="sliders">
     <div class="slider-row">
       <span>Gain Mic</span>
@@ -223,7 +243,6 @@ canvas { position: absolute; }
   </div>
 </div>
 
-<!-- LOGS -->
 <div id="logZone"></div>
 
 <!-- LIBS -->
@@ -238,19 +257,20 @@ const config = {
   threshold: 30,
   monitor: false,
   filter: false,
-  filterFreq: 300, // Coupe les basses < 300Hz
+  filterFreq: 300,
   radarSpeed: 0.05,
   evp: false,
   radar: false,
   autoRec: false,
+  voiceReco: false, // Nouvelle option IA
   theme: 0
 };
 
 const themes = [
-  { p: '#00ffd0', s: '#0088aa', v: '#ffaa00' }, // Cyan
-  { p: '#00ff00', s: '#008800', v: '#ffff00' }, // Matrix
-  { p: '#ff0055', s: '#880022', v: '#00ffff' }, // Red Alert
-  { p: '#ffffff', s: '#888888', v: '#ff0000' }  // B&W
+  { p: '#00ffd0', s: '#0088aa', v: '#ffaa00' },
+  { p: '#00ff00', s: '#008800', v: '#ffff00' },
+  { p: '#ff0055', s: '#880022', v: '#00ffff' },
+  { p: '#ffffff', s: '#888888', v: '#ff0000' }
 ];
 
 // --- STATE ---
@@ -259,7 +279,8 @@ const state = {
   micStream: null, vidStream: null, recorder: null, isRec: false,
   running: false, radarAngle: 0,
   dataArray: null, bufferLength: 0,
-  wakeLock: null
+  wakeLock: null,
+  recognition: null // Objet reconnaissance vocale
 };
 
 // --- DOM ELEMENTS ---
@@ -268,9 +289,11 @@ const els = {
   load: el('loading'), loadMsg: el('loadMsg'),
   log: el('logZone'), mic: el('micStatus'), ai: el('aiStatus'), wake: el('wakeStatus'),
   start: el('startBtn'), monitor: el('monitorBtn'), filter: el('filterBtn'),
-  rec: el('recBtn'), fft: el('fftBtn'), evp: el('evpBtn'), radar: el('radarBtn'),
+  rec: el('recBtn'), voice: el('voiceRecoBtn'), // Bouton IA
+  fft: el('fftBtn'), evp: el('evpBtn'), radar: el('radarBtn'),
   cam: el('camBtn'), flash: el('flashBtn'), wake: el('wakeBtn'), theme: el('themeBtn'), clear: el('clearBtn'),
-  voice: el('voiceBar'), thresh: el('threshBar'),
+  voiceBar: el('voiceBar'), threshBar: el('threshBar'),
+  iaText: el('iaText'), iaLabel: el('iaLabel'),
   viz: el('vizContainer'), video: el('cameraFeed'),
   sGain: el('gainRange'), sThresh: el('threshRange'), sRadar: el('radarRange')
 };
@@ -282,23 +305,77 @@ function log(msg, type='info') {
   if(type==='err') div.className='log-err';
   if(type==='warn') div.className='log-warn';
   if(type==='suc') div.className='log-suc';
+  if(type==='ia') div.className='log-ia';
   els.log.appendChild(div);
   els.log.scrollTop = els.log.scrollHeight;
 }
 
-// --- INIT SYSTEM ---
-window.onload = async () => {
-  // Check IA
-  if (typeof tf !== 'undefined') {
-    els.ai.textContent = "READY (LOCAL)";
+// --- INIT ---
+window.onload = () => {
+  // Vérification API Vocale Native
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (SpeechRecognition) {
+    els.ai.textContent = "READY";
     els.ai.style.color = "var(--success)";
-    // Wake up TF backend
-    tf.tidy(() => { const t = tf.tensor1d([1,2]); t.mul(2); });
-    log("TensorFlow.js initialisé (Mode Local)", "suc");
+    log("API Reconnaissance Vocale Native détectée.", "suc");
+    
+    // Préparer l'objet mais ne pas démarrer avant le clic utilisateur
+    state.recognition = new SpeechRecognition();
+    state.recognition.continuous = true;
+    state.recognition.interimResults = true;
+    state.recognition.lang = 'fr-FR';
+
+    state.recognition.onresult = (event) => {
+      let interimTranscript = '';
+      let finalTranscript = '';
+
+      for (let i = event.resultIndex; i < event.results.length; ++i) {
+        if (event.results[i].isFinal) {
+          finalTranscript += event.results[i][0].transcript;
+        } else {
+          interimTranscript += event.results[i][0].transcript;
+        }
+      }
+
+      if (interimTranscript || finalTranscript) {
+        els.iaText.textContent = interimTranscript || finalTranscript;
+        els.iaLabel.textContent = "DÉTECTION EN COURS...";
+        els.iaLabel.style.color = "var(--primary)";
+        
+        // Effet visuel si mot détecté
+        if(finalTranscript) {
+           log(`IA DÉTECTE: "${finalTranscript}"`, "ia");
+        }
+      } else {
+         els.iaText.textContent = "...";
+         els.iaLabel.textContent = "ÉCOUTE...";
+         els.iaLabel.style.color = "var(--secondary)";
+      }
+    };
+
+    state.recognition.onerror = (event) => {
+      console.log("Speech Error", event.error);
+      // Ne pas loguer "no-speech" pour ne pas spammer
+      if(event.error !== 'no-speech') {
+         log(`Erreur IA: ${event.error}`, "warn");
+      }
+    };
+
+    state.recognition.onend = () => {
+      // Redémarrage automatique si le système est ON et l'IA activée
+      if (config.voiceReco && state.running) {
+        try { state.recognition.start(); } catch(e){}
+      } else {
+        els.voice.classList.remove('active');
+        els.iaLabel.textContent = "IA OFF";
+      }
+    };
+
   } else {
-    els.ai.textContent = "MISSING";
+    els.ai.textContent = "NOT SUPP";
     els.ai.style.color = "red";
-    log("TensorFlow.js introuvable", "err");
+    els.voice.disabled = true;
+    log("Reconnaissance vocale non supportée par ce navigateur.", "err");
   }
   
   els.load.style.display = 'none';
@@ -328,23 +405,19 @@ async function startSystem() {
     state.filterNode.frequency.value = config.filterFreq;
     state.filterNode.Q.value = 1;
 
-    // Graph: Source -> Filter -> Gain -> Analyser -> (Destination)
     state.source = state.ctx.createMediaStreamSource(stream);
     state.source.connect(state.filterNode);
     state.filterNode.connect(state.gainNode);
     state.gainNode.connect(state.analyser);
     
-    // Monitor init
     if(config.monitor) state.analyser.connect(state.ctx.destination);
 
-    // Recorder
     state.recorder = new MediaRecorder(stream);
     state.recorder.ondataavailable = e => {
       if(e.data.size > 0) saveBlob(e.data);
     };
     state.recorder.onstop = () => { state.isRec = false; els.rec.classList.remove('active'); };
 
-    // UI Update
     state.running = true;
     els.mic.textContent = "ON"; els.mic.style.color = "#0f0";
     els.start.textContent = "STOP SYSTEM";
@@ -353,7 +426,7 @@ async function startSystem() {
     
     initVisuals();
     loop();
-    log("Système Actif. Micro connecté.", "suc");
+    log("Système Actif.", "suc");
 
   } catch (e) {
     log("Erreur Micro: " + e.message, "err");
@@ -363,6 +436,13 @@ async function startSystem() {
 }
 
 function stopSystem() {
+  // Arrêt IA
+  if(state.recognition) {
+    try { state.recognition.stop(); } catch(e){}
+    config.voiceReco = false;
+    els.voice.classList.remove('active');
+  }
+
   if(state.micStream) state.micStream.getTracks().forEach(t=>t.stop());
   if(state.vidStream) stopCam();
   if(state.ctx) state.ctx.close();
@@ -373,77 +453,85 @@ function stopSystem() {
   els.start.style.background = "var(--success)";
   enableButtons(false);
   
-  // Clear canvas
   els.viz.innerHTML = ''; 
-  els.viz.appendChild(els.video); // Remettre video
+  els.viz.appendChild(els.video); 
+  els.viz.appendChild(el('iaBox')); // Remettre le texte IA
   log("Système arrêté.");
 }
 
-// --- FEATURE: MONITOR (ÉCOUTE) ---
+// --- IA VOICE RECO CONTROL ---
+function toggleVoiceReco() {
+  if (!state.recognition) return;
+
+  config.voiceReco = !config.voiceReco;
+  
+  if (config.voiceReco) {
+    try {
+      state.recognition.start();
+      els.voice.classList.add('active');
+      log("IA RECOGNITION: ON", "suc");
+    } catch(e) {
+      log("Erreur démarrage IA", "err");
+      config.voiceReco = false;
+    }
+  } else {
+    try { state.recognition.stop(); } catch(e){}
+    els.voice.classList.remove('active');
+    els.iaText.textContent = "...";
+    els.iaLabel.textContent = "IA OFF";
+    log("IA RECOGNITION: OFF");
+  }
+}
+
+// --- FEATURES ---
 function toggleMonitor() {
   config.monitor = !config.monitor;
   if(config.monitor) {
     state.analyser.connect(state.ctx.destination);
     els.monitor.classList.add('active');
-    els.monitor.classList.add('danger');
-    log("MONITOR ON - Attention au feedback (Larsen) !", "warn");
+    log("MONITOR ON", "warn");
   } else {
     state.analyser.disconnect(state.ctx.destination);
     els.monitor.classList.remove('active');
-    els.monitor.classList.remove('danger');
     log("MONITOR OFF");
   }
 }
 
-// --- FEATURE: FILTER (Anti-Bruit) ---
 function toggleFilter() {
   config.filter = !config.filter;
-  if(config.filter) {
-    state.filterNode.frequency.value = config.filterFreq; // 300Hz cutoff
-    els.filter.classList.add('active');
-    log(`Filtre Passe-Haut ON (> ${config.filterFreq}Hz)`);
-  } else {
-    state.filterNode.frequency.value = 0; // Flat
-    els.filter.classList.remove('active');
-    log("Filtre OFF");
-  }
+  state.filterNode.frequency.value = config.filter ? config.filterFreq : 0;
+  els.filter.classList.toggle('active');
+  log(`Filtre HP: ${config.filter ? 'ON' : 'OFF'}`);
 }
 
-// --- FEATURE: WAKE LOCK (Screen On) ---
-async function toggleWake() {
+function toggleWake() {
   if (!state.wakeLock) {
-    try {
-      state.wakeLock = await navigator.wakeLock.request('screen');
+    navigator.wakeLock.request('screen').then(lock => {
+      state.wakeLock = lock;
       els.wake.classList.add('active');
-      els.wake.textContent = "📱 LOCKED";
+      els.wake.textContent = "LOCKED";
       els.wakeStatus.textContent = "ON";
-      log("Écran verrouillé allumé.", "suc");
-    } catch (err) { log("Wake Lock error: " + err, "err"); }
+    }).catch(e => log("Wake Lock error", "err"));
   } else {
     state.wakeLock.release();
     state.wakeLock = null;
     els.wake.classList.remove('active');
-    els.wake.textContent = "📱 SCREEN ON";
+    els.wake.textContent = "SCREEN ON";
     els.wakeStatus.textContent = "OFF";
-    log("Wake Lock libéré.");
   }
 }
 
 // --- RECORDING ---
 function checkAutoRec(avg) {
-  if(config.autoRec && avg > config.threshold && !state.isRec) {
-    startRec();
-  }
+  if(config.autoRec && avg > config.threshold && !state.isRec) startRec();
 }
 
 function startRec() {
   state.isRec = true;
   state.recorder.start();
   els.rec.classList.add('active');
-  log("🔴 ENREGISTREMENT DÉCLENCHÉ (Anomalie)", "warn");
-  setTimeout(() => {
-    if(state.isRec) state.recorder.stop();
-  }, 5000);
+  log("🔴 ENREGISTREMENT (Anomalie)", "warn");
+  setTimeout(() => { if(state.isRec) state.recorder.stop(); }, 5000);
 }
 
 function saveBlob(blobData) {
@@ -451,18 +539,16 @@ function saveBlob(blobData) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url; a.download = `EVP_${Date.now()}.webm`;
-  a.click(); log("Enregistrement sauvegardé.", "suc");
+  a.click(); log("Enregistrement sauvé.", "suc");
 }
 
-// --- VISUALIZATION LOOP ---
+// --- VISUALS ---
 function initVisuals() {
-  // Waterfall
   const c1 = document.createElement('canvas');
   c1.id='waterfallCanvas'; c1.width=els.viz.clientWidth; c1.height=60;
   els.viz.appendChild(c1);
   state.wfCtx = c1.getContext('2d');
   
-  // Radar
   const c2 = document.createElement('canvas');
   c2.id='radarCanvas'; c2.width=100; c2.height=100;
   els.viz.appendChild(c2);
@@ -475,19 +561,14 @@ function loop() {
   
   state.analyser.getByteFrequencyData(state.dataArray);
   
-  // Calculs
   let sum = 0;
   for(let i=0; i<state.bufferLength; i++) sum += state.dataArray[i];
   const avg = sum / state.bufferLength;
   
-  // UI Bars
-  els.voice.style.width = Math.min(100, avg) + '%';
-  els.thresh.style.width = config.threshold + '%';
+  els.voiceBar.style.width = Math.min(100, avg) + '%';
+  els.threshBar.style.width = config.threshold + '%';
   
-  // Logic
   checkAutoRec(avg);
-  
-  // Draw
   drawWaterfall();
   if(config.radar) drawRadar(avg);
 }
@@ -496,7 +577,6 @@ function drawWaterfall() {
   const ctx = state.wfCtx, w=ctx.canvas.width, h=ctx.canvas.height;
   const img = ctx.getImageData(0,0,w,h-1);
   ctx.putImageData(img,0,1);
-  
   const hue = config.evp ? 280 : 180;
   for(let i=0; i<state.bufferLength; i+=2) {
     const v = state.dataArray[i];
@@ -508,18 +588,11 @@ function drawWaterfall() {
 function drawRadar(intensity) {
   const ctx = state.rdCtx, cx=50, cy=50;
   ctx.fillStyle = 'rgba(0,0,0,0.2)'; ctx.fillRect(0,0,100,100);
-  
-  // Grid
   ctx.strokeStyle = 'rgba(0,255,208,0.3)'; ctx.beginPath(); ctx.arc(cx,cy,40,0,7); ctx.stroke();
-  
-  // Scan
   state.radarAngle += config.radarSpeed;
   ctx.save(); ctx.translate(cx,cy); ctx.rotate(state.radarAngle);
   ctx.fillStyle = 'rgba(0,255,208,0.5)';
-  ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0,45,-0.2,0.2); ctx.fill();
-  ctx.restore();
-  
-  // Blips
+  ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0,45,-0.2,0.2); ctx.fill(); ctx.restore();
   if(intensity > config.threshold && Math.random()>0.8) {
     const r = Math.random()*35; const a = Math.random()*6.28;
     ctx.fillStyle='red'; ctx.beginPath(); ctx.arc(cx+Math.cos(a)*r, cy+Math.sin(a)*r, 2,0,7); ctx.fill();
@@ -534,7 +607,7 @@ async function toggleCam() {
       els.video.srcObject = state.vidStream;
       els.video.style.display = 'block';
       els.cam.classList.add('active');
-      log("Caméra active.");
+      log("Caméra ON");
     } catch(e) { log("Erreur caméra", "err"); }
   } else {
     stopCam();
@@ -547,7 +620,7 @@ function stopCam() {
 
 // --- UTILS ---
 function enableButtons(en) {
-  const btns = [els.monitor, els.filter, els.rec, els.fft, els.evp, els.radar, els.cam, els.flash];
+  const btns = [els.monitor, els.filter, els.rec, els.voice, els.fft, els.evp, els.radar, els.cam, els.flash];
   btns.forEach(b => b.disabled = !en);
 }
 function toggleTheme() {
@@ -563,6 +636,7 @@ function toggleTheme() {
 els.start.onclick = () => state.running ? stopSystem() : startSystem();
 els.monitor.onclick = toggleMonitor;
 els.filter.onclick = toggleFilter;
+els.voice.onclick = toggleVoiceReco; // Gestionnaire IA
 els.rec.onclick = () => { config.autoRec = !config.autoRec; els.rec.classList.toggle('active'); log(`Auto Rec: ${config.autoRec}`); };
 els.fft.onclick = () => { config.fftSize = config.fftSize===1024?2048:1024; state.analyser.fftSize=config.fftSize; state.dataArray = new Uint8Array(state.analyser.frequencyBinCount); els.fft.textContent=`FFT ${config.fftSize}`; };
 els.evp.onclick = () => { config.evp = !config.evp; els.evp.classList.toggle('active'); log(`Mode EVP: ${config.evp}`); };
@@ -582,12 +656,10 @@ els.wake.onclick = toggleWake;
 els.theme.onclick = toggleTheme;
 els.clear.onclick = () => { els.log.innerHTML = ''; };
 
-// Sliders
 els.sGain.oninput = (e) => { config.gain = parseFloat(e.target.value); if(state.gainNode) state.gainNode.gain.value = config.gain; };
-els.sThresh.oninput = (e) => { config.threshold = parseInt(e.target.value); els.thresh.style.width = config.threshold + '%'; };
+els.sThresh.oninput = (e) => { config.threshold = parseInt(e.target.value); els.threshBar.style.width = config.threshold + '%'; };
 els.sRadar.oninput = (e) => { config.radarSpeed = parseInt(e.target.value)/100; };
 
-// Resize
 window.onresize = () => {
   if(state.wfCtx) { state.wfCtx.canvas.width = els.viz.clientWidth; }
 };
