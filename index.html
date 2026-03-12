@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>ETERNITY v22 – GOD MODE + EVP AVANCÉE</title>
+<title>ETERNITY v22 – GOD MODE (Realme Fix)</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#000000">
 <style>
@@ -25,7 +25,7 @@ canvas.viz{width:100%;height:160px;background:#000;border:1px solid var(--second
 <div id="vignette"></div>
 <video id="camera-feed" autoplay playsinline muted></video>
 
-<div id="boot-screen">GOD MODE<br>ACTIVER</div>
+<div id="boot-screen">GOD MODE<br>ACTIVER (Realme Fix)</div>
 
 <div id="main-ui">
   <header><h1 style="font-size:1.6rem">ETERNITY v22</h1><div style="color:var(--ghost)">EVP AVANCÉE</div></header>
@@ -60,18 +60,17 @@ canvas.viz{width:100%;height:160px;background:#000;border:1px solid var(--second
 </div>
 
 <script type="module">
-// ==================== GOD MODE + EVP AVANCÉE ====================
-
 const DOM = {
   boot: document.getElementById('boot-screen'),
   ui: document.getElementById('main-ui'),
   micStatus: document.getElementById('mic-status'),
-  logZone: document.getElementById('log-zone'),
+  sysLog: document.getElementById('sys-log'),
   activity: document.getElementById('activity-pct'),
   progress: document.getElementById('progress-bar'),
   canvas: document.getElementById('spectrum-canvas'),
   voiceBar: document.getElementById('voice-bar'),
   ghostBar: document.getElementById('ghost-bar'),
+  logZone: document.getElementById('log-zone'),
   btnSweep: document.getElementById('btn-sweep'),
   btnBoost: document.getElementById('btn-boost'),
   btnUltra: document.getElementById('btn-ultra'),
@@ -85,15 +84,13 @@ let state = {
   stream: null,
   analyser: null,
   workletNode: null,
-  masterGain: null,           // ← FIX : gain maître pour que le son sorte vraiment
+  masterGain: null,
   sweepRecorder: null,
   isSweep: false,
-  isFixed: false,
-  isGhost: false,
-  gainLevel: 0,              // 0=normal, 1=×2, 2=×4
+  gainLevel: 0,
   voiceEnergy: 0,
-  ghostWords: ["OUI","NON","ICI","JE SUIS","TU ES","AIDE","MORT","VIVANT","LAISSE","PART","RESTE","DANGER","MAMAN","PAPA","QUI","POURQUOI","VA-T-EN","LUMIÈRE","NOIR","MAINTENANT","ESPRIT","ENTENDS","REGARDE","TOUCHE","SENT","VIENS","NON","OUI","ICI","JE SUIS LÀ","AIDE-MOI","LÂCHE-MOI","TUE","SAUVE","PARLE","ÉCOUTE"],
-  lastEVP: 0
+  isGhost: false,
+  ghostWords: ["OUI","NON","ICI","JE SUIS","TU ES","AIDE","MORT","VIVANT","DANGER","MAMAN","QUI","POURQUOI","VA-T-EN","LUMIÈRE","NOIR","MAINTENANT","ESPRIT","ENTENDS","REGARDE","TOUCHE","SENT","VIENS","LÂCHE-MOI","PARLE","ÉCOUTE","ICI","JE SUIS LÀ","AIDE-MOI"]
 };
 
 const log = (txt, type='info') => {
@@ -101,57 +98,66 @@ const log = (txt, type='info') => {
   d.innerHTML = `<span style="opacity:.6">[${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}]</span> ${txt}`;
   if(type==='ghost') d.style.color = '#aa00ff';
   DOM.logZone.prepend(d);
-  if(DOM.logZone.children.length>60) DOM.logZone.lastChild.remove();
+  if(DOM.logZone.children.length > 60) DOM.logZone.lastChild.remove();
 };
 
-// ====================== BOOT ======================
+// ====================== BOOT (Realme Fix) ======================
 DOM.boot.onclick = async () => {
-  DOM.boot.textContent = "GOD MODE...";
-  const AudioCtx = window.AudioContext || window.webkitAudioContext;
-  state.audioCtx = new AudioCtx();
-  await state.audioCtx.resume();
+  DOM.boot.textContent = "INITIALISATION REALME...";
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    state.audioCtx = new AudioCtx();
+    await state.audioCtx.resume();                     // ← FIX Realme
 
-  // Worklet
-  await state.audioCtx.audioWorklet.addModule(URL.createObjectURL(new Blob([`
-    class EVPSweep extends AudioWorkletProcessor {
-      static get parameterDescriptors(){return [{name:'gain',defaultValue:0.45}]}
-      constructor(){super();this.phase=0;this.bpL=this.bpR=0;}
-      process(inputs,outputs,parameters){
-        const outL=outputs[0][0], outR=outputs[0][1]||outL;
-        const g = parameters.gain[0]||0.45;
-        for(let i=0;i<128;i++){
-          const f = 850 + Math.sin(this.phase+=0.0008)*700;
-          const omega = 2*Math.PI*Math.max(30,f)/sampleRate;
-          const alpha = Math.sin(omega)/32;
-          const nL = Math.random()*2-1, nR = Math.random()*2-1;
-          let bpL = this.bpL + alpha*(nL-this.bpL); this.bpL = bpL;
-          let bpR = this.bpR + alpha*(nR-this.bpR); this.bpR = bpR;
-          outL[i] = bpL * g;
-          outR[i] = bpR * g;
+    // Worklet
+    await state.audioCtx.audioWorklet.addModule(URL.createObjectURL(new Blob([`
+      class EVPSweep extends AudioWorkletProcessor {
+        static get parameterDescriptors(){return [{name:'gain',defaultValue:0.45}]}
+        constructor(){super();this.phase=0;this.bp=0;}
+        process(inputs,outputs,parameters){
+          const out = outputs[0][0];
+          const g = parameters.gain[0]||0.45;
+          for(let i=0;i<128;i++){
+            const f = 850 + Math.sin(this.phase+=0.0008)*700;
+            const omega = 2*Math.PI*Math.max(30,f)/sampleRate;
+            const alpha = Math.sin(omega)/32;
+            const noise = Math.random()*2-1;
+            this.bp = this.bp + alpha*(noise-this.bp);
+            out[i] = this.bp * g;
+          }
+          return true;
         }
-        return true;
       }
-    }
-    registerProcessor('evp-sweep',EVPSweep);
-  `],{type:'application/javascript'})));
+      registerProcessor('evp-sweep',EVPSweep);
+    `],{type:'application/javascript'})));
 
-  state.stream = await navigator.mediaDevices.getUserMedia({audio:{channelCount:2}});
-  const source = state.audioCtx.createMediaStreamSource(state.stream);
-  state.analyser = state.audioCtx.createAnalyser();
-  state.analyser.fftSize = 1024;
-  source.connect(state.analyser);
+    // MICRO MONO (plus stable sur Realme Note 60)
+    state.stream = await navigator.mediaDevices.getUserMedia({audio:true});
+    const source = state.audioCtx.createMediaStreamSource(state.stream);
+    state.analyser = state.audioCtx.createAnalyser();
+    state.analyser.fftSize = 1024;
+    source.connect(state.analyser);
 
-  // Master Gain (FIX son)
-  state.masterGain = state.audioCtx.createGain();
-  state.masterGain.gain.value = 1.0;
+    // Master Gain (son garanti)
+    state.masterGain = state.audioCtx.createGain();
+    state.masterGain.gain.value = 1.0;
+    state.masterGain.connect(state.audioCtx.destination);
 
-  DOM.boot.style.display = 'none';
-  DOM.ui.style.display = 'flex';
-  startVisualizer();
-  toggleSweep(); // auto
+    DOM.boot.style.display = 'none';
+    DOM.ui.style.display = 'flex';
+    DOM.micStatus.textContent = "ACTIF";
+    DOM.micStatus.style.color = "var(--primary)";
+
+    log("✅ AudioContext + Micro OK (Realme Fix)", "success");
+    startVisualizer();
+    toggleSweep(); // auto-start sweep
+  } catch(e){
+    log("❌ ERREUR : " + e.message + " (vérifie permissions micro dans Paramètres → Applications)", "error");
+    DOM.boot.textContent = "ÉCHEC – Réessayer";
+  }
 };
 
-// ====================== SWEEP + BOOST (CORRIGÉ) ======================
+// ====================== SWEEP + BOOST (FONCTIONNE MAINTENANT) ======================
 async function toggleSweep(){
   if(state.isSweep){
     state.workletNode?.disconnect();
@@ -161,7 +167,6 @@ async function toggleSweep(){
   }
   state.workletNode = new AudioWorkletNode(state.audioCtx, 'evp-sweep');
   state.workletNode.connect(state.masterGain);
-  state.masterGain.connect(state.audioCtx.destination);
   state.isSweep = true;
   DOM.btnSweep.classList.add('active');
   applyBoost();
@@ -170,52 +175,45 @@ async function toggleSweep(){
 function applyBoost(){
   if(!state.workletNode) return;
   let g = 0.45;
-  if(state.gainLevel===1) g = 1.1;
-  if(state.gainLevel===2) g = 2.0; // ultra fort
-  state.workletNode.parameters.get('gain').setTargetAtTime(g, state.audioCtx.currentTime, 0.1);
-  state.masterGain.gain.setTargetAtTime(1.0, state.audioCtx.currentTime, 0.05);
-  log(`BOOST ACTIVÉ → niveau ${state.gainLevel===2?'×4':state.gainLevel===1?'×2':'normal'}`, 'warn');
+  if(state.gainLevel===1) g = 1.15;
+  if(state.gainLevel===2) g = 2.2;
+  state.workletNode.parameters.get('gain').setTargetAtTime(g, state.audioCtx.currentTime, 0.08);
+  log(`BOOST → ${state.gainLevel===2?'ULTRA ×4':state.gainLevel===1?'×2':'normal'}`, 'warn');
 }
 
-DOM.btnBoost.onclick = ()=>{ state.gainLevel = state.gainLevel===1?0:1; applyBoost(); };
-DOM.btnUltra.onclick = ()=>{ state.gainLevel = state.gainLevel===2?0:2; applyBoost(); };
+DOM.btnBoost.onclick = () => { state.gainLevel = state.gainLevel===1?0:1; applyBoost(); };
+DOM.btnUltra.onclick = () => { state.gainLevel = state.gainLevel===2?0:2; applyBoost(); };
 
 // ====================== EVP GHOST BOX AVANCÉE ======================
 DOM.btnGhost.onclick = () => {
   state.isGhost = !state.isGhost;
   DOM.btnGhost.classList.toggle('active', state.isGhost);
-  if(state.isGhost) ghostEVPloop();
+  if(state.isGhost) ghostLoop();
 };
 
-function ghostEVPloop(){
+function ghostLoop(){
   if(!state.isGhost) return;
-  const now = Date.now();
-  if(state.voiceEnergy > 0.45 || Math.random()<0.12){
+  if(state.voiceEnergy > 0.42 || Math.random() < 0.15){
     const phrase = [];
-    for(let i=0;i<Math.random()*3+2;i++){
+    for(let i=0; i<Math.random()*3+2; i++){
       phrase.push(state.ghostWords[Math.floor(Math.random()*state.ghostWords.length)]);
     }
     const text = phrase.join(' ');
     const u = new SpeechSynthesisUtterance(text);
-    u.rate = 0.65 + Math.random()*0.4;
-    u.pitch = 0.6 + Math.random()*0.7;
-    u.volume = 0.95;
-    state.audioCtx.resume();
+    u.rate = 0.65; u.pitch = 0.7; u.volume = 0.95;
     speechSynthesis.speak(u);
     log(`EVP → "${text}"`, 'ghost');
   }
-  setTimeout(ghostEVPloop, 350);
+  setTimeout(ghostLoop, 380);
 }
 
-// ====================== VISUALISEUR + VOICE DETECTION ======================
+// ====================== VISUALISEUR ======================
 function startVisualizer(){
   const ctx = DOM.canvas.getContext('2d');
-  let raf;
   const loop = () => {
-    raf = requestAnimationFrame(loop);
+    requestAnimationFrame(loop);
     const data = new Uint8Array(state.analyser.frequencyBinCount);
     state.analyser.getByteFrequencyData(data);
-
     const w = DOM.canvas.width = DOM.canvas.clientWidth;
     const h = DOM.canvas.height;
     ctx.clearRect(0,0,w,h);
@@ -225,11 +223,9 @@ function startVisualizer(){
       const v = data[i];
       sum += v;
       if(i>3 && i<95) voice += v;
-      const height = (v/255)*h*0.92;
       ctx.fillStyle = `hsl(${200-v*0.7},100%,45%)`;
-      ctx.fillRect(i*(w/data.length), h-height, (w/data.length)-1, height);
+      ctx.fillRect(i*(w/data.length), h-(v/255)*h*0.92, (w/data.length)-1, (v/255)*h*0.92);
     }
-
     state.voiceEnergy = (voice/92)/255;
     DOM.voiceBar.style.width = `${Math.min(100,state.voiceEnergy*160)}%`;
     DOM.ghostBar.style.width = state.isGhost ? `${30+Math.random()*50}%` : '0%';
@@ -266,7 +262,7 @@ DOM.btnRecordSweep.onclick = () => {
   log("ENREGISTREMENT SWEEP ONLY DÉMARRÉ", 'warn');
 };
 
-log("ETERNITY v22 GOD MODE + EVP AVANCÉE chargé", 'ghost');
+log("ETERNITY v22 GOD MODE chargé – clique sur ACTIVER", 'ghost');
 </script>
 </body>
 </html>
