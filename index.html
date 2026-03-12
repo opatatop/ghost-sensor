@@ -2,870 +2,297 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ETERNITY v33 OMEGA ULTIMATE LAB</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ETERNITY Mobile</title>
 <style>
 :root {
-  --primary-color: #00ffd0;
-  --background-color: #000814;
-  --panel-bg: rgba(0, 0, 0, 0.85);
-  --button-bg: #001f30;
-  --voice-color: #ffaa00;
-  --evp-color: #aa00ff;
-  --ai-color: #00ff88;
-  --error-color: #ff0000;
+  --primary: #00ffd0;
+  --bg: #000814;
+  --panel: rgba(0, 0, 0, 0.9);
+  --button: #001f30;
+  --voice: #ffaa00;
+  --evp: #aa00ff;
 }
 
 body {
   margin: 0;
+  padding: 0;
   font-family: 'Courier New', monospace;
-  background: var(--background-color);
-  color: var(--primary-color);
-  overflow: hidden;
+  background: var(--bg);
+  color: var(--primary);
   height: 100vh;
-  display: grid;
-  grid-template-areas:
-    "header header"
-    "controls visualization"
-    "logs visualization";
-  grid-template-rows: auto 1fr auto;
-  grid-template-columns: 350px 1fr;
-}
-
-#panel {
-  grid-area: controls;
-  padding: 15px;
-  background: var(--panel-bg);
-  border-right: 2px solid var(--primary-color);
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  touch-action: manipulation;
 }
 
-#logZone {
-  grid-area: logs;
-  padding: 10px;
-  background: rgba(0, 0, 0, 0.6);
-  border-top: 1px solid var(--primary-color);
-  border-right: 1px solid var(--primary-color);
-  overflow-y: auto;
-  max-height: 300px;
+#header {
+  padding: 15px;
+  text-align: center;
+  background: var(--panel);
+  border-bottom: 2px solid var(--primary);
+}
+
+#controls {
+  padding: 15px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--primary);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
 }
 
 #visualization {
-  grid-area: visualization;
+  flex: 1;
   position: relative;
+  overflow: hidden;
+}
+
+#logZone {
+  height: 150px;
+  overflow-y: auto;
+  padding: 10px;
+  background: rgba(0, 0, 0, 0.6);
+  border-top: 1px solid var(--primary);
+  font-size: 0.9em;
 }
 
 button {
-  background: var(--button-bg);
-  border: 1px solid var(--primary-color);
-  color: var(--primary-color);
-  padding: 8px 12px;
-  margin: 4px 0;
-  cursor: pointer;
+  background: var(--button);
+  border: 1px solid var(--primary);
+  color: var(--primary);
+  padding: 12px;
+  margin: 5px 0;
+  border-radius: 5px;
   font-weight: bold;
-  transition: all 0.2s;
+  touch-action: manipulation;
   width: 100%;
 }
 
-button:hover {
+button:active {
   background: rgba(0, 31, 48, 0.8);
 }
 
 #voiceBar {
   height: 12px;
   width: 0%;
-  background: var(--voice-color);
-  margin-top: 4px;
-  transition: width 0.1s linear;
-}
-
-.btn-group {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+  background: var(--voice);
+  margin: 5px 0;
+  transition: width 0.1s;
 }
 
 .status {
   display: flex;
   justify-content: space-between;
-  padding: 5px 0;
+  margin-bottom: 10px;
+  font-size: 0.9em;
 }
 
-.loading {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: var(--background-color);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-direction: column;
-  z-index: 100;
-}
-
-.error-message {
-  color: var(--error-color);
-  margin-top: 20px;
+.error {
+  color: #ff0000;
+  margin: 10px 0;
   text-align: center;
 }
 
 @media (max-width: 768px) {
-  body {
-    grid-template-areas:
-      "header"
-      "controls"
-      "visualization"
-      "logs";
-    grid-template-rows: auto auto 1fr auto;
+  #controls {
     grid-template-columns: 1fr;
   }
-
-  #panel {
-    border-right: none;
-    border-bottom: 2px solid var(--primary-color);
-  }
-
-  #visualization {
-    height: 400px;
+  button {
+    padding: 10px;
   }
 }
 </style>
 </head>
 <body>
-<div class="loading" id="loadingScreen">
-  <h2>ETERNITY LAB</h2>
-  <div class="progress">Initialisation...</div>
-  <div class="progress-bar" id="progressBar"></div>
-  <div class="error-message" id="errorMessage"></div>
+<div id="header">
+  <h3>ETERNITY Mobile</h3>
 </div>
 
-<div id="panel">
-  <h3>ETERNITY v33 OMEGA</h3>
+<div id="controls">
   <div class="status">
     <span>MIC: <span id="micStatus">OFF</span></span>
     <span>IA: <span id="aiStatus">---</span></span>
   </div>
+
   <div>
-    VOICE LEVEL:
+    <div>VOICE LEVEL:</div>
     <div id="voiceBar"></div>
   </div>
-  <div class="btn-group">
-    <button id="fftLarge" data-fft="4096">FFT 4096</button>
-    <button id="fftMedium" data-fft="2048">FFT 2048</button>
-    <button id="fftSmall" data-fft="1024">FFT 1024</button>
-    <button id="autoRec">AUTO REC</button>
-    <button id="evpMode">EVP MODE</button>
-    <button id="toggle3D">3D SPECTRO</button>
-    <button id="toggleRadar">RADAR</button>
-    <button id="toggleAI">IA ANALYSIS</button>
-    <button id="exportLog">EXPORT LOG</button>
-    <button id="wavRecord">WAV RECORD</button>
-  </div>
-  <div class="settings">
-    <h4>EVP THRESHOLD</h4>
-    <button id="evpThresholdUp">+</button>
-    <button id="evpThresholdDown">-</button>
-    <div id="evpThresholdValue">0.5</div>
-  </div>
+
+  <button id="startBtn">DÉMARRER</button>
+  <button id="fftBtn">FFT 2048</button>
+  <button id="recBtn">AUTO REC</button>
+  <button id="evpBtn">EVP MODE</button>
 </div>
 
-<div id="logZone"></div>
 <div id="visualization"></div>
+<div id="logZone"></div>
 
 <script>
-// Configuration des URLs des bibliothèques
-const LIBRARIES = {
-  three: 'https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js',
-  tfjs: 'https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.11.0/dist/tf.min.js',
-  yamnet: 'https://cdn.jsdelivr.net/npm/@tensorflow-models/yamnet@1.0.5/dist/yamnet.min.js'
+// Configuration pour mobile
+const config = {
+  fftSize: 1024, // Plus petit pour les performances
+  autoRec: false,
+  evpMode: false
 };
 
-// ======================= STATE MANAGEMENT =======================
-const state = {
-  audio: {
-    context: null,
-    analyser: null,
-    dataArray: null,
-    stream: null,
-    recorder: null,
-    chunks: [],
-    status: 'off',
-    energy: 0,
-    fftSize: 2048
-  },
-  visualization: {
-    mode: '3d',
-    spectro3D: true,
-    radar: true,
-    waterfall: true,
-    scene: null,
-    camera: null,
-    renderer: null,
-    cubes: []
-  },
-  ai: {
-    model: null,
-    predictions: [],
-    status: 'off',
-    evpMode: false,
-    evpThreshold: 0.5
-  },
-  recording: {
-    wav: false,
-    auto: false,
-    buffers: []
-  },
-  logs: [],
-  initialized: false,
-  librariesLoaded: {
-    three: false,
-    tfjs: false,
-    yamnet: false
-  }
-};
-
-// ======================= DOM ELEMENTS =======================
+// Éléments DOM
 const elements = {
   micStatus: document.getElementById('micStatus'),
   aiStatus: document.getElementById('aiStatus'),
   voiceBar: document.getElementById('voiceBar'),
   logZone: document.getElementById('logZone'),
-  visualization: document.getElementById('visualization'),
-  loadingScreen: document.getElementById('loadingScreen'),
-  progressBar: document.getElementById('progressBar'),
-  errorMessage: document.getElementById('errorMessage'),
-  fftButtons: {
-    large: document.getElementById('fftLarge'),
-    medium: document.getElementById('fftMedium'),
-    small: document.getElementById('fftSmall')
-  },
-  evpThresholdValue: document.getElementById('evpThresholdValue')
+  startBtn: document.getElementById('startBtn'),
+  fftBtn: document.getElementById('fftBtn'),
+  recBtn: document.getElementById('recBtn'),
+  evpBtn: document.getElementById('evpBtn')
 };
 
-// ======================= UTILITY FUNCTIONS =======================
-/**
- * Ajoute un message au journal
- * @param {string} msg - Message à journaliser
- * @param {string} color - Couleur du message
- */
-function log(msg, color = "--ai-color") {
+// Variables audio
+let audioCtx;
+let analyser;
+let dataArray;
+let mediaRecorder;
+let animationFrameId;
+
+// Journalisation
+function log(msg, color = config.evpMode ? "#aa00ff" : "#00ff88") {
   const div = document.createElement("div");
-  div.style.color = `var(${color})`;
+  div.style.color = color;
   const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute: '2-digit', second: '2-digit'});
   div.textContent = `[${time}] ${msg}`;
-  elements.logZone.prepend(div);
-
-  // Limiter à 200 entrées
-  if (elements.logZone.children.length > 200) {
-    elements.logZone.removeChild(elements.logZone.lastChild);
-  }
-
-  state.logs.unshift(div.textContent);
-  console.log(msg); // Also log to console for debugging
+  elements.logZone.appendChild(div);
+  elements.logZone.scrollTop = elements.logZone.scrollHeight;
 }
 
-/**
- * Met à jour la barre de progression du chargement
- * @param {number} progress - Pourcentage de progression (0-100)
- */
-function updateLoadingProgress(progress) {
-  elements.progressBar.style.width = `${progress}%`;
-}
-
-/**
- * Affiche un message d'erreur
- * @param {string} msg - Message d'erreur
- */
-function showError(msg) {
-  elements.errorMessage.textContent = msg;
-  log(`ERREUR: ${msg}`, "--error-color");
-}
-
-// ======================= AUDIO MODULE =======================
-const AudioModule = {
-  init: async function() {
-    try {
-      state.audio.context = new (window.AudioContext || window.webkitAudioContext)();
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-
-      state.audio.stream = stream;
-      state.audio.recorder = new MediaRecorder(stream);
-      state.audio.recorder.ondataavailable = this.handleDataAvailable;
-      state.audio.recorder.onstop = this.handleRecordingStop;
-
-      const source = state.audio.context.createMediaStreamSource(stream);
-      state.audio.analyser = state.audio.context.createAnalyser();
-      state.audio.analyser.fftSize = state.audio.fftSize;
-      state.audio.dataArray = new Uint8Array(state.audio.analyser.frequencyBinCount);
-      source.connect(state.audio.analyser);
-
-      state.audio.status = 'active';
-      elements.micStatus.textContent = "ACTIVE";
-      log("Système audio initialisé");
-
-      // Démarrer la boucle audio
-      this.audioLoop();
-
-      return true;
-    } catch (error) {
-      log(`Erreur audio: ${error.message}`, "--error-color");
-      showError(`Audio error: ${error.message}`);
-      return false;
-    }
-  },
-
-  handleDataAvailable: function(event) {
-    state.audio.chunks.push(event.data);
-  },
-
-  handleRecordingStop: function() {
-    const blob = new Blob(state.audio.chunks, { type: "audio/webm" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `event_${Date.now()}.webm`;
-    a.click();
-    log("Enregistrement sauvegardé");
-    state.audio.chunks = [];
-  },
-
-  audioLoop: function() {
-    if (!state.audio.analyser) return;
-
-    state.audio.analyser.getByteFrequencyData(state.audio.dataArray);
-
-    // Calculer l'énergie vocale
-    const sum = state.audio.dataArray.reduce((acc, val) => acc + val, 0);
-    state.audio.energy = Math.min(100, sum / state.audio.dataArray.length);
-    elements.voiceBar.style.width = `${state.audio.energy}%`;
-
-    // Déclencher l'enregistrement automatique si activé
-    if (state.recording.auto && state.audio.energy > 30) {
-      this.startRecording();
-    }
-
-    requestAnimationFrame(this.audioLoop.bind(this));
-  },
-
-  startRecording: function() {
-    if (state.audio.recorder.state === "inactive") {
-      state.audio.chunks = [];
-      state.audio.recorder.start();
-      log("Enregistrement démarré (3 sec)");
-
-      setTimeout(() => {
-        if (state.audio.recorder.state !== "inactive") {
-          state.audio.recorder.stop();
-        }
-      }, 3000);
-    }
-  }
-};
-
-// ======================= VISUALIZATION MODULE =======================
-const VisualizationModule = {
-  init: function() {
-    // Créer la scène 3D
-    this.init3D();
-
-    // Créer les canvases pour waterfall et radar
-    this.createWaterfall();
-    this.createRadar();
-
-    // Démarrer la boucle de rendu
-    this.renderLoop();
-  },
-
-  init3D: function() {
-    if (!window.THREE) {
-      log("Three.js non disponible", "--error-color");
-      return;
-    }
-
-    state.visualization.scene = new THREE.Scene();
-    state.visualization.camera = new THREE.PerspectiveCamera(
-      75,
-      elements.visualization.clientWidth / elements.visualization.clientHeight,
-      0.1,
-      2000
-    );
-    state.visualization.camera.position.z = 200;
-
-    state.visualization.renderer = new THREE.WebGLRenderer({ antialias: true });
-    state.visualization.renderer.setSize(
-      elements.visualization.clientWidth,
-      elements.visualization.clientHeight
-    );
-    elements.visualization.appendChild(state.visualization.renderer.domElement);
-  },
-
-  createWaterfall: function() {
-    const canvas = document.createElement('canvas');
-    canvas.id = 'waterfallCanvas';
-    canvas.style.position = 'absolute';
-    canvas.style.bottom = '0';
-    canvas.style.left = '0';
-    canvas.width = elements.visualization.clientWidth;
-    canvas.height = 200;
-    elements.visualization.appendChild(canvas);
-    this.waterfallCtx = canvas.getContext('2d');
-  },
-
-  createRadar: function() {
-    const canvas = document.createElement('canvas');
-    canvas.id = 'radarCanvas';
-    canvas.style.position = 'absolute';
-    canvas.style.top = '10px';
-    canvas.style.right = '10px';
-    canvas.width = 180;
-    canvas.height = 180;
-    elements.visualization.appendChild(canvas);
-    this.radarCtx = canvas.getContext('2d');
-  },
-
-  drawWaterfall: function() {
-    if (!state.visualization.waterfall || !this.waterfallCtx || !state.audio.dataArray) return;
-
-    const w = this.waterfallCtx.canvas.width;
-    const h = this.waterfallCtx.canvas.height;
-
-    // Déplacer l'image vers le bas
-    const img = this.waterfallCtx.getImageData(0, 0, w, h);
-    this.waterfallCtx.putImageData(img, 0, 1);
-
-    // Dessiner les nouvelles données
-    for (let i = 0; i < state.audio.dataArray.length; i++) {
-      const v = state.audio.dataArray[i];
-      this.waterfallCtx.fillStyle = `hsl(${200 - v}, 100%, 50%)`;
-      this.waterfallCtx.fillRect(i * (w / state.audio.dataArray.length), 0, 2, 1);
-    }
-  },
-
-  drawRadar: function() {
-    if (!state.visualization.radar || !this.radarCtx || !state.audio.dataArray) return;
-
-    this.radarCtx.clearRect(0, 0, this.radarCtx.canvas.width, this.radarCtx.canvas.height);
-    this.radarCtx.strokeStyle = "var(--primary-color)";
-    this.radarCtx.beginPath();
-    this.radarCtx.arc(90, 90, 80, 0, Math.PI * 2);
-    this.radarCtx.stroke();
-
-    const energy = state.audio.dataArray.reduce((acc, val) => acc + val, 0);
-    const angle = Math.random() * Math.PI * 2;
-    const r = energy / 1500;
-    const x = 90 + Math.cos(angle) * r;
-    const y = 90 + Math.sin(angle) * r;
-
-    this.radarCtx.fillStyle = "var(--ai-color)";
-    this.radarCtx.fillRect(x, y, 4, 4);
-  },
-
-  draw3DSpectro: function() {
-    if (!state.visualization.spectro3D || !state.audio.dataArray || !state.visualization.scene) return;
-
-    for (let i = 0; i < state.audio.dataArray.length; i += 2) {
-      const v = state.audio.dataArray[i] / 255;
-      const color = state.ai.evpMode
-        ? `hsl(${300 - state.audio.dataArray[i]}, 100%, 50%)`
-        : `hsl(${200 - state.audio.dataArray[i]}, 100%, 50%)`;
-
-      const geometry = new THREE.BoxGeometry(2, 2, v * 60);
-      const material = new THREE.MeshBasicMaterial({ color: new THREE.Color(color) });
-      const cube = new THREE.Mesh(geometry, material);
-
-      cube.position.x = i - 256;
-      cube.position.y = -60;
-      cube.position.z = v * 30;
-      state.visualization.scene.add(cube);
-      state.visualization.cubes.push(cube);
-    }
-
-    // Limiter le nombre de cubes
-    if (state.visualization.cubes.length > 10000) {
-      const old = state.visualization.cubes.shift();
-      state.visualization.scene.remove(old);
-    }
-  },
-
-  renderLoop: function() {
-    requestAnimationFrame(this.renderLoop.bind(this));
-
-    if (state.audio.dataArray) {
-      this.draw3DSpectro();
-      this.drawRadar();
-      this.drawWaterfall();
-    }
-
-    if (state.visualization.renderer && state.visualization.scene && state.visualization.camera) {
-      state.visualization.renderer.render(
-        state.visualization.scene,
-        state.visualization.camera
-      );
-    }
-  },
-
-  handleResize: function() {
-    if (state.visualization.camera) {
-      state.visualization.camera.aspect =
-        elements.visualization.clientWidth / elements.visualization.clientHeight;
-      state.visualization.camera.updateProjectionMatrix();
-    }
-
-    if (state.visualization.renderer) {
-      state.visualization.renderer.setSize(
-        elements.visualization.clientWidth,
-        elements.visualization.clientHeight
-      );
-    }
-
-    if (this.waterfallCtx) {
-      this.waterfallCtx.canvas.width = elements.visualization.clientWidth;
-    }
-  }
-};
-
-// ======================= AI MODULE =======================
-const AIModule = {
-  loadModel: async function() {
-    if (!window.tf || !window.yamnet) {
-      log("TensorFlow.js ou YAMNet non disponible", "--error-color");
-      showError("TensorFlow.js ou YAMNet non chargé");
-      return false;
-    }
-
-    try {
-      log("Chargement du modèle YAMNet...");
-      state.ai.status = 'loading';
-
-      // Utiliser une version plus récente de YAMNet si disponible
-      if (window.yamnet && window.yamnet.load) {
-        state.ai.model = await window.yamnet.load();
-        state.ai.status = 'ready';
-        elements.aiStatus.textContent = "READY";
-        log("Modèle IA chargé avec succès", "--ai-color");
-        this.analyzeLoop();
-        return true;
-      } else {
-        throw new Error("YAMNet non disponible");
-      }
-    } catch (error) {
-      log(`Erreur chargement IA: ${error.message}`, "--error-color");
-      showError(`IA error: ${error.message}`);
-      state.ai.status = 'error';
-      return false;
-    }
-  },
-
-  analyzeAudio: async function() {
-    if (!state.ai.model || !state.audio.dataArray || state.ai.status !== 'ready') return;
-
-    try {
-      // Normaliser les données
-      const floatData = new Float32Array(state.audio.dataArray.length);
-      for (let i = 0; i < state.audio.dataArray.length; i++) {
-        floatData[i] = (state.audio.dataArray[i] - 128) / 128;
-      }
-
-      const inputTensor = tf.tensor(floatData).reshape([floatData.length, 1]);
-      const scores = await state.ai.model.predict(inputTensor);
-
-      const topScores = Array.from(scores.dataSync())
-        .map((s, i) => ({ score: s, index: i }))
-        .sort((a, b) => b.score - a.score)
-        .slice(0, 3);
-
-      state.ai.predictions = topScores.map(p =>
-        `${state.ai.model.classes[p.index]} (${(p.score * 100).toFixed(1)}%)`
-      );
-
-      elements.aiStatus.textContent = state.ai.predictions[0];
-
-      // Détection EVP
-      if (state.ai.evpMode && topScores[0].score < state.ai.evpThreshold) {
-        log(`EVP détecté: ${state.ai.predictions[0]}`, "--evp-color");
-        if (state.recording.auto) {
-          AudioModule.startRecording();
-        }
-      }
-    } catch (error) {
-      log(`Erreur d'analyse IA: ${error.message}`, "--error-color");
-    }
-  },
-
-  analyzeLoop: function() {
-    if (state.ai.status === 'ready') {
-      this.analyzeAudio();
-    }
-    setTimeout(this.analyzeLoop.bind(this), 500);
-  }
-};
-
-// ======================= RECORDING MODULE =======================
-const RecordingModule = {
-  startWAVRecording: function() {
-    if (state.recording.wav) return;
-
-    state.recording.wav = true;
-    state.recording.buffers = [];
-    log("Enregistrement WAV démarré", "--voice-color");
-
-    // Capturer périodiquement les données
-    this.captureWAV();
-  },
-
-  stopWAVRecording: function() {
-    if (!state.recording.wav) return;
-
-    state.recording.wav = false;
-    const bufferLength = state.recording.buffers.reduce((sum, b) => sum + b.length, 0);
-    const interleaved = new Float32Array(bufferLength);
-    let offset = 0;
-
-    for (const buffer of state.recording.buffers) {
-      interleaved.set(buffer, offset);
-      offset += buffer.length;
-    }
-
-    const wavBlob = this.encodeWAV(interleaved, state.audio.context.sampleRate);
-    const url = URL.createObjectURL(wavBlob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `event_${Date.now()}.wav`;
-    a.click();
-    log("Fichier WAV sauvegardé", "--voice-color");
-  },
-
-  captureWAV: function() {
-    if (!state.recording.wav || !state.audio.dataArray) return;
-
-    const floatData = new Float32Array(state.audio.dataArray.length);
-    for (let i = 0; i < state.audio.dataArray.length; i++) {
-      floatData[i] = (state.audio.dataArray[i] - 128) / 128;
-    }
-    state.recording.buffers.push(floatData);
-
-    if (state.recording.wav) {
-      setTimeout(this.captureWAV.bind(this), 100);
-    }
-  },
-
-  encodeWAV: function(samples, sampleRate) {
-    const buffer = new ArrayBuffer(44 + samples.length * 2);
-    const view = new DataView(buffer);
-
-    function writeString(offset, string) {
-      for (let i = 0; i < string.length; i++) {
-        view.setUint8(offset + i, string.charCodeAt(i));
-      }
-    }
-
-    let offset = 0;
-    writeString(offset, 'RIFF'); offset += 4;
-    view.setUint32(offset, 36 + samples.length * 2, true); offset += 4;
-    writeString(offset, 'WAVE'); offset += 4;
-    writeString(offset, 'fmt '); offset += 4;
-    view.setUint32(offset, 16, true); offset += 4;
-    view.setUint16(offset, 1, true); offset += 2;
-    view.setUint16(offset, 1, true); offset += 2;
-    view.setUint32(offset, sampleRate, true); offset += 4;
-    view.setUint32(offset, sampleRate * 2, true); offset += 4;
-    view.setUint16(offset, 2, true); offset += 2;
-    view.setUint16(offset, 16, true); offset += 2;
-    writeString(offset, 'data'); offset += 4;
-    view.setUint32(offset, samples.length * 2, true); offset += 4;
-
-    // Écrire les données PCM
-    let pos = 44;
-    for (const s of samples) {
-      const sample = Math.max(-1, Math.min(1, s));
-      view.setInt16(pos, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
-      pos += 2;
-    }
-
-    return new Blob([view], { type: "audio/wav" });
-  },
-
-  exportLog: function() {
-    const blob = new Blob(state.logs, { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `eternity_log_${Date.now()}.txt`;
-    a.click();
-    log("Journal exporté", "--ai-color");
-  }
-};
-
-// ======================= UI MODULE =======================
-const UIModule = {
-  init: function() {
-    // Boutons FFT
-    elements.fftButtons.large.onclick = () => this.setFFTSize(4096);
-    elements.fftButtons.medium.onclick = () => this.setFFTSize(2048);
-    elements.fftButtons.small.onclick = () => this.setFFTSize(1024);
-
-    // Autres boutons
-    document.getElementById('autoRec').onclick = () => this.toggleAutoRec();
-    document.getElementById('evpMode').onclick = () => this.toggleEVPMode();
-    document.getElementById('toggle3D').onclick = () => this.toggle3D();
-    document.getElementById('toggleRadar').onclick = () => this.toggleRadar();
-    document.getElementById('toggleAI').onclick = () => this.toggleAI();
-    document.getElementById('exportLog').onclick = RecordingModule.exportLog;
-    document.getElementById('wavRecord').onclick = () => this.toggleWavRecord();
-    document.getElementById('evpThresholdUp').onclick = () => this.adjustEVPThreshold(0.05);
-    document.getElementById('evpThresholdDown').onclick = () => this.adjustEVPThreshold(-0.05);
-
-    // Gestion du redimensionnement
-    window.addEventListener('resize', VisualizationModule.handleResize);
-  },
-
-  setFFTSize: function(size) {
-    state.audio.fftSize = size;
-    if (state.audio.analyser) {
-      state.audio.analyser.fftSize = size;
-      state.audio.dataArray = new Uint8Array(state.audio.analyser.frequencyBinCount);
-    }
-    log(`Taille FFT définie à ${size}`);
-  },
-
-  toggleAutoRec: function() {
-    state.recording.auto = !state.recording.auto;
-    document.getElementById('autoRec').style.backgroundColor =
-      state.recording.auto ? "#00aa00" : "var(--button-bg)";
-    log(`Enregistrement automatique ${state.recording.auto ? "ACTIF" : "INACTIF"}`);
-  },
-
-  toggleEVPMode: function() {
-    state.ai.evpMode = !state.ai.evpMode;
-    document.getElementById('evpMode').style.backgroundColor =
-      state.ai.evpMode ? "var(--evp-color)" : "var(--button-bg)";
-    log(`Mode EVP ${state.ai.evpMode ? "ACTIF" : "INACTIF"}`);
-  },
-
-  toggle3D: function() {
-    state.visualization.spectro3D = !state.visualization.spectro3D;
-    document.getElementById('toggle3D').style.backgroundColor =
-      state.visualization.spectro3D ? "var(--primary-color)" : "var(--button-bg)";
-    log(`Visualisation 3D ${state.visualization.spectro3D ? "ACTIVE" : "INACTIVE"}`);
-  },
-
-  toggleRadar: function() {
-    state.visualization.radar = !state.visualization.radar;
-    document.getElementById('toggleRadar').style.backgroundColor =
-      state.visualization.radar ? "var(--primary-color)" : "var(--button-bg)";
-    log(`Radar ${state.visualization.radar ? "ACTIF" : "INACTIF"}`);
-  },
-
-  toggleAI: function() {
-    if (state.ai.status === 'ready') {
-      state.ai.status = 'off';
-      document.getElementById('toggleAI').style.backgroundColor = "var(--button-bg)";
-      log("Analyse IA INACTIVE");
-    } else if (state.ai.status === 'error') {
-      log("Analyse IA indisponible", "--error-color");
-    } else {
-      state.ai.status = 'ready';
-      document.getElementById('toggleAI').style.backgroundColor = "var(--ai-color)";
-      log("Analyse IA ACTIVE");
-    }
-  },
-
-  toggleWavRecord: function() {
-    if (state.recording.wav) {
-      RecordingModule.stopWAVRecording();
-      document.getElementById('wavRecord').style.backgroundColor = "var(--button-bg)";
-    } else {
-      RecordingModule.startWAVRecording();
-      document.getElementById('wavRecord').style.backgroundColor = "var(--voice-color)";
-    }
-  },
-
-  adjustEVPThreshold: function(amount) {
-    state.ai.evpThreshold = Math.min(1, Math.max(0, state.ai.evpThreshold + amount));
-    elements.evpThresholdValue.textContent = state.ai.evpThreshold.toFixed(2);
-    log(`Seuil EVP défini à ${state.ai.evpThreshold.toFixed(2)}`);
-  }
-};
-
-// ======================= MAIN APPLICATION =======================
-/**
- * Charge un script externe avec gestion d'erreur
- * @param {string} url - URL du script
- * @returns {Promise<boolean>} - True si chargé avec succès
- */
-function loadScript(url) {
-  return new Promise((resolve, reject) => {
-    const script = document.createElement('script');
-    script.src = url;
-    script.onload = () => resolve(true);
-    script.onerror = () => {
-      log(`Erreur de chargement: ${url}`, "--error-color");
-      resolve(false);
-    };
-    document.head.appendChild(script);
-  });
-}
-
-/**
- * Initialise l'application
- */
-async function initApplication() {
+// Initialisation mobile
+async function initMobile() {
   try {
-    // Charger les bibliothèques dans l'ordre
-    updateLoadingProgress(10);
-    log("Chargement des bibliothèques...");
+    log("Initialisation...");
 
-    // Charger Three.js
-    const threeLoaded = await loadScript(LIBRARIES.three);
-    state.librariesLoaded.three = threeLoaded;
-    updateLoadingProgress(30);
-    if (!threeLoaded) showError("Three.js non chargé");
+    // Demander l'accès au microphone
+    const stream = await navigator.mediaDevices.getUserMedia({
+      audio: true,
+      video: false
+    });
 
-    // Charger TensorFlow.js
-    const tfjsLoaded = await loadScript(LIBRARIES.tfjs);
-    state.librariesLoaded.tfjs = tfjsLoaded;
-    updateLoadingProgress(50);
-    if (!tfjsLoaded) showError("TensorFlow.js non chargé");
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const source = audioCtx.createMediaStreamSource(stream);
 
-    // Charger YAMNet
-    const yamnetLoaded = await loadScript(LIBRARIES.yamnet);
-    state.librariesLoaded.yamnet = yamnetLoaded;
-    updateLoadingProgress(70);
-    if (!yamnetLoaded) showError("YAMNet non chargé");
+    analyser = audioCtx.createAnalyser();
+    analyser.fftSize = config.fftSize;
+    dataArray = new Uint8Array(analyser.frequencyBinCount);
+    source.connect(analyser);
 
-    // Initialiser les modules
-    const audioInitialized = await AudioModule.init();
-    VisualizationModule.init();
+    config.micActive = true;
+    elements.micStatus.textContent = "ON";
+    log("Micro activé");
 
-    // Initialiser l'IA si disponible
-    if (yamnetLoaded && tfjsLoaded) {
-      await AIModule.loadModel();
-    } else {
-      log("Mode IA désactivé - bibliothèques manquantes", "--error-color");
-      state.ai.status = 'error';
-    }
-
-    UIModule.init();
-
-    // Cacher l'écran de chargement
-    elements.loadingScreen.style.display = 'none';
-    updateLoadingProgress(100);
-
-    log("Application prête", "--primary-color");
-    state.initialized = true;
+    updateVisual();
+    setupButtons();
 
   } catch (error) {
-    log(`Erreur d'initialisation: ${error.message}`, "--error-color");
-    showError(`Initialization error: ${error.message}`);
+    log(`Erreur: ${error.message}`, "#ff0000");
+    if (error.name === 'NotAllowedError') {
+      alert("Veuillez autoriser l'accès au microphone dans les paramètres");
+    }
   }
 }
 
-// Démarrer l'application
-initApplication();
+// Mise à jour visuelle optimisée
+function updateVisual() {
+  if (!analyser) return;
+
+  analyser.getByteFrequencyData(dataArray);
+
+  // Calcul simplifié pour mobile
+  const sum = dataArray.reduce((acc, val) => acc + val, 0);
+  const avg = Math.min(100, sum / dataArray.length);
+  elements.voiceBar.style.width = `${avg}%`;
+
+  // Détection vocale basique
+  if (config.autoRec && avg > 30) {
+    startRecording(3000); // Enregistrement court pour mobile
+  }
+
+  animationFrameId = requestAnimationFrame(updateVisual);
+}
+
+// Enregistrement audio
+function startRecording(duration) {
+  if (!mediaRecorder) {
+    const stream = audioCtx.createMediaStreamDestination().stream;
+    mediaRecorder = new MediaRecorder(stream);
+    mediaRecorder.ondataavailable = saveRecording;
+  }
+
+  log("Enregistrement démarré");
+  mediaRecorder.start();
+
+  setTimeout(() => {
+    if (mediaRecorder.state !== "inactive") {
+      mediaRecorder.stop();
+    }
+  }, duration);
+}
+
+function saveRecording(event) {
+  const blob = new Blob([event.data], { type: "audio/webm" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `recording_${Date.now()}.webm`;
+  a.click();
+  log("Enregistrement sauvegardé");
+}
+
+// Gestion des boutons
+function setupButtons() {
+  elements.startBtn.onclick = initMobile;
+  elements.fftBtn.onclick = toggleFFT;
+  elements.recBtn.onclick = toggleAutoRec;
+  elements.evpBtn.onclick = toggleEVP;
+}
+
+function toggleFFT() {
+  config.fftSize = config.fftSize === 1024 ? 2048 : 1024;
+  if (analyser) {
+    analyser.fftSize = config.fftSize;
+    dataArray = new Uint8Array(analyser.frequencyBinCount);
+  }
+  elements.fftBtn.textContent = `FFT ${config.fftSize}`;
+  log(`FFT: ${config.fftSize}`);
+}
+
+function toggleAutoRec() {
+  config.autoRec = !config.autoRec;
+  elements.recBtn.style.backgroundColor = config.autoRec ? "#00aa00" : "";
+  log(`Auto Rec: ${config.autoRec ? "ON" : "OFF"}`);
+}
+
+function toggleEVP() {
+  config.evpMode = !config.evpMode;
+  elements.evpBtn.style.backgroundColor = config.evpMode ? "#aa00ff" : "";
+  log(`EVP Mode: ${config.evpMode ? "ON" : "OFF"}`);
+}
+
+// Optimisation pour Android
+function optimizeForAndroid() {
+  // Désactiver le rendu 3D (trop gourmand pour mobile)
+  // Utiliser des intervalles au lieu de requestAnimationFrame si problèmes
+  if (window.matchMedia('(max-width: 768px)').matches) {
+    log("Mode mobile activé");
+    // Réduire la fréquence de mise à jour
+    setInterval(updateVisual, 200); // 5fps
+    cancelAnimationFrame(animationFrameId);
+  }
+}
+
+// Démarrage
+log("Appuyez sur DÉMARRER pour commencer");
+optimizeForAndroid();
 </script>
 </body>
 </html>
