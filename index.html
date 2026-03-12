@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>ETERNITY v18 VOICE FOCUS</title>
+    <title>ETERNITY v19 DIAGNOSTIC</title>
     <meta name="theme-color" content="#000000">
     <style>
         :root {
@@ -90,7 +90,13 @@
             padding: 10px; text-shadow: 0 0 5px var(--secondary);
         }
 
-        /* Zone spéciale pour l'IA */
+        /* Indicateur Enregistrement IA */
+        #rec-indicator {
+            font-size: 0.7rem; color: #666; margin-top: 5px; text-align: center; font-weight: bold;
+        }
+        #rec-indicator.active { color: var(--danger); animation: blink 1s infinite; }
+        @keyframes blink { 50% { opacity: 0; } }
+
         #ai-zone {
             flex: 1; margin: 10px;
             border: 1px solid var(--secondary); background: rgba(0, 5, 10, 0.85);
@@ -127,9 +133,6 @@
         .btn-sweep { border-color: var(--danger); color: var(--danger); }
         .btn-sweep.active { background: var(--danger); color: #fff; box-shadow: 0 0 15px var(--danger); }
 
-        @keyframes blink { 50% { opacity: 0; } }
-        .live-dot { color: var(--danger); animation: blink 1.5s infinite; margin-right: 5px; font-weight: bold; }
-
     </style>
 </head>
 <body>
@@ -141,8 +144,8 @@
     <div id="ui">
         <header>
             <div>
-                <h1 class="cyber-title">ETERNITY v18</h1>
-                <div class="cyber-sub">VOICE FOCUS ARCHITECTURE</div>
+                <h1 class="cyber-title">ETERNITY v19</h1>
+                <div class="cyber-sub">DIAGNOSTIC VISIBLE</div>
             </div>
             <div style="text-align: right;">
                 <div id="clock" style="font-size:1.1rem; color:var(--secondary)">00:00</div>
@@ -171,31 +174,29 @@
 
         <div id="ai-zone">
             <div style="position:sticky; top:0; background:#000; padding-bottom:5px; border-bottom:1px solid var(--secondary); margin-bottom:5px; display:flex; justify-content:space-between; align-items:center;">
-                <span style="color:var(--primary)">> CANAL IA DÉDIQUÉ</span>
+                <span style="color:var(--primary)">> TRAITEMENT SIGNAL IA</span>
                 <span id="ai-status" style="color:var(--danger); font-size:0.7rem; font-weight:bold;">OFFLINE</span>
             </div>
+            <div id="rec-indicator">● EN ATTENTE D'ACTIVATION</div>
             <div id="log-container"></div>
         </div>
 
         <div class="controls">
             <button id="btn-audio" onclick="initAudioSimple()">SCOPE</button>
-            <button id="btn-echo" onclick="initDedicatedAI()">ECHO VOIX</button>
+            <button id="btn-echo" onclick="toggleDedicatedAI()">ECHO VOIX</button>
             <button id="btn-sweep" class="btn-sweep" onclick="toggleSweep()">SWEEP</button>
             <button id="btn-sens" onclick="toggleSensors()">SENSORS</button>
         </div>
     </div>
 
     <script>
-        // --- V18 VOICE FOCUS ---
+        // --- V19 DIAGNOSTIC VISIBLE ---
 
         let audioCtx, globalStream, globalSource, analyser, gainNode;
         let sweepNodes = [], recognition, synth;
         let isVisualizer = false, isEcho = false, isSweep = false, isSensors = false;
         let emfVal = 0, motionVal = 0, audioLevel = 0;
         let lastAlpha = null, instability = 0, emfBase = 0;
-        
-        // IMPORTANT : Flux dédié pour l'IA pour éviter le bruit du Sweep
-        let aiStream = null; 
 
         // 1. INIT AUDIO SCOPE (Global)
         async function initAudioSimple() {
@@ -207,12 +208,19 @@
                 isVisualizer = !isVisualizer;
                 btn.classList.toggle('active', isVisualizer);
                 errorText.style.display = isVisualizer ? 'none' : 'block';
-                if(isVisualizer) drawSymmetricSpectrum();
+                if(isVisualizer) {
+                    drawSymmetricSpectrum();
+                    drawNetworkBg();
+                    sysStatus.innerText = "SCOPE ACTIF";
+                    sysStatus.style.color = "#666";
+                } else {
+                    sysStatus.innerText = "SCOPE VEILLE";
+                }
                 return;
             }
 
-            btn.innerText = "CONNEXION...";
-            errorText.innerText = "INIT AUDIO SCOPE...";
+            btn.innerText = "INIT...";
+            errorText.innerText = "CONNEXION MICRO...";
 
             try {
                 const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -239,104 +247,108 @@
                 
                 isVisualizer = true;
                 drawSymmetricSpectrum();
-                drawNetworkBg();
                 cyberLog("Audio Scope Connecté.", "system");
 
             } catch (e) {
                 console.error(e);
                 btn.innerText = "ERR";
                 btn.style.borderColor = "red";
-                errorText.innerText = "MICRO BLOQUÉ";
+                errorText.innerText = "ACCÈS REFUSÉ";
                 errorText.style.color = "red";
-                alert("Micro bloqué par Android. Vérifiez Paramètres > Chrome > Microphone.");
+                alert("Micro bloqué par Android. Regardez Paramètres > Chrome > Microphone.");
             }
         }
 
-        // 2. INIT IA DÉDIÉE (Nouveau Système)
-        async function initDedicatedAI() {
+        // 2. IA DÉDIÉE (Utilise le même flux que le Scope)
+        async function toggleDedicatedAI() {
             const btn = document.getElementById('btn-echo');
             const statusEl = document.getElementById('ai-status');
-            const stateEl = document.getElementById('ai-state');
+            const recInd = document.getElementById('rec-indicator');
 
             if (isEcho) {
-                // ARRÊT PROPRE
+                // ARRET
                 isEcho = false; btn.classList.remove('active');
                 statusEl.innerText = "OFFLINE"; statusEl.style.color = "var(--danger)";
-                stateEl.innerText = "STANDBY";
                 if(recognition) recognition.stop();
-                
-                // Si on arrête l'IA, on ne coupe pas le Sweep, mais on libère le flux IA
-                if(aiStream) {
-                    aiStream.getTracks().forEach(track => track.stop());
-                    aiStream = null;
-                }
+                recInd.innerText = "● EN ATTENTE D'ACTIVATION";
+                recInd.classList.remove('active');
                 return;
             }
 
             // DÉMARRAGE
             try {
-                stateEl.innerText = "INIT...";
-                stateEl.style.color = "yellow";
+                statusEl.innerText = "INIT..."; statusEl.style.color = "yellow";
+                recInd.innerText = "● INITIALISATION...";
                 
-                // ÉTAPE 1 : Arrêter le Sweep temporairement pour éviter le bruit
-                const wasSweepOn = isSweep;
-                if (isSweep) {
-                    stopSweep();
-                }
-
-                // ÉTAPE 2 : Demander un flux MICRO FRAIS (indispensable pour l'IA)
-                aiStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-
                 synth = window.speechSynthesis;
-                if (!synth) throw new Error("TTS absent");
+                if (!synth) throw new Error("TTS indisponible");
 
                 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-                if (!SpeechRecognition) throw new Error("IA absente");
+                if (!SpeechRecognition) throw new Error("IA indisponible sur ce navigateur");
 
                 recognition = new SpeechRecognition();
                 recognition.continuous = true;
                 recognition.interimResults = false; 
                 recognition.lang = 'fr-FR';
 
-                // IMPORTANT : On relie le flux FRAIS à la reconnaissance
-                // (Note: On ne le connecte pas aux haut-parleurs pour éviter le larsen, sauf via Speak)
-                
+                // IMPORTANT : Utilisation du flux global (cloné) au lieu d'un nouveau flux
+                // Cela évite le conflit "Micro déjà utilisé" sur Realme
+                if (!globalStream) {
+                    alert("Veuillez activer SCOPE (Micro) d'abord !");
+                    statusEl.innerText = "ERREUR SCOPE";
+                    return;
+                }
+
+                // On clone le flux pour l'IA (c'est une "copie" indépendante)
+                const aiStreamClone = globalStream.clone();
+
                 recognition.onstart = () => {
                     isEcho = true; btn.classList.add('active');
-                    statusEl.innerHTML = '<span class="live-dot">●</span>EN LIGNE (CANAL PROPRE)';
+                    statusEl.innerHTML = '<span class="live-dot">●</span>ONLINE (ÉCOUTE ACTIVE)';
                     statusEl.style.color = "var(--primary)";
-                    stateEl.innerText = "ONLINE";
-                    cyberLog("Canal IA Dédié Actif (Sans Sweep).", "system");
+                    recInd.innerText = "● ENREGISTREMENT EN COURS...";
+                    recInd.classList.add('active');
+                    cyberLog("Canal IA Connecté (Flux Cloné).", "system");
                 };
 
                 recognition.onresult = (event) => {
                     const transcript = event.results[event.results.length - 1][0].transcript;
                     const confidence = event.results[event.results.length - 1][0].confidence;
                     
-                    // On baisse le seuil de confiance à 0.1 (10%) pour capter les chuchotements
-                    if (transcript.trim().length > 0 && confidence > 0.1) {
+                    // Afficher le résultat même s'il est faible (pour voir)
+                    if (transcript.trim().length > 0) {
                         cyberLog(transcript, "msg-final");
                         speakText(transcript);
                     }
                 };
 
-                recognition.onerror = (e) => {
-                    console.error(e);
-                    isEcho = false; btn.classList.remove('active'); 
-                    statusEl.innerText = "ERREUR: " + e.error;
-                    statusEl.style.color = "red";
-                    if(e.error === 'not-allowed') alert("Micro bloqué pour l'IA. Vérifiez les paramètres.");
+                // GESTION DES ERREURS (Le point clé du diagnostic)
+                recognition.onerror = (event) => {
+                    console.error("Erreur IA:", event.error);
+                    let msg = "ERREUR INCONNUE";
+                    
+                    if (event.error === 'not-allowed') {
+                        msg = "REFUSÉ PAR SYSTÈME (Android)";
+                        alert("ALERTE CRITIQUE : L'IA est bloquée.\nAllez dans : chrome://settings/content\nTrouvez 'github.io' et activez le Micro.");
+                    } else if (event.error === 'no-speech') {
+                        msg = "AUCUN SON DÉTECTÉ (Parle plus fort !)";
+                    } else if (event.error === 'network') {
+                        msg = "ERREUR RÉSEAU";
+                    }
+
+                    statusEl.innerText = msg; statusEl.style.color = "red";
+                    recInd.innerText = "● ERREUR : " + msg.toUpperCase();
+                    recInd.classList.add('active');
+                    recInd.style.color = "red";
                 };
 
                 recognition.onend = () => {
                     if (isEcho) {
-                        statusEl.innerText = "RECONNECT...";
+                        statusEl.innerText = "RECONNECTION...";
                         setTimeout(() => { if (isEcho) recognition.start(); }, 1000);
                     } else {
                         statusEl.innerText = "OFFLINE"; statusEl.style.color = "var(--danger)";
-                        stateEl.innerText = "STANDBY";
-                        // Relancer le sweep si c'était le cas
-                        if(wasSweepOn) startSweep();
+                        recInd.innerText = "● EN ATTENTE D'ACTIVATION";
                     }
                 };
 
@@ -344,7 +356,8 @@
 
             } catch (e) {
                 console.error(e);
-                alert("Erreur Initialisation IA: " + e.message);
+                alert("Erreur Initialisation IA : " + e.message);
+                statusEl.innerText = "ECHEC";
             }
         }
 
@@ -354,13 +367,16 @@
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.lang = 'fr-FR';
             utterance.rate = 1.2; utterance.volume = 1.0;
+            // Réveil du contexte pour le son
+            if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+            
             const voices = synth.getVoices();
             const frenchVoice = voices.find(v => v.lang.includes('fr'));
             if (frenchVoice) utterance.voice = frenchVoice;
             synth.speak(utterance);
         }
 
-        // 3. VISUALISEUR (Scope)
+        // 3. VISUALISEUR
         function drawSymmetricSpectrum() {
             if(!isVisualizer || !analyser) return;
             requestAnimationFrame(drawSymmetricSpectrum);
@@ -400,10 +416,6 @@
             if (isSweep) {
                 stopSweep(); isSweep = false; btn.classList.remove('active');
             } else {
-                // Si l'IA est active, le Sweep va gêner
-                if(isEcho) {
-                    alert("Attention : L'IA utilise le micro. Le Sweep va créer du bruit qui peut gêner l'écoute.");
-                }
                 if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 if (audioCtx.state === 'suspended') await audioCtx.resume();
                 startSweep(); isSweep = true; btn.classList.add('active');
@@ -420,7 +432,7 @@
             const lfo = audioCtx.createOscillator(); lfo.frequency.value = 0.1;
             const lfoGain = audioCtx.createGain(); lfoGain.gain.value = 3000; 
             lfo.connect(lfoGain); lfoGain.connect(filter.frequency); filter.frequency.value = 1000;
-            const vol = audioCtx.createGain(); vol.gain.value = 0.6; // Volume un peu plus bas pour l'IA
+            const vol = audioCtx.createGain(); vol.gain.value = 0.6; 
             noise.connect(filter); filter.connect(vol); vol.connect(audioCtx.destination);
             noise.start(); lfo.start();
             sweepNodes = [noise, lfo];
@@ -463,9 +475,8 @@
             const container = document.getElementById('log-container');
             const div = document.createElement('div');
             div.className = className;
-            const prefix = `<span class="msg-prefix">[RX_VOICE]</span>`;
+            const prefix = `<span class="msg-prefix">[RX_DATA]</span>`;
             
-            // Effet décodage
             const chars = "01";
             let iterations = 0;
             const interval = setInterval(() => {
