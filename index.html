@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>ETERNITY MOBILE</title>
+<title>ETERNITY MOBILE LAB</title>
 <style>
 :root {
   --primary: #00ffd0;
@@ -39,8 +39,8 @@ body {
   padding: 15px;
   background: var(--panel);
   border-bottom: 1px solid var(--primary);
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 10px;
 }
 
@@ -64,6 +64,7 @@ button {
   border: 1px solid var(--primary);
   color: var(--primary);
   padding: 12px;
+  margin: 5px 0;
   border-radius: 5px;
   font-weight: bold;
   touch-action: manipulation;
@@ -112,6 +113,23 @@ button:disabled {
   align-items: center;
   z-index: 100;
 }
+
+#waterfallCanvas {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 100px;
+}
+
+@media (max-width: 768px) {
+  #controls {
+    grid-template-columns: 1fr;
+  }
+  button {
+    padding: 10px;
+  }
+}
 </style>
 </head>
 <body>
@@ -120,13 +138,13 @@ button:disabled {
 </div>
 
 <div id="header">
-  <h3>ETERNITY MOBILE</h3>
+  <h3>ETERNITY MOBILE LAB</h3>
 </div>
 
 <div id="controls">
   <div class="status">
     <span>MIC: <span id="micStatus">OFF</span></span>
-    <span>STATUS: <span id="appStatus">INACTIVE</span></span>
+    <span>IA: <span id="aiStatus">OFF</span></span>
   </div>
 
   <div>
@@ -134,7 +152,7 @@ button:disabled {
     <div id="voiceBar"></div>
   </div>
 
-  <button id="startBtn">DÉMARRER</button>
+  <button id="startBtn">START</button>
   <button id="fftBtn" disabled>FFT 1024</button>
   <button id="recBtn" disabled>AUTO REC</button>
   <button id="evpBtn" disabled>EVP MODE</button>
@@ -155,20 +173,23 @@ const state = {
   fftSize: 1024,
   autoRec: false,
   evpMode: false,
-  initialized: false
+  initialized: false,
+  waterfallCtx: null,
+  animationId: null
 };
 
 // Éléments DOM
 const elements = {
   micStatus: document.getElementById('micStatus'),
-  appStatus: document.getElementById('appStatus'),
+  aiStatus: document.getElementById('aiStatus'),
   voiceBar: document.getElementById('voiceBar'),
   logZone: document.getElementById('logZone'),
   startBtn: document.getElementById('startBtn'),
   fftBtn: document.getElementById('fftBtn'),
   recBtn: document.getElementById('recBtn'),
   evpBtn: document.getElementById('evpBtn'),
-  loadingScreen: document.getElementById('loadingScreen')
+  loadingScreen: document.getElementById('loadingScreen'),
+  visualization: document.getElementById('visualization')
 };
 
 // Journalisation
@@ -179,21 +200,20 @@ function log(msg, color = "--primary") {
   div.textContent = `[${time}] ${msg}`;
   elements.logZone.appendChild(div);
   elements.logZone.scrollTop = elements.logZone.scrollHeight;
-  console.log(msg); // Pour débogage
+  console.log(msg);
 }
 
-// Initialisation complète
-async function initialize() {
+// Initialisation audio
+async function initAudio() {
   try {
-    log("Initialisation de l'application...");
+    log("Initialisation audio...");
 
-    // Vérifier la compatibilité Web Audio
+    // Vérifier la compatibilité
     if (!window.AudioContext && !window.webkitAudioContext) {
       throw new Error("Web Audio API non supporté");
     }
 
-    // Demander l'accès au microphone
-    log("Demande d'accès au microphone...");
+    // Demander le microphone
     const stream = await navigator.mediaDevices.getUserMedia({
       audio: true,
       video: false
@@ -211,12 +231,17 @@ async function initialize() {
     // Configurer l'enregistrement
     state.recorder = new MediaRecorder(stream);
     state.recorder.ondataavailable = handleDataAvailable;
-    state.recorder.onstop = handleRecordingStop;
+    state.recorder.onstop = () => {
+      state.isRecording = false;
+      log("Enregistrement terminé");
+    };
+
+    // Créer le canvas waterfall
+    createWaterfall();
 
     // Mettre à jour l'interface
     elements.micStatus.textContent = "ON";
-    elements.appStatus.textContent = "ACTIVE";
-    elements.startBtn.textContent = "ARRÊTER";
+    elements.startBtn.textContent = "STOP";
     elements.fftBtn.disabled = false;
     elements.recBtn.disabled = false;
     elements.evpBtn.disabled = false;
@@ -224,23 +249,19 @@ async function initialize() {
     // Cacher l'écran de chargement
     elements.loadingScreen.style.display = 'none';
 
-    // Démarrer la boucle audio
-    state.initialized = true;
-    log("Micro et audio initialisés avec succès");
-
     // Démarrer la visualisation
-    updateVisual();
+    state.initialized = true;
+    state.animationId = requestAnimationFrame(updateVisual);
+    log("Audio initialisé avec succès");
 
   } catch (error) {
     log(`Erreur: ${error.message}`, "--error");
-    elements.appStatus.textContent = "ERREUR";
     console.error(error);
   }
 }
 
 // Gestion des données audio
 function handleDataAvailable(event) {
-  log("Données audio reçues");
   const blob = new Blob([event.data], { type: "audio/webm" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
@@ -249,36 +270,56 @@ function handleDataAvailable(event) {
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
-  log("Enregistrement sauvegardé");
+  log("Fichier enregistré");
 }
 
-function handleRecordingStop() {
-  state.isRecording = false;
-  log("Enregistrement terminé");
+// Créer le canvas waterfall
+function createWaterfall() {
+  const canvas = document.createElement('canvas');
+  canvas.id = 'waterfallCanvas';
+  canvas.width = elements.visualization.clientWidth;
+  canvas.height = 100;
+  elements.visualization.appendChild(canvas);
+  state.waterfallCtx = canvas.getContext('2d');
 }
 
 // Mise à jour visuelle
 function updateVisual() {
-  if (!state.initialized) return;
+  if (!state.initialized || !state.analyser) return;
 
+  // Mettre à jour les données audio
   state.analyser.getByteFrequencyData(state.dataArray);
 
-  // Calculer le niveau sonore
+  // Niveau sonore
   const sum = state.dataArray.reduce((acc, val) => acc + val, 0);
   const avg = Math.min(100, sum / state.dataArray.length);
   elements.voiceBar.style.width = `${avg}%`;
 
-  // Détection vocale pour enregistrement automatique
+  // Waterfall
+  if (state.waterfallCtx) {
+    const w = state.waterfallCtx.canvas.width;
+    const h = state.waterfallCtx.canvas.height;
+    const img = state.waterfallCtx.getImageData(0, 0, w, h);
+    state.waterfallCtx.putImageData(img, 0, 1);
+
+    for (let i = 0; i < state.dataArray.length; i++) {
+      const v = state.dataArray[i];
+      state.waterfallCtx.fillStyle = `hsl(${200 - v}, 100%, 50%)`;
+      state.waterfallCtx.fillRect(i * (w / state.dataArray.length), 0, 2, 1);
+    }
+  }
+
+  // Auto-record
   if (state.autoRec && avg > 30 && !state.isRecording) {
     startRecording(3000);
   }
 
-  requestAnimationFrame(updateVisual);
+  state.animationId = requestAnimationFrame(updateVisual);
 }
 
-// Contrôles
-function startRecording(duration = 3000) {
-  if (state.isRecording) return;
+// Enregistrement
+function startRecording(duration) {
+  if (!state.recorder || state.isRecording) return;
 
   state.isRecording = true;
   state.recorder.start();
@@ -301,24 +342,23 @@ function setupButtons() {
 
 function toggleApp() {
   if (state.initialized) {
-    // Arrêter l'application
-    if (state.stream) {
-      state.stream.getTracks().forEach(track => track.stop());
-    }
-    if (state.audioContext) {
-      state.audioContext.close();
-    }
+    // Arrêter tout
+    if (state.animationId) cancelAnimationFrame(state.animationId);
+    if (state.audioContext) state.audioContext.close();
+    if (state.stream) state.stream.getTracks().forEach(track => track.stop());
+
+    // Réinitialiser
     state.initialized = false;
     elements.micStatus.textContent = "OFF";
-    elements.appStatus.textContent = "INACTIVE";
-    elements.startBtn.textContent = "DÉMARRER";
+    elements.aiStatus.textContent = "OFF";
+    elements.startBtn.textContent = "START";
     elements.fftBtn.disabled = true;
     elements.recBtn.disabled = true;
     elements.evpBtn.disabled = true;
     log("Application arrêtée");
+
   } else {
-    // Démarrer l'application
-    initialize();
+    initAudio();
   }
 }
 
@@ -335,12 +375,13 @@ function toggleFFT() {
 function toggleAutoRec() {
   state.autoRec = !state.autoRec;
   elements.recBtn.style.backgroundColor = state.autoRec ? "var(--primary)" : "";
-  log(`Enregistrement automatique: ${state.autoRec ? "ON" : "OFF"}`);
+  log(`Auto Rec: ${state.autoRec ? "ON" : "OFF"}`);
 }
 
 function toggleEVP() {
   state.evpMode = !state.evpMode;
   elements.evpBtn.style.backgroundColor = state.evpMode ? "var(--evp)" : "";
+  elements.aiStatus.textContent = state.evpMode ? "ON" : "OFF";
   log(`Mode EVP: ${state.evpMode ? "ON" : "OFF"}`);
 }
 
