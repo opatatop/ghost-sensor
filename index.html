@@ -71,6 +71,7 @@ button {
   font-weight: bold;
   touch-action: manipulation;
   width: 100%;
+  cursor: pointer;
 }
 
 button:active {
@@ -80,6 +81,7 @@ button:active {
 button:disabled {
   background: #333;
   color: #666;
+  cursor: not-allowed;
 }
 
 #voiceBar {
@@ -145,7 +147,7 @@ button:disabled {
 <body>
 <div class="loading" id="loadingScreen">
   <h2>ETERNITY LAB</h2>
-  <div class="progress">Initialisation...</div>
+  <div class="progress">Chargement des modules...</div>
   <div id="initLog"></div>
 </div>
 
@@ -206,8 +208,8 @@ const state = {
   model: null,
   initialized: false,
   librariesLoaded: {
-    three: typeof THREE !== 'undefined',
-    tfjs: typeof tf !== 'undefined'
+    three: false,
+    tfjs: false
   }
 };
 
@@ -224,7 +226,8 @@ const elements = {
   evpBtn: document.getElementById('evpBtn'),
   radarBtn: document.getElementById('radarBtn'),
   wavBtn: document.getElementById('wavBtn'),
-  loadingScreen: document.getElementById('loadingScreen')
+  loadingScreen: document.getElementById('loadingScreen'),
+  visualization: document.getElementById('visualization') // Ajouté manquant
 };
 
 // Journalisation
@@ -238,10 +241,11 @@ function log(msg, type = 'info') {
   console.log(msg);
 }
 
-// Initialisation complète
+// Initialisation complète (Déclenchée par le clic START)
 async function initApplication() {
   try {
-    log("Début de l'initialisation...");
+    log("Demande d'accès microphone...");
+    elements.initLog.textContent = "Initialisation Audio...";
 
     // Vérifier les API nécessaires
     if (!checkAudioSupport()) {
@@ -251,11 +255,13 @@ async function initApplication() {
     // Initialiser l'audio
     await initAudio();
 
+    elements.initLog.textContent = "Initialisation Visualisation...";
     // Initialiser la visualisation
     initVisualization();
 
     // Charger le modèle IA si disponible
     if (state.librariesLoaded.tfjs) {
+      elements.initLog.textContent = "Chargement IA...";
       await loadModel();
     } else {
       log("TensorFlow.js non disponible - mode IA désactivé", "error");
@@ -271,6 +277,9 @@ async function initApplication() {
   } catch (error) {
     log(`Erreur d'initialisation: ${error.message}`, "error");
     console.error(error);
+    // IMPORTANT : Cacher l'écran de chargement en cas d'erreur pour voir le log
+    elements.loadingScreen.style.display = 'none';
+    elements.startBtn.disabled = false;
   }
 }
 
@@ -291,14 +300,15 @@ function checkAudioSupport() {
 
 // Initialisation audio
 async function initAudio() {
-  log("Initialisation audio...");
-
   try {
     // Demander l'accès au microphone
     const stream = await navigator.mediaDevices.getUserMedia({
       audio: true,
       video: false
     });
+
+    // Sauvegarder le stream pour pouvoir l'arrêter plus tard
+    state.stream = stream;
 
     // Créer le contexte audio
     state.audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -375,6 +385,10 @@ function initVisualization() {
 
 // Créer le waterfall
 function createWaterfall() {
+  // Supprimer l'ancien si existe (pour éviter les doublons lors des recharges)
+  const old = document.getElementById('waterfallCanvas');
+  if (old) old.remove();
+
   const canvas = document.createElement('canvas');
   canvas.id = 'waterfallCanvas';
   canvas.width = elements.visualization.clientWidth;
@@ -385,6 +399,9 @@ function createWaterfall() {
 
 // Créer le radar
 function createRadar() {
+  const old = document.getElementById('radarCanvas');
+  if (old) old.remove();
+
   const canvas = document.createElement('canvas');
   canvas.id = 'radarCanvas';
   canvas.width = 150;
@@ -398,6 +415,12 @@ function init3D() {
   if (!state.librariesLoaded.three) return;
 
   try {
+    // Nettoyer la scène précédente si elle existe
+    if (state.renderer) {
+      elements.visualization.removeChild(state.renderer.domElement);
+      state.cubes = [];
+    }
+
     // Créer la scène
     state.scene = new THREE.Scene();
     state.camera = new THREE.PerspectiveCamera(
@@ -409,7 +432,7 @@ function init3D() {
     state.camera.position.z = 500;
 
     // Créer le renderer
-    state.renderer = new THREE.WebGLRenderer({ antialias: true });
+    state.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     state.renderer.setSize(
       elements.visualization.clientWidth,
       elements.visualization.clientHeight
@@ -566,6 +589,7 @@ function startRecording(duration) {
 
 // Configuration des boutons
 function setupButtons() {
+  // Assurez-vous que les événements ne sont pas dupliqués
   elements.startBtn.onclick = toggleApp;
   elements.fftBtn.onclick = toggleFFT;
   elements.recBtn.onclick = toggleAutoRec;
@@ -579,6 +603,16 @@ function toggleApp() {
     // Arrêter l'application
     if (state.audioContext) state.audioContext.close();
     if (state.stream) state.stream.getTracks().forEach(track => track.stop());
+
+    // Nettoyage DOM
+    if (state.renderer && state.renderer.domElement) {
+      elements.visualization.removeChild(state.renderer.domElement);
+      state.renderer = null;
+    }
+    const wf = document.getElementById('waterfallCanvas');
+    if (wf) wf.remove();
+    const rd = document.getElementById('radarCanvas');
+    if (rd) rd.remove();
 
     // Réinitialiser
     state.initialized = false;
@@ -616,6 +650,7 @@ function toggleAutoRec() {
 
 function toggleEVP() {
   config.evpMode = !config.evpMode;
+  config.spectro3D = config.evpMode; // Activer 3D en mode EVP
   elements.evpBtn.style.backgroundColor = config.evpMode ? "var(--evp)" : "";
   log(`Mode EVP: ${config.evpMode ? "ON" : "OFF"}`);
 }
@@ -647,9 +682,30 @@ window.addEventListener('resize', () => {
   }
 });
 
-// Initialisation
-log("Application chargée");
-initApplication();
+// Gestionnaire au chargement de la page pour vérifier les libs
+window.addEventListener('load', () => {
+  log("Application chargée. En attente de démarrage.");
+  
+  // Vérification des bibliothèques externes
+  state.librariesLoaded.three = typeof THREE !== 'undefined';
+  state.librariesLoaded.tfjs = typeof tf !== 'undefined';
+
+  if (state.librariesLoaded.three) {
+    log("Three.js détecté", "success");
+  } else {
+    log("Three.js non détecté", "error");
+  }
+
+  if (state.librariesLoaded.tfjs) {
+    log("TensorFlow.js détecté", "success");
+  } else {
+    log("TensorFlow.js non détecté", "error");
+  }
+
+  // Cacher l'écran de chargement initial
+  elements.loadingScreen.style.display = 'none';
+});
+
 </script>
 </body>
 </html>
