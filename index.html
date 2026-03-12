@@ -1,374 +1,167 @@
 <!DOCTYPE html>
 
 <html lang="fr">
-
 <head>
-
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-
-<title>ETERNITY v29 NEURAL</title>
-
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ETERNITY v32 OMEGA ULTIMATE LAB</title>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.12.0/dist/tf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/yamnet@0.1.1/dist/yamnet.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
-
 <style>
-
-body{
-margin:0;
-background:#000814;
-color:#00ffd0;
-font-family:Courier New;
-overflow:hidden;
-}
-
-#panel{
-position:absolute;
-top:10px;
-left:10px;
-background:rgba(0,0,0,.75);
-border:1px solid #00ffd0;
-padding:10px;
-z-index:10;
-}
-
-button{
-background:#001f30;
-border:1px solid #00ffd0;
-color:#00ffd0;
-padding:6px;
-margin:3px;
-cursor:pointer;
-}
-
-#voiceBar{
-height:8px;
-background:#ffaa00;
-width:0%;
-}
-
-#radar{
-position:absolute;
-right:10px;
-top:10px;
-width:160px;
-height:160px;
-border-radius:50%;
-border:2px solid #00ffd0;
-}
-
-#waterfall{
-position:absolute;
-bottom:0;
-left:0;
-width:100%;
-height:200px;
-}
-
+body{margin:0;background:#000814;color:#00ffd0;font-family:Courier New;overflow:hidden;}
+#panel{position:absolute;top:10px;left:10px;background:rgba(0,0,0,.85);border:2px solid #00ffd0;padding:12px;z-index:20;}
+button{background:#001f30;border:1px solid #00ffd0;color:#00ffd0;padding:8px;margin:4px;cursor:pointer;}
+#voiceBar{height:10px;background:#ffaa00;width:0%;}
+#radar{position:absolute;right:10px;top:10px;width:180px;height:180px;border-radius:50%;border:2px solid #00ffd0;}
+#waterfall{position:absolute;bottom:0;left:0;width:100%;height:300px;}
+#logZone{position:absolute;bottom:310px;left:10px;width:400px;max-height:300px;overflow-y:auto;font-size:0.8rem;background:rgba(0,0,0,0.6);padding:6px;border:1px solid #00ffd0;}
 </style>
-
 </head>
-
 <body>
-
 <div id="panel">
-
-<h3>ETERNITY v29 NEURAL</h3>
-
+<h3>ETERNITY v32 OMEGA ULTIMATE LAB</h3>
 MIC : <span id="mic">OFF</span><br>
-AI CLASS : <span id="ai">---</span>
-
-<div style="margin-top:6px">
-VOICE
-<div id="voiceBar"></div>
+IA CLASS : <span id="ai">---</span><br>
+<div style="margin-top:6px">VOICE<div id="voiceBar"></div></div>
+<button id="evp">EVP MODE</button>
+<button id="rec">AUTO REC</button>
+<button id="fftLarge">FFT 4096</button>
+<button id="fftMedium">FFT 2048</button>
+<button id="fftSmall">FFT 1024</button>
+<button id="radarToggle">RADAR ON/OFF</button>
+<button id="spectro3D">SPECTRO 3D ON/OFF</button>
 </div>
-
-<button id="evp">EVP MODE</button> <button id="rec">AUTO REC</button>
-
-</div>
-
-<canvas id="radar"></canvas> <canvas id="waterfall"></canvas>
-
+<div id="logZone"></div>
+<canvas id="radar"></canvas>
+<canvas id="waterfall"></canvas>
 <script>
+// VARIABLES GLOBALES
+let audioCtx, analyser, dataArray, fftSize=2048;
+let mediaRecorder, chunks=[];
+let scene, camera, renderer, cubes=[], spectro3DOn=true, radarOn=true;
+let evpMode=false, autoRec=false;
+let radar=document.getElementById("radar"), radarCtx=radar.getContext("2d");
+let waterfall=document.getElementById("waterfall"), wfCtx=waterfall.getContext("2d");
+let model, yamnet;
 
-let audioCtx
-let analyser
-let dataArray
+// LOG
+function log(msg,color="#00ff88"){const div=document.createElement("div");div.style.color=color;const time=new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit',second:'2-digit'});div.textContent=`[${time}] ${msg}`;document.getElementById("logZone").prepend(div);if(document.getElementById("logZone").children.length>200) document.getElementById("logZone").lastChild.remove();}
 
-let scene
-let camera
-let renderer
-
-let cubes=[]
-
-let radar=document.getElementById("radar")
-let radarCtx=radar.getContext("2d")
-
-let waterfall=document.getElementById("waterfall")
-let wfCtx=waterfall.getContext("2d")
-
-let evpMode=false
-let autoRec=false
-
-let mediaRecorder
-let chunks=[]
-
-// AUDIO INIT
-
+// INIT AUDIO
 async function initAudio(){
-
-audioCtx=new AudioContext()
-
-const stream=await navigator.mediaDevices.getUserMedia({audio:true})
-
-mediaRecorder=new MediaRecorder(stream)
-
-mediaRecorder.ondataavailable=e=>chunks.push(e.data)
-
-mediaRecorder.onstop=saveRecording
-
-const source=audioCtx.createMediaStreamSource(stream)
-
-analyser=audioCtx.createAnalyser()
-
-analyser.fftSize=2048
-
-dataArray=new Uint8Array(analyser.frequencyBinCount)
-
-source.connect(analyser)
-
-document.getElementById("mic").textContent="ACTIVE"
-
+audioCtx=new AudioContext();
+const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+mediaRecorder=new MediaRecorder(stream);
+mediaRecorder.ondataavailable=e=>chunks.push(e.data);
+mediaRecorder.onstop=saveRecording;
+const source=audioCtx.createMediaStreamSource(stream);
+analyser=audioCtx.createAnalyser();
+analyser.fftSize=fftSize;
+dataArray=new Uint8Array(analyser.frequencyBinCount);
+source.connect(analyser);
+document.getElementById("mic").textContent="ACTIVE";
+log("Audio actif");
 }
 
-// 3D ENGINE
-
+// INIT 3D
 function init3D(){
-
-scene=new THREE.Scene()
-
-camera=new THREE.PerspectiveCamera(
-75,
-window.innerWidth/window.innerHeight,
-0.1,
-1000
-)
-
-renderer=new THREE.WebGLRenderer()
-
-renderer.setSize(window.innerWidth,window.innerHeight)
-
-document.body.appendChild(renderer.domElement)
-
-camera.position.z=150
-
-}
-
-// LOOP
-
-function loop(){
-
-requestAnimationFrame(loop)
-
-analyser.getByteFrequencyData(dataArray)
-
-draw3D()
-
-drawRadar()
-
-drawWaterfall()
-
-detectVoice()
-
-renderer.render(scene,camera)
-
-}
-
-// 3D SPECTRUM
-
-function draw3D(){
-
-for(let i=0;i<dataArray.length;i+=8){
-
-let v=dataArray[i]/255
-
-let geometry=new THREE.BoxGeometry(2,2,v*50)
-
-let color=evpMode?
-`hsl(${300-dataArray[i]},100%,50%)`:
-`hsl(${200-dataArray[i]},100%,50%)`
-
-let material=new THREE.MeshBasicMaterial({
-color:new THREE.Color(color)
-})
-
-let cube=new THREE.Mesh(geometry,material)
-
-cube.position.x=i-128
-cube.position.y=-60
-cube.position.z=v*30
-
-scene.add(cube)
-
-cubes.push(cube)
-
-}
-
-if(cubes.length>6000){
-
-let old=cubes.shift()
-
-scene.remove(old)
-
-}
-
-}
-
-// RADAR
-
-function drawRadar(){
-
-radar.width=160
-radar.height=160
-
-radarCtx.clearRect(0,0,160,160)
-
-radarCtx.strokeStyle="#00ffd0"
-
-radarCtx.beginPath()
-radarCtx.arc(80,80,70,0,Math.PI*2)
-radarCtx.stroke()
-
-let energy=0
-
-for(let i=0;i<dataArray.length;i++)
-energy+=dataArray[i]
-
-let angle=Math.random()*Math.PI*2
-
-let r=energy/1200
-
-let x=80+Math.cos(angle)*r
-let y=80+Math.sin(angle)*r
-
-radarCtx.fillStyle="#00ff88"
-radarCtx.fillRect(x,y,3,3)
-
+scene=new THREE.Scene();
+camera=new THREE.PerspectiveCamera(75,window.innerWidth/window.innerHeight,0.1,1000);
+renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(window.innerWidth,window.innerHeight);
+document.body.appendChild(renderer.domElement);
+camera.position.z=150;
 }
 
 // WATERFALL
-
 function drawWaterfall(){
-
-const w=waterfall.width=window.innerWidth
-const h=waterfall.height=200
-
-let img=wfCtx.getImageData(0,0,w,h)
-
-wfCtx.putImageData(img,0,1)
-
+const w=waterfall.width=window.innerWidth;
+const h=waterfall.height=300;
+let img=wfCtx.getImageData(0,0,w,h);
+wfCtx.putImageData(img,0,1);
 for(let i=0;i<dataArray.length;i++){
-
-let v=dataArray[i]
-
-wfCtx.fillStyle=`hsl(${200-v},100%,50%)`
-
-wfCtx.fillRect(i*(w/dataArray.length),0,2,1)
-
+let v=dataArray[i];
+wfCtx.fillStyle=`hsl(${200-v},100%,50%)`;
+wfCtx.fillRect(i*(w/dataArray.length),0,2,1);
+}
 }
 
+// RADAR
+function drawRadar(){
+if(!radarOn) return;
+radar.width=180; radar.height=180;
+radarCtx.clearRect(0,0,180,180);
+radarCtx.strokeStyle="#00ffd0";
+radarCtx.beginPath(); radarCtx.arc(90,90,80,0,Math.PI*2);
+radarCtx.stroke();
+let energy=0; for(let i=0;i<dataArray.length;i++) energy+=dataArray[i];
+let angle=Math.random()*Math.PI*2; let r=energy/1500; let x=90+Math.cos(angle)*r; let y=90+Math.sin(angle)*r;
+radarCtx.fillStyle="#00ff88";
+radarCtx.fillRect(x,y,4,4);
 }
 
-// VOICE DETECTION
-
-function detectVoice(){
-
-let voice=0
-
-for(let i=0;i<dataArray.length;i++){
-
-let freq=i*(44100/2048)
-
-if(freq>300 && freq<3400)
-voice+=dataArray[i]
-
+// 3D SPECTRO
+function draw3D(){
+if(!spectro3DOn) return;
+for(let i=0;i<dataArray.length;i+=2){
+let v=dataArray[i]/255;
+let geometry=new THREE.BoxGeometry(2,2,v*60);
+let color=evpMode?`hsl(${300-dataArray[i]},100%,50%)`:`hsl(${200-dataArray[i]},100%,50%)`;
+let material=new THREE.MeshBasicMaterial({color:new THREE.Color(color)});
+let cube=new THREE.Mesh(geometry,material);
+cube.position.x=i-256; cube.position.y=-60; cube.position.z=v*30;
+scene.add(cube); cubes.push(cube);
+}
+if(cubes.length>10000){let old=cubes.shift(); scene.remove(old);}
 }
 
-voice/=100
-
-document.getElementById("voiceBar").style.width=
-Math.min(100,voice)+"%"
-
-let result="Noise"
-
-if(voice>90)
-result="Voice"
-
-document.getElementById("ai").textContent=result
-
-if(result==="Voice" && autoRec)
-record()
-
+// CLASSIFY AUDIO
+async function classifyAudio(){
+if(!model) return;
+const floatData=new Float32Array(dataArray.length);
+for(let i=0;i<dataArray.length;i++) floatData[i]=dataArray[i]/255;
+const input=tf.tensor([floatData]);
+const predictions=await model.predict(input);
+const topIndex=predictions.argMax(-1).dataSync()[0];
+const className=yamnet.classMap[topIndex]||"Noise";
+document.getElementById("ai").textContent=className;
+if(autoRec && className==="Speech") record();
+log(`Classe détectée: ${className}`);
 }
 
-// RECORDING
+// RECORD
+function record(){if(mediaRecorder.state==="inactive"){chunks=[];mediaRecorder.start();setTimeout(()=>mediaRecorder.stop(),3000);}}
+function saveRecording(){let blob=new Blob(chunks,{type:"audio/webm"});let url=URL.createObjectURL(blob);let a=document.createElement("a");a.href=url;a.download="event_audio.webm";a.click();}
 
-function record(){
-
-if(mediaRecorder.state==="inactive"){
-
-chunks=[]
-
-mediaRecorder.start()
-
-setTimeout(()=>mediaRecorder.stop(),3000)
-
-}
-
-}
-
-function saveRecording(){
-
-let blob=new Blob(chunks,{type:"audio/webm"})
-
-let url=URL.createObjectURL(blob)
-
-let a=document.createElement("a")
-
-a.href=url
-a.download="eternity_event_audio.webm"
-
-a.click()
-
+// LOOP
+async function loop(){
+requestAnimationFrame(loop);
+analyser.getByteFrequencyData(dataArray);
+draw3D(); drawRadar(); drawWaterfall(); await classifyAudio();
+renderer.render(scene,camera);
 }
 
 // BUTTONS
-
-document.getElementById("evp").onclick=()=>{
-evpMode=!evpMode
-}
-
-document.getElementById("rec").onclick=()=>{
-autoRec=!autoRec
-}
+document.getElementById("evp").onclick=()=>{evpMode=!evpMode;log("EVP mode "+(evpMode?"ON":"OFF"));};
+document.getElementById("rec").onclick=()=>{autoRec=!autoRec;log("AutoRec "+(autoRec?"ON":"OFF"));};
+document.getElementById("fftLarge").onclick=()=>{fftSize=4096; analyser.fftSize=fftSize; dataArray=new Uint8Array(analyser.frequencyBinCount); log("FFT 4096 activée");};
+document.getElementById("fftMedium").onclick=()=>{fftSize=2048; analyser.fftSize=fftSize; dataArray=new Uint8Array(analyser.frequencyBinCount); log("FFT 2048 activée");};
+document.getElementById("fftSmall").onclick=()=>{fftSize=1024; analyser.fftSize=fftSize; dataArray=new Uint8Array(analyser.frequencyBinCount); log("FFT 1024 activée");};
+document.getElementById("radarToggle").onclick=()=>{radarOn=!radarOn;log("Radar "+(radarOn?"ON":"OFF"));};
+document.getElementById("spectro3D").onclick=()=>{spectro3DOn=!spectro3DOn;log("Spectro3D "+(spectro3DOn?"ON":"OFF"));};
 
 // START
-
 async function start(){
-
-await initAudio()
-
-init3D()
-
-loop()
-
+log("Chargement modèle YAMNet...");
+yamnet=await yamnet.load();
+model=yamnet.model;
+await initAudio();
+init3D();
+loop();
+log("ETERNITY v32 OMEGA ULTIMATE LAB prêt !");
 }
-
-start()
-
-</script>
+start(); </script>
 
 </body>
-
 </html>
