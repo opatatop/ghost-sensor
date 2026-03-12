@@ -1,277 +1,312 @@
-<!DOCTYPE html>
 <html lang="fr">
+
 <head>
+
 <meta charset="UTF-8">
-<title>ETERNITY v22 – IA TRANSLATE PRO (Realme Note 60 FULL)</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="theme-color" content="#000000">
+<title>ETERNITY v26 QUANTUM</title>
+
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
+
 <style>
-:root{--primary:#00ffcc;--secondary:#0088ff;--ia:#00ff88;--ghost:#aa00ff;--voice:#ffaa00;--bg:#00050a}
-*{box-sizing:border-box;margin:0;padding:0}
-body{height:100dvh;background:var(--bg);color:var(--primary);font-family:'Courier New',monospace;overflow:hidden;display:grid;place-items:center}
-#boot-screen{z-index:100;padding:2.8rem 4rem;border:4px solid var(--primary);border-radius:50%;font-size:clamp(1.6rem,8vw,2.3rem);text-align:center;cursor:pointer}
-#main-ui{inset:0;position:absolute;z-index:10;display:none;flex-direction:column;background:rgba(0,0,0,.96);padding:1rem;gap:1rem;overflow-y:auto}
-.panel{background:rgba(0,10,20,.78);border:1px solid var(--secondary);border-radius:6px;padding:1.1rem}
-button{padding:1rem .7rem;font-weight:bold;text-transform:uppercase;background:rgba(0,20,40,.85);border:1px solid var(--secondary);color:var(--secondary);border-radius:5px;cursor:pointer}
-button.active{background:var(--secondary);color:#000;box-shadow:0 0 22px var(--secondary)}
-#btn-ia.active{background:var(--ia);color:#000;box-shadow:0 0 25px var(--ia)}
-canvas.viz{width:100%;height:170px;background:#000;border:1px solid var(--secondary)}
+
+body{
+background:#000814;
+color:#00ffd0;
+font-family:Courier New;
+margin:0;
+overflow:hidden;
+}
+
+#panel{
+position:absolute;
+top:10px;
+left:10px;
+background:rgba(0,0,0,.7);
+border:1px solid #00ffd0;
+padding:10px;
+z-index:10;
+}
+
+button{
+padding:6px;
+margin:4px;
+background:#001f30;
+border:1px solid #00ffd0;
+color:#00ffd0;
+cursor:pointer;
+}
+
+#waterfall{
+position:absolute;
+bottom:0;
+left:0;
+width:100%;
+height:200px;
+}
+
+#voiceBar{
+height:8px;
+background:#ffaa00;
+width:0%;
+}
+
 </style>
+
 </head>
+
 <body>
 
-<div id="boot-screen">IA TRANSLATE PRO<br>REALME NOTE 60 FULL</div>
+<div id="panel">
 
-<div id="main-ui">
-  <header><h1>ETERNITY v22</h1><div style="color:#00ff88">IA TRANSLATE MODE</div></header>
+<h3>ETERNITY v26 QUANTUM</h3>
 
-  <div class="panel">
-    <div style="display:flex;justify-content:space-between"><span>MICRO</span><span id="mic-status">OFF</span></div>
-    <div id="sys-log">En attente de l'IA...</div>
-  </div>
+MIC : <span id="mic">OFF</span><br>
+CLASS : <span id="class">---</span>
 
-  <div class="panel">
-    <div style="display:flex;justify-content:space-between"><span>ACTIVITÉ</span><span id="activity-pct">0 %</span></div>
-    <div style="height:14px;background:#001122;border:1px solid var(--secondary)"><div id="progress-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#0088ff,#00ffcc)"></div></div>
-  </div>
-
-  <div class="panel" style="flex:1.7;position:relative">
-    <canvas id="spectrum-canvas" class="viz"></canvas>
-    <canvas id="peak-hold-canvas" class="viz" style="position:absolute;top:0;opacity:0.55"></canvas>
-    <div style="margin-top:8px">VOIX <div id="voice-bar" style="height:10px;background:#ffaa00;width:0%"></div></div>
-    <div style="margin-top:6px;color:#00ff88;font-size:1.15rem">IA : <span id="ia-text">---</span></div>
-  </div>
-
-  <div class="panel">
-    <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <button id="btn-sweep">SWEEP</button>
-      <button id="btn-boost">BOOST ×2</button>
-      <button id="btn-ultra">ULTRA ×4</button>
-      <button id="btn-maxvol">MAX VOLUME</button>
-      <button id="btn-fixed">TON FIXE</button>
-      <button id="btn-ia">IA TRANSLATE</button>
-      <button id="btn-vibrate">VIBRATION IA</button>
-      <button id="btn-screen">ÉCRAN ON</button>
-    </div>
-    <div style="margin-top:15px">
-      <button id="btn-record-sweep">RECORD SWEEP ONLY</button>
-    </div>
-    <label style="display:block;margin-top:12px">Fréquence sweep : <input type="range" id="freq-slider" min="80" max="6000" value="850" step="50" style="width:100%"></label>
-  </div>
-
-  <div class="panel" style="flex:1.2">
-    <div style="color:#777;font-size:0.85rem;margin-bottom:8px">JOURNAL IA</div>
-    <div id="log-zone" style="max-height:260px;overflow-y:auto;font-size:0.82rem;line-height:1.4"></div>
-  </div>
+<div style="margin-top:6px">
+VOIX
+<div id="voiceBar"></div>
 </div>
 
-<script type="module">
-// ==================== VERSION COMPLÈTE LONGUE ====================
+<button id="evp">EVP FILTER</button> <button id="record">AUTO RECORD</button>
 
-const DOM = {
-  boot: document.getElementById('boot-screen'),
-  ui: document.getElementById('main-ui'),
-  micStatus: document.getElementById('mic-status'),
-  sysLog: document.getElementById('sys-log'),
-  activity: document.getElementById('activity-pct'),
-  progress: document.getElementById('progress-bar'),
-  canvas: document.getElementById('spectrum-canvas'),
-  peakHoldCanvas: document.getElementById('peak-hold-canvas'),
-  voiceBar: document.getElementById('voice-bar'),
-  iaText: document.getElementById('ia-text'),
-  logZone: document.getElementById('log-zone'),
-  btnSweep: document.getElementById('btn-sweep'),
-  btnBoost: document.getElementById('btn-boost'),
-  btnUltra: document.getElementById('btn-ultra'),
-  btnMaxVol: document.getElementById('btn-maxvol'),
-  btnFixed: document.getElementById('btn-fixed'),
-  btnIA: document.getElementById('btn-ia'),
-  btnVibrate: document.getElementById('btn-vibrate'),
-  btnScreen: document.getElementById('btn-screen'),
-  btnRecordSweep: document.getElementById('btn-record-sweep'),
-  freqSlider: document.getElementById('freq-slider')
-};
+</div>
 
-let state = {
-  audioCtx: null,
-  stream: null,
-  analyser: null,
-  workletNode: null,
-  masterGain: null,
-  recognition: null,
-  sweepRecorder: null,
-  peakHold: new Uint8Array(512),
-  isSweep: false,
-  gainLevel: 0,
-  voiceEnergy: 0,
-  isIA: false,
-  vibrateOnIA: false,
-  wakeLock: null
-};
+<canvas id="waterfall"></canvas>
 
-const log = (msg, type = 'info') => {
-  const div = document.createElement('div');
-  const time = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-  div.innerHTML = `<span style="opacity:0.5">[${time}]</span> ${msg}`;
-  if(type==='ia') div.style.color = '#00ff88';
-  if(type==='ghost') div.style.color = '#aa00ff';
-  DOM.logZone.prepend(div);
-  if(DOM.logZone.children.length > 80) DOM.logZone.lastChild.remove();
-};
+<script>
 
-// ====================== BOOT ======================
-DOM.boot.onclick = async () => {
-  DOM.boot.textContent = "CHARGEMENT IA...";
-  try {
-    const AudioCtx = window.AudioContext || window.webkitAudioContext;
-    state.audioCtx = new AudioCtx();
-    await state.audioCtx.resume();
+let ctx
+let analyser
+let data
 
-    // Worklet
-    await state.audioCtx.audioWorklet.addModule(URL.createObjectURL(new Blob([`
-      class RealmeSweep extends AudioWorkletProcessor {
-        static get parameterDescriptors(){return [{name:'gain',defaultValue:0.45},{name:'freq',defaultValue:850}]}
-        constructor(){super();this.phase=0;this.bp=0;}
-        process(inputs,outputs,parameters){
-          const out=outputs[0][0]; const g=parameters.gain[0]||0.45; const f=parameters.freq[0]||850;
-          for(let i=0;i<128;i++){
-            const omega=2*Math.PI*Math.max(30,f)/sampleRate;
-            const alpha=Math.sin(omega)/28;
-            const noise=Math.random()*2-1;
-            this.bp = this.bp + alpha*(noise - this.bp);
-            out[i] = this.bp * g;
-          }
-          return true;
-        }
-      }
-      registerProcessor('realme-sweep', RealmeSweep);
-    `],{type:'application/javascript'})));
+let scene
+let camera
+let renderer
 
-    state.stream = await navigator.mediaDevices.getUserMedia({audio:true});
-    const source = state.audioCtx.createMediaStreamSource(state.stream);
-    state.analyser = state.audioCtx.createAnalyser();
-    state.analyser.fftSize = 1024;
-    source.connect(state.analyser);
+let waterfallCanvas=document.getElementById("waterfall")
+let wfCtx=waterfallCanvas.getContext("2d")
 
-    state.masterGain = state.audioCtx.createGain();
-    state.masterGain.gain.value = 1.0;
-    state.masterGain.connect(state.audioCtx.destination);
+let evpMode=false
+let autoRecord=false
 
-    DOM.boot.style.display = 'none';
-    DOM.ui.style.display = 'flex';
-    DOM.micStatus.textContent = "ACTIF";
-    log("✅ Realme Note 60 – IA TRANSLATE prête", "success");
-    startVisualizer();
-    toggleSweep();
-  } catch(e){
-    log("ERREUR : " + e.message, "error");
-  }
-};
+let cubes=[]
 
-// ====================== SWEEP + BOOST ======================
-async function toggleSweep(){
-  if(state.isSweep){ state.workletNode?.disconnect(); state.isSweep=false; DOM.btnSweep.classList.remove('active'); return; }
-  state.workletNode = new AudioWorkletNode(state.audioCtx, 'realme-sweep');
-  state.workletNode.connect(state.masterGain);
-  state.isSweep = true;
-  DOM.btnSweep.classList.add('active');
-  applyBoost();
-}
-function applyBoost(){
-  if(!state.workletNode) return;
-  const g = state.gainLevel===2 ? 2.4 : state.gainLevel===1 ? 1.25 : 0.45;
-  state.workletNode.parameters.get('gain').setTargetAtTime(g, state.audioCtx.currentTime, 0.1);
-}
-DOM.btnBoost.onclick = () => { state.gainLevel = state.gainLevel===1?0:1; applyBoost(); };
-DOM.btnUltra.onclick = () => { state.gainLevel = state.gainLevel===2?0:2; applyBoost(); };
-DOM.btnMaxVol.onclick = () => { state.masterGain.gain.setTargetAtTime(2.0, state.audioCtx.currentTime, 0.05); log("VOLUME MAXIMISÉ", "warn"); };
+// AUDIO INIT
 
-// ====================== IA TRANSLATE (le vrai pro) ======================
-DOM.btnIA.onclick = () => {
-  state.isIA = !state.isIA;
-  DOM.btnIA.classList.toggle('active', state.isIA);
-  if(state.isIA) startIATranslate();
-  else if(state.recognition) state.recognition.stop();
-};
+async function init(){
 
-function startIATranslate(){
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  state.recognition = new SpeechRecognition();
-  state.recognition.continuous = true;
-  state.recognition.interimResults = true;
-  state.recognition.lang = 'fr-FR';
+ctx=new AudioContext()
 
-  state.recognition.onresult = e => {
-    const result = e.results[e.results.length-1][0].transcript;
-    const conf = (e.results[e.results.length-1][0].confidence * 100).toFixed(0);
-    DOM.iaText.textContent = result;
-    if(conf > 55) log(`IA → "${result}" (${conf}%)`, 'ia');
-  };
+const stream=await navigator.mediaDevices.getUserMedia({audio:true})
 
-  state.recognition.onerror = e => log("IA erreur : " + e.error, "error");
-  state.recognition.onend = () => { if(state.isIA) setTimeout(() => state.recognition?.start(), 150); };
-  state.recognition.start();
-  log("IA TRANSLATE ACTIVÉ – elle écoute le sweep en direct", "ia");
+const source=ctx.createMediaStreamSource(stream)
+
+analyser=ctx.createAnalyser()
+
+analyser.fftSize=2048
+
+data=new Uint8Array(analyser.frequencyBinCount)
+
+source.connect(analyser)
+
+document.getElementById("mic").textContent="ACTIVE"
+
+init3D()
+
+loop()
+
 }
 
-// ====================== VISUALISEUR + PEAK HOLD ======================
-function startVisualizer(){
-  const ctx = DOM.canvas.getContext('2d');
-  const phCtx = DOM.peakHoldCanvas.getContext('2d');
-  const loop = () => {
-    requestAnimationFrame(loop);
-    const data = new Uint8Array(state.analyser.frequencyBinCount);
-    state.analyser.getByteFrequencyData(data);
-    const w = DOM.canvas.width = DOM.canvas.clientWidth;
-    const h = DOM.canvas.height = 170;
-    ctx.clearRect(0,0,w,h);
+// 3D ENGINE
 
-    let sum = 0, voice = 0;
-    for(let i=0;i<data.length;i++){
-      const v = data[i];
-      sum += v;
-      if(i>3 && i<95) voice += v;
+function init3D(){
 
-      const barH = (v/255)*h*0.92;
-      ctx.fillStyle = `hsl(${200 - v*0.7},100%,45%)`;
-      ctx.fillRect(i*(w/data.length), h - barH, (w/data.length)-1, barH);
+scene=new THREE.Scene()
 
-      if(v > state.peakHold[i]) state.peakHold[i] = v;
-      else state.peakHold[i] *= 0.93;
-    }
+camera=new THREE.PerspectiveCamera(
+75,
+window.innerWidth/window.innerHeight,
+0.1,
+1000
+)
 
-    // Peak hold
-    phCtx.clearRect(0,0,w,h);
-    for(let i=0;i<state.peakHold.length;i++){
-      const barH = (state.peakHold[i]/255)*h*0.92;
-      phCtx.fillStyle = '#ffffff44';
-      phCtx.fillRect(i*(w/state.peakHold.length), h-barH, (w/state.peakHold.length)-1, barH);
-    }
+renderer=new THREE.WebGLRenderer()
 
-    state.voiceEnergy = (voice/92)/255;
-    DOM.voiceBar.style.width = Math.min(100, state.voiceEnergy*160) + '%';
+renderer.setSize(window.innerWidth,window.innerHeight)
 
-    const prob = Math.min(100, (sum/data.length/2.55)*1.3 + state.voiceEnergy*75);
-    DOM.activity.textContent = Math.round(prob) + '%';
-    DOM.progress.style.width = prob + '%';
-  };
-  loop();
+document.body.appendChild(renderer.domElement)
+
+camera.position.z=150
+
 }
 
-// ====================== AUTRES BOUTONS ======================
-DOM.freqSlider.oninput = () => {
-  if(state.workletNode) state.workletNode.parameters.get('freq').setValueAtTime(+DOM.freqSlider.value, state.audioCtx.currentTime);
-};
+// MAIN LOOP
 
-DOM.btnVibrate.onclick = () => { state.vibrateOnIA = !state.vibrateOnIA; DOM.btnVibrate.classList.toggle('active', state.vibrateOnIA); };
-DOM.btnScreen.onclick = async () => {
-  if(!state.wakeLock) state.wakeLock = await navigator.wakeLock.request('screen');
-  log("ÉCRAN TOUJOURS ALLUMÉ", "success");
-};
+function loop(){
 
-DOM.btnRecordSweep.onclick = () => { /* code record sweep */ };
+requestAnimationFrame(loop)
 
-log("VERSION COMPLÈTE IA TRANSLATE chargée – tous les boutons sont là", "ia");
+analyser.getByteFrequencyData(data)
+
+update3D()
+
+drawWaterfall()
+
+classifyAudio()
+
+renderer.render(scene,camera)
+
+}
+
+// 3D SPECTROGRAM
+
+function update3D(){
+
+for(let i=0;i<data.length;i+=8){
+
+let v=data[i]/255
+
+let geometry=new THREE.BoxGeometry(2,2,v*50)
+
+let color=evpMode?
+`hsl(${300-data[i]},100%,50%)`:
+`hsl(${200-data[i]},100%,50%)`
+
+let material=new THREE.MeshBasicMaterial({
+color:new THREE.Color(color)
+})
+
+let cube=new THREE.Mesh(geometry,material)
+
+cube.position.x=i-128
+cube.position.y=-60
+cube.position.z=v*30
+
+scene.add(cube)
+
+cubes.push(cube)
+
+}
+
+if(cubes.length>4000){
+
+let old=cubes.shift()
+
+scene.remove(old)
+
+}
+
+}
+
+// WATERFALL
+
+function drawWaterfall(){
+
+const w=waterfallCanvas.width=window.innerWidth
+const h=waterfallCanvas.height=200
+
+let img=wfCtx.getImageData(0,0,w,h)
+
+wfCtx.putImageData(img,0,1)
+
+for(let i=0;i<data.length;i++){
+
+let v=data[i]
+
+wfCtx.fillStyle=`hsl(${200-v},100%,50%)`
+
+wfCtx.fillRect(i*(w/data.length),0,2,1)
+
+}
+
+}
+
+// AUDIO CLASSIFICATION
+
+function classifyAudio(){
+
+let voice=0
+let music=0
+let noise=0
+
+for(let i=0;i<data.length;i++){
+
+let freq=i*(44100/2048)
+
+let v=data[i]
+
+if(freq>300 && freq<3400)
+voice+=v
+
+if(v>120)
+music++
+
+if(v<20)
+noise++
+
+}
+
+voice/=100
+
+document.getElementById("voiceBar").style.width=Math.min(100,voice)+"%"
+
+let result="Noise"
+
+if(voice>90)
+result="Voice"
+
+else if(music>80)
+result="Music"
+
+document.getElementById("class").textContent=result
+
+detectAnomaly(result)
+
+}
+
+// ANOMALY DETECTOR
+
+function detectAnomaly(type){
+
+if(type==="Voice" && autoRecord){
+
+recordEvent()
+
+}
+
+}
+
+// EVENT RECORDER
+
+function recordEvent(){
+
+console.log("EVENT RECORDED")
+
+}
+
+// BUTTONS
+
+document.getElementById("evp").onclick=()=>{
+
+evpMode=!evpMode
+
+}
+
+document.getElementById("record").onclick=()=>{
+
+autoRecord=!autoRecord
+
+}
+
+// START
+
+init()
+
 </script>
+
 </body>
+
 </html>
