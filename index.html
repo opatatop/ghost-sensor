@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>ETERNITY LAB OMNI-SENSOR</title>
+<title>ETERNITY IA LAB OMNI-SENSOR</title>
 <style>
 :root {
   --primary: #ff0000;
@@ -80,10 +80,11 @@ body {
   background: rgba(0,0,0,0.9); padding: 10px;
   min-height: 3.5rem; border: 1px solid var(--primary);
   text-transform: uppercase;
+  text-shadow: 0 0 10px var(--primary);
 }
 
-canvas { width: 100%; height: 100%; position: absolute; top:0; left:0; z-index: 1; opacity: 0.7; }
-#cameraFeed { width: 100%; height: 100%; object-fit: cover; position: absolute; z-index: 0; opacity: 0.2; display: none; }
+canvas { width: 100%; height: 100%; position: absolute; top:0; left:0; z-index: 1; opacity: 0.75; }
+#cameraFeed { width: 100%; height: 100%; object-fit: cover; position: absolute; z-index: 0; opacity: 0.25; display: none; }
 
 #controlsArea {
   background: var(--panel); border-top: 2px solid var(--primary);
@@ -104,7 +105,7 @@ button {
 button:active { background: var(--primary); color: #000; }
 button.active {
   background: var(--btn-active); color: #fff;
-  box-shadow: 0 0 10px var(--primary);
+  box-shadow: 0 0 15px var(--primary);
   border-color: #fff;
 }
 
@@ -116,7 +117,7 @@ button.active {
 
 #barsArea { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; font-size: 0.7rem; }
 .bar-box { background: #220000; height: 8px; width: 100%; border: 1px solid #550000; margin-top:2px; }
-.bar-fill { height: 100%; width: 0%; transition: width 0.05s; background: var(--primary); }
+.bar-fill { height: 100%; width: 0%; transition: width 0.05s linear; background: var(--primary); }
 
 #logZone {
   height: 40px; background: #000; border-top: 1px solid #333;
@@ -125,6 +126,7 @@ button.active {
 }
 .log-warn { color: yellow !important; }
 .log-err { color: red !important; }
+.log-suc { color: limegreen !important; }
 </style>
 </head>
 <body>
@@ -132,14 +134,14 @@ button.active {
 <!-- DASHBOARD CAPTEURS RÉELS -->
 <div id="sensorDashboard">
   <div class="sensor-box" id="boxMotion">MOTION<br><span class="sensor-val" id="valMotion">0.0</span> m/s²</div>
-  <div class="sensor-box" id="boxMag">MAGNETIC<br><span class="sensor-val" id="valMag">0</span> µT</div>
+  <div class="sensor-box" id="boxMag">MAGNETIC<br><span class="sensor-val" id="valMag">0</span> °</div>
   <div class="sensor-box" id="boxLight">LIGHT<br><span class="sensor-val" id="valLight">0</span> Lux</div>
 </div>
 
 <div id="header">
   <div>MIC: <span id="micStatus">OFF</span></div>
   <div>BAT: <span id="batStatus">--%</span></div>
-  <div>FREQ: <span id="freqStatus">0</span> Hz</div>
+  <div>FREQ: <span id="freqStatus">NORMAL</span></div>
 </div>
 
 <div id="vizContainer">
@@ -173,108 +175,93 @@ button.active {
 
 <div id="logZone"></div>
 
-<!-- LIBS -->
-<script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.11.0/dist/tf.min.js"></script>
-
 <script>
+// === APP STATE ===
 let app = {
   running: false,
   simulation: false,
-  ctx: null, source: null, gain: null, analyser: null,
-  monitorGain: null, monitorDelay: null,
-  ghost: null, ghostGain: null, noiseNode: null, noiseGain: null,
-  stream: null, vidStream: null, recorder: null, isRec: false,
+  ctx: null,
+  source: null,
+  analyser: null,
+  mixer: null,
+  monitorInputGain: null,
+  monitorGain: null,
+  monitorDelay: null,
+  monitorFeedback: null,
+  ghost: null,
+  ghostGain: null,
+  ghostSweepInterval: null,
+  noiseNode: null,
+  noiseGain: null,
+  stream: null,
+  vidStream: null,
+  recorder: null,
+  isRec: false,
   recognition: null,
+  sampleRate: 44100,
+  lastAlpha: 0,
   config: { monitor: false, ghostBox: false, autoRec: false, evp: false, radar: false, cam: false, flash: false },
-  canvas: null, cCtx: null, width: 0, height: 0,
-  // Sensors
-  motionThreshold: 1.5, // Seuil mouvement
-  magBaseline: 0,
-  lightBaseline: 0,
-  pulseInterval: null
+  canvas: null,
+  cCtx: null,
+  width: 0,
+  height: 0,
+  dataArray: null,
+  motionThreshold: 1.5
 };
 
 const el = (id) => document.getElementById(id);
 const els = {
-  log: el('logZone'), mic: el('micStatus'), bat: el('batStatus'), freq: el('freqStatus'),
-  voiceBar: el('voiceBar'), iaText: el('iaText'),
-  canvas: el('canvas'), camera: el('cameraFeed'),
-  // Sensors
-  valMotion: el('valMotion'), boxMotion: el('boxMotion'),
-  valMag: el('valMag'), boxMag: el('boxMag'),
-  valLight: el('valLight'), boxLight: el('boxLight')
+  log: el('logZone'),
+  mic: el('micStatus'),
+  bat: el('batStatus'),
+  freq: el('freqStatus'),
+  voiceBar: el('voiceBar'),
+  iaText: el('iaText'),
+  canvas: el('canvas'),
+  camera: el('cameraFeed'),
+  valMotion: el('valMotion'),
+  boxMotion: el('boxMotion'),
+  valMag: el('valMag'),
+  boxMag: el('boxMag'),
+  valLight: el('valLight'),
+  boxLight: el('boxLight')
 };
 
-function log(msg, type='') {
+function log(msg, type = '') {
   const d = document.createElement('div');
   d.textContent = `> ${msg}`;
-  if(type) d.className = type;
-  els.log.appendChild(d); els.log.scrollTop = els.log.scrollHeight;
+  if (type) d.className = type;
+  els.log.appendChild(d);
+  els.log.scrollTop = els.log.scrollHeight;
 }
 
-// --- START & PERMISSIONS ---
-
-async function forceStart() {
-  if(app.running) return;
-  el('startBtn').textContent = "INIT CAPTEURS...";
-  el('startBtn').style.background = "orange";
-  log("Initialisation Omni-Sensor...", 'log-suc');
-
-  try {
-    // 1. Audio
-    app.ctx = new (window.AudioContext || window.webkitAudioContext)();
-    if (app.ctx.state === 'suspended') await app.ctx.resume();
-    app.stream = await navigator.mediaDevices.getUserMedia({ 
-        audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false }, 
-        video: false 
-    });
-    setupAudioNodes(app.stream);
-
-    // 2. Battery
-    initBattery();
-
-    // 3. Sensors (Motion, Orientation, Light)
-    initSensors();
-
-    // 4. IA
-    initVoice();
-
-    app.running = true;
-    app.simulation = false;
-    startUI("CAPTEURS ACTIFS");
-
-  } catch (err) {
-    console.error(err);
-    log("Erreur init: " + err.message, 'log-err');
-    // Fallback si capteurs bloqués
-    setupSimulation();
-    app.running = true;
-    app.simulation = true;
-    startUI("MODE LIMITÉ (SIM)");
-  }
-}
-
-// --- AUDIO NODES (Écoute améliorée incluse) ---
+// === AUDIO SETUP (CORRIGÉ + AMÉLIORÉ) ===
 function setupAudioNodes(stream) {
+  app.ctx = new (window.AudioContext || window.webkitAudioContext)();
+  if (app.ctx.state === 'suspended') app.ctx.resume();
+
   app.source = app.ctx.createMediaStreamSource(stream);
-  app.gain = app.ctx.createGain();
   app.analyser = app.ctx.createAnalyser();
   app.analyser.fftSize = 2048;
-  app.analyser.smoothingTimeConstant = 0.8; // Lissage pour lecture fréquence
+  app.analyser.smoothingTimeConstant = 0.85;
   app.dataArray = new Uint8Array(app.analyser.frequencyBinCount);
-  
-  // Monitor + Echo
-  app.monitorGain = app.ctx.createGain();
-  app.monitorDelay = app.ctx.createDelay(1.0);
-  app.monitorDelay.delayTime.value = 0.2;
-  app.monitorFeedback = app.ctx.createGain();
-  app.monitorFeedback.gain.value = 0.4;
-  
-  // Ghost Box
+
+  // Mixer principal (sortie haut-parleur)
+  app.mixer = app.ctx.createGain();
+  app.mixer.gain.value = 1;
+  app.mixer.connect(app.ctx.destination);
+
+  // Ghost Box (oscillateur + sweep)
   app.ghost = app.ctx.createOscillator();
   app.ghost.type = 'sawtooth';
+  app.ghost.frequency.value = 250;
   app.ghostGain = app.ctx.createGain();
+  app.ghostGain.gain.value = 0;
+  app.ghost.connect(app.ghostGain);
+  app.ghostGain.connect(app.mixer);
+  app.ghost.start();
+
+  // Bruit blanc (Ghost Box classique)
   const bufferSize = app.ctx.sampleRate * 2;
   const buffer = app.ctx.createBuffer(1, bufferSize, app.ctx.sampleRate);
   const data = buffer.getChannelData(0);
@@ -283,375 +270,477 @@ function setupAudioNodes(stream) {
   app.noiseNode.buffer = buffer;
   app.noiseNode.loop = true;
   app.noiseGain = app.ctx.createGain();
-  
-  app.ghost.connect(app.ghostGain);
-  app.ghostGain.connect(app.gain);
+  app.noiseGain.gain.value = 0;
   app.noiseNode.connect(app.noiseGain);
-  app.noiseGain.connect(app.gain);
-  app.ghost.start();
+  app.noiseGain.connect(app.mixer);
   app.noiseNode.start();
 
-  // Route
-  app.source.connect(app.gain);
-  app.gain.connect(app.analyser);
+  // Écoute+ (echo avec feedback)
+  app.monitorDelay = app.ctx.createDelay(1.0);
+  app.monitorDelay.delayTime.value = 0.18;
+  app.monitorFeedback = app.ctx.createGain();
+  app.monitorFeedback.gain.value = 0;
+  app.monitorGain = app.ctx.createGain();
+  app.monitorGain.gain.value = 0;
 
-  // Recorder
-  app.recorder = new MediaRecorder(stream);
-  app.recorder.ondataavailable = e => saveBlob(e.data);
+  app.monitorInputGain = app.ctx.createGain();
+  app.monitorInputGain.gain.value = 0;
+
+  // Chaîne echo
+  app.source.connect(app.monitorInputGain);
+  app.monitorInputGain.connect(app.monitorDelay);
+  app.monitorDelay.connect(app.monitorFeedback);
+  app.monitorFeedback.connect(app.monitorDelay);
+  app.monitorDelay.connect(app.monitorGain);
+  app.monitorGain.connect(app.mixer);
+
+  // Analyse uniquement (pas de mic dans les HP → pas de larsen !)
+  app.source.connect(app.analyser);
+
+  // Recorder (mic brut pour EVP)
+  app.recorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+  app.recorder.ondataavailable = e => {
+    if (e.data.size > 0) saveBlob(e.data);
+  };
 }
 
+// Simulation audio (quand pas de micro)
 function setupSimulation() {
   app.dataArray = new Uint8Array(1024);
+  app.sampleRate = 44100;
   els.valMotion.textContent = "SIM";
   els.valMag.textContent = "SIM";
   els.valLight.textContent = "SIM";
 }
 
-function startUI(mode) {
-  el('startBtn').textContent = "SYSTEME ACTIF";
-  el('startBtn').classList.add('running');
-  el('startBtn').style.background = "var(--primary)";
-  els.mic.textContent = "ON"; els.mic.style.color = "#0f0";
-  els.iaText.textContent = "SURVEILLANCE...";
-  
+// === LANCEMENT ===
+async function forceStart() {
+  if (app.running) return;
+
+  const startBtn = el('startBtn');
+  startBtn.textContent = "INIT CAPTEURS...";
+  startBtn.style.background = "orange";
+  log("Initialisation Omni-Sensor...", 'log-suc');
+
+  // Toujours initialiser les capteurs indépendants
+  initBattery();
+  await initSensors();
+  initVoice();
+
+  try {
+    // Audio réel
+    app.stream = await navigator.mediaDevices.getUserMedia({
+      audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
+      video: false
+    });
+    setupAudioNodes(app.stream);
+    app.simulation = false;
+    log("Micro + Audio : OK", 'log-suc');
+  } catch (err) {
+    console.error(err);
+    log("Pas de micro → mode simulation", 'log-warn');
+    setupSimulation();
+    app.simulation = true;
+  }
+
+  app.running = true;
+  startUI(app.simulation ? "MODE SIMULATION" : "SYSTEME ACTIF");
+}
+
+// === CAPTEURS (iOS PERMISSION + CORRIGÉ) ===
+async function initSensors() {
+  // Motion (Accelerometer)
+  if (window.DeviceMotionEvent) {
+    if (typeof DeviceMotionEvent.requestPermission === 'function') {
+      try {
+        const perm = await DeviceMotionEvent.requestPermission();
+        if (perm === 'granted') {
+          window.addEventListener('devicemotion', handleMotion);
+          log("Capteur mouvement : OK (permission iOS)");
+        } else {
+          log("Permission mouvement refusée", 'log-warn');
+        }
+      } catch (e) {}
+    } else {
+      window.addEventListener('devicemotion', handleMotion);
+      log("Capteur mouvement : OK");
+    }
+  } else {
+    els.valMotion.textContent = "N/A";
+  }
+
+  // Magnetic / Orientation
+  if (window.DeviceOrientationEvent) {
+    if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+      try {
+        const perm = await DeviceOrientationEvent.requestPermission();
+        if (perm === 'granted') {
+          window.addEventListener('deviceorientation', handleMagnetic);
+          log("Capteur magnétique : OK (permission iOS)");
+        } else {
+          log("Permission orientation refusée", 'log-warn');
+        }
+      } catch (e) {}
+    } else {
+      window.addEventListener('deviceorientation', handleMagnetic);
+      log("Capteur magnétique : OK");
+    }
+  } else {
+    els.valMag.textContent = "N/A";
+  }
+
+  // Light (AmbientLightSensor - rare)
+  if ('AmbientLightSensor' in window) {
+    try {
+      const sensor = new AmbientLightSensor();
+      sensor.onreading = () => {
+        const lux = Math.round(sensor.illuminance);
+        els.valLight.textContent = lux;
+        if (app.lightBaseline === 0) app.lightBaseline = lux;
+        if (Math.abs(lux - app.lightBaseline) > 40 && lux < app.lightBaseline) {
+          triggerSensorAlert('boxLight', "OMBRE DÉTECTÉE");
+        }
+      };
+      sensor.start();
+      log("Capteur lumière : OK");
+    } catch (err) {
+      els.valLight.textContent = "ERR";
+    }
+  } else {
+    els.valLight.textContent = "N/A";
+  }
+}
+
+function handleMotion(event) {
+  if (app.simulation) return;
+  const acc = event.accelerationIncludingGravity || event.acceleration;
+  if (!acc) return;
+
+  const total = Math.hypot(acc.x || 0, acc.y || 0, acc.z || 0);
+  const relativeMotion = Math.abs(total - 9.8);
+  els.valMotion.textContent = relativeMotion.toFixed(1);
+
+  if (relativeMotion > app.motionThreshold) {
+    triggerSensorAlert('boxMotion', "TREMBLEMENT DÉTECTÉ");
+  }
+}
+
+function handleMagnetic(event) {
+  if (app.simulation) return;
+  const alpha = event.alpha || 0;
+  els.valMag.textContent = Math.floor(alpha);
+
+  if (Math.abs(alpha - app.lastAlpha) > 45) {
+    triggerSensorAlert('boxMag', "PERTURBATION MAGNÉTIQUE");
+  }
+  app.lastAlpha = alpha;
+}
+
+// === BATTERIE ===
+function initBattery() {
+  if ('getBattery' in navigator) {
+    navigator.getBattery().then(bat => {
+      const update = () => {
+        els.bat.textContent = Math.floor(bat.level * 100) + "%" + (bat.charging ? " ⚡" : "");
+      };
+      update();
+      bat.addEventListener('levelchange', update);
+      bat.addEventListener('chargingchange', update);
+      log("Batterie : OK");
+    });
+  } else {
+    els.bat.textContent = "N/A";
+  }
+}
+
+// === VOIX (SpeechRecognition) ===
+function initVoice() {
+  const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRec) {
+    els.iaText.textContent = "INDISPONIBLE";
+    return;
+  }
+  app.recognition = new SpeechRec();
+  app.recognition.continuous = true;
+  app.recognition.interimResults = true;
+  app.recognition.lang = 'fr-FR';
+
+  app.recognition.onresult = (e) => {
+    let txt = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      txt += e.results[i][0].transcript;
+    }
+    if (txt) {
+      els.iaText.textContent = txt.toUpperCase();
+      if (e.results[e.results.length - 1].isFinal) {
+        log(`VOIX : "${txt}"`, 'log-suc');
+      }
+    }
+  };
+  app.recognition.onend = () => { if (app.running) app.recognition.start(); };
+  try { app.recognition.start(); } catch (e) {}
+}
+
+// === ALERTES ===
+function triggerSensorAlert(boxId, msg) {
+  const box = el(boxId);
+  if (!box.classList.contains('alert-sensor')) {
+    box.classList.add('alert-sensor');
+    log(msg, 'log-err');
+    if (navigator.vibrate) navigator.vibrate([150, 50, 150]);
+    setTimeout(() => box.classList.remove('alert-sensor'), 1800);
+  }
+}
+
+// === UI START / STOP ===
+function startUI(status) {
+  const startBtn = el('startBtn');
+  startBtn.textContent = "SYSTEME ACTIF";
+  startBtn.style.background = "var(--primary)";
+  startBtn.style.color = "#000";
+
+  els.mic.textContent = "ON";
+  els.mic.style.color = "#0f0";
+  els.iaText.textContent = status;
+
   resize();
   drawLoop();
   startPulseTimer();
 }
 
 function stopSystem() {
-  if(app.stream) app.stream.getTracks().forEach(t=>t.stop());
-  if(app.vidStream) app.vidStream.getTracks().forEach(t=>t.stop());
-  if(app.ctx) app.ctx.close();
-  if(app.recognition) app.recognition.stop();
-  if(app.pulseInterval) clearInterval(app.pulseInterval);
-  
-  // Stop Sensors
+  if (app.stream) app.stream.getTracks().forEach(t => t.stop());
+  if (app.vidStream) app.vidStream.getTracks().forEach(t => t.stop());
+  if (app.ctx) app.ctx.close();
+  if (app.recognition) app.recognition.stop();
+  if (app.pulseInterval) clearInterval(app.pulseInterval);
+  if (app.ghostSweepInterval) clearInterval(app.ghostSweepInterval);
+
   window.removeEventListener('devicemotion', handleMotion);
   window.removeEventListener('deviceorientation', handleMagnetic);
-  
+
   app.running = false;
   el('startBtn').textContent = "ACTIVER TOUS LES CAPTEURS";
-  el('startBtn').classList.remove('running');
   el('startBtn').style.background = "#fff";
+  el('startBtn').style.color = "#000";
   els.mic.textContent = "OFF";
+  els.mic.style.color = "";
+
   document.querySelectorAll('.active').forEach(b => b.classList.remove('active'));
   Object.keys(app.config).forEach(k => app.config[k] = false);
 }
 
-// --- REAL SENSORS LOGIC ---
-
-function initSensors() {
-  // 1. Motion (Accelerometer)
-  if (window.DeviceMotionEvent) {
-      window.addEventListener('devicemotion', handleMotion);
-      log("Capteur Mouvement: OK");
-  } else {
-      els.valMotion.textContent = "N/A";
-  }
-
-  // 2. Magnetic (Compass) - Approx via absolute orientation
-  if (window.DeviceOrientationEvent && window.DeviceOrientationEvent.requestPermission) {
-      // iOS 13+ needs permission request
-      // For this single file, we try standard listener first
-  }
-  
-  if (window.DeviceOrientationEvent) {
-      window.addEventListener('deviceorientation', handleMagnetic);
-      log("Capteur Magnétique: OK");
-  } else {
-      els.valMag.textContent = "N/A";
-  }
-
-  // 3. Light (Generic Sensor API)
-  if ('AmbientLightSensor' in window) {
-      try {
-          const sensor = new AmbientLightSensor();
-          sensor.onreading = () => {
-              const lux = Math.round(sensor.illuminance);
-              els.valLight.textContent = lux;
-              // Détection Ombre (changement > 50 lux)
-              if (app.lightBaseline === 0) app.lightBaseline = lux;
-              if (Math.abs(lux - app.lightBaseline) > 50 && lux < app.lightBaseline) {
-                  triggerSensorAlert('boxLight', "OMBRE DÉTECTÉE");
-              }
-          };
-          sensor.start();
-          log("Capteur Lumière: OK");
-      } catch (err) {
-          els.valLight.textContent = "ERR";
-      }
-  } else {
-      els.valLight.textContent = "N/A";
-  }
-}
-
-function handleMotion(event) {
-  if(app.simulation) return;
-  const acc = event.accelerationIncludingGravity || event.acceleration;
-  if(!acc) return;
-  
-  const x = acc.x || 0;
-  const y = acc.y || 0;
-  const z = acc.z || 0;
-  const totalMotion = Math.abs(x) + Math.abs(y) + Math.abs(z);
-  
-  // Normalisation approx pour posé sur table (~9.8 sur Z)
-  const relativeMotion = Math.abs(totalMotion - 9.8);
-  
-  els.valMotion.textContent = relativeMotion.toFixed(1);
-  
-  if (relativeMotion > app.motionThreshold) {
-      triggerSensorAlert('boxMotion', "TREMBLEMENT DÉTECTÉ");
-  }
-}
-
-function handleMagnetic(event) {
-  if(app.simulation || !event.absolute) return; // Besoin de données absolues (Nord)
-  
-  // Alpha = Boussole (0-360)
-  const alpha = event.alpha || 0;
-  const beta = event.beta || 0;
-  const gamma = event.gamma || 0;
-  
-  // Calcul variation simple pour "perturbation"
-  // En réalité, on utiliserait le champ magnétique total si dispo, ici on simule une anomalie si ça tourne vite
-  // NOTE: Le champ magnétique réel (x,y,z) n'est pas toujours dispo dans 'deviceorientation' standard.
-  // On utilise l'alpha pour la stabilité.
-  
-  els.valMag.textContent = Math.floor(alpha) + "°";
-  
-  // Détection "Spin" (tourbillon) = Anomalie ?
-  if (Math.abs(event.alpha - (app.lastAlpha || 0)) > 50) {
-      triggerSensorAlert('boxMag', "PERTURBATION MAGNÉTIQUE");
-  }
-  app.lastAlpha = alpha;
-}
-
-function initBattery() {
-  if ('getBattery' in navigator) {
-      navigator.getBattery().then(battery => {
-          updateBattery();
-          battery.addEventListener('levelchange', updateBattery);
-          battery.addEventListener('chargingchange', updateBattery);
-          log("Batterie: OK");
-      });
-  } else {
-      els.bat.textContent = "N/A";
-  }
-}
-
-function updateBattery() {
-  if(navigator.getBattery) {
-      navigator.getBattery().then(b => {
-          els.bat.textContent = Math.floor(b.level * 100) + "%" + (b.charging ? " ⚡" : "");
-      });
-  }
-}
-
-function triggerSensorAlert(boxId, msg) {
-  const box = el(boxId);
-  if(!box.classList.contains('alert-sensor')) {
-      box.classList.add('alert-sensor');
-      log(msg, 'log-err');
-      // Haptic Feedback
-      if(navigator.vibrate) navigator.vibrate(200);
-      setTimeout(() => box.classList.remove('alert-sensor'), 2000);
-  }
-}
-
-// --- IA VOICE (RÉELLE UNIQUEMENT) ---
-function initVoice() {
-  const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (SpeechRec) {
-      app.recognition = new SpeechRec();
-      app.recognition.continuous = true;
-      app.recognition.interimResults = true;
-      app.recognition.lang = 'fr-FR';
-      
-      app.recognition.onresult = (e) => {
-          let txt = '';
-          for(let i=e.resultIndex; i<e.results.length; i++) txt += e.results[i][0].transcript;
-          if(txt) {
-              els.iaText.textContent = txt;
-              if(e.results[e.results.length-1].isFinal) log(`VOIX DÉTECTÉE: "${txt}"`, 'log-suc');
-          }
-      };
-      app.recognition.onerror = (e) => {};
-      app.recognition.onend = () => { if(app.running) try{app.recognition.start()}catch(e){} };
-      try{ app.recognition.start(); } catch(e){}
-  } else {
-      els.iaText.textContent = "INDISPONIBLE";
-  }
-}
-
-// --- OPTIONS ---
+// === OPTIONS (AMÉLIORÉ) ===
 function toggleOpt(key) {
-  if(!app.running) { log("Capteurs requis", 'log-warn'); return; }
+  if (!app.running) {
+    log("Démarrez le système d'abord", 'log-warn');
+    return;
+  }
   app.config[key] = !app.config[key];
   const btn = el(key + 'Btn');
-  if(btn) btn.classList.toggle('active');
-  
-  log(`${key}: ${app.config[key]?'ON':'OFF'}`);
-  
-  if(key === 'monitor' && !app.simulation) {
-      if(app.config[key]) {
-          app.analyser.connect(app.monitorDelay);
-          app.monitorDelay.connect(app.monitorFeedback);
-          app.monitorFeedback.connect(app.monitorDelay);
-          app.monitorDelay.connect(app.monitorGain);
-          app.monitorGain.connect(app.ctx.destination);
-      } else {
-          app.analyser.disconnect(app.monitorDelay);
-          app.monitorGain.disconnect(app.ctx.destination);
-      }
+  if (btn) btn.classList.toggle('active');
+
+  log(`${key.toUpperCase()}: ${app.config[key] ? 'ON' : 'OFF'}`);
+
+  if (key === 'monitor') {
+    const on = app.config.monitor;
+    if (app.monitorInputGain) app.monitorInputGain.gain.value = on ? 0.75 : 0;
+    if (app.monitorGain) app.monitorGain.gain.value = on ? 0.65 : 0;
+    if (app.monitorFeedback) app.monitorFeedback.gain.value = on ? 0.32 : 0;
   }
-  if(key === 'ghostBox' && !app.simulation) {
-      app.ghostGain.gain.value = app.config[key] ? 0.1 : 0;
-      app.noiseGain.gain.value = app.config[key] ? 0.05 : 0;
+
+  if (key === 'ghostBox') {
+    const on = app.config.ghostBox;
+    if (app.ghostGain) app.ghostGain.gain.value = on ? 0.13 : 0;
+    if (app.noiseGain) app.noiseGain.gain.value = on ? 0.07 : 0;
+
+    if (on && !app.ghostSweepInterval) {
+      app.ghostSweepInterval = setInterval(sweepGhost, 65);
+    } else if (!on && app.ghostSweepInterval) {
+      clearInterval(app.ghostSweepInterval);
+      app.ghostSweepInterval = null;
+    }
   }
-  if(key === 'cam') toggleCam();
-  if(key === 'flash') toggleFlash();
+
+  if (key === 'cam') toggleCam();
+  if (key === 'flash') toggleFlash();
 }
 
+function sweepGhost() {
+  if (!app.ghost || !app.running || !app.config.ghostBox) return;
+  const freq = 85 + Math.random() * 920;
+  app.ghost.frequency.setValueAtTime(freq, app.ctx.currentTime);
+}
+
+// === CAM + TORCHE ===
 async function toggleCam() {
-  if(!app.config.cam) {
-      try {
-          app.vidStream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
-          els.camera.srcObject = app.vidStream;
-          els.camera.style.display = 'block';
-      } catch(e) { log("Erreur Cam", 'log-err'); app.config.cam=false; el('camBtn').classList.remove('active'); }
+  const on = app.config.cam;
+  if (on) {
+    try {
+      app.vidStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+      els.camera.srcObject = app.vidStream;
+      els.camera.style.display = 'block';
+      log("Caméra activée", 'log-suc');
+    } catch (e) {
+      log("Erreur caméra", 'log-err');
+      app.config.cam = false;
+      el('camBtn').classList.remove('active');
+    }
   } else {
-      if(app.vidStream) app.vidStream.getTracks().forEach(t=>t.stop());
-      app.vidStream = null; els.camera.style.display = 'none';
+    if (app.vidStream) app.vidStream.getTracks().forEach(t => t.stop());
+    app.vidStream = null;
+    els.camera.style.display = 'none';
   }
 }
 
 async function toggleFlash() {
-  if(!app.vidStream) return log("Caméra requise", 'log-warn');
+  if (!app.vidStream) return log("Caméra requise pour la torche", 'log-warn');
   try {
-      const track = app.vidStream.getVideoTracks()[0];
-      await track.applyConstraints({advanced: [{torch: app.config.flash}]});
-  } catch(e) { log("Erreur Torche", 'log-err'); }
+    const track = app.vidStream.getVideoTracks()[0];
+    await track.applyConstraints({ advanced: [{ torch: app.config.flash }] });
+  } catch (e) {
+    log("Torche non supportée", 'log-err');
+  }
 }
 
+// === RECORDER ===
 function saveBlob(data) {
-  const url = URL.createObjectURL(new Blob([data], {type:'audio/webm'}));
-  const a = document.createElement('a'); a.href=url; a.download=`OMNI_${Date.now()}.webm`; a.click();
-  log("Enregistrement sauvé", 'log-suc');
+  const url = URL.createObjectURL(data);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `OMNI_EVP_${Date.now()}.webm`;
+  a.click();
+  URL.revokeObjectURL(url);
+  log("Enregistrement EVP sauvegardé", 'log-suc');
 }
 
-// --- VISUAL LOOP ---
-
+// === VISUALISATION (CORRIGÉ) ===
 function drawLoop() {
-  if(!app.running) return;
+  if (!app.running) return;
   requestAnimationFrame(drawLoop);
-  
-  if(app.simulation) {
-      const t = Date.now()/50;
-      for(let i=0; i<1024; i++) app.dataArray[i] = (Math.sin(i*0.05+t)+1)*50 + Math.random()*20;
-  } else {
-      app.analyser.getByteFrequencyData(app.dataArray);
+
+  // Données audio
+  if (app.simulation) {
+    const t = Date.now() / 40;
+    for (let i = 0; i < 1024; i++) {
+      app.dataArray[i] = (Math.sin(i * 0.04 + t) + 1) * 55 + Math.random() * 35;
+    }
+  } else if (app.analyser) {
+    app.analyser.getByteFrequencyData(app.dataArray);
   }
 
   // Calculs
-  let sum = 0;
-  let lowFreqSum = 0; // 0-200Hz (Graves/Rumbles)
-  let highFreqSum = 0; // 2000Hz+ (Aigus/Cris)
-  
-  const nyquist = app.ctx.sampleRate / 2;
+  let sum = 0, lowSum = 0, highSum = 0;
+  const nyquist = app.sampleRate / 2;
   const binSize = nyquist / app.dataArray.length;
 
-  for(let i=0; i<app.dataArray.length; i++) {
-      const v = app.dataArray[i];
-      sum += v;
-      const freq = i * binSize;
-      if(freq < 200) lowFreqSum += v;
-      if(freq > 2000) highFreqSum += v;
+  for (let i = 0; i < app.dataArray.length; i++) {
+    const v = app.dataArray[i];
+    sum += v;
+    const f = i * binSize;
+    if (f < 200) lowSum += v;
+    if (f > 2000) highSum += v;
   }
-  
+
   const avg = sum / app.dataArray.length;
-  const avgLow = lowFreqSum / (200 / binSize);
-  const avgHigh = highFreqSum / ((nyquist - 2000) / binSize);
+  const avgHigh = highSum / Math.max(1, (nyquist - 2000) / binSize);
 
-  els.voiceBar.style.width = Math.min(100, avg) + '%';
-  els.freq.textContent = avgHigh > 50 ? "HIGH HF" : "NORMAL";
+  els.voiceBar.style.width = Math.min(100, avg * 1.1) + '%';
+  els.freq.textContent = avgHigh > 55 ? "HIGH HF" : "NORMAL";
+  els.freq.style.color = avgHigh > 55 ? "red" : "var(--text)";
 
-  // Auto Rec
-  if(app.config.autoRec && !app.simulation && avg > 50 && !app.isRec) {
-      app.isRec = true; app.recorder.start(); log("⚠️ ANOMALIE AUDIO", 'log-err');
-      setTimeout(() => { if(app.isRec) { app.recorder.stop(); app.isRec=false; }}, 4000);
+  // Auto REC
+  if (app.config.autoRec && !app.simulation && avg > 48 && !app.isRec) {
+    app.isRec = true;
+    app.recorder.start();
+    log("⚠️ ANOMALIE AUDIO – ENREGISTREMENT", 'log-err');
+    setTimeout(() => {
+      if (app.isRec && app.recorder.state === 'recording') {
+        app.recorder.stop();
+        app.isRec = false;
+      }
+    }, 4200);
   }
 
-  // Dessin
-  const ctx = app.cCtx, w=app.width, h=app.height;
-  ctx.fillStyle = 'rgba(5, 0, 0, 0.2)';
-  ctx.fillRect(0,0,w,h);
-  
-  const barW = (w / app.dataArray.length) * 2.5;
+  // Dessin canvas
+  const ctx = app.cCtx;
+  const w = app.width;
+  const h = app.height;
+  ctx.fillStyle = 'rgba(5,0,0,0.25)';
+  ctx.fillRect(0, 0, w, h);
+
+  const barW = (w / app.dataArray.length) * 2.8;
   let x = 0;
-  for(let i=0; i<app.dataArray.length; i++) {
-      const v = app.dataArray[i];
-      const barH = (v/255)*h;
-      
-      // Mode EVP Low = On met en rouge les fréquences graves
-      let color = `rgb(${v}, 0, 0)`;
-      if(app.config.evp) {
-          const freq = i * binSize;
-          if(freq < 200) color = `rgb(0, ${v}, ${v})`; // Cyan pour les rumbles
-      }
-      
-      ctx.fillStyle = color;
-      ctx.fillRect(x, h-barH, barW, barH);
-      x += barW+1;
+  for (let i = 0; i < app.dataArray.length; i++) {
+    const v = app.dataArray[i];
+    const barH = (v / 255) * h * 0.95;
+    let color = `rgb(${v}, 30, 30)`;
+
+    if (app.config.evp) {
+      const f = i * binSize;
+      if (f < 220) color = `rgb(30, ${v}, ${v + 50})`; // cyan EVP
+    }
+
+    ctx.fillStyle = color;
+    ctx.fillRect(x, h - barH, barW, barH);
+    x += barW + 1;
   }
 
-  // Radar HF (High Freq Detection) - RÉEL
-  if(app.config.radar) {
-      // On dessine le radar
-      const cx = w-60, cy = 60, r=50;
-      ctx.strokeStyle = '#f00'; ctx.beginPath(); ctx.arc(cx,cy,r,0,7); ctx.stroke();
-      
-      // Affiche un blip SEULEMENT si haute fréquence réelle détectée
-      if(avgHigh > 60) {
-          ctx.fillStyle = '#fff';
-          ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2); ctx.fill(); // Full circle alert
-          els.freq.style.color = "red";
-      } else {
-          els.freq.style.color = "var(--text)";
-          // Scanner normal
-          const ang = (Date.now()/1000) % (Math.PI*2);
-          ctx.save(); ctx.translate(cx,cy); ctx.rotate(ang);
-          ctx.fillStyle = 'rgba(255,0,0,0.5)';
-          ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0,r,-0.1,0.1); ctx.fill(); ctx.restore();
-      }
+  // Radar HF
+  if (app.config.radar) {
+    const cx = w - 70, cy = 65, r = 48;
+    ctx.strokeStyle = '#f00';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.stroke();
+
+    if (avgHigh > 62) {
+      ctx.fillStyle = 'rgba(255,255,255,0.9)';
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.fill();
+      els.freq.style.color = "#ff0";
+    } else {
+      const ang = (Date.now() / 800) % (Math.PI * 2);
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(ang);
+      ctx.fillStyle = 'rgba(255,0,0,0.7)';
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.arc(0, 0, r, -0.15, 0.15);
+      ctx.fill();
+      ctx.restore();
+    }
   }
 }
 
-// --- UTILS ---
-
+// === UTILS ===
 function startPulseTimer() {
-  if(app.pulseInterval) clearInterval(app.pulseInterval);
+  if (app.pulseInterval) clearInterval(app.pulseInterval);
   app.pulseInterval = setInterval(() => {
-      if(!app.running) return;
-      // Pulse visuel sur le bouton
-      el('startBtn').style.opacity = (el('startBtn').style.opacity === '0.5') ? '1' : '0.5';
-  }, 3000);
+    const btn = el('startBtn');
+    if (!btn) return;
+    btn.style.opacity = (btn.style.opacity === '0.4') ? '1' : '0.4';
+  }, 2800);
 }
 
-window.onload = () => {
-  app.canvas = els.canvas;
-  app.cCtx = app.canvas.getContext('2d');
-  resize();
-  log("OMNI-SENSOR PRET. Appuyez sur START.");
-};
-window.onresize = resize;
 function resize() {
   app.width = els.canvas.clientWidth;
   app.height = els.canvas.clientHeight;
   app.canvas.width = app.width;
   app.canvas.height = app.height;
 }
+
+// === INIT ===
+window.onload = () => {
+  app.canvas = els.canvas;
+  app.cCtx = app.canvas.getContext('2d', { alpha: true });
+  resize();
+  log("OMNI-SENSOR v2.1 PRÊT – Appuyez sur START", 'log-suc');
+};
+window.onresize = resize;
 </script>
 </body>
 </html>
