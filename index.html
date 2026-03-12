@@ -3,468 +3,586 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ETERNITY v33 OMEGA ULTIMATE LAB – PART 1</title>
+<title>ETERNITY v33 OMEGA ULTIMATE LAB</title>
 <style>
-body{
-  margin:0;
-  font-family:'Courier New', monospace;
-  background:#000814;
-  color:#00ffd0;
-  overflow:hidden;
+:root {
+  --primary-color: #00ffd0;
+  --background-color: #000814;
+  --panel-bg: rgba(0, 0, 0, 0.85);
+  --button-bg: #001f30;
+  --voice-color: #ffaa00;
+  --evp-color: #aa00ff;
+  --ai-color: #00ff88;
 }
-#panel{
-  position:absolute;
-  top:10px;
-  left:10px;
-  background:rgba(0,0,0,0.85);
-  border:2px solid #00ffd0;
-  padding:12px;
-  z-index:20;
-  width:320px;
+
+body {
+  margin: 0;
+  font-family: 'Courier New', monospace;
+  background: var(--background-color);
+  color: var(--primary-color);
+  overflow: hidden;
+  height: 100vh;
 }
-button{
-  background:#001f30;
-  border:1px solid #00ffd0;
-  color:#00ffd0;
-  padding:6px 10px;
-  margin:4px;
-  cursor:pointer;
-  font-weight:bold;
+
+#panel {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: var(--panel-bg);
+  border: 2px solid var(--primary-color);
+  padding: 12px;
+  z-index: 20;
+  width: 320px;
 }
-#voiceBar{
-  height:12px;
-  width:0%;
-  background:#ffaa00;
-  margin-top:4px;
+
+button {
+  background: var(--button-bg);
+  border: 1px solid var(--primary-color);
+  color: var(--primary-color);
+  padding: 6px 10px;
+  margin: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.2s;
 }
-#logZone{
-  position:absolute;
-  bottom:10px;
-  left:10px;
-  width:400px;
-  max-height:300px;
-  overflow-y:auto;
-  font-size:0.8rem;
-  background:rgba(0,0,0,0.6);
-  padding:6px;
-  border:1px solid #00ffd0;
+
+button:hover {
+  background: rgba(0, 31, 48, 0.8);
+}
+
+#voiceBar {
+  height: 12px;
+  width: 0%;
+  background: var(--voice-color);
+  margin-top: 4px;
+  transition: width 0.1s linear;
+}
+
+#logZone {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  width: 400px;
+  max-height: 300px;
+  overflow-y: auto;
+  font-size: 0.8rem;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 6px;
+  border: 1px solid var(--primary-color);
+}
+
+#waterfallCanvas {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+}
+
+#radarCanvas {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+
+/* Style pour les boutons dynamiques */
+.dynamic-btn {
+  position: absolute;
+  left: 10px;
 }
 </style>
 </head>
 <body>
 <div id="panel">
-<h3>ETERNITY v33 OMEGA ULTIMATE LAB – PART 1</h3>
-MIC : <span id="mic">OFF</span><br>
-IA CLASS : <span id="ai">---</span><br>
-<div>VOICE<div id="voiceBar"></div></div>
-<button id="fftLarge">FFT 4096</button>
-<button id="fftMedium">FFT 2048</button>
-<button id="fftSmall">FFT 1024</button>
-<button id="autoRec">AUTO REC</button>
-<button id="evp">EVP MODE</button>
+  <h3>ETERNITY v33 OMEGA ULTIMATE LAB</h3>
+  <div>MIC : <span id="mic">OFF</span></div>
+  <div>IA CLASS : <span id="ai">---</span></div>
+  <div>VOICE <div id="voiceBar"></div></div>
+  <div class="btn-group">
+    <button id="fftLarge">FFT 4096</button>
+    <button id="fftMedium">FFT 2048</button>
+    <button id="fftSmall">FFT 1024</button>
+    <button id="autoRec">AUTO REC</button>
+    <button id="evp">EVP MODE</button>
+  </div>
 </div>
 <div id="logZone"></div>
-<script>
-// ======================= VARIABLES GLOBALES =======================
-let audioCtx, analyser, dataArray, fftSize = 2048;
-let mediaRecorder, chunks = [];
-let autoRec = false, evpMode = false;
 
-// ======================= LOG =======================
-function log(msg, color="#00ff88"){
+<script>
+// Configuration initiale
+const config = {
+  fftSize: 2048,
+  autoRec: false,
+  evpMode: false,
+  spectro3D: true,
+  radar: true,
+  ai: true,
+  evpThreshold: 0.5
+};
+
+// Variables globales
+let audioCtx, analyser, dataArray;
+let mediaRecorder, chunks = [];
+let scene, camera, renderer;
+let cubes = [];
+let model, predictions = [];
+let recBuffers = [], isRecordingWAV = false;
+
+// DOM Elements
+const elements = {
+  mic: document.getElementById("mic"),
+  ai: document.getElementById("ai"),
+  voiceBar: document.getElementById("voiceBar"),
+  logZone: document.getElementById("logZone")
+};
+
+// ======================= UTILITIES =======================
+function log(msg, color = "#00ff88") {
   const div = document.createElement("div");
   div.style.color = color;
-  const time = new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute: '2-digit', second: '2-digit'});
   div.textContent = `[${time}] ${msg}`;
-  document.getElementById("logZone").prepend(div);
-  if(document.getElementById("logZone").children.length>200) document.getElementById("logZone").lastChild.remove();
-}
+  elements.logZone.prepend(div);
 
-// ======================= INITIALISATION AUDIO =======================
-async function initAudio(){
-  audioCtx = new AudioContext();
-  const stream = await navigator.mediaDevices.getUserMedia({audio:true});
-  mediaRecorder = new MediaRecorder(stream);
-  mediaRecorder.ondataavailable = e => chunks.push(e.data);
-  mediaRecorder.onstop = saveRecording;
-
-  const source = audioCtx.createMediaStreamSource(stream);
-  analyser = audioCtx.createAnalyser();
-  analyser.fftSize = fftSize;
-  dataArray = new Uint8Array(analyser.frequencyBinCount);
-  source.connect(analyser);
-
-  document.getElementById("mic").textContent = "ACTIVE";
-  log("Audio actif et analysable");
-}
-
-// ======================= ENREGISTREMENT =======================
-function record(){
-  if(mediaRecorder.state==="inactive"){
-    chunks=[];
-    mediaRecorder.start();
-    log("Enregistrement automatique démarré");
-    setTimeout(()=>mediaRecorder.stop(), 3000);
+  // Limiter le nombre de logs
+  if (elements.logZone.children.length > 200) {
+    elements.logZone.removeChild(elements.logZone.lastChild);
   }
 }
-function saveRecording(){
-  let blob = new Blob(chunks, {type:"audio/webm"});
-  let url = URL.createObjectURL(blob);
-  let a = document.createElement("a");
+
+// ======================= AUDIO INITIALIZATION =======================
+async function initAudio() {
+  try {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+    mediaRecorder = new MediaRecorder(stream);
+    mediaRecorder.ondataavailable = e => chunks.push(e.data);
+    mediaRecorder.onstop = saveRecording;
+
+    const source = audioCtx.createMediaStreamSource(stream);
+    analyser = audioCtx.createAnalyser();
+    analyser.fftSize = config.fftSize;
+    dataArray = new Uint8Array(analyser.frequencyBinCount);
+    source.connect(analyser);
+
+    elements.mic.textContent = "ACTIVE";
+    log("Audio actif et analysable");
+
+    // Démarrer la boucle audio
+    audioLoop();
+  } catch (error) {
+    log(`Erreur audio: ${error.message}`, "#ff0000");
+  }
+}
+
+// ======================= AUDIO LOOP =======================
+function audioLoop() {
+  requestAnimationFrame(audioLoop);
+
+  if (!analyser) return;
+
+  analyser.getByteFrequencyData(dataArray);
+
+  // Calcul de l'énergie vocale
+  const sum = dataArray.reduce((acc, val) => acc + val, 0);
+  const voiceEnergy = Math.min(100, sum / dataArray.length);
+  elements.voiceBar.style.width = `${voiceEnergy}%`;
+
+  // Auto record si activé
+  if (config.autoRec && voiceEnergy > 30) {
+    record();
+  }
+}
+
+// ======================= RECORDING =======================
+function record() {
+  if (mediaRecorder.state === "inactive") {
+    chunks = [];
+    mediaRecorder.start();
+    log("Enregistrement démarré");
+
+    // Arrêter après 3 secondes
+    setTimeout(() => {
+      if (mediaRecorder.state !== "inactive") {
+        mediaRecorder.stop();
+      }
+    }, 3000);
+  }
+}
+
+function saveRecording() {
+  const blob = new Blob(chunks, { type: "audio/webm" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
   a.href = url;
-  a.download = "event_audio.webm";
+  a.download = `event_audio_${Date.now()}.webm`;
   a.click();
   log("Enregistrement sauvegardé");
 }
 
-// ======================= LOOP AUDIO =======================
-function loop(){
-  requestAnimationFrame(loop);
-  analyser.getByteFrequencyData(dataArray);
-  // Calcul voix / énergie
-  let sum=0;
-  for(let i=0;i<dataArray.length;i++) sum+=dataArray[i];
-  let voiceEnergy = Math.min(100, sum/dataArray.length);
-  document.getElementById("voiceBar").style.width = voiceEnergy + "%";
+// ======================= 3D VISUALIZATION =======================
+function init3D() {
+  scene = new THREE.Scene();
+  camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
+  camera.position.z = 200;
 
-  // Auto record si activé
-  if(autoRec && voiceEnergy>30) record();
-}
-loop();
+  renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  document.body.appendChild(renderer.domElement);
 
-// ======================= BOUTONS =======================
-document.getElementById("fftLarge").onclick=()=>{
-  fftSize=4096; analyser.fftSize=fftSize; dataArray=new Uint8Array(analyser.frequencyBinCount); log("FFT 4096 activée");
-};
-document.getElementById("fftMedium").onclick=()=>{
-  fftSize=2048; analyser.fftSize=fftSize; dataArray=new Uint8Array(analyser.frequencyBinCount); log("FFT 2048 activée");
-};
-document.getElementById("fftSmall").onclick=()=>{
-  fftSize=1024; analyser.fftSize=fftSize; dataArray=new Uint8Array(analyser.frequencyBinCount); log("FFT 1024 activée");
-};
-document.getElementById("autoRec").onclick=()=>{
-  autoRec=!autoRec;
-  log("Auto Recording "+(autoRec?"ON":"OFF"));
-};
-document.getElementById("evp").onclick=()=>{
-  evpMode=!evpMode;
-  log("EVP Mode "+(evpMode?"ON":"OFF"), "#aa00ff");
-};
+  // Créer les éléments visuels
+  createWaterfall();
+  createRadar();
 
-// ======================= START =======================
-initAudio();
-log("PARTIE 1 : UI et audio setup prêts");
-</script>
-</body>
-</html>
-
-<!-- PARTIE 2 : Spectrogramme 3D GPU + Radar + Waterfall -->
-<script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
-<script>
-// ======================= VARIABLES 3D =======================
-let scene, camera, renderer;
-let cubes = [];
-let spectro3DOn = true, radarOn = true;
-
-// ======================= INIT 3D =======================
-function init3D(){
-    scene = new THREE.Scene();
-    camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 2000);
-    camera.position.z = 200;
-    renderer = new THREE.WebGLRenderer({antialias:true});
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    document.body.appendChild(renderer.domElement);
+  // Démarrer la boucle 3D
+  renderLoop();
 }
 
-// ======================= WATERFALL =======================
-let waterfall = document.createElement('canvas');
-waterfall.id = 'waterfallCanvas';
-waterfall.style.position = 'absolute';
-waterfall.style.bottom = '0';
-waterfall.style.left = '0';
-waterfall.width = window.innerWidth;
-waterfall.height = 300;
-document.body.appendChild(waterfall);
-let wfCtx = waterfall.getContext('2d');
-
-function drawWaterfall(){
-    let w = waterfall.width;
-    let h = waterfall.height;
-    let img = wfCtx.getImageData(0,0,w,h);
-    wfCtx.putImageData(img,0,1);
-    for(let i=0;i<dataArray.length;i++){
-        let v = dataArray[i];
-        wfCtx.fillStyle = `hsl(${200-v},100%,50%)`;
-        wfCtx.fillRect(i*(w/dataArray.length),0,2,1);
-    }
+function createWaterfall() {
+  const waterfall = document.createElement('canvas');
+  waterfall.id = 'waterfallCanvas';
+  waterfall.width = window.innerWidth;
+  waterfall.height = 300;
+  document.body.appendChild(waterfall);
+  return waterfall.getContext('2d');
 }
 
-// ======================= RADAR =======================
-let radar = document.createElement('canvas');
-radar.id = 'radarCanvas';
-radar.width = 180;
-radar.height = 180;
-radar.style.position = 'absolute';
-radar.style.top = '10px';
-radar.style.right = '10px';
-document.body.appendChild(radar);
-let radarCtx = radar.getContext('2d');
-
-function drawRadar(){
-    if(!radarOn) return;
-    radarCtx.clearRect(0,0,radar.width,radar.height);
-    radarCtx.strokeStyle = "#00ffd0";
-    radarCtx.beginPath();
-    radarCtx.arc(90,90,80,0,Math.PI*2);
-    radarCtx.stroke();
-    let energy = 0;
-    for(let i=0;i<dataArray.length;i++) energy+=dataArray[i];
-    let angle = Math.random()*Math.PI*2;
-    let r = energy/1500;
-    let x = 90 + Math.cos(angle)*r;
-    let y = 90 + Math.sin(angle)*r;
-    radarCtx.fillStyle = "#00ff88";
-    radarCtx.fillRect(x,y,4,4);
+function createRadar() {
+  const radar = document.createElement('canvas');
+  radar.id = 'radarCanvas';
+  radar.width = 180;
+  radar.height = 180;
+  document.body.appendChild(radar);
+  return radar.getContext('2d');
 }
 
-// ======================= DRAW SPECTRO 3D =======================
-function draw3DSpectro(){
-    if(!spectro3DOn) return;
-    for(let i=0;i<dataArray.length;i+=2){
-        let v = dataArray[i]/255;
-        let geometry = new THREE.BoxGeometry(2,2,v*60);
-        let color = evpMode?`hsl(${300-dataArray[i]},100%,50%)`:`hsl(${200-dataArray[i]},100%,50%)`;
-        let material = new THREE.MeshBasicMaterial({color:new THREE.Color(color)});
-        let cube = new THREE.Mesh(geometry,material);
-        cube.position.x = i-256;
-        cube.position.y = -60;
-        cube.position.z = v*30;
-        scene.add(cube);
-        cubes.push(cube);
-    }
-    // Supprime anciens cubes pour ne pas saturer
-    if(cubes.length>10000){ let old=cubes.shift(); scene.remove(old); }
+function drawWaterfall(ctx) {
+  const w = ctx.canvas.width;
+  const h = ctx.canvas.height;
+  const img = ctx.getImageData(0, 0, w, h);
+  ctx.putImageData(img, 0, 1);
+
+  for (let i = 0; i < dataArray.length; i++) {
+    const v = dataArray[i];
+    ctx.fillStyle = `hsl(${200 - v}, 100%, 50%)`;
+    ctx.fillRect(i * (w / dataArray.length), 0, 2, 1);
+  }
 }
 
-// ======================= LOOP 3D =======================
-function loop3D(){
-    requestAnimationFrame(loop3D);
+function drawRadar(ctx) {
+  if (!config.radar) return;
+
+  ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+  ctx.strokeStyle = "#00ffd0";
+  ctx.beginPath();
+  ctx.arc(90, 90, 80, 0, Math.PI * 2);
+  ctx.stroke();
+
+  const energy = dataArray.reduce((acc, val) => acc + val, 0);
+  const angle = Math.random() * Math.PI * 2;
+  const r = energy / 1500;
+  const x = 90 + Math.cos(angle) * r;
+  const y = 90 + Math.sin(angle) * r;
+
+  ctx.fillStyle = "#00ff88";
+  ctx.fillRect(x, y, 4, 4);
+}
+
+function draw3DSpectro() {
+  if (!config.spectro3D || !dataArray) return;
+
+  for (let i = 0; i < dataArray.length; i += 2) {
+    const v = dataArray[i] / 255;
+    const color = config.evpMode
+      ? `hsl(${300 - dataArray[i]}, 100%, 50%)`
+      : `hsl(${200 - dataArray[i]}, 100%, 50%)`;
+
+    const geometry = new THREE.BoxGeometry(2, 2, v * 60);
+    const material = new THREE.MeshBasicMaterial({ color: new THREE.Color(color) });
+    const cube = new THREE.Mesh(geometry, material);
+
+    cube.position.x = i - 256;
+    cube.position.y = -60;
+    cube.position.z = v * 30;
+    scene.add(cube);
+    cubes.push(cube);
+  }
+
+  // Limiter le nombre de cubes
+  if (cubes.length > 10000) {
+    const old = cubes.shift();
+    scene.remove(old);
+  }
+}
+
+function renderLoop() {
+  requestAnimationFrame(renderLoop);
+
+  if (analyser) {
     analyser.getByteFrequencyData(dataArray);
     draw3DSpectro();
-    drawRadar();
-    drawWaterfall();
-    renderer.render(scene,camera);
+    drawRadar(radarCtx);
+    drawWaterfall(waterfallCtx);
+  }
+
+  renderer.render(scene, camera);
 }
 
-// ======================= BOUTONS PARTIE 2 =======================
-let btnSpectro3D = document.createElement('button');
-btnSpectro3D.textContent = 'Spectro 3D ON/OFF';
-btnSpectro3D.style.position = 'absolute';
-btnSpectro3D.style.top = '200px';
-btnSpectro3D.style.left = '10px';
-btnSpectro3D.onclick = ()=>{ spectro3DOn = !spectro3DOn; log("Spectro 3D "+(spectro3DOn?"ON":"OFF")); };
-document.body.appendChild(btnSpectro3D);
-
-let btnRadar = document.createElement('button');
-btnRadar.textContent = 'Radar ON/OFF';
-btnRadar.style.position = 'absolute';
-btnRadar.style.top = '230px';
-btnRadar.style.left = '10px';
-btnRadar.onclick = ()=>{ radarOn = !radarOn; log("Radar "+(radarOn?"ON":"OFF")); };
-document.body.appendChild(btnRadar);
-
-// ======================= START PARTIE 2 =======================
-init3D();
-loop3D();
-log("PARTIE 2 : Spectrogram 3D, Radar et Waterfall prêts");
-</script>
-
-<!-- PARTIE 3 : IA TensorFlow, classification 521 sons, EVP avancé, Auto Recording -->
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.9.0/dist/tf.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/yamnet@0.1.0/dist/yamnet.min.js"></script>
-<script>
-// ======================= VARIABLES IA =======================
-let model, predictions = [];
-let evpThreshold = 0.5; // seuil détection EVP
-let aiOn = true;
-
-// ======================= CHARGEMENT MODELE =======================
-async function loadModel(){
+// ======================= AI ANALYSIS =======================
+async function loadModel() {
+  try {
     log("Chargement du modèle TensorFlow YAMNet...");
     model = await yamnet.load();
     log("Modèle chargé ✅");
+  } catch (error) {
+    log(`Erreur chargement modèle: ${error.message}`, "#ff0000");
+  }
 }
-loadModel();
 
-// ======================= ANALYSE AUDIO =======================
-async function analyseAudio(){
-    if(!model) return;
-    analyser.getByteTimeDomainData(dataArray);
-    // Normalisation [-1,1]
-    let floatData = Float32Array.from(dataArray, v => (v-128)/128);
-    const inputTensor = tf.tensor(floatData).reshape([floatData.length,1]);
-    const scores = await model.predict(inputTensor);
-    const topScores = Array.from(scores.dataSync()).map((s,i)=>({score:s,index:i}));
-    topScores.sort((a,b)=>b.score-a.score);
-    const top5 = topScores.slice(0,5);
-    predictions = top5.map(p=>`${model.classes[p.index]} (${(p.score*100).toFixed(1)}%)`);
-    document.getElementById("ai").textContent = predictions[0];
-    // EVP detection simple
-    if(evpMode && top5[0].score<evpThreshold){
-        log(`EVP détecté : signal faible et mystérieux`, "#aa00ff");
-        if(autoRec) record();
+async function analyseAudio() {
+  if (!model || !analyser) return;
+
+  const floatData = new Float32Array(dataArray.length);
+  for (let i = 0; i < dataArray.length; i++) {
+    floatData[i] = (dataArray[i] - 128) / 128;
+  }
+
+  const inputTensor = tf.tensor(floatData).reshape([floatData.length, 1]);
+  const scores = await model.predict(inputTensor);
+
+  const topScores = Array.from(scores.dataSync())
+    .map((s, i) => ({ score: s, index: i }))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 5);
+
+  predictions = topScores.map(p =>
+    `${model.classes[p.index]} (${(p.score * 100).toFixed(1)}%)`
+  );
+
+  elements.ai.textContent = predictions[0];
+
+  // Détection EVP
+  if (config.evpMode && topScores[0].score < config.evpThreshold) {
+    log(`EVP détecté : signal faible et mystérieux`, "#aa00ff");
+    if (config.autoRec) record();
+  }
+}
+
+function aiLoop() {
+  if (config.ai) {
+    analyseAudio();
+  }
+  requestAnimationFrame(aiLoop);
+}
+
+// ======================= UI CONTROLS =======================
+function createButton(text, top, onclick) {
+  const btn = document.createElement('button');
+  btn.textContent = text;
+  btn.style.position = 'absolute';
+  btn.style.top = `${top}px`;
+  btn.style.left = '10px';
+  btn.onclick = onclick;
+  document.body.appendChild(btn);
+  return btn;
+}
+
+// Créer tous les boutons
+function createUI() {
+  // Boutons FFT
+  document.getElementById("fftLarge").onclick = () => {
+    config.fftSize = 4096;
+    if (analyser) {
+      analyser.fftSize = config.fftSize;
+      dataArray = new Uint8Array(analyser.frequencyBinCount);
     }
-}
+    log("FFT 4096 activée");
+  };
 
-// ======================= AUTO IA LOOP ======================
-async function iaLoop(){
-    requestAnimationFrame(iaLoop);
-    if(aiOn) await analyseAudio();
-}
-iaLoop();
-
-// ======================= BOUTONS IA =======================
-let btnIA = document.createElement('button');
-btnIA.textContent = 'IA ON/OFF';
-btnIA.style.position='absolute';
-btnIA.style.top='260px';
-btnIA.style.left='10px';
-btnIA.onclick = ()=>{ aiOn=!aiOn; log("IA "+(aiOn?"ON":"OFF"),"#00ff88"); };
-document.body.appendChild(btnIA);
-
-let btnEVPThreshold = document.createElement('button');
-btnEVPThreshold.textContent='EVP Seuil+';
-btnEVPThreshold.style.position='absolute';
-btnEVPThreshold.style.top='290px';
-btnEVPThreshold.style.left='10px';
-btnEVPThreshold.onclick = ()=>{ evpThreshold=Math.min(1,evpThreshold+0.05); log(`Seuil EVP = ${evpThreshold.toFixed(2)}`, "#aa00ff"); };
-document.body.appendChild(btnEVPThreshold);
-
-let btnEVPThresholdDec = document.createElement('button');
-btnEVPThresholdDec.textContent='EVP Seuil-';
-btnEVPThresholdDec.style.position='absolute';
-btnEVPThresholdDec.style.top='320px';
-btnEVPThresholdDec.style.left='10px';
-btnEVPThresholdDec.onclick = ()=>{ evpThreshold=Math.max(0,evpThreshold-0.05); log(`Seuil EVP = ${evpThreshold.toFixed(2)}`, "#aa00ff"); };
-document.body.appendChild(btnEVPThresholdDec);
-
-log("PARTIE 3 : IA TensorFlow + EVP + Auto Recording avancé prêts");
-</script>
-
-
-<!-- PARTIE 4 : Enregistreur WAV, journal scientifique, export automatique -->
-<script>
-// ======================= ENREGISTREUR WAV =======================
-let recBuffers = [], isRecordingWAV = false;
-
-function startWAVRecording(){
-    if(isRecordingWAV) return;
-    isRecordingWAV = true;
-    recBuffers = [];
-    log("Enregistrement WAV démarré", "#ffaa00");
-}
-
-function stopWAVRecording(){
-    if(!isRecordingWAV) return;
-    isRecordingWAV = false;
-    // Convertir Float32Array en WAV
-    let bufferLength = recBuffers.reduce((sum,b)=>sum+b.length,0);
-    let interleaved = new Float32Array(bufferLength);
-    let offset = 0;
-    for(let i=0;i<recBuffers.length;i++){
-        interleaved.set(recBuffers[i], offset);
-        offset += recBuffers[i].length;
+  document.getElementById("fftMedium").onclick = () => {
+    config.fftSize = 2048;
+    if (analyser) {
+      analyser.fftSize = config.fftSize;
+      dataArray = new Uint8Array(analyser.frequencyBinCount);
     }
+    log("FFT 2048 activée");
+  };
 
-    let wavBlob = encodeWAV(interleaved, audioCtx.sampleRate);
-    let url = URL.createObjectURL(wavBlob);
-    let a = document.createElement('a');
-    a.href = url;
-    a.download = `ETERNITY_EVENT_${Date.now()}.wav`;
-    a.click();
-    log("WAV sauvegardé automatiquement", "#ffaa00");
-}
-
-function encodeWAV(samples, sampleRate){
-    let buffer = new ArrayBuffer(44 + samples.length*2);
-    let view = new DataView(buffer);
-    function writeString(view, offset, string){
-        for(let i=0;i<string.length;i++) view.setUint8(offset+i,string.charCodeAt(i));
+  document.getElementById("fftSmall").onclick = () => {
+    config.fftSize = 1024;
+    if (analyser) {
+      analyser.fftSize = config.fftSize;
+      dataArray = new Uint8Array(analyser.frequencyBinCount);
     }
-    let offset=0;
-    writeString(view, offset, 'RIFF'); offset+=4;
-    view.setUint32(offset, 36 + samples.length*2, true); offset+=4;
-    writeString(view, offset, 'WAVE'); offset+=4;
-    writeString(view, offset, 'fmt '); offset+=4;
-    view.setUint32(offset,16,true); offset+=4;
-    view.setUint16(offset,1,true); offset+=2;
-    view.setUint16(offset,1,true); offset+=2;
-    view.setUint32(offset, sampleRate,true); offset+=4;
-    view.setUint32(offset, sampleRate*2,true); offset+=4;
-    view.setUint16(offset,2,true); offset+=2;
-    view.setUint16(offset,16,true); offset+=2;
-    writeString(view, offset, 'data'); offset+=4;
-    view.setUint32(offset, samples.length*2,true); offset+=4;
-    // PCM
-    let pos=44;
-    for(let i=0;i<samples.length;i++){
-        let s=Math.max(-1,Math.min(1,samples[i]));
-        view.setInt16(pos, s<0?s*0x8000:s*0x7FFF,true);
-        pos+=2;
-    }
-    return new Blob([view], {type:"audio/wav"});
-}
+    log("FFT 1024 activée");
+  };
 
-// ======================= ENREGISTREMENT EN TEMPS REEL =======================
-function captureWAV(){
-    if(!isRecordingWAV) return;
-    let floatData = new Float32Array(dataArray.length);
-    for(let i=0;i<dataArray.length;i++) floatData[i] = (dataArray[i]-128)/128;
-    recBuffers.push(floatData);
-}
+  document.getElementById("autoRec").onclick = () => {
+    config.autoRec = !config.autoRec;
+    log(`Auto Recording ${config.autoRec ? "ON" : "OFF"}`);
+  };
 
-// ======================= LOOP D'ENREGISTREMENT =======================
-function wavLoop(){
-    requestAnimationFrame(wavLoop);
-    captureWAV();
-}
-wavLoop();
+  document.getElementById("evp").onclick = () => {
+    config.evpMode = !config.evpMode;
+    log(`EVP Mode ${config.evpMode ? "ON" : "OFF"}`, "#aa00ff");
+  };
 
-// ======================= EXPORT JOURNAL SCIENTIFIQUE =======================
-let exportBtn = document.createElement('button');
-exportBtn.textContent='EXPORT JOURNAL';
-exportBtn.style.position='absolute';
-exportBtn.style.top='350px';
-exportBtn.style.left='10px';
-exportBtn.onclick = ()=>{
-    let blob = new Blob([document.getElementById("logZone").innerText], {type:"text/plain"});
-    let url = URL.createObjectURL(blob);
-    let a = document.createElement('a');
+  // Boutons dynamiques
+  createButton('Spectro 3D ON/OFF', 200, () => {
+    config.spectro3D = !config.spectro3D;
+    log(`Spectro 3D ${config.spectro3D ? "ON" : "OFF"}`);
+  });
+
+  createButton('Radar ON/OFF', 230, () => {
+    config.radar = !config.radar;
+    log(`Radar ${config.radar ? "ON" : "OFF"}`);
+  });
+
+  createButton('IA ON/OFF', 260, () => {
+    config.ai = !config.ai;
+    log(`IA ${config.ai ? "ON" : "OFF"}`, "#00ff88");
+  });
+
+  createButton('EVP Seuil+', 290, () => {
+    config.evpThreshold = Math.min(1, config.evpThreshold + 0.05);
+    log(`Seuil EVP = ${config.evpThreshold.toFixed(2)}`, "#aa00ff");
+  });
+
+  createButton('EVP Seuil-', 320, () => {
+    config.evpThreshold = Math.max(0, config.evpThreshold - 0.05);
+    log(`Seuil EVP = ${config.evpThreshold.toFixed(2)}`, "#aa00ff");
+  });
+
+  createButton('EXPORT JOURNAL', 350, () => {
+    const blob = new Blob([elements.logZone.innerText], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
     a.href = url;
     a.download = `ETERNITY_JOURNAL_${Date.now()}.txt`;
     a.click();
     log("Journal scientifique exporté", "#ffaa00");
-};
-document.body.appendChild(exportBtn);
+  });
 
-// ======================= BOUTON ENREGISTREMENT WAV =======================
-let wavBtn = document.createElement('button');
-wavBtn.textContent='WAV ON/OFF';
-wavBtn.style.position='absolute';
-wavBtn.style.top='380px';
-wavBtn.style.left='10px';
-wavBtn.onclick = ()=>{
-    if(isRecordingWAV){ stopWAVRecording(); }
-    else{ startWAVRecording(); }
-};
-document.body.appendChild(wavBtn);
+  createButton('WAV ON/OFF', 380, () => {
+    if (isRecordingWAV) {
+      stopWAVRecording();
+    } else {
+      startWAVRecording();
+    }
+  });
+}
 
-// ======================= JOURNAL AUTO =======================
-setInterval(()=>{
-    if(evpMode && voiceEnergy>25) log(`EVP EVENT DETECTED – Energy=${voiceEnergy.toFixed(2)}`, "#aa00ff");
-    if(autoRec && voiceEnergy>30) record();
-}, 3000);
+// ======================= WAV RECORDING =======================
+function startWAVRecording() {
+  if (isRecordingWAV) return;
+  isRecordingWAV = true;
+  recBuffers = [];
+  log("Enregistrement WAV démarré", "#ffaa00");
+}
 
-log("PARTIE 4 : Enregistreur WAV, journal scientifique et export prêts");
+function stopWAVRecording() {
+  if (!isRecordingWAV) return;
+  isRecordingWAV = false;
+
+  const bufferLength = recBuffers.reduce((sum, b) => sum + b.length, 0);
+  const interleaved = new Float32Array(bufferLength);
+  let offset = 0;
+
+  for (const buffer of recBuffers) {
+    interleaved.set(buffer, offset);
+    offset += buffer.length;
+  }
+
+  const wavBlob = encodeWAV(interleaved, audioCtx.sampleRate);
+  const url = URL.createObjectURL(wavBlob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `ETERNITY_EVENT_${Date.now()}.wav`;
+  a.click();
+  log("WAV sauvegardé automatiquement", "#ffaa00");
+}
+
+function encodeWAV(samples, sampleRate) {
+  const buffer = new ArrayBuffer(44 + samples.length * 2);
+  const view = new DataView(buffer);
+
+  function writeString(offset, string) {
+    for (let i = 0; i < string.length; i++) {
+      view.setUint8(offset + i, string.charCodeAt(i));
+    }
+  }
+
+  let offset = 0;
+  writeString(offset, 'RIFF'); offset += 4;
+  view.setUint32(offset, 36 + samples.length * 2, true); offset += 4;
+  writeString(offset, 'WAVE'); offset += 4;
+  writeString(offset, 'fmt '); offset += 4;
+  view.setUint32(offset, 16, true); offset += 4;
+  view.setUint16(offset, 1, true); offset += 2;
+  view.setUint16(offset, 1, true); offset += 2;
+  view.setUint32(offset, sampleRate, true); offset += 4;
+  view.setUint32(offset, sampleRate * 2, true); offset += 4;
+  view.setUint16(offset, 2, true); offset += 2;
+  view.setUint16(offset, 16, true); offset += 2;
+  writeString(offset, 'data'); offset += 4;
+  view.setUint32(offset, samples.length * 2, true); offset += 4;
+
+  // PCM data
+  let pos = 44;
+  for (const s of samples) {
+    const sample = Math.max(-1, Math.min(1, s));
+    view.setInt16(pos, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
+    pos += 2;
+  }
+
+  return new Blob([view], { type: "audio/wav" });
+}
+
+function captureWAV() {
+  if (!isRecordingWAV || !analyser) return;
+
+  const floatData = new Float32Array(dataArray.length);
+  for (let i = 0; i < dataArray.length; i++) {
+    floatData[i] = (dataArray[i] - 128) / 128;
+  }
+  recBuffers.push(floatData);
+}
+
+function wavLoop() {
+  if (isRecordingWAV) {
+    captureWAV();
+  }
+  requestAnimationFrame(wavLoop);
+}
+
+// ======================= INITIALIZATION =======================
+function init() {
+  // Charger les scripts externes
+  loadScript('https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js', () => {
+    loadScript('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.9.0/dist/tf.min.js', () => {
+      loadScript('https://cdn.jsdelivr.net/npm/@tensorflow-models/yamnet@0.1.0/dist/yamnet.min.js', () => {
+        initAudio();
+        init3D();
+        loadModel();
+        createUI();
+        aiLoop();
+        wavLoop();
+
+        // Logs initiaux
+        log("Système ETERNITY v33 OMEGA ULTIMATE LAB initialisé");
+      });
+    });
+  });
+}
+
+function loadScript(url, callback) {
+  const script = document.createElement('script');
+  script.src = url;
+  script.onload = callback;
+  document.head.appendChild(script);
+}
+
+// Démarrer l'application
+init();
 </script>
-
+</body>
+</html>
