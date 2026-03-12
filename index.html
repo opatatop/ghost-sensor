@@ -1,436 +1,272 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>ETERNITY v22 GOD MODE</title>
-  <meta name="theme-color" content="#000000" />
-  <meta name="color-scheme" content="dark only" />
-
-  <style>
-    :root {
-      --primary: #00ffcc; --secondary: #0088ff; --danger: #ff0055;
-      --voice: #ffaa00; --ghost: #aa00ff;
-      --bg: #00050a; --panel: rgba(0,10,20,0.75);
-      --glow-p: 0 0 15px var(--primary); --glow-g: 0 0 20px var(--ghost);
-    }
-    * { box-sizing:border-box; margin:0; padding:0; }
-    body {
-      height:100dvh; background:var(--bg); color:var(--primary);
-      font-family:'Courier New',ui-monospace,monospace; overflow:hidden;
-      display:grid; place-items:center; touch-action:manipulation;
-    }
-    #bg-network,#vignette,#camera-feed { inset:0; position:fixed; pointer-events:none; }
-    #bg-network { opacity:0.08; z-index:1; }
-    #vignette { z-index:2; background:radial-gradient(circle at center,transparent 10%,#000 80%); }
-    #camera-feed { object-fit:cover; opacity:0.18; filter:grayscale(1) contrast(1.6) brightness(0.45) hue-rotate(200deg); z-index:0; }
-
-    #boot-screen {
-      z-index:100; padding:2.5rem 3.5rem; border:3px solid var(--primary); border-radius:50%;
-      font-size:clamp(1.4rem,7vw,2rem); text-align:center; text-shadow:var(--glow-p);
-      cursor:pointer; transition:all 0.3s;
-    }
-    #boot-screen:active { transform:scale(0.92); background:rgba(0,255,204,0.12); }
-
-    #main-ui {
-      inset:0; position:absolute; z-index:10; display:none; flex-direction:column;
-      background:rgba(0,0,0,0.95); padding:1rem; gap:1rem; overflow-y:auto;
-    }
-    header { display:flex; justify-content:space-between; align-items:baseline; padding-bottom:0.8rem; border-bottom:1px solid var(--secondary); }
-    .title { font-size:1.55rem; letter-spacing:4px; text-shadow:var(--glow-p); }
-    .subtitle { font-size:0.7rem; opacity:0.8; color:var(--ghost); }
-
-    .panel { background:var(--panel); border:1px solid var(--secondary); border-radius:4px; padding:1rem; font-size:0.85rem; }
-    .row { display:flex; justify-content:space-between; align-items:center; margin:0.4rem 0; }
-
-    canvas.viz { width:100%; height:160px; background:#000; border:1px solid var(--secondary); border-radius:4px; }
-    .peak-hold { position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; }
-
-    .voice-bar, .ghost-bar { height:10px; margin-top:6px; border-radius:2px; }
-    .voice-bar { background:var(--voice); }
-    .ghost-bar { background:var(--ghost); box-shadow:var(--glow-g); }
-
-    .sweep-controls { display:flex; flex-wrap:wrap; gap:0.8rem; margin-top:0.8rem; font-size:0.78rem; }
-    button { padding:0.9rem 0.6rem; font-size:0.78rem; font-weight:bold; text-transform:uppercase;
-      background:rgba(0,20,40,0.8); border:1px solid var(--secondary); color:var(--secondary);
-      border-radius:4px; cursor:pointer; transition:all 0.15s; }
-    button:active { transform:scale(0.95); }
-    button.active { background:var(--secondary); color:#000; box-shadow:0 0 18px var(--secondary); }
-    #btn-ghost.active { background:var(--ghost); color:white; box-shadow:var(--glow-g); }
-  </style>
+<meta charset="UTF-8">
+<title>ETERNITY v22 – GOD MODE + EVP AVANCÉE</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#000000">
+<style>
+:root{--primary:#00ffcc;--secondary:#0088ff;--danger:#ff0055;--ghost:#aa00ff;--voice:#ffaa00;--bg:#00050a}
+*{box-sizing:border-box;margin:0;padding:0}
+body{height:100dvh;background:var(--bg);color:var(--primary);font-family:'Courier New',monospace;overflow:hidden;display:grid;place-items:center}
+#boot-screen{z-index:100;padding:2.5rem 4rem;border:3px solid var(--primary);border-radius:50%;font-size:clamp(1.5rem,8vw,2.2rem);text-align:center;cursor:pointer;transition:all .3s}
+#boot-screen:active{transform:scale(.92)}
+#main-ui{inset:0;position:absolute;z-index:10;display:none;flex-direction:column;background:rgba(0,0,0,.95);padding:1rem;gap:1rem;overflow-y:auto}
+.panel{background:rgba(0,10,20,.75);border:1px solid var(--secondary);border-radius:4px;padding:1rem}
+button{padding:.9rem .6rem;font-weight:bold;text-transform:uppercase;background:rgba(0,20,40,.8);border:1px solid var(--secondary);color:var(--secondary);border-radius:4px;cursor:pointer;transition:all .15s}
+button.active{background:var(--secondary);color:#000;box-shadow:0 0 20px var(--secondary)}
+#btn-ghost.active{background:var(--ghost);color:white;box-shadow:0 0 25px var(--ghost)}
+canvas.viz{width:100%;height:160px;background:#000;border:1px solid var(--secondary)}
+</style>
 </head>
 <body>
 
-  <canvas id="bg-network"></canvas>
-  <div id="vignette"></div>
-  <video id="camera-feed" autoplay playsinline muted></video>
+<canvas id="bg-network"></canvas>
+<div id="vignette"></div>
+<video id="camera-feed" autoplay playsinline muted></video>
 
-  <div id="boot-screen" role="button" tabindex="0">GOD MODE<br>ACTIVER</div>
+<div id="boot-screen">GOD MODE<br>ACTIVER</div>
 
-  <div id="main-ui">
-    <header>
-      <h1 class="title">ETERNITY v22</h1>
-      <div class="subtitle">GOD MODE — LAST RESORT</div>
-    </header>
+<div id="main-ui">
+  <header><h1 style="font-size:1.6rem">ETERNITY v22</h1><div style="color:var(--ghost)">EVP AVANCÉE</div></header>
 
-    <div class="panel">
-      <div class="row"><span>MICRO STÉRÉO</span><span id="mic-status">OFF</span></div>
-      <div id="sys-log">En attente du divin...</div>
+  <div class="panel"><div style="display:flex;justify-content:space-between"><span>MICRO</span><span id="mic-status">OFF</span></div><div id="sys-log">En attente des esprits...</div></div>
+
+  <div class="panel">
+    <div style="display:flex;justify-content:space-between"><span>ACTIVITÉ</span><span id="activity-pct">0 %</span></div>
+    <div style="height:12px;background:#001122;border:1px solid var(--secondary)"><div id="progress-bar" style="height:100%;width:0%;background:linear-gradient(90deg,var(--secondary),var(--primary))"></div></div>
+  </div>
+
+  <div class="panel" style="flex:1.6;position:relative">
+    <canvas id="spectrum-canvas" class="viz"></canvas>
+    <div style="margin-top:8px">VOIX <div id="voice-bar" style="height:10px;background:var(--voice);width:0%"></div></div>
+    <div style="margin-top:4px">EVP <div id="ghost-bar" style="height:10px;background:var(--ghost);width:0%"></div></div>
+  </div>
+
+  <div class="panel">
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button id="btn-sweep">SWEEP</button>
+      <button id="btn-boost">BOOST ×2</button>
+      <button id="btn-ultra">ULTRA ×4</button>
+      <button id="btn-fixed">TON FIXE</button>
+      <button id="btn-ghost">EVP GHOST BOX</button>
     </div>
-
-    <div class="panel">
-      <div class="row"><span>ACTIVITÉ GLOBALE</span><span id="activity-pct">0 %</span></div>
-      <div class="progress-outer"><div id="progress-bar" class="progress-inner"></div></div>
-      <div class="row" style="font-size:0.78rem;margin-top:0.6rem;"><span>EMF: <b id="emf-val">--</b></span></div>
-    </div>
-
-    <!-- SPECTRE + PEAK HOLD + VOICE + GHOST -->
-    <div class="panel" style="flex:1.6; position:relative;">
-      <canvas id="spectrum-canvas" class="viz"></canvas>
-      <canvas id="peak-hold-canvas" class="viz peak-hold" style="opacity:0.6;"></canvas>
-      <div style="display:flex;justify-content:space-between;font-size:0.75rem;margin-top:6px;">
-        <span>Niveau: <b id="peak-level">-- dB</b></span>
-        <span>Pic max: <b id="max-peak">-- dB</b></span>
-      </div>
-      <div style="margin-top:8px;">VOIX <div class="voice-bar" id="voice-bar" style="width:0%"></div></div>
-      <div style="margin-top:4px;">GHOST BOX <div class="ghost-bar" id="ghost-bar" style="width:0%"></div></div>
-    </div>
-
-    <!-- SWEEP + GHOST CONTROLS -->
-    <div class="panel">
-      <div class="row"><span>SWEEP &amp; GHOST BOX</span></div>
-      <div class="sweep-controls">
-        <button id="btn-sweep">SWEEP</button>
-        <button id="btn-boost">BOOST ×2</button>
-        <button id="btn-ultra">ULTRA ×4</button>
-        <button id="btn-fixed">TON FIXE</button>
-        <button id="btn-ghost">GHOST BOX</button>
-        <label>Fréq: <input type="range" id="sweep-freq" min="80" max="9000" value="850" step="50"></label>
-      </div>
-      <div style="margin-top:10px;display:flex;gap:8px;">
-        <button id="btn-record-mic">RECORD MIC</button>
-        <button id="btn-record-sweep">RECORD SWEEP ONLY</button>
-      </div>
-    </div>
-
-    <div class="panel" style="flex:1.3;">
-      <div style="text-align:center;color:#777;font-size:0.82rem;margin-bottom:0.5rem;">JOURNAL DIVIN</div>
-      <div id="log-zone" style="max-height:220px;overflow-y:auto;"></div>
-    </div>
-
-    <div class="controls" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(80px,1fr));gap:0.7rem;">
-      <button id="btn-echo">ECHO IA</button>
-      <button id="btn-sensors">SENSORS</button>
-      <button id="btn-export">EXPORT LOGS</button>
-      <button id="btn-reset">RESET</button>
+    <div style="margin-top:12px">
+      <button id="btn-record-sweep">RECORD SWEEP ONLY</button>
     </div>
   </div>
 
-  <script type="module">
-    // =============================================================
-    // ETERNITY v22 – GOD MODE (2026) – Tout en un
-    // =============================================================
+  <div class="panel" style="flex:1"><div id="log-zone" style="max-height:240px;overflow-y:auto;font-size:0.8rem"></div></div>
+</div>
 
-    const DOM = {
-      boot: document.getElementById('boot-screen'),
-      ui: document.getElementById('main-ui'),
-      micStatus: document.getElementById('mic-status'),
-      sysLog: document.getElementById('sys-log'),
-      activity: document.getElementById('activity-pct'),
-      progress: document.getElementById('progress-bar'),
-      emf: document.getElementById('emf-val'),
-      canvas: document.getElementById('spectrum-canvas'),
-      peakHoldCanvas: document.getElementById('peak-hold-canvas'),
-      peakLevel: document.getElementById('peak-level'),
-      maxPeak: document.getElementById('max-peak'),
-      voiceBar: document.getElementById('voice-bar'),
-      ghostBar: document.getElementById('ghost-bar'),
-      logZone: document.getElementById('log-zone'),
-      btnSweep: document.getElementById('btn-sweep'),
-      btnBoost: document.getElementById('btn-boost'),
-      btnUltra: document.getElementById('btn-ultra'),
-      btnFixed: document.getElementById('btn-fixed'),
-      btnGhost: document.getElementById('btn-ghost'),
-      btnRecordMic: document.getElementById('btn-record-mic'),
-      btnRecordSweep: document.getElementById('btn-record-sweep'),
-      btnEcho: document.getElementById('btn-echo'),
-      btnSensors: document.getElementById('btn-sensors'),
-      btnExport: document.getElementById('btn-export'),
-      btnReset: document.getElementById('btn-reset'),
-    };
+<script type="module">
+// ==================== GOD MODE + EVP AVANCÉE ====================
 
-    let state = {
-      audioCtx: null,
-      stream: null,
-      analyser: null,
-      workletNode: null,
-      sweepDestination: null,        // ← pour RECORD SWEEP ONLY
-      recorderMic: null,
-      recorderSweep: null,
-      chunksSweep: [],
-      isRunning: false,
-      isSweep: false,
-      isFixed: false,
-      isGhostBox: false,
-      sweepGainLevel: 0,
-      voiceEnergy: 0,
-      voiceAvg: 0,
-      peakHold: new Uint8Array(512), // tableau pour peak hold
-      peakMax: -Infinity,
-      ghostWords: ["OUI","NON","ICI","ESPRIT","MAMAN","DANGER","LAISSE","AIDE","TUE","PART","RESTE","LUMIÈRE","NOIR","MORT","VIVANT","JE SUIS","TU ES","ICI","MAINTENANT","VA-T-EN","AIDE-MOI","QUI ES-TU","POURQUOI"],
-      lastGhostTime: 0,
-      raf: null,
-    };
+const DOM = {
+  boot: document.getElementById('boot-screen'),
+  ui: document.getElementById('main-ui'),
+  micStatus: document.getElementById('mic-status'),
+  logZone: document.getElementById('log-zone'),
+  activity: document.getElementById('activity-pct'),
+  progress: document.getElementById('progress-bar'),
+  canvas: document.getElementById('spectrum-canvas'),
+  voiceBar: document.getElementById('voice-bar'),
+  ghostBar: document.getElementById('ghost-bar'),
+  btnSweep: document.getElementById('btn-sweep'),
+  btnBoost: document.getElementById('btn-boost'),
+  btnUltra: document.getElementById('btn-ultra'),
+  btnFixed: document.getElementById('btn-fixed'),
+  btnGhost: document.getElementById('btn-ghost'),
+  btnRecordSweep: document.getElementById('btn-record-sweep')
+};
 
-    const log = (msg, cls = 'info') => {
-      const div = document.createElement('div');
-      div.className = `log-entry ${cls}`;
-      const t = new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-      div.innerHTML = `<span class="log-time">[${t}]</span> ${msg}`;
-      DOM.logZone.prepend(div);
-      if (DOM.logZone.children.length > 50) DOM.logZone.lastElementChild.remove();
-    };
+let state = {
+  audioCtx: null,
+  stream: null,
+  analyser: null,
+  workletNode: null,
+  masterGain: null,           // ← FIX : gain maître pour que le son sorte vraiment
+  sweepRecorder: null,
+  isSweep: false,
+  isFixed: false,
+  isGhost: false,
+  gainLevel: 0,              // 0=normal, 1=×2, 2=×4
+  voiceEnergy: 0,
+  ghostWords: ["OUI","NON","ICI","JE SUIS","TU ES","AIDE","MORT","VIVANT","LAISSE","PART","RESTE","DANGER","MAMAN","PAPA","QUI","POURQUOI","VA-T-EN","LUMIÈRE","NOIR","MAINTENANT","ESPRIT","ENTENDS","REGARDE","TOUCHE","SENT","VIENS","NON","OUI","ICI","JE SUIS LÀ","AIDE-MOI","LÂCHE-MOI","TUE","SAUVE","PARLE","ÉCOUTE"],
+  lastEVP: 0
+};
 
-    // =============================================================
-    // BOOT GOD MODE
-    // =============================================================
-    async function boot() {
-      DOM.boot.textContent = "GOD MODE ACTIVÉ...";
-      const AudioCtx = window.AudioContext || window.webkitAudioContext;
-      state.audioCtx = new AudioCtx();
-      await state.audioCtx.resume();
+const log = (txt, type='info') => {
+  const d = document.createElement('div');
+  d.innerHTML = `<span style="opacity:.6">[${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}]</span> ${txt}`;
+  if(type==='ghost') d.style.color = '#aa00ff';
+  DOM.logZone.prepend(d);
+  if(DOM.logZone.children.length>60) DOM.logZone.lastChild.remove();
+};
 
-      // Worklet stéréo + ton fixe + ghost ready
-      await state.audioCtx.audioWorklet.addModule(URL.createObjectURL(new Blob([`
-        class GodSweepProcessor extends AudioWorkletProcessor {
-          static get parameterDescriptors() {
-            return [{name:'centerFreq',defaultValue:850},{name:'lfoRange',defaultValue:700},
-                    {name:'isFixed',defaultValue:0},{name:'gain',defaultValue:0.45}];
-          }
-          constructor(){super(); this.phase=0; this.lpL=this.bpL=0; this.lpR=this.bpR=0;}
-          process(inputs,outputs,parameters){
-            const outL=outputs[0][0]; const outR=outputs[0][1]||outL;
-            const fixed=parameters.isFixed[0]>0.5;
-            for(let i=0;i<128;i++){
-              const lfo = fixed?0:Math.sin(this.phase+=2*Math.PI*0.11/sampleRate);
-              const f = parameters.centerFreq[i]+lfo*(parameters.lfoRange[0]||700);
-              const omega=2*Math.PI*Math.max(30,Math.min(16000,f))/sampleRate;
-              const alpha=Math.sin(omega)/(2*15);
-              const noiseL=Math.random()*2-1; const noiseR=Math.random()*2-1;
-              // SVF gauche & droite
-              let bpL = this.bpL + alpha*(noiseL-this.lpL-this.bpL); this.lpL+=alpha*bpL; this.bpL=bpL;
-              let bpR = this.bpR + alpha*(noiseR-this.lpR-this.bpR); this.lpR+=alpha*bpR; this.bpR=bpR;
-              outL[i]=this.bpL*(parameters.gain[i]||0.45);
-              outR[i]=this.bpR*(parameters.gain[i]||0.45);
-            }
-            return true;
-          }
+// ====================== BOOT ======================
+DOM.boot.onclick = async () => {
+  DOM.boot.textContent = "GOD MODE...";
+  const AudioCtx = window.AudioContext || window.webkitAudioContext;
+  state.audioCtx = new AudioCtx();
+  await state.audioCtx.resume();
+
+  // Worklet
+  await state.audioCtx.audioWorklet.addModule(URL.createObjectURL(new Blob([`
+    class EVPSweep extends AudioWorkletProcessor {
+      static get parameterDescriptors(){return [{name:'gain',defaultValue:0.45}]}
+      constructor(){super();this.phase=0;this.bpL=this.bpR=0;}
+      process(inputs,outputs,parameters){
+        const outL=outputs[0][0], outR=outputs[0][1]||outL;
+        const g = parameters.gain[0]||0.45;
+        for(let i=0;i<128;i++){
+          const f = 850 + Math.sin(this.phase+=0.0008)*700;
+          const omega = 2*Math.PI*Math.max(30,f)/sampleRate;
+          const alpha = Math.sin(omega)/32;
+          const nL = Math.random()*2-1, nR = Math.random()*2-1;
+          let bpL = this.bpL + alpha*(nL-this.bpL); this.bpL = bpL;
+          let bpR = this.bpR + alpha*(nR-this.bpR); this.bpR = bpR;
+          outL[i] = bpL * g;
+          outR[i] = bpR * g;
         }
-        registerProcessor('god-sweep-processor',GodSweepProcessor);
-      `],{type:'application/javascript'})));
-
-      state.stream = await navigator.mediaDevices.getUserMedia({audio:{channelCount:2}});
-      const source = state.audioCtx.createMediaStreamSource(state.stream);
-      state.analyser = state.audioCtx.createAnalyser();
-      state.analyser.fftSize = 1024;
-      source.connect(state.analyser);
-
-      // Destination séparée pour RECORD SWEEP ONLY
-      state.sweepDestination = state.audioCtx.createMediaStreamDestination();
-
-      DOM.boot.classList.add('hidden');
-      DOM.ui.style.display = 'flex';
-      state.isRunning = true;
-      log("GOD MODE CHARGÉ – QUE LES ESPRITS VIENNENT", 'success');
-      startViz();
-      toggleSweep(); // auto-start
-    }
-
-    // =============================================================
-    // SWEEP + RECORD SWEEP ONLY
-    // =============================================================
-    async function toggleSweep() {
-      if (state.isSweep) {
-        state.workletNode?.disconnect();
-        state.isSweep = false;
-        DOM.btnSweep.classList.remove('active');
-        return;
-      }
-      state.workletNode = new AudioWorkletNode(state.audioCtx, 'god-sweep-processor');
-      const p = state.workletNode.parameters;
-      p.get('centerFreq').setValueAtTime(850,state.audioCtx.currentTime);
-      p.get('gain').setValueAtTime(0.45,state.audioCtx.currentTime);
-      state.workletNode.connect(state.audioCtx.destination);
-      state.workletNode.connect(state.sweepDestination); // pour recording séparé
-      state.isSweep = true;
-      DOM.btnSweep.classList.add('active');
-    }
-
-    function toggleFixed() {
-      state.isFixed = !state.isFixed;
-      DOM.btnFixed.classList.toggle('active',state.isFixed);
-      if(state.workletNode) state.workletNode.parameters.get('isFixed').setValueAtTime(state.isFixed?1:0,state.audioCtx.currentTime);
-    }
-
-    // RECORD SWEEP ONLY
-    function startRecordSweep() {
-      if (!state.sweepDestination) return log("Sweep non actif");
-      state.chunksSweep = [];
-      state.recorderSweep = new MediaRecorder(state.sweepDestination.stream, {mimeType:'audio/webm;codecs=opus'});
-      state.recorderSweep.ondataavailable = e => e.data.size && state.chunksSweep.push(e.data);
-      state.recorderSweep.onstop = () => {
-        const blob = new Blob(state.chunksSweep,{type:'audio/webm'});
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = `ETERNITY-SWEEP-GOD-${Date.now()}.webm`;
-        a.click();
-      };
-      state.recorderSweep.start();
-      DOM.btnRecordSweep.textContent = "STOP SWEEP REC";
-      DOM.btnRecordSweep.classList.add('active');
-      log("ENREGISTREMENT SWEEP ONLY DÉMARRÉ (pur bruit fantôme)", 'warn');
-    }
-
-    function stopRecordSweep() {
-      state.recorderSweep?.stop();
-      DOM.btnRecordSweep.textContent = "RECORD SWEEP ONLY";
-      DOM.btnRecordSweep.classList.remove('active');
-    }
-
-    // =============================================================
-    // VISUALISEUR + PEAK HOLD + VOICE DETECTOR AMÉLIORÉ
-    // =============================================================
-    function startViz() {
-      const ctx = DOM.canvas.getContext('2d');
-      const phCtx = DOM.peakHoldCanvas.getContext('2d');
-      let frame = 0;
-
-      const draw = () => {
-        if(!state.isRunning) return;
-        state.raf = requestAnimationFrame(draw);
-
-        const data = new Uint8Array(state.analyser.frequencyBinCount);
-        state.analyser.getByteFrequencyData(data);
-
-        const w = DOM.canvas.width = DOM.canvas.clientWidth;
-        const h = DOM.canvas.height = 160;
-        ctx.clearRect(0,0,w,h);
-
-        let sum = 0, voiceSum = 0, maxVal = 0;
-
-        for(let i=0;i<data.length;i++){
-          const val = data[i];
-          sum += val;
-          if(val>maxVal) maxVal=val;
-          if(i>2 && i<92) voiceSum += val; // bande voix élargie
-
-          const x = i*(w/data.length);
-          const barH = (val/255)*h*0.9;
-          ctx.fillStyle = `hsl(${210-val*0.8},100%,${40+val*0.25}%)`;
-          ctx.fillRect(x,h-barH,(w/data.length)-1,barH);
-
-          // Peak hold decay
-          if(val > state.peakHold[i]) state.peakHold[i] = val;
-          else state.peakHold[i] *= 0.94; // lente décroissance
-        }
-
-        // Dessin peak hold
-        phCtx.clearRect(0,0,w,h);
-        for(let i=0;i<state.peakHold.length;i++){
-          const x = i*(w/state.peakHold.length);
-          const barH = (state.peakHold[i]/255)*h*0.9;
-          phCtx.fillStyle = '#ffffff33';
-          phCtx.fillRect(x,h-barH,(w/state.peakHold.length)-1,barH);
-        }
-
-        state.audioLevel = sum/data.length/2.55;
-        state.voiceAvg = (state.voiceAvg*0.7 + (voiceSum/90)/255*0.3);
-        state.voiceEnergy = state.voiceAvg;
-
-        // Mise à jour barres
-        DOM.voiceBar.style.width = Math.min(100,state.voiceEnergy*140)+'%';
-        DOM.ghostBar.style.width = (state.isGhostBox?Math.random()*60+30:0)+'%';
-
-        const db = 20*Math.log10(maxVal/255+0.001);
-        DOM.peakLevel.textContent = db.toFixed(1)+" dB";
-        state.peakMax = Math.max(state.peakMax,db);
-        DOM.maxPeak.textContent = state.peakMax.toFixed(1)+" dB";
-
-        updateDashboard();
-        frame++;
-      };
-      draw();
-    }
-
-    function updateDashboard(){
-      const prob = Math.min(100, state.audioLevel*1.1 + state.emf*3 + state.voiceEnergy*65);
-      DOM.activity.textContent = Math.round(prob)+'%';
-      DOM.progress.style.width = prob+'%';
-    }
-
-    // =============================================================
-    // GHOST BOX MODE (le vrai mode fantôme)
-    // =============================================================
-    function toggleGhostBox(){
-      state.isGhostBox = !state.isGhostBox;
-      DOM.btnGhost.classList.toggle('active',state.isGhostBox);
-      if(state.isGhostBox){
-        log("GHOST BOX ACTIVÉ – les esprits peuvent parler", 'ghost');
-        ghostLoop();
-      } else {
-        log("GHOST BOX OFF");
+        return true;
       }
     }
+    registerProcessor('evp-sweep',EVPSweep);
+  `],{type:'application/javascript'})));
 
-    function ghostLoop(){
-      if(!state.isGhostBox) return;
-      const now = Date.now();
-      const voiceTrigger = state.voiceEnergy > 0.48;
-      const randomTrigger = Math.random() < 0.07;
+  state.stream = await navigator.mediaDevices.getUserMedia({audio:{channelCount:2}});
+  const source = state.audioCtx.createMediaStreamSource(state.stream);
+  state.analyser = state.audioCtx.createAnalyser();
+  state.analyser.fftSize = 1024;
+  source.connect(state.analyser);
 
-      if((voiceTrigger || randomTrigger) && now - state.lastGhostTime > 1200){
-        const word = state.ghostWords[Math.floor(Math.random()*state.ghostWords.length)];
-        speakGhost(word);
-        state.lastGhostTime = now;
-        log(`GHOST → "${word}"`, 'ghost');
-      }
-      setTimeout(ghostLoop, 400);
+  // Master Gain (FIX son)
+  state.masterGain = state.audioCtx.createGain();
+  state.masterGain.gain.value = 1.0;
+
+  DOM.boot.style.display = 'none';
+  DOM.ui.style.display = 'flex';
+  startVisualizer();
+  toggleSweep(); // auto
+};
+
+// ====================== SWEEP + BOOST (CORRIGÉ) ======================
+async function toggleSweep(){
+  if(state.isSweep){
+    state.workletNode?.disconnect();
+    state.isSweep = false;
+    DOM.btnSweep.classList.remove('active');
+    return;
+  }
+  state.workletNode = new AudioWorkletNode(state.audioCtx, 'evp-sweep');
+  state.workletNode.connect(state.masterGain);
+  state.masterGain.connect(state.audioCtx.destination);
+  state.isSweep = true;
+  DOM.btnSweep.classList.add('active');
+  applyBoost();
+}
+
+function applyBoost(){
+  if(!state.workletNode) return;
+  let g = 0.45;
+  if(state.gainLevel===1) g = 1.1;
+  if(state.gainLevel===2) g = 2.0; // ultra fort
+  state.workletNode.parameters.get('gain').setTargetAtTime(g, state.audioCtx.currentTime, 0.1);
+  state.masterGain.gain.setTargetAtTime(1.0, state.audioCtx.currentTime, 0.05);
+  log(`BOOST ACTIVÉ → niveau ${state.gainLevel===2?'×4':state.gainLevel===1?'×2':'normal'}`, 'warn');
+}
+
+DOM.btnBoost.onclick = ()=>{ state.gainLevel = state.gainLevel===1?0:1; applyBoost(); };
+DOM.btnUltra.onclick = ()=>{ state.gainLevel = state.gainLevel===2?0:2; applyBoost(); };
+
+// ====================== EVP GHOST BOX AVANCÉE ======================
+DOM.btnGhost.onclick = () => {
+  state.isGhost = !state.isGhost;
+  DOM.btnGhost.classList.toggle('active', state.isGhost);
+  if(state.isGhost) ghostEVPloop();
+};
+
+function ghostEVPloop(){
+  if(!state.isGhost) return;
+  const now = Date.now();
+  if(state.voiceEnergy > 0.45 || Math.random()<0.12){
+    const phrase = [];
+    for(let i=0;i<Math.random()*3+2;i++){
+      phrase.push(state.ghostWords[Math.floor(Math.random()*state.ghostWords.length)]);
+    }
+    const text = phrase.join(' ');
+    const u = new SpeechSynthesisUtterance(text);
+    u.rate = 0.65 + Math.random()*0.4;
+    u.pitch = 0.6 + Math.random()*0.7;
+    u.volume = 0.95;
+    state.audioCtx.resume();
+    speechSynthesis.speak(u);
+    log(`EVP → "${text}"`, 'ghost');
+  }
+  setTimeout(ghostEVPloop, 350);
+}
+
+// ====================== VISUALISEUR + VOICE DETECTION ======================
+function startVisualizer(){
+  const ctx = DOM.canvas.getContext('2d');
+  let raf;
+  const loop = () => {
+    raf = requestAnimationFrame(loop);
+    const data = new Uint8Array(state.analyser.frequencyBinCount);
+    state.analyser.getByteFrequencyData(data);
+
+    const w = DOM.canvas.width = DOM.canvas.clientWidth;
+    const h = DOM.canvas.height;
+    ctx.clearRect(0,0,w,h);
+
+    let sum = 0, voice = 0;
+    for(let i=0;i<data.length;i++){
+      const v = data[i];
+      sum += v;
+      if(i>3 && i<95) voice += v;
+      const height = (v/255)*h*0.92;
+      ctx.fillStyle = `hsl(${200-v*0.7},100%,45%)`;
+      ctx.fillRect(i*(w/data.length), h-height, (w/data.length)-1, height);
     }
 
-    function speakGhost(text){
-      const u = new SpeechSynthesisUtterance(text);
-      u.lang = 'fr-FR';
-      u.rate = 0.85 + Math.random()*0.6;
-      u.pitch = 0.7 + Math.random()*0.8;
-      u.volume = 0.95;
-      state.synth.speak(u);
-    }
+    state.voiceEnergy = (voice/92)/255;
+    DOM.voiceBar.style.width = `${Math.min(100,state.voiceEnergy*160)}%`;
+    DOM.ghostBar.style.width = state.isGhost ? `${30+Math.random()*50}%` : '0%';
 
-    // =============================================================
-    // EVENTS
-    // =============================================================
-    DOM.boot.onclick = boot;
-    DOM.btnSweep.onclick = toggleSweep;
-    DOM.btnFixed.onclick = toggleFixed;
-    DOM.btnGhost.onclick = toggleGhostBox;
-    DOM.btnBoost.onclick = ()=>{state.sweepGainLevel=state.sweepGainLevel===1?0:1; updateGain();};
-    DOM.btnUltra.onclick = ()=>{state.sweepGainLevel=state.sweepGainLevel===2?0:2; updateGain();};
-    DOM.btnRecordSweep.onclick = ()=>{ state.recorderSweep?stopRecordSweep():startRecordSweep(); };
-    DOM.btnExport.onclick = ()=>{ /* export logs */ };
-    DOM.btnReset.onclick = () => location.reload();
+    const prob = Math.min(100, (sum/data.length/2.55)*1.2 + state.voiceEnergy*70);
+    DOM.activity.textContent = Math.round(prob)+'%';
+    DOM.progress.style.width = prob+'%';
+  };
+  loop();
+}
 
-    function updateGain(){
-      if(!state.workletNode) return;
-      const g = state.sweepGainLevel===2?1.95 : state.sweepGainLevel===1?1.08 : 0.45;
-      state.workletNode.parameters.get('gain').setTargetAtTime(g,state.audioCtx.currentTime,0.08);
-    }
+// ====================== RECORD SWEEP ONLY ======================
+DOM.btnRecordSweep.onclick = () => {
+  if(state.sweepRecorder){
+    state.sweepRecorder.stop();
+    state.sweepRecorder = null;
+    DOM.btnRecordSweep.textContent = "RECORD SWEEP ONLY";
+    return;
+  }
+  const dest = state.audioCtx.createMediaStreamDestination();
+  state.workletNode?.connect(dest);
+  state.sweepRecorder = new MediaRecorder(dest.stream, {mimeType:'audio/webm;codecs=opus'});
+  let chunks = [];
+  state.sweepRecorder.ondataavailable = e => chunks.push(e.data);
+  state.sweepRecorder.onstop = () => {
+    const blob = new Blob(chunks,{type:'audio/webm'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `EVP-SWEEP-${Date.now()}.webm`;
+    a.click();
+  };
+  state.sweepRecorder.start();
+  DOM.btnRecordSweep.textContent = "STOP RECORD SWEEP";
+  log("ENREGISTREMENT SWEEP ONLY DÉMARRÉ", 'warn');
+};
 
-    window.addEventListener('beforeunload',()=>{
-      cancelAnimationFrame(state.raf);
-      state.stream?.getTracks().forEach(t=>t.stop());
-    });
-
-    log("ETERNITY v22 GOD MODE chargé – les morts attendent votre signal...", 'ghost');
-  </script>
+log("ETERNITY v22 GOD MODE + EVP AVANCÉE chargé", 'ghost');
+</script>
 </body>
 </html>
