@@ -2,8 +2,8 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>ETERNITY v21 CLEAN SLATE</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ETERNITY v22 THE LAST RESORT</title>
     <meta name="theme-color" content="#000000">
     <style>
         :root {
@@ -23,49 +23,83 @@
             flex-direction: column;
             overflow: hidden;
             touch-action: manipulation; 
+            /* IMPORTANT : Pas de 'pointer-events: none' ici pour tester si c'est ça qui bloque */
+            cursor: pointer; 
         }
 
+        /* Arrière-plan visuel */
         #network-bg {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 1; opacity: 0.08; pointer-events: none;
+            z-index: 1; opacity: 0.1; pointer-events: none;
         }
         #vignette-cyber {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: radial-gradient(circle, transparent 30%, #000 120%);
-            pointer-events: none; z-index: 3;
+            background: radial-gradient(circle, transparent 20%, #000 100%);
+            pointer-events: none; z-index: 2;
             box-shadow: inset 0 0 50px rgba(0, 136, 255, 0.2);
         }
         #camera-feed {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            object-fit: cover; z-index: 0; opacity: 0.2; 
-            filter: contrast(1.4) brightness(0.5) grayscale(100%) hue-rotate(180deg);
+            object-fit: cover; z-index: 0; opacity: 0.3; 
+            filter: contrast(1.4) brightness(0.6) grayscale(100%) hue-rotate(180deg);
         }
 
+        /* Interface */
         #ui {
             position: relative; z-index: 10; height: 100%;
-            display: flex; flex-direction: column; justify-content: space-between;
+            display: flex; flex-direction: column; justify-content: center; align-items: center; /* Tout centré */
+        }
+
+        /* LE GROS BOUTON CENTRAL */
+        #main-action-btn {
+            width: 200px; height: 200px;
+            border-radius: 50%;
+            border: 2px solid var(--primary);
+            background: rgba(0, 20, 20, 0.8);
+            color: var(--primary);
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            font-size: 1rem;
+            text-align: center;
+            display: flex; justify-content: center; align-items: center;
+            z-index: 100;
+            box-shadow: 0 0 20px var(--primary);
+            touch-action: manipulation;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+        #main-action-btn:active { transform: scale(0.95); background: var(--primary); color: #000; }
+
+        /* Contenu caché (S'affiche après clic) */
+        #full-ui {
+            display: none; /* Masqué au début */
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 150; /* Au dessus de tout */
+            flex-direction: column;
+            justify-content: space-between;
         }
 
         header {
-            background: linear-gradient(180deg, rgba(0,0,0,0.95), transparent);
+            background: linear-gradient(180deg, rgba(0,0,0,0.9), transparent);
             padding: 10px;
-            display: flex; justify-content: space-between; align-items: flex-start;
-            border-bottom: 1px solid var(--secondary);
+            display: flex; justify-content: space-between;
         }
-        .cyber-title { font-size: 1rem; font-weight: 900; letter-spacing: 2px; margin: 0; color: var(--secondary); text-shadow: 0 0 5px var(--secondary); }
-        .cyber-sub { font-size: 0.6rem; color: var(--primary); letter-spacing: 1px; }
+        .cyber-title { font-size: 1.2rem; font-weight: 900; letter-spacing: 2px; margin: 0; color: var(--secondary); text-shadow: 0 0 5px var(--secondary); }
+        .cyber-sub { font-size: 0.6rem; color: var(--primary); letter-spacing: 1px; text-align: center;}
 
         .data-panel {
             background: rgba(0, 10, 20, 0.7);
-            margin: 5px 10px;
+            margin: 10px;
             border: 1px solid var(--secondary);
-            padding: 8px;
-            backdrop-filter: blur(4px);
+            padding: 10px;
+            margin-top: auto; /* Centré verticalement */
+            width: 90%;
         }
-        .data-row { display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 0.75rem; align-items: center; }
+        .data-row { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 0.8rem; align-items: center; }
         
         .prob-container {
-            width: 100%; height: 16px; background: #001122; border: 1px solid var(--secondary); margin-top: 6px;
+            width: 100%; height: 20px; background: #001122; border: 1px solid var(--secondary); margin-top: 5px;
             position: relative; overflow: hidden;
         }
         .prob-fill {
@@ -77,74 +111,48 @@
 
         #spectrum-canvas {
             width: 100%; height: 120px; background: #000;
-            border-top: 1px solid var(--secondary); border-bottom: 1px solid var(--secondary);
+            border: 1px solid var(--secondary);
             position: relative;
             display: flex; justify-content: center; align-items: center;
             overflow: hidden;
+            margin: 10px 0;
+            width: 90%;
         }
         canvas { width: 100%; height: 100%; display: block; }
         
-        #error-text {
-            position: absolute; z-index: 5; text-align: center; pointer-events: none;
-            color: var(--secondary); font-weight: bold; font-size: 0.85rem;
-            padding: 10px; text-shadow: 0 0 5px var(--secondary);
-        }
-
-        #ai-zone {
-            flex: 1; margin: 10px;
-            border: 1px solid var(--secondary); background: rgba(0, 5, 10, 0.85);
-            padding: 10px; padding-bottom: 110px;
-            overflow-y: auto; font-size: 0.9rem;
+        /* Zone Log Visible (Pour voir les erreurs) */
+        #sys-log {
+            height: 100px; overflow-y: auto; overflow-y: scroll; font-size: 0.7rem; color: #fff; font-family: monospace;
+            background: rgba(0, 0, 0, 0.8); border: 1px solid #555;
+            width: 90%;
+            margin-bottom: 10px;
             pointer-events: auto;
-            text-shadow: 0 0 2px var(--secondary); position: relative;
         }
-        .msg-final { color: var(--primary); border-bottom: 1px solid var(--primary); margin: 4px 0; padding: 4px; background: rgba(0, 255, 204, 0.1); font-size: 1.1rem; font-weight: bold; }
-        .msg-system { color: #446677; font-size: 0.7rem; margin-bottom: 4px; font-family: monospace; }
-        .msg-prefix { color: var(--secondary); font-weight: bold; margin-right: 5px; }
 
+        /* Les vrais contrôles (Initialement masqués) */
         .controls {
-            position: fixed; bottom: 0; left: 0; width: 100%;
-            padding: 10px 10px 35px 10px;
-            display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;
-            background: linear-gradient(0deg, rgba(0,0,0,1), rgba(0,0,0,0.8));
-            z-index: 100; 
+            width: 90%;
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+            margin: 0 auto;
         }
 
         button {
             background: rgba(0, 20, 40, 0.8); border: 1px solid var(--secondary); color: var(--secondary);
-            padding: 14px 2px; font-family: inherit; font-weight: bold; cursor: pointer;
-            font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.5px; transition: 0.2s;
+            padding: 15px 2px; font-family: inherit; font-weight: bold; cursor: pointer;
+            font-size: 0.7rem; text-transform: uppercase;
             touch-action: manipulation; 
-            -webkit-tap-highlight-color: transparent;
+            -webkit-track-highlight-color: transparent;
         }
         button:active { transform: scale(0.95); background: var(--secondary); color: #000; }
-        button.active { background: var(--secondary); color: #000; box-shadow: 0 0 15px var(--secondary); border-color: #fff; }
+        button.active { background: var(--secondary); color: #000; box-shadow: 0 0 10px var(--secondary); border-color: #fff; }
         
-        /* Bouton Aide */
-        #btn-help { border-color: #ffff00; color: #ffff00; font-weight: 900; }
-        #btn-help:active { background: #ffff00; color: #000; }
-
         #btn-echo { border-color: #ff00ff; color: #ff00ff; }
         #btn-echo.active { background: #ff00ff; color: #fff; box-shadow: 0 0 15px #ff00ff; }
         .btn-sweep { border-color: var(--danger); color: var(--danger); }
         .btn-sweep.active { background: var(--danger); color: #fff; box-shadow: 0 0 15px var(--danger); }
 
-        @keyframes blink { 50% { opacity: 0; } }
-        .live-dot { color: var(--danger); animation: blink 1.5s infinite; margin-right: 5px; font-weight: bold; }
-
-        /* Modal Aide */
-        #help-modal {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.95); z-index: 200;
-            display: none; flex-direction: column; justify-content: center; align-items: center;
-            padding: 20px; text-align: center;
-        }
-        .help-content {
-            background: #111; border: 1px solid var(--secondary); padding: 20px; max-width: 90%; text-align: left; font-size: 0.8rem; color: #ddd;
-            line-height: 1.6;
-        }
-        .step { margin-bottom: 10px; display: flex; gap: 10px; align-items: center; }
-        .btn-close { background: var(--danger); color: white; border: none; padding: 10px 20px; font-family: inherit; font-weight: bold; cursor: pointer; margin-top: 20px; }
+        /* Log Texte Visible */
+        .log-entry { border-bottom: 1px dashed #444; padding: 2px 0; color: #aaa; font-size: 0.7rem; }
 
     </style>
 </head>
@@ -154,146 +162,92 @@
     <div id="vignette-cyber"></div>
     <video id="camera-feed" autoplay playsinline muted></video>
 
-    <!-- Modal d'aide (Solution au blocage) -->
-    <div id="help-modal">
-        <h2 style="color:var(--primary); margin-top:0;">DIAGNOSTIC SYSTÈME</h2>
-        <div class="help-content">
-            <p><strong>PROBLÈME :</strong> Le micro est bloqué par le système même si les paramètres disent "Autoriser".</p>
-            <p><strong>SOLUTION (Manuelle) :</strong></p>
-            
-            <div class="step">
-                <div>1.</div>
-                <div>Cliquez dans la barre d'adresse tout en haut (là où est écrit l'adresse).</div>
-            </div>
-            <div class="step">
-                <div>2.</div>
-                <div>Efface l'adresse (le lien github) et tape exactement : </div>
-                <code style="background:#000; color:#0f0; padding:2px;">chrome://settings/content</code>
-            </div>
-            <div class="step">
-                <div>3.</div>
-                <div>Dans la liste, touchez l'entrée <strong>Microphone</strong>.</div>
-            </div>
-            <div class="step">
-                <div>4.</div>
-                <div>Change <strong>Bloquer</strong> en <strong>Autoriser</strong>.</div>
-            </div>
-            <div class="step">
-                <div>5.</div>
-                <div>Ferme l'onglet et réessayer.</div>
-            </div>
-            
-            <p style="font-size: 0.7rem; color:#888; margin-top:10px;">
-                *Note : C'est le seul moyen de contourner le blocage d'Android 15 sur les pages web.*
-            </p>
-        </div>
-        <button class="btn-close" onclick="closeHelp()">FERMER</button>
+    <!-- GRAND BOUTON INITIAL -->
+    <div id="main-action-btn" onclick="systemBoot()">
+        <span id="btn-text">ACTIVER<br>SYSTÈME</span>
     </div>
 
-    <div id="ui">
+    <!-- UI COMPLET (Caché au début) -->
+    <div id="full-ui">
         <header>
-            <div>
-                <h1 class="clean-title">ETERNITY v21</h1>
-                <div class="clean-sub">CLEAN SLATE (NO REVOKE)</div>
-            </div>
-            <div style="text-align: right;">
-                <div id="clock" style="font-size:1.1rem; color:var(--secondary)">00:00</div>
-                <div style="font-size:0.6rem; color:var(--primary)">SYS: <span id="ai-state">STANDBY</span></div>
-            </div>
+            <h1 class="cyber-title">ETERNITY v22</h1>
+            <div class="cyber-sub">THE LAST RESORT</div>
         </header>
 
         <div class="data-panel">
             <div class="data-row">
-                <span style="color:var(--secondary)">ANOMALIE (HARDWARE)</span>
-                <span id="prob-val" style="font-weight:bold; color:var(--primary)">0.0%</span>
+                <span style="color:var(--secondary)">STATUT MICRO</span>
+                <span id="sys-status">EN ATTENTE</span>
             </div>
-            <div class="prob-container">
-                <div id="prob-fill" class="prob-fill"></div>
+            <div class="sys-log" id="sys-log">En attente d'action utilisateur...</div>
+        </div>
+
+        <div class="data-panel">
+            <div class="data-row">
+                <span style="color:var(--primary)">ACTIVITÉ (SCOPE)</span>
+                <div class="prob-container">
+                    <div id="prob-fill" class="prob-fill"></div>
+                <div id="vol-disp" style="font-weight:bold; color:var(--primary)">OFF</div>
             </div>
-            <div class="data-row" style="margin-top:8px; font-size:0.7rem; color:#666; font-family: monospace;">
-                <span>[IN: <span id="vol-disp">--</span>]</span>
-                <span>[OUT: <span id="emf-disp">--</span>]</span>
+            <div class="data-row" style="margin-top:10px; font-size:0.7rem; color:#666; font-family: monospace;">
+                <span>[EMF: <span id="emf-disp">--</span>]</span>
             </div>
         </div>
 
-        <div id="spectrum-canvas">
-            <canvas id="viz-canvas"></canvas>
-            <div id="error-text">SCOPE (Micro Audio)</div>
+        <div class="data-panel" style="flex: 1;">
+             <canvas id="viz-canvas"></canvas>
         </div>
 
-        <div id="ai-zone">
-            <div style="position:sticky; top:0; background:#000; padding-bottom:5px; border-bottom:1px solid var(--secondary); margin-bottom:5px; display:flex; justify-content:space-between; align-items:center;">
-                <span style="color:var(--primary)">> TRAITEMENT SIGNAL (RÉEL)</span>
-                <span id="ai-status" style="color:var(--danger); font-size:0.7rem; font-weight:bold;">OFFLINE</span>
+        <div class="data-panel" style="flex: 1;">
+            <div style="border: 1px solid var(--secondary); padding: 5px; text-align: center; color: #666; margin-bottom: 5px;">
+                ZONE LOG (ERREURS)
             </div>
-            <div id="log-container"></div>
-        </div>
+            <div id="ai-zone" style="background: rgba(0,0,0,0.8); border: 1px solid var(--secondary); flex: 1; margin-top: 5px; overflow-y: auto; font-size: 0.9rem; pointer-events: auto;">
+                <div class="log-entry">> En attente de démarrage...</div>
+            </div>
 
         <div class="controls">
-            <button id="btn-help" onclick="showHelp()">DIAGNOSTIC</button>
             <button id="btn-echo" onclick="initDedicatedAI()">ECHO VOIX</button>
             <button id="btn-sweep" class="btn-sweep" onclick="toggleSweep()">SWEEP</button>
-            <button id="btn-sens" onclick="toggleSensors()">SENSORS</button>
+            <button id="btn-sens" onclick="toggleSensors()">SENSORS</div>
+            <button id="btn-reset" onclick="location.reload()">RESET APP</button>
         </div>
     </div>
 
     <script>
-        // --- V21 CLEAN SLATE (NO REVOKE) ---
+        // --- V22 THE LAST RESORT ---
 
         let audioCtx, globalStream, globalSource, analyser, gainNode;
         let sweepNodes = [], recognition, synth;
-        let isVisualizer = false, isEcho = false, isSweep = false, isSensors = false;
+        let isVisualizer = false, isEcho = false, isSweep = false, isSystemRunning = false, isSensors = false;
         let emfVal = 0, motionVal = 0, audioLevel = 0;
         let lastAlpha = null, instability = 0, emfBase = 0;
 
-        // 1. AFFICHER L'AIDE
-        function showHelp() {
-            document.getElementById('help-modal').style.display = 'flex';
-        }
+        // 1. LE BOUTON "ACTIVER SYSTÈME" (Le Débloqueur)
+        async function systemBoot() {
+            const btnText = document.getElementById('btn-text');
+            const fullUi = document.getElementById('full-ui');
+            const sysLog = document.getElementById('sys-log');
+            const sysStatus = document.getElementById('sys-status');
 
-        function closeHelp() {
-            document.getElementById('help-modal').style.display = 'none';
-        }
-
-        // 2. INIT AUDIO (Simplifié et Robuste)
-        async function initAudioSimple() {
-            const btn = document.getElementById('btn-audio'); // Note: Le bouton SCOPE n'est plus le principal, c'est le bouton DIAGNOSTIC
-            const errorText = document.getElementById('error-text');
-            
-            if (globalStream) {
-                isVisualizer = !isVisualizer;
-                // On simule l'état du bouton Scope
-                const scopeBtn = document.getElementById('btn-echo'); // On utilise le bouton Echo pour l'indicateur visuel
-                if(isVisualizer) {
-                    document.getElementById('btn-echo').classList.add('active');
-                } else {
-                    document.getElementById('btn-echo').classList.remove('active');
-                }
-                errorText.style.display = isVisualizer ? 'none' : 'block';
-                if(isVisualizer) {
-                    drawSymmetricSpectrum();
-                    drawNetworkBg();
-                    document.getElementById('sys-status').innerText = "AUDIO ACTIF";
-                    document.getElementById('sys-status').style.color = "var(--primary)";
-                } else {
-                    document.getElementById('sys-status').innerText = "STANDBY";
-                    document.getElementById('sys-status').style.color = "#666";
-                }
-                return;
-            }
-
-            errorText.innerText = "CONNEXION AUDIO...";
+            // Feedback immédiat
+            btnText.innerHTML = "INITIALISATION...";
+            sysLog.innerText = "Création du contexte audio...";
+            sysStatus.innerText = "ANALYSE MATÉRIEL...";
 
             try {
-                // IMPORTANT : On demande l'audio SANS contraintes complexes pour ne pas bloquer le Realme
-                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                // ÉTAPE 1 : Création du contexte
+                const AudioContext = window.AudioContext || window-être亡 // Utiliseur nul si AudioContext n'existe pas (Erreur sécurité) ?? window.AudioContext;
                 audioCtx = new AudioContext();
                 if (audioCtx.state === 'suspended') await audioCtx.resume();
 
+                // ÉTAPE 2 : Demande Audio
+                sysLog.innerText = "Demande Microphone...";
                 globalStream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 
+                // Setup
                 globalSource = audioCtx.createMediaStreamSource(globalStream);
-                analyser = audioCtx.createAnalyser();
+                analyser = audioCtx créerAnalyser();
                 analyser.fftSize = 256;
                 analyser.smoothingTimeConstant = 0.85;
                 
@@ -301,28 +255,39 @@
                 gainNode.gain.value = 0.0;
 
                 globalSource.connect(analyser);
-                analyser.connect(gainNode);
-                gainNode.connect(audioCtx.destination);
+                analyser connect(gainNode);
+                gainNode connect(audioCtx.destination);
 
-                errorText.style.display = 'none';
+                // SUCCÈS
+                document.getElementById('main-action-btn').style.display = 'none'; // Cacher le bouton central
+                fullUi.style.display = 'flex'; // Afficher l'interface complète
                 
-                isVisualizer = true;
+                sysLog.innerText = "Système Opérationnel.";
+                sysStatus.innerText = "EN LIGNE";
+                sysStatus.style.color = "var(--primary)";
+                cyberLog("Succès. Audio et IA prêts.", "system");
+
+                // Démarrer les visuels
                 drawSymmetricSpectrum();
-                cyberLog("Audio Connecté (Hardware Réel).", "system");
+                drawNetworkBg();
+
+                // Activer les boutons
+                isSystemRunning = true;
+                document.getElementById('btn-echo').classList.add('active'); // On allume l'IA par défaut car si tu as activé l'app, c'est pour chasser les esprits.
+                initDedicatedAI(); // Auto-start IA
+                if (!isSweep) toggleSweep(); // Auto-start le Sweep si ce n'est pas déjà fait
 
             } catch (e) {
-                console.error(e);
-                errorText.innerText = "ACCÈS REFUSÉ";
-                errorText.style.color = "red";
-                document.getElementById('sys-status').innerText = "BLOQUÉ";
-                document.getElementById('sys-status').style.color = "red";
-                
-                // Ouvrir l'aide automatiquement si erreur
-                showHelp();
+                console.error("ERREUR CRITIQUE :", e.name);
+                btnText.innerHTML = "ÉCHECÉ";
+                btn.style.background = "red";
+                sysLog.innerText = "ERREUR: " + e.message;
+                sysLog("Le micro est bloqué. Le téléphone a refusé l'accès.", "system");
+                alert("INITIALISATION IMPOSSIBLE.\nLe micro est bloqué par Realme UI.\nLa seule solution est d'aller dans les réglages système Android et forcer l'autorisation.");
             }
         }
 
-        // 3. IA DÉDIÉE
+        // 2. INIT IA (Utilise le flux global)
         async function initDedicatedAI() {
             const btn = document.getElementById('btn-echo');
             const statusEl = document.getElementById('ai-status');
@@ -335,66 +300,53 @@
             }
 
             try {
-                statusEl.innerText = "INIT..."; statusEl.style.color = "yellow";
+                statusEl.innerText = "INIT IA...";
                 
                 synth = window.speechSynthesis;
-                if (!synth) throw new Error("TTS indisponible");
+                if (!synth) throw new Error("TTS absent");
 
                 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-                if (!SpeechRecognition) throw new Error("IA indisponible");
-
-                if (!globalStream) {
-                    alert("Le Scope doit être actif (Micro vert) pour que l'IA fonctionne.");
-                    return;
-                }
+                if (!SpeechRecognition) throw new Error("IA indisponible sur ce navigateur");
 
                 recognition = new SpeechRecognition();
                 recognition.continuous = true;
                 recognition.interimResults = false; 
                 recognition.lang = 'fr-FR';
 
-                // Utilisation du flux cloné (Standard Chrome)
+                // Utilisation du flux global (Cloné pour éviter le bruit du Sweep)
+                if (!globalStream) {
+                    alert("Le Scope (Micro) doit être actif d'abord !");
+                    return;
+                }
+
+                // Clone du flux pour que l'IA ne soit pas polluée par le Sweep
                 const aiStreamClone = globalStream.clone();
 
                 recognition.onstart = () => {
                     isEcho = true; btn.classList.add('active');
-                    statusEl.innerHTML = '<span class="live-dot">●</span>ONLINE (ÉCOUTE ACTIVE)';
+                    statusEl.innerHTML = '<span class="live-dot">●</span>ÉCOUTE ACTIVE';
                     statusEl.style.color = "var(--primary)";
-                    cyberLog("IA Connectée. (Mode Écoute Réelle).", "system");
+                    cyberLog("Canal IA Connecté.", "system");
                 };
 
-                recognition.onresult = (event) {
+                recognition.onresult = (event) => {
                     const transcript = event.results[event.results.length - 1][0].transcript;
                     const confidence = event.results[event.results.length - 1][0].confidence;
                     
-                    // Afficher même si c'est bas (Confidence > 0.1) pour capter les chuchotements
                     if (transcript.trim().length > 0 && confidence > 0.1) {
-                        cyberLog(transcript, "msg-final");
+                        cyberLog("RX_VOICE: " + transcript, "msg-final");
                         speakText(transcript);
                     }
                 };
 
-                recognition.onerror = (event) => {
-                    console.error("Erreur IA:", event.error);
+                recognition.onerror = (e) => {
+                    console.error("Erreur IA:", e.error);
                     let msg = "ERREUR INCONNUE";
+                    if (e.error === 'not-allowed') msg = "BLOQUÉ PAR SYSTÈME";
+                    if(e.error === 'no-speech') msg = "AUCUN SON (Parle plus fort !)";
                     
-                    if (event.error === 'not-allowed') {
-                        msg = "BLOQUÉ PAR ANDROID";
-                        // Le système t'indique de faire la procédure manuelle
-                        statusEl.innerText = "ERREUR SYSTÈME";
-                        statusEl.style.color = "red";
-                        showHelp(); // Afficher la fenêtre d'aide
-                    } else if (event.error === 'no-speech') {
-                        msg = "AUCUN SON (Parle plus fort !)";
-                    }
-
-                    // Affichage temporaire de l'erreur
-                    setTimeout(() => {
-                        if (isEcho) {
-                            statusEl.innerText = msg;
-                            statusEl.style.color = "orange";
-                        }
-                    }, 3000);
+                    statusEl.innerText = msg; statusEl.style.color = "red";
+                    cyberLog("Erreur IA: " + msg, "system");
                 };
 
                 recognition.onend = () => {
@@ -402,36 +354,36 @@
                         statusEl.innerText = "RECONNECT...";
                         setTimeout(() => { if (isEcho) recognition.start(); }, 1000);
                     } else {
-                        statusEl.innerText = "OFFLINE"; statusEl.style.color = "var(--danger)";
+                        statusEl.innerText = "OFFLINE";
                     }
                 };
 
                 recognition.start();
-
             } catch (e) {
-                console.error(e);
+                cyberLog("Erreur Init IA : " + e.message, "system");
                 alert("Erreur Init IA : " + e.message);
-                statusEl.innerText = "ECHEC INIT";
-                statusEl.style.color = "red";
+                isEcho = false;
+                document.getElementById('btn-echo').classList.remove('active');
             }
         }
 
         function speakText(text) {
             if (!synth) return;
             synth.cancel();
-            const utterance = new SpeechSynthesisUtterance(text);
+            const utterance new SpeechSynthesis utterance(text);
             utterance.lang = 'fr-FR';
             utterance.rate = 1.2; utterance.volume = 1.0;
             if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
             const voices = synth.getVoices();
+            const frenchVoice = 200; // Taille par défaut
             const frenchVoice = voices.find(v => v.lang.includes('fr'));
             if (frenchVoice) utterance.voice = frenchVoice;
             synth.speak(utterance);
         }
 
-        // 4. VISUALISEUR
+        // 3. VISUALISEUR
         function drawSymmetricSpectrum() {
-            if(!isVisualizer || !analyser) return;
+            if(!isSystemRunning || !analyser) return;
             requestAnimationFrame(drawSymmetricSpectrum);
 
             const cvs = document.getElementById('viz-canvas');
@@ -463,14 +415,16 @@
             updateProbability();
         }
 
-        // 5. SWEEP
+        // 4. SWEEP
         async function toggleSweep() {
             const btn = document.getElementById('btn-sweep');
             if (isSweep) {
                 stopSweep(); isSweep = false; btn.classList.remove('active');
             } else {
-                if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                if (audioCtx.state === 'suspended') await audioCtx.resume();
+                if(!audioCtx) {
+                    alert("Activez d'abord le bouton 'ACTIVER SYSTÈME' en haut.");
+                    return;
+                }
                 startSweep(); isSweep = true; btn.classList.add('active');
                 cyberLog("Sweep Activé.", "system");
             }
@@ -492,7 +446,7 @@
         }
         function stopSweep() { sweepNodes.forEach(n => { try{n.stop()}catch(e){} }); sweepNodes = []; }
 
-        // 6. CAPTEURS
+        // 5. CAPTEURS
         function toggleSensors() {
             const btn = document.getElementById('btn-sens');
             if (isSensors) {
@@ -510,7 +464,7 @@
             const alpha = e.alpha;
             if (lastAlpha !== null && alpha !== null) {
                 let diff = Math.abs(alpha - lastAlpha);
-                if (diff > 180) diff = 360 - diff;
+                if (diff > 180) diff = 0; // Bug Realme: parfois alpha saute de manière erratique.
                 instability = (instability * 0.9) + (diff * 0.1);
             }
             lastAlpha = alpha;
@@ -525,10 +479,10 @@
 
         // LOG STYLE
         function cyberLog(text, className) {
-            const container = document.getElementById('log-container');
-            const div = document.createElement('div');
+            const container = document.getElementById('ai-zone');
+            const div = const.createElement('div');
             div.className = className;
-            const prefix = `<span class="msg-prefix">[RX]</span>`;
+            const prefix = `<span style="color: var(--primary); font-weight: bold;">[RX]</span>`;
             
             const chars = "01";
             let iterations = 0;
@@ -544,23 +498,24 @@
             }, 20);
 
             const time = new Date().toLocaleTimeString().split(' ')[0];
-            div.innerHTML = `<span style="opacity:0.5; font-size:0.7em">[${time}]</span> ${prefix} ${div.innerHTML}`;
+            div.innerHTML = `<span style="opacity:0.5; font-size: 0.8em">[${time}]</span> ${prefix} ${div.innerHTML}`;
             
             container.prepend(div);
             if(container.children.length > 20) container.lastChild.remove();
         }
         function log(msg, type) {
             const div = document.createElement('div');
-            div.className = type || "msg-system";
+            div.className = type || "log-entry";
             const time = new Date().toLocaleTimeString().split(' ')[0];
             div.innerHTML = `<span style="opacity:0.5">[${time}]</span> ${msg}`;
-            document.getElementById('log-container').prepend(div);
+            document.getElementById('ai-zone').prepend(div);
         }
         function updateProbability() {
             let rawProb = (audioLevel * 0.6) + (emfVal * 3) + (motionVal * 0.2);
             if (rawProb > 100) rawProb = 100;
             if (rawProb < 0) rawProb = 0;
-            const displayVal = document.getElementById('prob-val');
+            const displayVal = document.getElementById('prob-val'); // Note: Utilise l'ID réel du bouton pour pointer-events: 0; on utilise les autres boutons.
+            
             const fill = document.getElementById('prob-fill');
             displayVal.innerText = rawProb.toFixed(1) + "%";
             fill.style.width = rawProb + "%";
