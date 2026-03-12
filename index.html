@@ -13,6 +13,7 @@
   --voice-color: #ffaa00;
   --evp-color: #aa00ff;
   --ai-color: #00ff88;
+  --error-color: #ff0000;
 }
 
 body {
@@ -22,28 +23,50 @@ body {
   color: var(--primary-color);
   overflow: hidden;
   height: 100vh;
+  display: grid;
+  grid-template-areas:
+    "header header"
+    "controls visualization"
+    "logs visualization";
+  grid-template-rows: auto 1fr auto;
+  grid-template-columns: 350px 1fr;
 }
 
 #panel {
-  position: absolute;
-  top: 10px;
-  left: 10px;
+  grid-area: controls;
+  padding: 15px;
   background: var(--panel-bg);
-  border: 2px solid var(--primary-color);
-  padding: 12px;
-  z-index: 20;
-  width: 320px;
+  border-right: 2px solid var(--primary-color);
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+#logZone {
+  grid-area: logs;
+  padding: 10px;
+  background: rgba(0, 0, 0, 0.6);
+  border-top: 1px solid var(--primary-color);
+  border-right: 1px solid var(--primary-color);
+  overflow-y: auto;
+  max-height: 300px;
+}
+
+#visualization {
+  grid-area: visualization;
+  position: relative;
 }
 
 button {
   background: var(--button-bg);
   border: 1px solid var(--primary-color);
   color: var(--primary-color);
-  padding: 6px 10px;
-  margin: 4px;
+  padding: 8px 12px;
+  margin: 4px 0;
   cursor: pointer;
   font-weight: bold;
   transition: all 0.2s;
+  width: 100%;
 }
 
 button:hover {
@@ -58,531 +81,875 @@ button:hover {
   transition: width 0.1s linear;
 }
 
-#logZone {
-  position: absolute;
-  bottom: 10px;
-  left: 10px;
-  width: 400px;
-  max-height: 300px;
-  overflow-y: auto;
-  font-size: 0.8rem;
-  background: rgba(0, 0, 0, 0.6);
-  padding: 6px;
-  border: 1px solid var(--primary-color);
+.btn-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
-#waterfallCanvas {
-  position: absolute;
-  bottom: 0;
+.status {
+  display: flex;
+  justify-content: space-between;
+  padding: 5px 0;
+}
+
+.loading {
+  position: fixed;
+  top: 0;
   left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--background-color);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  z-index: 100;
 }
 
-#radarCanvas {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-}
+@media (max-width: 768px) {
+  body {
+    grid-template-areas:
+      "header"
+      "controls"
+      "visualization"
+      "logs";
+    grid-template-rows: auto auto 1fr auto;
+    grid-template-columns: 1fr;
+  }
 
-/* Style pour les boutons dynamiques */
-.dynamic-btn {
-  position: absolute;
-  left: 10px;
+  #panel {
+    border-right: none;
+    border-bottom: 2px solid var(--primary-color);
+  }
+
+  #visualization {
+    height: 400px;
+  }
 }
 </style>
 </head>
 <body>
+<div class="loading" id="loadingScreen">
+  <h2>ETERNITY LAB</h2>
+  <div class="progress">Chargement des modules...</div>
+  <div class="progress-bar" id="progressBar"></div>
+</div>
+
 <div id="panel">
-  <h3>ETERNITY v33 OMEGA ULTIMATE LAB</h3>
-  <div>MIC : <span id="mic">OFF</span></div>
-  <div>IA CLASS : <span id="ai">---</span></div>
-  <div>VOICE <div id="voiceBar"></div></div>
+  <h3>ETERNITY v33 OMEGA</h3>
+  <div class="status">
+    <span>MIC: <span id="micStatus">OFF</span></span>
+    <span>IA: <span id="aiStatus">---</span></span>
+  </div>
+  <div>
+    VOICE LEVEL:
+    <div id="voiceBar"></div>
+  </div>
   <div class="btn-group">
-    <button id="fftLarge">FFT 4096</button>
-    <button id="fftMedium">FFT 2048</button>
-    <button id="fftSmall">FFT 1024</button>
+    <button id="fftLarge" data-fft="4096">FFT 4096</button>
+    <button id="fftMedium" data-fft="2048">FFT 2048</button>
+    <button id="fftSmall" data-fft="1024">FFT 1024</button>
     <button id="autoRec">AUTO REC</button>
-    <button id="evp">EVP MODE</button>
+    <button id="evpMode">EVP MODE</button>
+    <button id="toggle3D">3D SPECTRO</button>
+    <button id="toggleRadar">RADAR</button>
+    <button id="toggleAI">IA ANALYSIS</button>
+    <button id="exportLog">EXPORT LOG</button>
+    <button id="wavRecord">WAV RECORD</button>
+  </div>
+  <div class="settings">
+    <h4>EVP THRESHOLD</h4>
+    <button id="evpThresholdUp">+</button>
+    <button id="evpThresholdDown">-</button>
+    <div id="evpThresholdValue">0.5</div>
   </div>
 </div>
+
 <div id="logZone"></div>
+<div id="visualization"></div>
 
 <script>
-// Configuration initiale
-const config = {
-  fftSize: 2048,
-  autoRec: false,
-  evpMode: false,
-  spectro3D: true,
-  radar: true,
-  ai: true,
-  evpThreshold: 0.5
+/**
+ * ETERNITY v33 OMEGA ULTIMATE LAB
+ * Application d'analyse audio avec visualisation 3D et IA
+ * @version 1.0
+ * @license MIT
+ */
+
+// ======================= STATE MANAGEMENT =======================
+const state = {
+  audio: {
+    context: null,
+    analyser: null,
+    dataArray: null,
+    stream: null,
+    recorder: null,
+    chunks: [],
+    status: 'off',
+    energy: 0,
+    fftSize: 2048
+  },
+  visualization: {
+    mode: '3d',
+    spectro3D: true,
+    radar: true,
+    waterfall: true,
+    scene: null,
+    camera: null,
+    renderer: null,
+    cubes: []
+  },
+  ai: {
+    model: null,
+    predictions: [],
+    status: 'off',
+    evpMode: false,
+    evpThreshold: 0.5
+  },
+  recording: {
+    wav: false,
+    auto: false,
+    buffers: []
+  },
+  logs: [],
+  initialized: false
 };
 
-// Variables globales
-let audioCtx, analyser, dataArray;
-let mediaRecorder, chunks = [];
-let scene, camera, renderer;
-let cubes = [];
-let model, predictions = [];
-let recBuffers = [], isRecordingWAV = false;
-
-// DOM Elements
+// ======================= DOM ELEMENTS =======================
 const elements = {
-  mic: document.getElementById("mic"),
-  ai: document.getElementById("ai"),
-  voiceBar: document.getElementById("voiceBar"),
-  logZone: document.getElementById("logZone")
+  micStatus: document.getElementById('micStatus'),
+  aiStatus: document.getElementById('aiStatus'),
+  voiceBar: document.getElementById('voiceBar'),
+  logZone: document.getElementById('logZone'),
+  visualization: document.getElementById('visualization'),
+  loadingScreen: document.getElementById('loadingScreen'),
+  progressBar: document.getElementById('progressBar'),
+  fftButtons: {
+    large: document.getElementById('fftLarge'),
+    medium: document.getElementById('fftMedium'),
+    small: document.getElementById('fftSmall')
+  },
+  evpThresholdValue: document.getElementById('evpThresholdValue')
 };
 
-// ======================= UTILITIES =======================
-function log(msg, color = "#00ff88") {
+// ======================= UTILITY FUNCTIONS =======================
+/**
+ * Ajoute un message au journal
+ * @param {string} msg - Message à journaliser
+ * @param {string} color - Couleur du message
+ */
+function log(msg, color = "--ai-color") {
   const div = document.createElement("div");
-  div.style.color = color;
+  div.style.color = `var(${color})`;
   const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute: '2-digit', second: '2-digit'});
   div.textContent = `[${time}] ${msg}`;
   elements.logZone.prepend(div);
 
-  // Limiter le nombre de logs
+  // Limiter à 200 entrées
   if (elements.logZone.children.length > 200) {
     elements.logZone.removeChild(elements.logZone.lastChild);
   }
+
+  state.logs.unshift(div.textContent);
 }
 
-// ======================= AUDIO INITIALIZATION =======================
-async function initAudio() {
-  try {
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-
-    mediaRecorder = new MediaRecorder(stream);
-    mediaRecorder.ondataavailable = e => chunks.push(e.data);
-    mediaRecorder.onstop = saveRecording;
-
-    const source = audioCtx.createMediaStreamSource(stream);
-    analyser = audioCtx.createAnalyser();
-    analyser.fftSize = config.fftSize;
-    dataArray = new Uint8Array(analyser.frequencyBinCount);
-    source.connect(analyser);
-
-    elements.mic.textContent = "ACTIVE";
-    log("Audio actif et analysable");
-
-    // Démarrer la boucle audio
-    audioLoop();
-  } catch (error) {
-    log(`Erreur audio: ${error.message}`, "#ff0000");
-  }
+/**
+ * Met à jour la barre de progression du chargement
+ * @param {number} progress - Pourcentage de progression (0-100)
+ */
+function updateLoadingProgress(progress) {
+  elements.progressBar.style.width = `${progress}%`;
 }
 
-// ======================= AUDIO LOOP =======================
-function audioLoop() {
-  requestAnimationFrame(audioLoop);
-
-  if (!analyser) return;
-
-  analyser.getByteFrequencyData(dataArray);
-
-  // Calcul de l'énergie vocale
-  const sum = dataArray.reduce((acc, val) => acc + val, 0);
-  const voiceEnergy = Math.min(100, sum / dataArray.length);
-  elements.voiceBar.style.width = `${voiceEnergy}%`;
-
-  // Auto record si activé
-  if (config.autoRec && voiceEnergy > 30) {
-    record();
-  }
+/**
+ * Sauvegarde automatique de l'état
+ */
+function autoSaveState() {
+  const saveState = {
+    logs: state.logs,
+    config: {
+      fftSize: state.audio.fftSize,
+      autoRec: state.recording.auto,
+      evpMode: state.ai.evpMode,
+      spectro3D: state.visualization.spectro3D,
+      radar: state.visualization.radar,
+      evpThreshold: state.ai.evpThreshold
+    }
+  };
+  localStorage.setItem('eternityState', JSON.stringify(saveState));
+  log("État sauvegardé automatiquement", "--ai-color");
 }
 
-// ======================= RECORDING =======================
-function record() {
-  if (mediaRecorder.state === "inactive") {
-    chunks = [];
-    mediaRecorder.start();
-    log("Enregistrement démarré");
+// ======================= AUDIO MODULE =======================
+const AudioModule = {
+  /**
+   * Initialise le contexte audio
+   */
+  init: async function() {
+    try {
+      state.audio.context = new (window.AudioContext || window.webkitAudioContext)();
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
-    // Arrêter après 3 secondes
-    setTimeout(() => {
-      if (mediaRecorder.state !== "inactive") {
-        mediaRecorder.stop();
+      state.audio.stream = stream;
+      state.audio.recorder = new MediaRecorder(stream);
+      state.audio.recorder.ondataavailable = this.handleDataAvailable;
+      state.audio.recorder.onstop = this.handleRecordingStop;
+
+      const source = state.audio.context.createMediaStreamSource(stream);
+      state.audio.analyser = state.audio.context.createAnalyser();
+      state.audio.analyser.fftSize = state.audio.fftSize;
+      state.audio.dataArray = new Uint8Array(state.audio.analyser.frequencyBinCount);
+      source.connect(state.audio.analyser);
+
+      state.audio.status = 'active';
+      elements.micStatus.textContent = "ACTIVE";
+      log("Système audio initialisé");
+
+      // Charger l'état précédent si disponible
+      this.loadPreviousState();
+
+      // Démarrer la boucle audio
+      this.audioLoop();
+
+      // Sauvegarde automatique périodique
+      setInterval(autoSaveState, 30000);
+    } catch (error) {
+      log(`Erreur audio: ${error.message}`, "--error-color");
+    }
+  },
+
+  /**
+   * Gère les données audio disponibles
+   * @param {Event} event - Événement MediaRecorder
+   */
+  handleDataAvailable: function(event) {
+    state.audio.chunks.push(event.data);
+  },
+
+  /**
+   * Gère l'arrêt de l'enregistrement
+   */
+  handleRecordingStop: function() {
+    const blob = new Blob(state.audio.chunks, { type: "audio/webm" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `event_${Date.now()}.webm`;
+    a.click();
+    log("Enregistrement sauvegardé");
+    state.audio.chunks = [];
+  },
+
+  /**
+   * Boucle principale de traitement audio
+   */
+  audioLoop: function() {
+    if (!state.audio.analyser) return;
+
+    state.audio.analyser.getByteFrequencyData(state.audio.dataArray);
+
+    // Calculer l'énergie vocale
+    const sum = state.audio.dataArray.reduce((acc, val) => acc + val, 0);
+    state.audio.energy = Math.min(100, sum / state.audio.dataArray.length);
+    elements.voiceBar.style.width = `${state.audio.energy}%`;
+
+    // Déclencher l'enregistrement automatique si activé
+    if (state.recording.auto && state.audio.energy > 30) {
+      this.startRecording();
+    }
+
+    requestAnimationFrame(this.audioLoop.bind(this));
+  },
+
+  /**
+   * Démarre un enregistrement
+   */
+  startRecording: function() {
+    if (state.audio.recorder.state === "inactive") {
+      state.audio.chunks = [];
+      state.audio.recorder.start();
+      log("Enregistrement démarré (3 sec)");
+
+      setTimeout(() => {
+        if (state.audio.recorder.state !== "inactive") {
+          state.audio.recorder.stop();
+        }
+      }, 3000);
+    }
+  },
+
+  /**
+   * Charge l'état précédent si disponible
+   */
+  loadPreviousState: function() {
+    const savedState = localStorage.getItem('eternityState');
+    if (savedState) {
+      try {
+        const parsed = JSON.parse(savedState);
+        if (parsed.config) {
+          state.audio.fftSize = parsed.config.fftSize || 2048;
+          state.recording.auto = parsed.config.autoRec || false;
+          state.ai.evpMode = parsed.config.evpMode || false;
+          state.visualization.spectro3D = parsed.config.spectro3D !== false;
+          state.visualization.radar = parsed.config.radar !== false;
+          state.ai.evpThreshold = parsed.config.evpThreshold || 0.5;
+          elements.evpThresholdValue.textContent = state.ai.evpThreshold.toFixed(2);
+          log("État précédent restauré");
+        }
+      } catch (e) {
+        log("Erreur de chargement de l'état précédent", "--error-color");
       }
-    }, 3000);
-  }
-}
-
-function saveRecording() {
-  const blob = new Blob(chunks, { type: "audio/webm" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `event_audio_${Date.now()}.webm`;
-  a.click();
-  log("Enregistrement sauvegardé");
-}
-
-// ======================= 3D VISUALIZATION =======================
-function init3D() {
-  scene = new THREE.Scene();
-  camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
-  camera.position.z = 200;
-
-  renderer = new THREE.WebGLRenderer({ antialias: true });
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  document.body.appendChild(renderer.domElement);
-
-  // Créer les éléments visuels
-  createWaterfall();
-  createRadar();
-
-  // Démarrer la boucle 3D
-  renderLoop();
-}
-
-function createWaterfall() {
-  const waterfall = document.createElement('canvas');
-  waterfall.id = 'waterfallCanvas';
-  waterfall.width = window.innerWidth;
-  waterfall.height = 300;
-  document.body.appendChild(waterfall);
-  return waterfall.getContext('2d');
-}
-
-function createRadar() {
-  const radar = document.createElement('canvas');
-  radar.id = 'radarCanvas';
-  radar.width = 180;
-  radar.height = 180;
-  document.body.appendChild(radar);
-  return radar.getContext('2d');
-}
-
-function drawWaterfall(ctx) {
-  const w = ctx.canvas.width;
-  const h = ctx.canvas.height;
-  const img = ctx.getImageData(0, 0, w, h);
-  ctx.putImageData(img, 0, 1);
-
-  for (let i = 0; i < dataArray.length; i++) {
-    const v = dataArray[i];
-    ctx.fillStyle = `hsl(${200 - v}, 100%, 50%)`;
-    ctx.fillRect(i * (w / dataArray.length), 0, 2, 1);
-  }
-}
-
-function drawRadar(ctx) {
-  if (!config.radar) return;
-
-  ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-  ctx.strokeStyle = "#00ffd0";
-  ctx.beginPath();
-  ctx.arc(90, 90, 80, 0, Math.PI * 2);
-  ctx.stroke();
-
-  const energy = dataArray.reduce((acc, val) => acc + val, 0);
-  const angle = Math.random() * Math.PI * 2;
-  const r = energy / 1500;
-  const x = 90 + Math.cos(angle) * r;
-  const y = 90 + Math.sin(angle) * r;
-
-  ctx.fillStyle = "#00ff88";
-  ctx.fillRect(x, y, 4, 4);
-}
-
-function draw3DSpectro() {
-  if (!config.spectro3D || !dataArray) return;
-
-  for (let i = 0; i < dataArray.length; i += 2) {
-    const v = dataArray[i] / 255;
-    const color = config.evpMode
-      ? `hsl(${300 - dataArray[i]}, 100%, 50%)`
-      : `hsl(${200 - dataArray[i]}, 100%, 50%)`;
-
-    const geometry = new THREE.BoxGeometry(2, 2, v * 60);
-    const material = new THREE.MeshBasicMaterial({ color: new THREE.Color(color) });
-    const cube = new THREE.Mesh(geometry, material);
-
-    cube.position.x = i - 256;
-    cube.position.y = -60;
-    cube.position.z = v * 30;
-    scene.add(cube);
-    cubes.push(cube);
-  }
-
-  // Limiter le nombre de cubes
-  if (cubes.length > 10000) {
-    const old = cubes.shift();
-    scene.remove(old);
-  }
-}
-
-function renderLoop() {
-  requestAnimationFrame(renderLoop);
-
-  if (analyser) {
-    analyser.getByteFrequencyData(dataArray);
-    draw3DSpectro();
-    drawRadar(radarCtx);
-    drawWaterfall(waterfallCtx);
-  }
-
-  renderer.render(scene, camera);
-}
-
-// ======================= AI ANALYSIS =======================
-async function loadModel() {
-  try {
-    log("Chargement du modèle TensorFlow YAMNet...");
-    model = await yamnet.load();
-    log("Modèle chargé ✅");
-  } catch (error) {
-    log(`Erreur chargement modèle: ${error.message}`, "#ff0000");
-  }
-}
-
-async function analyseAudio() {
-  if (!model || !analyser) return;
-
-  const floatData = new Float32Array(dataArray.length);
-  for (let i = 0; i < dataArray.length; i++) {
-    floatData[i] = (dataArray[i] - 128) / 128;
-  }
-
-  const inputTensor = tf.tensor(floatData).reshape([floatData.length, 1]);
-  const scores = await model.predict(inputTensor);
-
-  const topScores = Array.from(scores.dataSync())
-    .map((s, i) => ({ score: s, index: i }))
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 5);
-
-  predictions = topScores.map(p =>
-    `${model.classes[p.index]} (${(p.score * 100).toFixed(1)}%)`
-  );
-
-  elements.ai.textContent = predictions[0];
-
-  // Détection EVP
-  if (config.evpMode && topScores[0].score < config.evpThreshold) {
-    log(`EVP détecté : signal faible et mystérieux`, "#aa00ff");
-    if (config.autoRec) record();
-  }
-}
-
-function aiLoop() {
-  if (config.ai) {
-    analyseAudio();
-  }
-  requestAnimationFrame(aiLoop);
-}
-
-// ======================= UI CONTROLS =======================
-function createButton(text, top, onclick) {
-  const btn = document.createElement('button');
-  btn.textContent = text;
-  btn.style.position = 'absolute';
-  btn.style.top = `${top}px`;
-  btn.style.left = '10px';
-  btn.onclick = onclick;
-  document.body.appendChild(btn);
-  return btn;
-}
-
-// Créer tous les boutons
-function createUI() {
-  // Boutons FFT
-  document.getElementById("fftLarge").onclick = () => {
-    config.fftSize = 4096;
-    if (analyser) {
-      analyser.fftSize = config.fftSize;
-      dataArray = new Uint8Array(analyser.frequencyBinCount);
     }
-    log("FFT 4096 activée");
-  };
+  }
+};
 
-  document.getElementById("fftMedium").onclick = () => {
-    config.fftSize = 2048;
-    if (analyser) {
-      analyser.fftSize = config.fftSize;
-      dataArray = new Uint8Array(analyser.frequencyBinCount);
+// ======================= VISUALIZATION MODULE =======================
+const VisualizationModule = {
+  /**
+   * Initialise le système de visualisation
+   */
+  init: function() {
+    // Créer la scène 3D
+    this.init3D();
+
+    // Créer les canvases pour waterfall et radar
+    this.createWaterfall();
+    this.createRadar();
+
+    // Démarrer la boucle de rendu
+    this.renderLoop();
+  },
+
+  /**
+   * Initialise Three.js
+   */
+  init3D: function() {
+    state.visualization.scene = new THREE.Scene();
+    state.visualization.camera = new THREE.PerspectiveCamera(
+      75,
+      elements.visualization.clientWidth / elements.visualization.clientHeight,
+      0.1,
+      2000
+    );
+    state.visualization.camera.position.z = 200;
+
+    state.visualization.renderer = new THREE.WebGLRenderer({ antialias: true });
+    state.visualization.renderer.setSize(
+      elements.visualization.clientWidth,
+      elements.visualization.clientHeight
+    );
+    elements.visualization.appendChild(state.visualization.renderer.domElement);
+  },
+
+  /**
+   * Crée le canvas pour le waterfall
+   */
+  createWaterfall: function() {
+    const canvas = document.createElement('canvas');
+    canvas.id = 'waterfallCanvas';
+    canvas.style.position = 'absolute';
+    canvas.style.bottom = '0';
+    canvas.style.left = '0';
+    canvas.width = elements.visualization.clientWidth;
+    canvas.height = 200;
+    elements.visualization.appendChild(canvas);
+    this.waterfallCtx = canvas.getContext('2d');
+  },
+
+  /**
+   * Crée le canvas pour le radar
+   */
+  createRadar: function() {
+    const canvas = document.createElement('canvas');
+    canvas.id = 'radarCanvas';
+    canvas.style.position = 'absolute';
+    canvas.style.top = '10px';
+    canvas.style.right = '10px';
+    canvas.width = 180;
+    canvas.height = 180;
+    elements.visualization.appendChild(canvas);
+    this.radarCtx = canvas.getContext('2d');
+  },
+
+  /**
+   * Dessine le waterfall
+   */
+  drawWaterfall: function() {
+    if (!state.visualization.waterfall || !state.audio.dataArray) return;
+
+    const w = this.waterfallCtx.canvas.width;
+    const h = this.waterfallCtx.canvas.height;
+
+    // Déplacer l'image vers le bas
+    const img = this.waterfallCtx.getImageData(0, 0, w, h);
+    this.waterfallCtx.putImageData(img, 0, 1);
+
+    // Dessiner les nouvelles données
+    for (let i = 0; i < state.audio.dataArray.length; i++) {
+      const v = state.audio.dataArray[i];
+      this.waterfallCtx.fillStyle = `hsl(${200 - v}, 100%, 50%)`;
+      this.waterfallCtx.fillRect(i * (w / state.audio.dataArray.length), 0, 2, 1);
     }
-    log("FFT 2048 activée");
-  };
+  },
 
-  document.getElementById("fftSmall").onclick = () => {
-    config.fftSize = 1024;
-    if (analyser) {
-      analyser.fftSize = config.fftSize;
-      dataArray = new Uint8Array(analyser.frequencyBinCount);
+  /**
+   * Dessine le radar
+   */
+  drawRadar: function() {
+    if (!state.visualization.radar || !this.radarCtx) return;
+
+    this.radarCtx.clearRect(0, 0, this.radarCtx.canvas.width, this.radarCtx.canvas.height);
+    this.radarCtx.strokeStyle = "var(--primary-color)";
+    this.radarCtx.beginPath();
+    this.radarCtx.arc(90, 90, 80, 0, Math.PI * 2);
+    this.radarCtx.stroke();
+
+    const energy = state.audio.dataArray.reduce((acc, val) => acc + val, 0);
+    const angle = Math.random() * Math.PI * 2;
+    const r = energy / 1500;
+    const x = 90 + Math.cos(angle) * r;
+    const y = 90 + Math.sin(angle) * r;
+
+    this.radarCtx.fillStyle = "var(--ai-color)";
+    this.radarCtx.fillRect(x, y, 4, 4);
+  },
+
+  /**
+   * Dessine le spectrogramme 3D
+   */
+  draw3DSpectro: function() {
+    if (!state.visualization.spectro3D || !state.audio.dataArray) return;
+
+    for (let i = 0; i < state.audio.dataArray.length; i += 2) {
+      const v = state.audio.dataArray[i] / 255;
+      const color = state.ai.evpMode
+        ? `hsl(${300 - state.audio.dataArray[i]}, 100%, 50%)`
+        : `hsl(${200 - state.audio.dataArray[i]}, 100%, 50%)`;
+
+      const geometry = new THREE.BoxGeometry(2, 2, v * 60);
+      const material = new THREE.MeshBasicMaterial({ color: new THREE.Color(color) });
+      const cube = new THREE.Mesh(geometry, material);
+
+      cube.position.x = i - 256;
+      cube.position.y = -60;
+      cube.position.z = v * 30;
+      state.visualization.scene.add(cube);
+      state.visualization.cubes.push(cube);
     }
-    log("FFT 1024 activée");
-  };
 
-  document.getElementById("autoRec").onclick = () => {
-    config.autoRec = !config.autoRec;
-    log(`Auto Recording ${config.autoRec ? "ON" : "OFF"}`);
-  };
+    // Limiter le nombre de cubes
+    if (state.visualization.cubes.length > 10000) {
+      const old = state.visualization.cubes.shift();
+      state.visualization.scene.remove(old);
+    }
+  },
 
-  document.getElementById("evp").onclick = () => {
-    config.evpMode = !config.evpMode;
-    log(`EVP Mode ${config.evpMode ? "ON" : "OFF"}`, "#aa00ff");
-  };
+  /**
+   * Boucle principale de rendu
+   */
+  renderLoop: function() {
+    requestAnimationFrame(this.renderLoop.bind(this));
 
-  // Boutons dynamiques
-  createButton('Spectro 3D ON/OFF', 200, () => {
-    config.spectro3D = !config.spectro3D;
-    log(`Spectro 3D ${config.spectro3D ? "ON" : "OFF"}`);
-  });
+    if (state.audio.dataArray) {
+      this.draw3DSpectro();
+      this.drawRadar();
+      this.drawWaterfall();
+    }
 
-  createButton('Radar ON/OFF', 230, () => {
-    config.radar = !config.radar;
-    log(`Radar ${config.radar ? "ON" : "OFF"}`);
-  });
+    if (state.visualization.renderer) {
+      state.visualization.renderer.render(
+        state.visualization.scene,
+        state.visualization.camera
+      );
+    }
+  },
 
-  createButton('IA ON/OFF', 260, () => {
-    config.ai = !config.ai;
-    log(`IA ${config.ai ? "ON" : "OFF"}`, "#00ff88");
-  });
+  /**
+   * Redimensionne les éléments lors du redimensionnement de la fenêtre
+   */
+  handleResize: function() {
+    if (state.visualization.camera) {
+      state.visualization.camera.aspect =
+        elements.visualization.clientWidth / elements.visualization.clientHeight;
+      state.visualization.camera.updateProjectionMatrix();
+    }
 
-  createButton('EVP Seuil+', 290, () => {
-    config.evpThreshold = Math.min(1, config.evpThreshold + 0.05);
-    log(`Seuil EVP = ${config.evpThreshold.toFixed(2)}`, "#aa00ff");
-  });
+    if (state.visualization.renderer) {
+      state.visualization.renderer.setSize(
+        elements.visualization.clientWidth,
+        elements.visualization.clientHeight
+      );
+    }
 
-  createButton('EVP Seuil-', 320, () => {
-    config.evpThreshold = Math.max(0, config.evpThreshold - 0.05);
-    log(`Seuil EVP = ${config.evpThreshold.toFixed(2)}`, "#aa00ff");
-  });
+    if (this.waterfallCtx) {
+      this.waterfallCtx.canvas.width = elements.visualization.clientWidth;
+    }
+  }
+};
 
-  createButton('EXPORT JOURNAL', 350, () => {
-    const blob = new Blob([elements.logZone.innerText], { type: "text/plain" });
+// ======================= AI MODULE =======================
+const AIModule = {
+  /**
+   * Charge le modèle YAMNet
+   */
+  loadModel: async function() {
+    try {
+      log("Chargement du modèle YAMNet...");
+      updateLoadingProgress(70);
+      state.ai.model = await yamnet.load();
+      state.ai.status = 'ready';
+      elements.aiStatus.textContent = "READY";
+      log("Modèle IA chargé avec succès", "--ai-color");
+      updateLoadingProgress(90);
+      this.analyzeLoop();
+    } catch (error) {
+      log(`Erreur chargement IA: ${error.message}`, "--error-color");
+    }
+  },
+
+  /**
+   * Analyse le flux audio
+   */
+  analyzeAudio: async function() {
+    if (!state.ai.model || !state.audio.dataArray || !state.ai.status === 'ready') return;
+
+    // Normaliser les données
+    const floatData = new Float32Array(state.audio.dataArray.length);
+    for (let i = 0; i < state.audio.dataArray.length; i++) {
+      floatData[i] = (state.audio.dataArray[i] - 128) / 128;
+    }
+
+    const inputTensor = tf.tensor(floatData).reshape([floatData.length, 1]);
+    const scores = await state.ai.model.predict(inputTensor);
+
+    const topScores = Array.from(scores.dataSync())
+      .map((s, i) => ({ score: s, index: i }))
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 3);
+
+    state.ai.predictions = topScores.map(p =>
+      `${state.ai.model.classes[p.index]} (${(p.score * 100).toFixed(1)}%)`
+    );
+
+    elements.aiStatus.textContent = state.ai.predictions[0];
+
+    // Détection EVP
+    if (state.ai.evpMode && topScores[0].score < state.ai.evpThreshold) {
+      log(`EVP détecté: ${state.ai.predictions[0]}`, "--evp-color");
+      if (state.recording.auto) {
+        AudioModule.startRecording();
+      }
+    }
+  },
+
+  /**
+   * Boucle d'analyse périodique
+   */
+  analyzeLoop: function() {
+    if (state.ai.status === 'ready') {
+      this.analyzeAudio();
+    }
+    setTimeout(this.analyzeLoop.bind(this), 500);
+  }
+};
+
+// ======================= RECORDING MODULE =======================
+const RecordingModule = {
+  /**
+   * Démarre l'enregistrement WAV
+   */
+  startWAVRecording: function() {
+    if (state.recording.wav) return;
+
+    state.recording.wav = true;
+    state.recording.buffers = [];
+    log("Enregistrement WAV démarré", "--voice-color");
+
+    // Capturer périodiquement les données
+    this.captureWAV();
+  },
+
+  /**
+   * Arrête l'enregistrement WAV
+   */
+  stopWAVRecording: function() {
+    if (!state.recording.wav) return;
+
+    state.recording.wav = false;
+    const bufferLength = state.recording.buffers.reduce((sum, b) => sum + b.length, 0);
+    const interleaved = new Float32Array(bufferLength);
+    let offset = 0;
+
+    for (const buffer of state.recording.buffers) {
+      interleaved.set(buffer, offset);
+      offset += buffer.length;
+    }
+
+    const wavBlob = this.encodeWAV(interleaved, state.audio.context.sampleRate);
+    const url = URL.createObjectURL(wavBlob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `event_${Date.now()}.wav`;
+    a.click();
+    log("Fichier WAV sauvegardé", "--voice-color");
+  },
+
+  /**
+   * Capture les données audio pour l'enregistrement WAV
+   */
+  captureWAV: function() {
+    if (!state.recording.wav || !state.audio.dataArray) return;
+
+    const floatData = new Float32Array(state.audio.dataArray.length);
+    for (let i = 0; i < state.audio.dataArray.length; i++) {
+      floatData[i] = (state.audio.dataArray[i] - 128) / 128;
+    }
+    state.recording.buffers.push(floatData);
+
+    if (state.recording.wav) {
+      setTimeout(this.captureWAV.bind(this), 100);
+    }
+  },
+
+  /**
+   * Encode les données audio en WAV
+   */
+  encodeWAV: function(samples, sampleRate) {
+    const buffer = new ArrayBuffer(44 + samples.length * 2);
+    const view = new DataView(buffer);
+
+    function writeString(offset, string) {
+      for (let i = 0; i < string.length; i++) {
+        view.setUint8(offset + i, string.charCodeAt(i));
+      }
+    }
+
+    let offset = 0;
+    writeString(offset, 'RIFF'); offset += 4;
+    view.setUint32(offset, 36 + samples.length * 2, true); offset += 4;
+    writeString(offset, 'WAVE'); offset += 4;
+    writeString(offset, 'fmt '); offset += 4;
+    view.setUint32(offset, 16, true); offset += 4;
+    view.setUint16(offset, 1, true); offset += 2;
+    view.setUint16(offset, 1, true); offset += 2;
+    view.setUint32(offset, sampleRate, true); offset += 4;
+    view.setUint32(offset, sampleRate * 2, true); offset += 4;
+    view.setUint16(offset, 2, true); offset += 2;
+    view.setUint16(offset, 16, true); offset += 2;
+    writeString(offset, 'data'); offset += 4;
+    view.setUint32(offset, samples.length * 2, true); offset += 4;
+
+    // Écrire les données PCM
+    let pos = 44;
+    for (const s of samples) {
+      const sample = Math.max(-1, Math.min(1, s));
+      view.setInt16(pos, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
+      pos += 2;
+    }
+
+    return new Blob([view], { type: "audio/wav" });
+  },
+
+  /**
+   * Exporte le journal
+   */
+  exportLog: function() {
+    const blob = new Blob(state.logs, { type: "text/plain" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `ETERNITY_JOURNAL_${Date.now()}.txt`;
+    a.download = `eternity_log_${Date.now()}.txt`;
     a.click();
-    log("Journal scientifique exporté", "#ffaa00");
-  });
+    log("Journal exporté", "--ai-color");
+  }
+};
 
-  createButton('WAV ON/OFF', 380, () => {
-    if (isRecordingWAV) {
-      stopWAVRecording();
+// ======================= UI MODULE =======================
+const UIModule = {
+  /**
+   * Initialise les gestionnaires d'événements
+   */
+  init: function() {
+    // Boutons FFT
+    elements.fftButtons.large.onclick = () => this.setFFTSize(4096);
+    elements.fftButtons.medium.onclick = () => this.setFFTSize(2048);
+    elements.fftButtons.small.onclick = () => this.setFFTSize(1024);
+
+    // Autres boutons
+    document.getElementById('autoRec').onclick = () => this.toggleAutoRec();
+    document.getElementById('evpMode').onclick = () => this.toggleEVPMode();
+    document.getElementById('toggle3D').onclick = () => this.toggle3D();
+    document.getElementById('toggleRadar').onclick = () => this.toggleRadar();
+    document.getElementById('toggleAI').onclick = () => this.toggleAI();
+    document.getElementById('exportLog').onclick = RecordingModule.exportLog;
+    document.getElementById('wavRecord').onclick = () => this.toggleWavRecord();
+    document.getElementById('evpThresholdUp').onclick = () => this.adjustEVPThreshold(0.05);
+    document.getElementById('evpThresholdDown').onclick = () => this.adjustEVPThreshold(-0.05);
+
+    // Gestion du redimensionnement
+    window.addEventListener('resize', VisualizationModule.handleResize);
+  },
+
+  /**
+   * Définit la taille FFT
+   * @param {number} size - Taille FFT (1024, 2048, 4096)
+   */
+  setFFTSize: function(size) {
+    state.audio.fftSize = size;
+    if (state.audio.analyser) {
+      state.audio.analyser.fftSize = size;
+      state.audio.dataArray = new Uint8Array(state.audio.analyser.frequencyBinCount);
+    }
+    log(`Taille FFT définie à ${size}`);
+  },
+
+  /**
+   * Active/désactive l'enregistrement automatique
+   */
+  toggleAutoRec: function() {
+    state.recording.auto = !state.recording.auto;
+    document.getElementById('autoRec').style.backgroundColor =
+      state.recording.auto ? "#00aa00" : "var(--button-bg)";
+    log(`Enregistrement automatique ${state.recording.auto ? "ACTIF" : "INACTIF"}`);
+  },
+
+  /**
+   * Active/désactive le mode EVP
+   */
+  toggleEVPMode: function() {
+    state.ai.evpMode = !state.ai.evpMode;
+    document.getElementById('evpMode').style.backgroundColor =
+      state.ai.evpMode ? "var(--evp-color)" : "var(--button-bg)";
+    log(`Mode EVP ${state.ai.evpMode ? "ACTIF" : "INACTIF"}`);
+  },
+
+  /**
+   * Active/désactive la visualisation 3D
+   */
+  toggle3D: function() {
+    state.visualization.spectro3D = !state.visualization.spectro3D;
+    document.getElementById('toggle3D').style.backgroundColor =
+      state.visualization.spectro3D ? "var(--primary-color)" : "var(--button-bg)";
+    log(`Visualisation 3D ${state.visualization.spectro3D ? "ACTIVE" : "INACTIVE"}`);
+  },
+
+  /**
+   * Active/désactive le radar
+   */
+  toggleRadar: function() {
+    state.visualization.radar = !state.visualization.radar;
+    document.getElementById('toggleRadar').style.backgroundColor =
+      state.visualization.radar ? "var(--primary-color)" : "var(--button-bg)";
+    log(`Radar ${state.visualization.radar ? "ACTIF" : "INACTIF"}`);
+  },
+
+  /**
+   * Active/désactive l'analyse IA
+   */
+  toggleAI: function() {
+    state.ai.status = state.ai.status === 'ready' ? 'off' : 'ready';
+    document.getElementById('toggleAI').style.backgroundColor =
+      state.ai.status === 'ready' ? "var(--ai-color)" : "var(--button-bg)";
+    log(`Analyse IA ${state.ai.status === 'ready' ? "ACTIVE" : "INACTIVE"}`);
+  },
+
+  /**
+   * Active/désactive l'enregistrement WAV
+   */
+  toggleWavRecord: function() {
+    if (state.recording.wav) {
+      RecordingModule.stopWAVRecording();
+      document.getElementById('wavRecord').style.backgroundColor = "var(--button-bg)";
     } else {
-      startWAVRecording();
+      RecordingModule.startWAVRecording();
+      document.getElementById('wavRecord').style.backgroundColor = "var(--voice-color)";
     }
-  });
-}
+  },
 
-// ======================= WAV RECORDING =======================
-function startWAVRecording() {
-  if (isRecordingWAV) return;
-  isRecordingWAV = true;
-  recBuffers = [];
-  log("Enregistrement WAV démarré", "#ffaa00");
-}
-
-function stopWAVRecording() {
-  if (!isRecordingWAV) return;
-  isRecordingWAV = false;
-
-  const bufferLength = recBuffers.reduce((sum, b) => sum + b.length, 0);
-  const interleaved = new Float32Array(bufferLength);
-  let offset = 0;
-
-  for (const buffer of recBuffers) {
-    interleaved.set(buffer, offset);
-    offset += buffer.length;
+  /**
+   * Ajuste le seuil EVP
+   * @param {number} amount - Montant de l'ajustement
+   */
+  adjustEVPThreshold: function(amount) {
+    state.ai.evpThreshold = Math.min(1, Math.max(0, state.ai.evpThreshold + amount));
+    elements.evpThresholdValue.textContent = state.ai.evpThreshold.toFixed(2);
+    log(`Seuil EVP défini à ${state.ai.evpThreshold.toFixed(2)}`);
   }
+};
 
-  const wavBlob = encodeWAV(interleaved, audioCtx.sampleRate);
-  const url = URL.createObjectURL(wavBlob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `ETERNITY_EVENT_${Date.now()}.wav`;
-  a.click();
-  log("WAV sauvegardé automatiquement", "#ffaa00");
-}
+// ======================= MAIN APPLICATION =======================
+/**
+ * Charge les dépendances dans l'ordre requis
+ */
+function loadDependencies() {
+  updateLoadingProgress(10);
+  log("Initialisation de l'application...");
 
-function encodeWAV(samples, sampleRate) {
-  const buffer = new ArrayBuffer(44 + samples.length * 2);
-  const view = new DataView(buffer);
-
-  function writeString(offset, string) {
-    for (let i = 0; i < string.length; i++) {
-      view.setUint8(offset + i, string.charCodeAt(i));
-    }
-  }
-
-  let offset = 0;
-  writeString(offset, 'RIFF'); offset += 4;
-  view.setUint32(offset, 36 + samples.length * 2, true); offset += 4;
-  writeString(offset, 'WAVE'); offset += 4;
-  writeString(offset, 'fmt '); offset += 4;
-  view.setUint32(offset, 16, true); offset += 4;
-  view.setUint16(offset, 1, true); offset += 2;
-  view.setUint16(offset, 1, true); offset += 2;
-  view.setUint32(offset, sampleRate, true); offset += 4;
-  view.setUint32(offset, sampleRate * 2, true); offset += 4;
-  view.setUint16(offset, 2, true); offset += 2;
-  view.setUint16(offset, 16, true); offset += 2;
-  writeString(offset, 'data'); offset += 4;
-  view.setUint32(offset, samples.length * 2, true); offset += 4;
-
-  // PCM data
-  let pos = 44;
-  for (const s of samples) {
-    const sample = Math.max(-1, Math.min(1, s));
-    view.setInt16(pos, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
-    pos += 2;
-  }
-
-  return new Blob([view], { type: "audio/wav" });
-}
-
-function captureWAV() {
-  if (!isRecordingWAV || !analyser) return;
-
-  const floatData = new Float32Array(dataArray.length);
-  for (let i = 0; i < dataArray.length; i++) {
-    floatData[i] = (dataArray[i] - 128) / 128;
-  }
-  recBuffers.push(floatData);
-}
-
-function wavLoop() {
-  if (isRecordingWAV) {
-    captureWAV();
-  }
-  requestAnimationFrame(wavLoop);
-}
-
-// ======================= INITIALIZATION =======================
-function init() {
-  // Charger les scripts externes
+  // Charger Three.js
+  updateLoadingProgress(20);
   loadScript('https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js', () => {
-    loadScript('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.9.0/dist/tf.min.js', () => {
-      loadScript('https://cdn.jsdelivr.net/npm/@tensorflow-models/yamnet@0.1.0/dist/yamnet.min.js', () => {
-        initAudio();
-        init3D();
-        loadModel();
-        createUI();
-        aiLoop();
-        wavLoop();
+    updateLoadingProgress(40);
 
-        // Logs initiaux
-        log("Système ETERNITY v33 OMEGA ULTIMATE LAB initialisé");
+    // Charger TensorFlow.js
+    loadScript('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.9.0/dist/tf.min.js', () => {
+      updateLoadingProgress(60);
+
+      // Charger YAMNet
+      loadScript('https://cdn.jsdelivr.net/npm/@tensorflow-models/yamnet@0.1.0/dist/yamnet.min.js', () => {
+        updateLoadingProgress(80);
+
+        // Tout est chargé, démarrer l'application
+        initApplication();
       });
     });
   });
 }
 
+/**
+ * Charge un script externe
+ * @param {string} url - URL du script
+ * @param {function} callback - Fonction de rappel
+ */
 function loadScript(url, callback) {
   const script = document.createElement('script');
   script.src = url;
   script.onload = callback;
+  script.onerror = () => {
+    log(`Erreur de chargement: ${url}`, "--error-color");
+  };
   document.head.appendChild(script);
 }
 
+/**
+ * Initialise l'application
+ */
+async function initApplication() {
+  try {
+    // Initialiser les modules
+    await AudioModule.init();
+    VisualizationModule.init();
+    await AIModule.loadModel();
+    UIModule.init();
+
+    // Cacher l'écran de chargement
+    elements.loadingScreen.style.display = 'none';
+    updateLoadingProgress(100);
+
+    log("Application ETERNITY v33 OMEGA prête", "--primary-color");
+    state.initialized = true;
+
+    // Vérifier les fonctionnalités Web Audio
+    if (!state.audio.context) {
+      log("Web Audio API non supporté", "--error-color");
+    }
+  } catch (error) {
+    log(`Erreur d'initialisation: ${error.message}`, "--error-color");
+  }
+}
+
 // Démarrer l'application
-init();
+loadDependencies();
 </script>
 </body>
 </html>
