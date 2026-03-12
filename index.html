@@ -1,21 +1,25 @@
+<!DOCTYPE html>
+
 <html lang="fr">
 
 <head>
 
 <meta charset="UTF-8">
-<title>ETERNITY v26 QUANTUM</title>
-
 <meta name="viewport" content="width=device-width,initial-scale=1">
+
+<title>ETERNITY v29 NEURAL</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
 
 <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
 
 <style>
 
 body{
+margin:0;
 background:#000814;
 color:#00ffd0;
 font-family:Courier New;
-margin:0;
 overflow:hidden;
 }
 
@@ -23,19 +27,35 @@ overflow:hidden;
 position:absolute;
 top:10px;
 left:10px;
-background:rgba(0,0,0,.7);
+background:rgba(0,0,0,.75);
 border:1px solid #00ffd0;
 padding:10px;
 z-index:10;
 }
 
 button{
-padding:6px;
-margin:4px;
 background:#001f30;
 border:1px solid #00ffd0;
 color:#00ffd0;
+padding:6px;
+margin:3px;
 cursor:pointer;
+}
+
+#voiceBar{
+height:8px;
+background:#ffaa00;
+width:0%;
+}
+
+#radar{
+position:absolute;
+right:10px;
+top:10px;
+width:160px;
+height:160px;
+border-radius:50%;
+border:2px solid #00ffd0;
 }
 
 #waterfall{
@@ -46,12 +66,6 @@ width:100%;
 height:200px;
 }
 
-#voiceBar{
-height:8px;
-background:#ffaa00;
-width:0%;
-}
-
 </style>
 
 </head>
@@ -60,63 +74,71 @@ width:0%;
 
 <div id="panel">
 
-<h3>ETERNITY v26 QUANTUM</h3>
+<h3>ETERNITY v29 NEURAL</h3>
 
 MIC : <span id="mic">OFF</span><br>
-CLASS : <span id="class">---</span>
+AI CLASS : <span id="ai">---</span>
 
 <div style="margin-top:6px">
-VOIX
+VOICE
 <div id="voiceBar"></div>
 </div>
 
-<button id="evp">EVP FILTER</button> <button id="record">AUTO RECORD</button>
+<button id="evp">EVP MODE</button> <button id="rec">AUTO REC</button>
 
 </div>
 
-<canvas id="waterfall"></canvas>
+<canvas id="radar"></canvas> <canvas id="waterfall"></canvas>
 
 <script>
 
-let ctx
+let audioCtx
 let analyser
-let data
+let dataArray
 
 let scene
 let camera
 let renderer
 
-let waterfallCanvas=document.getElementById("waterfall")
-let wfCtx=waterfallCanvas.getContext("2d")
+let cubes=[]
+
+let radar=document.getElementById("radar")
+let radarCtx=radar.getContext("2d")
+
+let waterfall=document.getElementById("waterfall")
+let wfCtx=waterfall.getContext("2d")
 
 let evpMode=false
-let autoRecord=false
+let autoRec=false
 
-let cubes=[]
+let mediaRecorder
+let chunks=[]
 
 // AUDIO INIT
 
-async function init(){
+async function initAudio(){
 
-ctx=new AudioContext()
+audioCtx=new AudioContext()
 
 const stream=await navigator.mediaDevices.getUserMedia({audio:true})
 
-const source=ctx.createMediaStreamSource(stream)
+mediaRecorder=new MediaRecorder(stream)
 
-analyser=ctx.createAnalyser()
+mediaRecorder.ondataavailable=e=>chunks.push(e.data)
+
+mediaRecorder.onstop=saveRecording
+
+const source=audioCtx.createMediaStreamSource(stream)
+
+analyser=audioCtx.createAnalyser()
 
 analyser.fftSize=2048
 
-data=new Uint8Array(analyser.frequencyBinCount)
+dataArray=new Uint8Array(analyser.frequencyBinCount)
 
 source.connect(analyser)
 
 document.getElementById("mic").textContent="ACTIVE"
-
-init3D()
-
-loop()
 
 }
 
@@ -143,37 +165,39 @@ camera.position.z=150
 
 }
 
-// MAIN LOOP
+// LOOP
 
 function loop(){
 
 requestAnimationFrame(loop)
 
-analyser.getByteFrequencyData(data)
+analyser.getByteFrequencyData(dataArray)
 
-update3D()
+draw3D()
+
+drawRadar()
 
 drawWaterfall()
 
-classifyAudio()
+detectVoice()
 
 renderer.render(scene,camera)
 
 }
 
-// 3D SPECTROGRAM
+// 3D SPECTRUM
 
-function update3D(){
+function draw3D(){
 
-for(let i=0;i<data.length;i+=8){
+for(let i=0;i<dataArray.length;i+=8){
 
-let v=data[i]/255
+let v=dataArray[i]/255
 
 let geometry=new THREE.BoxGeometry(2,2,v*50)
 
 let color=evpMode?
-`hsl(${300-data[i]},100%,50%)`:
-`hsl(${200-data[i]},100%,50%)`
+`hsl(${300-dataArray[i]},100%,50%)`:
+`hsl(${200-dataArray[i]},100%,50%)`
 
 let material=new THREE.MeshBasicMaterial({
 color:new THREE.Color(color)
@@ -191,7 +215,7 @@ cubes.push(cube)
 
 }
 
-if(cubes.length>4000){
+if(cubes.length>6000){
 
 let old=cubes.shift()
 
@@ -201,109 +225,147 @@ scene.remove(old)
 
 }
 
+// RADAR
+
+function drawRadar(){
+
+radar.width=160
+radar.height=160
+
+radarCtx.clearRect(0,0,160,160)
+
+radarCtx.strokeStyle="#00ffd0"
+
+radarCtx.beginPath()
+radarCtx.arc(80,80,70,0,Math.PI*2)
+radarCtx.stroke()
+
+let energy=0
+
+for(let i=0;i<dataArray.length;i++)
+energy+=dataArray[i]
+
+let angle=Math.random()*Math.PI*2
+
+let r=energy/1200
+
+let x=80+Math.cos(angle)*r
+let y=80+Math.sin(angle)*r
+
+radarCtx.fillStyle="#00ff88"
+radarCtx.fillRect(x,y,3,3)
+
+}
+
 // WATERFALL
 
 function drawWaterfall(){
 
-const w=waterfallCanvas.width=window.innerWidth
-const h=waterfallCanvas.height=200
+const w=waterfall.width=window.innerWidth
+const h=waterfall.height=200
 
 let img=wfCtx.getImageData(0,0,w,h)
 
 wfCtx.putImageData(img,0,1)
 
-for(let i=0;i<data.length;i++){
+for(let i=0;i<dataArray.length;i++){
 
-let v=data[i]
+let v=dataArray[i]
 
 wfCtx.fillStyle=`hsl(${200-v},100%,50%)`
 
-wfCtx.fillRect(i*(w/data.length),0,2,1)
+wfCtx.fillRect(i*(w/dataArray.length),0,2,1)
 
 }
 
 }
 
-// AUDIO CLASSIFICATION
+// VOICE DETECTION
 
-function classifyAudio(){
+function detectVoice(){
 
 let voice=0
-let music=0
-let noise=0
 
-for(let i=0;i<data.length;i++){
+for(let i=0;i<dataArray.length;i++){
 
 let freq=i*(44100/2048)
 
-let v=data[i]
-
 if(freq>300 && freq<3400)
-voice+=v
-
-if(v>120)
-music++
-
-if(v<20)
-noise++
+voice+=dataArray[i]
 
 }
 
 voice/=100
 
-document.getElementById("voiceBar").style.width=Math.min(100,voice)+"%"
+document.getElementById("voiceBar").style.width=
+Math.min(100,voice)+"%"
 
 let result="Noise"
 
 if(voice>90)
 result="Voice"
 
-else if(music>80)
-result="Music"
+document.getElementById("ai").textContent=result
 
-document.getElementById("class").textContent=result
-
-detectAnomaly(result)
+if(result==="Voice" && autoRec)
+record()
 
 }
 
-// ANOMALY DETECTOR
+// RECORDING
 
-function detectAnomaly(type){
+function record(){
 
-if(type==="Voice" && autoRecord){
+if(mediaRecorder.state==="inactive"){
 
-recordEvent()
+chunks=[]
+
+mediaRecorder.start()
+
+setTimeout(()=>mediaRecorder.stop(),3000)
 
 }
 
 }
 
-// EVENT RECORDER
+function saveRecording(){
 
-function recordEvent(){
+let blob=new Blob(chunks,{type:"audio/webm"})
 
-console.log("EVENT RECORDED")
+let url=URL.createObjectURL(blob)
+
+let a=document.createElement("a")
+
+a.href=url
+a.download="eternity_event_audio.webm"
+
+a.click()
 
 }
 
 // BUTTONS
 
 document.getElementById("evp").onclick=()=>{
-
 evpMode=!evpMode
-
 }
 
-document.getElementById("record").onclick=()=>{
-
-autoRecord=!autoRecord
-
+document.getElementById("rec").onclick=()=>{
+autoRec=!autoRec
 }
 
 // START
 
-init()
+async function start(){
+
+await initAudio()
+
+init3D()
+
+loop()
+
+}
+
+start()
 
 </script>
 
