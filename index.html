@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>ETERNITY OUPS LAB - REALITY CORE</title>
+<title>ETERNITY LAB - AUTO-RESTART</title>
 <style>
 :root {
-  --primary: #00ff00; /* Vert "Réel" */
+  --primary: #00ff00;
   --secondary: #003300;
   --bg: #000000;
   --panel: #050a05;
@@ -25,15 +25,6 @@ body {
   overflow: hidden;
 }
 
-/* SCROLLING MATRIX BACKGROUND */
-#matrixBg {
-  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-  background: linear-gradient(0deg, transparent 24%, rgba(0, 255, 0, .3) 25%, rgba(0, 255, 0, .3) 26%, transparent 27%, transparent 74%, rgba(0, 255, 0, .3) 75%, rgba(0, 255, 0, .3) 76%, transparent 77%, transparent), linear-gradient(90deg, transparent 24%, rgba(0, 255, 0, .3) 25%, rgba(0, 255, 0, .3) 26%, transparent 27%, transparent 74%, rgba(0, 255, 0, .3) 75%, rgba(0, 255, 0, .3) 76%, transparent 77%, transparent);
-  background-size: 50px 50px;
-  z-index: -1; opacity: 0.1;
-}
-
-/* HEADER */
 #header {
   background: var(--panel);
   border-bottom: 1px solid var(--primary);
@@ -41,14 +32,16 @@ body {
   display: flex; justify-content: space-between;
   font-size: 0.8rem; color: var(--primary);
 }
-#micLock {
-  font-weight: bold; color: red;
+#aiState {
+  font-weight: bold;
+  color: orange;
 }
-#micLock.locked {
+#aiState.listening {
   color: #00ff00;
+  animation: pulse 1s infinite;
 }
+@keyframes pulse { 50% { opacity: 0.5; } }
 
-/* STAGE */
 #mainStage {
   flex: 1; position: relative;
   display: flex; flex-direction: column; justify-content: center; align-items: center;
@@ -56,19 +49,19 @@ body {
 #iaText {
   font-size: 2rem; font-weight: 900; color: #fff;
   text-shadow: 0 0 10px var(--primary);
-  background: rgba(0,0,0,0.8);
+  background: rgba(0,0,0,0.9);
   padding: 15px;
   border: 2px solid var(--primary);
   min-width: 80%;
   text-align: center;
   text-transform: uppercase;
+  min-height: 3.5rem;
 }
 
-/* CONTROLS */
 #controls {
   background: var(--panel);
   border-top: 2px solid var(--primary);
-  height: 45vh;
+  height: 40vh;
   overflow-y: auto; padding: 10px;
   display: flex; flex-direction: column; gap: 10px;
 }
@@ -81,23 +74,16 @@ button {
   background: var(--btn-bg); border: 1px solid var(--primary);
   color: var(--primary); padding: 10px; font-size: 0.7rem;
   font-weight: bold; cursor: pointer; font-family: inherit;
-  text-transform: uppercase;
 }
 button:active { background: var(--primary); color: #000; }
-button.active {
-  background: var(--btn-active); color: #000;
-  box-shadow: 0 0 10px var(--primary);
-}
-button:disabled {
-  opacity: 0.3; cursor: not-allowed;
-}
+button.active { background: var(--btn-active); color: #000; box-shadow: 0 0 10px var(--primary); }
+button:disabled { opacity: 0.3; cursor: not-allowed; }
 
 #startBtn {
   width: 100%; font-size: 1.2rem; padding: 15px;
   background: #000; color: var(--primary); border: 2px solid var(--primary);
 }
 
-/* BARS */
 #bars {
   display: flex; gap: 5px; margin-bottom: 10px;
 }
@@ -109,17 +95,14 @@ button:disabled {
   padding: 5px; font-size: 0.7rem; overflow-y: auto; color: #888;
 }
 .log-real { color: var(--primary) !important; font-weight: bold; }
-.log-noise { color: yellow !important; }
-
+.log-sys { color: orange !important; }
 </style>
 </head>
 <body>
 
-<div id="matrixBg"></div>
-
 <div id="header">
-  <div>REALITY CORE</div>
-  <div id="micLock">MIC: UNLOCKED</div>
+  <div>REALITY CORE V2</div>
+  <div id="aiState">IA: OFF</div>
   <div id="status">IDLE</div>
 </div>
 
@@ -129,27 +112,25 @@ button:disabled {
 
 <div id="controls">
   <div id="bars">
-    <div class="bar-container" title="Niveau Audio"><div id="volBar" class="bar-fill"></div></div>
-    <div class="bar-container" title="Confiance IA"><div id="confBar" class="bar-fill" style="background:yellow"></div></div>
+    <div class="bar-container"><div id="volBar" class="bar-fill"></div></div>
+    <div class="bar-container"><div id="confBar" class="bar-fill" style="background:yellow"></div></div>
   </div>
 
-  <button id="startBtn" onclick="startSystem()">VERROUILLER MICRO & DÉMARRER</button>
+  <button id="startBtn" onclick="startSystem()">DÉMARRER & FORCER IA</button>
 
   <div class="button-grid">
     <button id="monitorBtn" onclick="toggleOpt('monitor')">🎧 ÉCOUTE</button>
-    <button id="gainBtn" onclick="toggleOpt('highGain')">⚡ GAIN MAX</button>
-    <button id="filterBtn" onclick="toggleOpt('filter')">🔇 COUPER BASSES</button>
+    <button id="boostBtn" onclick="toggleOpt('boost')">📡 BOOST SIGNAL</button>
     <button id="recBtn" onclick="toggleOpt('autoRec')">⏺ AUTO REC</button>
-    
+    <button id="camBtn" onclick="toggleOpt('cam')">📷 CAM</button>
     <button id="vizSpec" onclick="setViz('spectrum')">SPECTRE</button>
     <button id="vizWave" onclick="setViz('wave')">ONDE</button>
-    <button id="camBtn" onclick="toggleOpt('cam')">📷 CAMÉRA</button>
     <button id="stopBtn" style="border-color:red; color:red" onclick="stopSystem()">⏹ STOP</button>
   </div>
   
-  <div style="font-size:0.7rem; color:#666; text-align:center;">
-    NOTE: L'IA ne traduit que les mots réels. <br>
-    Le bruit sans mots affichera [BRUIT].
+  <div style="font-size:0.7rem; color:#aaa; text-align:center; margin-top:5px;">
+    Si pas de mots : Le bruit n'est pas du français.<br>
+    L'IA affichera "[SIGNAL]" si elle entend du son.
   </div>
 </div>
 
@@ -163,21 +144,21 @@ button:disabled {
 let app = {
   running: false,
   ctx: null,
-  stream: null, // IMPORTANT: Garder une référence globale pour ne jamais redemander
+  stream: null,
   vidStream: null,
   source: null,
   analyser: null,
-  gainNode: null,
-  filterNode: null,
   monitorGain: null,
+  booster: null, // Noeud de gain pour booster l'entrée vers l'IA
   recorder: null,
   isRec: false,
   recognition: null,
   keepAliveOsc: null,
+  aiWatchdog: null, // TIMER POUR REDÉMARRER L'IA
+  lastAIActivityTime: 0,
   config: {
     monitor: false,
-    highGain: false,
-    filter: false,
+    boost: false,
     autoRec: false,
     cam: false,
     vizMode: 'spectrum'
@@ -189,9 +170,8 @@ let app = {
 
 const el = (id) => document.getElementById(id);
 const els = {
-  log: el('logZone'), ia: el('iaText'), status: el('status'),
-  volBar: el('volBar'), confBar: el('confBar'),
-  lock: el('micLock')
+  log: el('logZone'), ia: el('iaText'), status: el('status'), aiState: el('aiState'),
+  volBar: el('volBar'), confBar: el('confBar')
 };
 
 function log(msg, type='') {
@@ -201,87 +181,63 @@ function log(msg, type='') {
   els.log.appendChild(d); els.log.scrollTop = els.log.scrollHeight;
 }
 
-// --- START UNIQUE ---
+// --- START ---
 
 async function startSystem() {
   if(app.running) return;
   
-  // Empêcher le double clic
   el('startBtn').disabled = true;
-  el('startBtn').textContent = "VERROUILLAGE MICRO...";
+  el('startBtn').textContent = "INIT SYSTÈME...";
   
   try {
-    // 1. Contexte Audio
     app.ctx = new (window.AudioContext || window.webkitAudioContext)();
     if (app.ctx.state === 'suspended') await app.ctx.resume();
 
-    // 2. DEMANDE MICRO (UNE SEULE FOIS)
-    // Si app.stream existe déjà, on le réutilise (ne redemande pas)
     if (!app.stream) {
-      log("Demande d'accès Micro...", 'log-real');
+      log("Demande Micro...", 'log-sys');
       app.stream = await navigator.mediaDevices.getUserMedia({ 
           audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false }, 
           video: false 
       });
-      log("Micro VERROUILLÉ.", 'log-real');
     }
 
-    // 3. Chaîne Audio
     setupAudioGraph();
-
-    // 4. Wake Lock
-    try { app.wakeLock = await navigator.wakeLock.request('screen'); } catch(e) {}
-    
-    // 5. Keep-Alive (Essentiel pour empêcher la boucle d'autorisation)
+    try { app.wakeLock = await navigator.wakeLock.request('screen'); } catch(e){}
     startKeepAlive();
-
-    // 6. IA (RÉELLE UNIQUEMENT)
-    startRealAI();
-
-    // 7. Viz
+    startAIWithWatchdog(); // IMPORTANT : Démarrage avec Chien de garde
     initViz();
 
     app.running = true;
-    el('startBtn').textContent = "SYSTÈME ACTIF (VERROUILLÉ)";
+    el('startBtn').textContent = "SYSTÈME ACTIF (AUTO-RESTART)";
     el('startBtn').style.background = "var(--btn-active)";
     el('startBtn').style.color = "#000";
-    els.lock.textContent = "LOCKED & SECURE";
-    els.lock.classList.add('locked');
-    els.status.textContent = "SURVEILLANCE ACTIVE";
     
     drawLoop();
-    log("Système Reality Core démarré. Traduction RÉELLE uniquement.", 'log-real');
+    log("Système V2 démarré. Watchdog IA actif.", 'log-sys');
 
   } catch (err) {
     console.error(err);
-    log("ERREUR CRITIQUE: " + err.message, 'log-noise');
+    log("ERREUR: " + err.message, 'log-sys');
     el('startBtn').disabled = false;
-    el('startBtn').textContent = "ERREUR - RÉESSAYER";
-    el('startBtn').style.background = "red";
+    el('startBtn').textContent = "ERREUR";
   }
 }
 
 function stopSystem() {
-  // On NE ferme PAS le stream ici pour éviter de redemander au redémarrage ?
-  // Non, pour être propre on ferme tout.
   if(app.wakeLock) { app.wakeLock.release(); app.wakeLock = null; }
-  if(app.stream) {
-      app.stream.getTracks().forEach(t=>t.stop());
-      app.stream = null; // On libère vraiment
-  }
+  if(app.stream) { app.stream.getTracks().forEach(t=>t.stop()); app.stream = null; }
   if(app.vidStream) app.vidStream.getTracks().forEach(t=>t.stop());
-  if(app.recognition) app.recognition.stop();
+  if(app.recognition) stopAI(); // Arrêt propre
   if(app.ctx) app.ctx.close();
   
   app.running = false;
   
   el('startBtn').disabled = false;
-  el('startBtn').textContent = "VERROUILLER MICRO & DÉMARRER";
+  el('startBtn').textContent = "DÉMARRER & FORCER IA";
   el('startBtn').style.background = "#000";
   el('startBtn').style.color = "var(--primary)";
-  els.lock.textContent = "MIC: UNLOCKED";
-  els.lock.classList.remove('locked');
   els.ia.textContent = "ARRÊTÉ";
+  els.aiState.textContent = "IA: OFF";
   document.querySelectorAll('.active').forEach(b => b.classList.remove('active'));
 }
 
@@ -290,72 +246,80 @@ function stopSystem() {
 function setupAudioGraph() {
   app.source = app.ctx.createMediaStreamSource(app.stream);
   
-  // Filtre Passe-Haut (Enlève le ronronnement du téléphone)
-  app.filterNode = app.ctx.createBiquadFilter();
-  app.filterNode.type = 'highpass';
-  app.filterNode.frequency.value = 300;
+  // Booster (Augmente le volume pour aider l'IA à capter les chuchotements)
+  app.booster = app.ctx.createGain();
+  app.booster.gain.value = 1.0;
   
-  // Gain (Boost pour l'écoute, ne boost PAS l'IA car l'IA prend le stream brut)
-  app.gainNode = app.ctx.createGain();
-  app.gainNode.gain.value = 1.0;
-
-  // Monitor (Sortie casque)
+  // Monitor
   app.monitorGain = app.ctx.createGain();
   app.monitorGain.gain.value = 0;
 
-  // Analyser (Pour les graphiques)
+  // Analyser
   app.analyser = app.ctx.createAnalyser();
   app.analyser.fftSize = 2048;
   app.analyser.smoothingTimeConstant = 0.5;
   app.dataArray = new Uint8Array(app.analyser.frequencyBinCount);
 
-  // Connexions
-  // Source -> Filtre -> Gain -> Analyser
-  app.source.connect(app.filterNode);
-  app.filterNode.connect(app.gainNode);
-  app.gainNode.connect(app.analyser);
+  // Route: Source -> Booster -> Analyser
+  app.source.connect(app.booster);
+  app.booster.connect(app.analyser);
   
-  // Monitor Branch
-  app.gainNode.connect(app.monitorGain);
+  // Monitor branch
+  app.booster.connect(app.monitorGain);
   app.monitorGain.connect(app.ctx.destination);
 
-  // Recorder
   app.recorder = new MediaRecorder(app.stream);
   app.recorder.ondataavailable = e => saveBlob(e.data);
 }
 
-// --- KEEP ALIVE (FIX BOUCLE 3 SECONDES) ---
+// --- IA & WATCHDOG (NOUVEAU) ---
 
-function startKeepAlive() {
-  // Oscillateur silencieux connecté à destination
-  // Cela force le navigateur à considérer le contexte Audio comme "actif en permanence"
-  app.keepAliveOsc = app.ctx.createOscillator();
-  const keepGain = app.ctx.createGain();
-  keepGain.gain.value = 0.001; // Presque inaudible mais techniquement actif
+function startAIWithWatchdog() {
+  startRealAI();
   
-  app.keepAliveOsc.connect(keepGain);
-  keepGain.connect(app.ctx.destination);
-  app.keepAliveOsc.start();
-  
-  // Réveil automatique au changement d'onglet
-  document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible' && app.ctx && app.ctx.state === 'suspended') {
-          app.ctx.resume();
-      }
-  });
+  // LANCEMENT DU CHIEN DE GARDE (Toutes les 3 secondes)
+  app.aiWatchdog = setInterval(() => {
+    if(!app.running) {
+      clearInterval(app.aiWatchdog);
+      return;
+    }
+    
+    const now = Date.now();
+    // Si l'IA n'a rien fait depuis 4 secondes, on la relance
+    if (now - app.lastAIActivityTime > 4000) {
+      log("Watchdog: Redémarrage IA...", 'log-sys');
+      stopAI();
+      setTimeout(() => startRealAI(), 200); // Petit délai
+    }
+  }, 3000);
 }
 
-// --- IA RÉELLE (SANS DICTIONNAIRE) ---
+function stopAI() {
+  if(app.recognition) {
+    try { app.recognition.stop(); } catch(e){}
+    app.recognition = null;
+  }
+  els.aiState.textContent = "IA: OFF";
+  els.aiState.className = "";
+}
 
 function startRealAI() {
   const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (SpeechRec) {
       app.recognition = new SpeechRec();
       app.recognition.continuous = true;
-      app.recognition.interimResults = true; // Affiche les mots en cours de formation
-      app.recognition.lang = 'fr-FR';
+      app.recognition.interimResults = true;
+      app.recognition.lang = 'fr-FR'; // Force Français
       
+      app.recognition.onstart = () => {
+          els.aiState.textContent = "IA: LISTENING";
+          els.aiState.classList.add('listening');
+          app.lastAIActivityTime = Date.now(); // Heartbeat
+      };
+
       app.recognition.onresult = (e) => {
+          app.lastAIActivityTime = Date.now(); // Heartbeat
+          
           let txt = '';
           let isFinal = false;
           
@@ -365,92 +329,74 @@ function startRealAI() {
           }
           
           if (txt) {
-              // Affichage
+              // Si mot détecté
               els.ia.textContent = txt;
               els.ia.style.color = "#fff";
-              
               if (isFinal) {
-                  log(`MOT DÉTECTÉ: "${txt}"`, 'log-real');
+                  log(`MOT: "${txt}"`, 'log-real');
                   app.lastSpeechTime = Date.now();
-              } else {
-                  // Mot en cours (interim)
-                  els.ia.style.opacity = 0.7;
               }
-          } else {
-              // Si le mot est vide mais qu'on est dans un event result
-              // C'est que l'IA a entendu du bruit mais n'a pas reconnu de mot
-              // On peut afficher un indicateur de "bruit" si on voulait, 
-              // mais l'utilisateur a demandé "Pas de mots aléatoires".
-              // On laisse le texte précédent s'effacer naturellement ou on met "..."
-              // els.ia.textContent = "...";
           }
       };
       
       app.recognition.onerror = (e) => {
-          if(e.error !== 'no-speech') {
-              log(`Erreur IA: ${e.error}`, 'log-noise');
-          }
+          log(`Erreur IA: ${e.error}`, 'log-sys');
+          // L'erreur va déclencher le watchdog
       };
       
       app.recognition.onend = () => {
-          // REDÉMARRAGE AUTO SEULEMENT SI LE SYSTÈME EST ACTIF
-          // C'est crucial pour ne pas relancer si l'utilisateur a cliqué sur STOP
-          if (app.running && app.config.monitor) { // On utilise monitor comme proxy "actif" ou un flag direct
-              try { app.recognition.start(); } catch(e){}
-          }
+          // Si le système tourne encore, c'est un crash silencieux (ou fin naturelle)
+          // Le watchdog s'en chargera.
       };
 
       try {
           app.recognition.start();
-          log("IA Réelle active. Écoute en cours.", 'log-real');
       } catch(e) {
-          log("Erreur démarrage IA", 'log-noise');
+          log("Erreur start IA", 'log-sys');
       }
   } else {
-      log("IA non supportée par ce navigateur", 'log-noise');
+      log("IA non supportée", 'log-sys');
   }
 }
 
-// --- LOOP & LOGIC ---
+// --- LOGIC ---
 
 function drawLoop() {
   if(!app.running) return;
   requestAnimationFrame(drawLoop);
   
-  // Données Audio
   app.analyser.getByteFrequencyData(app.dataArray);
   
   let sum = 0;
   for(let i=0; i<app.dataArray.length; i++) sum += app.dataArray[i];
   const avg = sum / app.dataArray.length;
   
-  // VU Meter
   els.volBar.style.width = Math.min(100, avg) + '%';
   
-  // LOGIQUE "TOUS LES BRUITS"
-  // Si le volume est haut, mais qu'aucun mot n'a été dit depuis 2 secondes
-  // On affiche que le système capte du bruit
+  // LOGIQUE D'AFFICHAGE DES BRUITS (SANS MOTS)
   const now = Date.now();
+  // Si audio fort mais aucun mot depuis 2 secondes
   if (avg > 40 && (now - app.lastSpeechTime > 2000)) {
+      els.ia.textContent = "[SIGNAL AUDIO - NON TRADUIT]";
+      els.ia.style.color = "yellow";
       els.confBar.style.width = "100%";
-      els.confBar.style.background = "red";
-      els.status.textContent = "BRUIT DÉTECTÉ (ININTELLIGIBLE)";
-      els.status.style.color = "yellow";
+      els.status.textContent = "BRUIT SANS MOTS";
   } else {
       els.confBar.style.width = "0%";
-      els.status.textContent = "SURVEILLANCE ACTIVE";
-      els.status.style.color = "var(--primary)";
+      if(els.ia.textContent.includes("SIGNAL")) {
+           els.ia.textContent = "..."; // Effacer le message de bruit si silence revient
+      }
+      els.status.textContent = "SURVEILLANCE";
   }
 
-  // Auto Rec
   if(app.config.autoRec && avg > 60 && !app.isRec) {
-      app.isRec = true; app.recorder.start(); log("⚠ ENREGISTREMENT DÉCLENCHÉ", 'log-real');
-      setTimeout(() => { if(app.isRec) { app.recorder.stop(); app.isRec=false; }}, 4000);
+      app.isRec = true; app.recorder.start(); log("⚠ ENREGISTREMENT", 'log-real');
+      setTimeout(() => { if(app.isRec) { app.recorder.stop(); app.isRec=false; }}, 3000);
   }
 
   // Dessin
   const ctx = app.cCtx, w = app.width, h = app.height;
-  ctx.fillStyle = 'rgba(0, 10, 0, 0.2)'; // Trainée verte
+  ctx.fillStyle = 'rgba(0, 10, 0, 0.2)';
   ctx.fillRect(0,0,w,h);
   
   if(app.config.vizMode === 'spectrum') {
@@ -464,17 +410,13 @@ function drawLoop() {
           x += barW+1;
       }
   } else {
-      // Waveform
       const timeData = new Uint8Array(app.analyser.fftSize);
       app.analyser.getByteTimeDomainData(timeData);
       ctx.lineWidth = 2; ctx.strokeStyle = '#00ff00'; ctx.beginPath();
-      const sliceW = w / timeData.length;
-      let x = 0;
+      const sliceW = w / timeData.length; let x = 0;
       for(let i = 0; i < timeData.length; i++) {
-          const v = timeData[i] / 128.0;
-          const y = v * h/2;
-          if(i===0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-          x += sliceW;
+          const v = timeData[i] / 128.0; const y = v * h/2;
+          if(i===0) ctx.moveTo(x, y); else ctx.lineTo(x, y); x += sliceW;
       }
       ctx.stroke();
   }
@@ -491,18 +433,13 @@ function toggleOpt(key) {
   
   if(key === 'monitor') {
       app.monitorGain.gain.value = app.config.monitor ? 1.0 : 0;
-      log(app.config.monitor ? "Écute activée" : "Écute coupée");
+      log(app.config.monitor ? "Écoute ON" : "Écute OFF");
   }
   
-  if(key === 'highGain') {
-      // Gain Software (n'affecte que l'écoute, pas l'IA qui prend le signal brut hardware)
-      app.gainNode.gain.value = app.config.highGain ? 5.0 : 1.0;
-      log(app.config.highGain ? "Gain MAX (Écoute)" : "Gain Normal");
-  }
-  
-  if(key === 'filter') {
-      app.filterNode.frequency.value = app.config.filter ? 1000 : 300;
-      log(app.config.filter ? "Filtre Vocal (1000Hz)" : "Filtre Large (300Hz)");
+  if(key === 'boost') {
+      // Boost le gain d'entrée pour aider l'IA
+      app.booster.gain.value = app.config.boost ? 3.0 : 1.0;
+      log(app.config.boost ? "Boost Signal ON" : "Boost Signal OFF");
   }
   
   if(key === 'cam') toggleCam();
@@ -516,7 +453,7 @@ async function toggleCam() {
           vid.srcObject = app.vidStream; vid.autoplay = true; vid.muted = true; vid.playsInline = true;
           vid.style.cssText = "position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; opacity:0.2; z-index:-1;";
           document.body.appendChild(vid);
-      } catch(e) { log("Erreur Cam", 'log-noise'); app.config.cam=false; el('camBtn').classList.remove('active'); }
+      } catch(e) { log("Erreur Cam", 'log-sys'); app.config.cam=false; el('camBtn').classList.remove('active'); }
   } else {
       if(app.vidStream) app.vidStream.getTracks().forEach(t=>t.stop());
       app.vidStream = null; document.querySelector('video')?.remove();
@@ -549,13 +486,25 @@ function resize() {
 
 function saveBlob(data) {
   const url = URL.createObjectURL(new Blob([data], {type:'audio/webm'}));
-  const a = document.createElement('a'); a.href=url; a.download=`REALITY_${Date.now()}.webm`; a.click();
+  const a = document.createElement('a'); a.href=url; a.download=`REALITY_V2_${Date.now()}.webm`; a.click();
   log("Fichier sauvé", 'log-real');
 }
 
-// INIT
+// KEEP ALIVE
+function startKeepAlive() {
+  app.keepAliveOsc = app.ctx.createOscillator();
+  const keepGain = app.ctx.createGain();
+  keepGain.gain.value = 0.001;
+  app.keepAliveOsc.connect(keepGain);
+  keepGain.connect(app.ctx.destination);
+  app.keepAliveOsc.start();
+  document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && app.ctx && app.ctx.state === 'suspended') app.ctx.resume();
+  });
+}
+
 window.onload = () => {
-    log("REALITY CORE PRÊT. Pas de mots aléatoires.", 'log-real');
+    log("REALITY CORE V2 PRÊT. Watchdog actif.", 'log-sys');
 };
 </script>
 </body>
