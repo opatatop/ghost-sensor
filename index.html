@@ -3,18 +3,17 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>ETERNITY MOBILE LAB PRO</title>
+<title>ETERNITY LAB ULTRA</title>
 <style>
 :root {
   --primary: #00ffd0;
+  --secondary: #0088aa;
   --bg: #000814;
-  --panel: rgba(0, 10, 20, 0.95);
-  --button: #001f30;
-  --voice: #ffaa00;
-  --evp: #aa00ff;
-  --error: #ff0000;
-  --success: #55ff55;
-  --glass: rgba(0, 255, 208, 0.1);
+  --panel: rgba(0, 15, 25, 0.95);
+  --btn-bg: #001f30;
+  --btn-active: #00ffd0;
+  --btn-active-text: #000;
+  --text: #e0e0e0;
 }
 
 body {
@@ -22,606 +21,577 @@ body {
   padding: 0;
   font-family: 'Courier New', monospace;
   background: var(--bg);
-  color: var(--primary);
+  color: var(--text);
   height: 100vh;
-  overflow: hidden;
   display: flex;
   flex-direction: column;
-  touch-action: manipulation;
+  overflow: hidden; /* Empêche le scroll global, on scroll les zones internes */
 }
 
-/* HEADER */
+/* HEADER COMPACT */
 #header {
-  padding: 10px;
-  text-align: center;
-  background: var(--panel);
-  border-bottom: 2px solid var(--primary);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-#header h3 { margin: 0; font-size: 1.2rem; }
-
-/* CONTROLS AREA */
-#controls {
-  padding: 10px;
+  padding: 8px;
   background: var(--panel);
   border-bottom: 1px solid var(--primary);
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  max-height: 40vh;
-  overflow-y: auto;
-}
-
-/* SETTINGS PANEL (Collapsible) */
-#settingsPanel {
-  grid-column: span 2;
-  background: rgba(0,0,0,0.5);
-  border: 1px solid var(--primary);
-  padding: 10px;
-  display: none; /* Caché par défaut */
-}
-#settingsPanel.open { display: block; }
-
-.setting-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 8px;
   font-size: 0.8rem;
+  flex-shrink: 0;
 }
+#header span { margin: 0 5px; }
 
-input[type="range"] {
-  width: 50%;
-  accent-color: var(--primary);
-}
-
-/* VISUALIZATION */
-#visualization {
+/* ZONE VISUALISATION (Prend l'espace restant) */
+#vizContainer {
   flex: 1;
   position: relative;
-  overflow: hidden;
   background: #000;
+  overflow: hidden;
 }
-
-/* Video Background for Camera Mode */
 #cameraFeed {
-  position: absolute;
-  top: 0; left: 0; width: 100%; height: 100%;
-  object-fit: cover;
-  opacity: 0.3;
-  display: none;
-  z-index: 0;
+  position: absolute; width: 100%; height: 100%; object-fit: cover; opacity: 0.4; display: none;
 }
 
-/* LOGS */
-#logZone {
-  height: 120px;
-  overflow-y: auto;
-  padding: 8px;
-  background: rgba(0, 0, 0, 0.8);
-  border-top: 1px solid var(--primary);
-  font-size: 0.75rem;
-  z-index: 10;
-}
-
-/* BUTTONS */
-button {
-  background: var(--button);
-  border: 1px solid var(--primary);
-  color: var(--primary);
+/* ZONE CONTROLES (Déroulable) */
+#controlsArea {
+  background: var(--panel);
+  border-top: 2px solid var(--primary);
+  max-height: 45vh; /* Limite la hauteur pour laisser voir la suite */
+  overflow-y: auto; /* Scroll actif ici */
   padding: 10px;
-  margin: 0;
-  border-radius: 4px;
-  font-weight: bold;
-  font-size: 0.8rem;
-  cursor: pointer;
-  text-transform: uppercase;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
-button:active { background: var(--primary); color: #000; }
-button:disabled { background: #222; color: #555; border-color: #444; }
-button.active-mode { background: var(--primary); color: #000; box-shadow: 0 0 10px var(--primary); }
+/* GRILLE BOUTONS (3 colonnes pour Note 60) */
+.button-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
 
-/* STATUS BARS */
-.status-grid {
+button {
+  background: var(--btn-bg);
+  border: 1px solid var(--secondary);
+  color: var(--primary);
+  padding: 8px 2px;
+  font-size: 0.7rem;
+  font-weight: bold;
+  cursor: pointer;
+  border-radius: 4px;
+  text-align: center;
+}
+
+button:disabled { opacity: 0.3; }
+button.active {
+  background: var(--btn-active);
+  color: var(--btn-active-text);
+  box-shadow: 0 0 8px var(--primary);
+}
+button.danger {
+  border-color: red; color: red;
+}
+button.danger.active {
+  background: red; color: white;
+}
+
+/* PARAMÈTRES SLIDERS */
+.sliders {
+  background: rgba(0,0,0,0.5);
+  padding: 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+}
+.slider-row {
+  display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;
+}
+input[type="range"] { width: 50%; accent-color: var(--primary); }
+
+/* BARS DE NIVEAU */
+#barsArea {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 5px;
-  margin-bottom: 10px;
-  font-size: 0.8rem;
+  margin-bottom: 5px;
+  font-size: 0.7rem;
 }
-.bar-container {
-  background: #222;
-  height: 10px;
-  width: 100%;
-  margin-top: 2px;
-  border: 1px solid #444;
-}
+.bar-box { background: #111; height: 8px; width: 100%; border: 1px solid #333; margin-top:2px; position: relative;}
 .bar-fill { height: 100%; width: 0%; transition: width 0.1s; }
-#voiceBar { background: var(--voice); }
-#thresholdBar { background: var(--evp); }
 
-/* LOAD SCREEN */
-.loading {
-  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-  background: var(--bg);
-  display: flex; justify-content: center; align-items: center; flex-direction: column;
-  z-index: 1000;
+/* LOGS */
+#logZone {
+  height: 100px;
+  background: #000;
+  border-top: 1px solid var(--primary);
+  padding: 5px;
+  font-size: 0.65rem;
+  overflow-y: auto;
+  color: #aaa;
+  font-family: monospace;
 }
+.log-warn { color: yellow !important; }
+.log-err { color: red !important; }
+.log-suc { color: #0f0 !important; }
 
-/* Canvas elements */
-#waterfallCanvas { position: absolute; bottom: 0; left: 0; width: 100%; height: 80px; z-index: 1; }
-#radarCanvas { position: absolute; top: 10px; right: 10px; width: 100px; height: 100px; z-index: 2; opacity: 0.8; }
+/* CANVAS */
+canvas { position: absolute; }
+#waterfallCanvas { bottom: 0; left: 0; height: 60px; width: 100%; opacity: 0.8; z-index: 2; }
+#radarCanvas { top: 10px; right: 10px; width: 80px; height: 80px; z-index: 3; }
+
+/* LOADING */
+#loading {
+  position: fixed; inset: 0; background: #000; z-index: 999;
+  display: flex; flex-direction: column; justify-content: center; align-items: center;
+}
 </style>
 </head>
 <body>
 
-<div class="loading" id="loadingScreen">
-  <h2>ETERNITY LAB PRO</h2>
-  <div class="progress">Chargement des systèmes...</div>
+<div id="loading">
+  <h2 style="color:var(--primary)">ETERNITY LAB ULTRA</h2>
+  <div id="loadMsg">Initialisation...</div>
 </div>
 
+<!-- HEADER -->
 <div id="header">
-  <h3>ETERNITY LAB</h3>
-  <div style="font-size:0.8rem">
-    <span>MIC: <span id="micStatus" style="color:var(--error)">OFF</span></span> | 
-    <span>IA: <span id="aiStatus">OFF</span></span>
-  </div>
+  <div>MIC: <span id="micStatus" style="color:red">OFF</span></div>
+  <div>IA: <span id="aiStatus" style="color:orange">CHECK</span></div>
+  <div>BAT: <span id="wakeStatus">OFF</span></div>
 </div>
 
-<div id="controls">
-  <!-- BOUTON START / STOP -->
-  <button id="startBtn" style="grid-column: span 2; font-size: 1.2rem; background: var(--success); color: #000; border: none;">START SYSTEM</button>
-
-  <!-- MODES -->
-  <button id="fftBtn" disabled>FFT 1024</button>
-  <button id="evpBtn" disabled>EVP MODE</button>
-  <button id="radarBtn" disabled>RADAR</button>
-  <button id="recBtn" disabled>AUTO REC</button>
-  <button id="camBtn" disabled>CAMERA</button>
-  <button id="flashBtn" disabled>LAMPE</button>
-  <button id="settingsBtn" style="grid-column: span 2; background: #333;">⚙️ PARAMÈTRES</button>
-  <button id="wavBtn" disabled>SAVE WAV</button>
-
-  <!-- PANNEAU PARAMÈTRES CACHÉ -->
-  <div id="settingsPanel">
-    <div class="setting-row">
-      <span>GAIN (Volume Mic)</span>
-      <input type="range" id="gainSlider" min="0" max="5" step="0.1" value="1">
-    </div>
-    <div class="setting-row">
-      <span>SEUIL EVP (Trigger)</span>
-      <input type="range" id="thresholdSlider" min="0" max="100" step="1" value="30">
-    </div>
-    <div class="setting-row">
-      <span>VITESSE RADAR</span>
-      <input type="range" id="radarSpeedSlider" min="1" max="10" step="1" value="5">
-    </div>
-  </div>
-</div>
-
-<div id="visualization">
+<!-- VISUALISATION -->
+<div id="vizContainer">
   <video id="cameraFeed" autoplay playsinline muted></video>
   <canvas id="radarCanvas"></canvas>
   <canvas id="waterfallCanvas"></canvas>
 </div>
 
-<div class="status-grid">
-  <div>
-    <div>VOICE INPUT</div>
-    <div class="bar-container"><div id="voiceBar" class="bar-fill"></div></div>
+<!-- CONTROLES (Scrollable) -->
+<div id="controlsArea">
+  
+  <!-- Barres de niveau -->
+  <div id="barsArea">
+    <div>
+      <div>INPUT</div>
+      <div class="bar-box"><div id="voiceBar" class="bar-fill" style="background:var(--voice)"></div></div>
+    </div>
+    <div>
+      <div>TRIGGER</div>
+      <div class="bar-box"><div id="threshBar" class="bar-fill" style="background:var(--primary); width:30%"></div></div>
+    </div>
   </div>
-  <div>
-    <div>TRIGGER LEVEL</div>
-    <div class="bar-container"><div id="thresholdBar" class="bar-fill" style="width: 30%"></div></div>
+
+  <!-- BOUTON PRINCIPAL -->
+  <button id="startBtn" style="font-size:1rem; padding:15px; background:var(--success); color:black; border:none;">START SYSTEM</button>
+
+  <!-- GRILLE DE COMMANDES -->
+  <div class="button-grid">
+    <!-- AUDIO -->
+    <button id="monitorBtn" disabled>🎧 MONITOR</button>
+    <button id="filterBtn" disabled>🔇 FILTRE HP</button>
+    <button id="recBtn" disabled>⏺ AUTO REC</button>
+    
+    <!-- VISUALS -->
+    <button id="fftBtn" disabled>FFT 1024</button>
+    <button id="evpBtn" disabled>🔮 EVP MODE</button>
+    <button id="radarBtn" disabled>📡 RADAR</button>
+    
+    <!-- TOOLS -->
+    <button id="camBtn" disabled>📷 CAM</button>
+    <button id="flashBtn" disabled>🔦 TORCHE</button>
+    <button id="wakeBtn">📱 SCREEN ON</button>
+    <button id="themeBtn">🎨 THEME</button>
+    <button id="clearBtn">🗑 CLEAR LOG</button>
+  </div>
+
+  <!-- SLIDERS -->
+  <div class="sliders">
+    <div class="slider-row">
+      <span>Gain Mic</span>
+      <input type="range" id="gainRange" min="0" max="3" step="0.1" value="1">
+    </div>
+    <div class="slider-row">
+      <span>Seuil (Trigger)</span>
+      <input type="range" id="threshRange" min="0" max="100" value="30">
+    </div>
+    <div class="slider-row">
+      <span>Vitesse Radar</span>
+      <input type="range" id="radarRange" min="1" max="20" value="5">
+    </div>
   </div>
 </div>
 
+<!-- LOGS -->
 <div id="logZone"></div>
 
-<!-- BIBLIOTHEQUES -->
+<!-- LIBS -->
 <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.11.0/dist/tf.min.js"></script>
 
 <script>
-// --- CONFIGURATION & STATE ---
+// --- CONFIGURATION ---
 const config = {
   fftSize: 1024,
-  autoRec: false,
-  evpMode: false,
-  radar: false,
-  camera: false,
-  gain: 1.0,
+  gain: 1,
   threshold: 30,
-  radarSpeed: 0.05
+  monitor: false,
+  filter: false,
+  filterFreq: 300, // Coupe les basses < 300Hz
+  radarSpeed: 0.05,
+  evp: false,
+  radar: false,
+  autoRec: false,
+  theme: 0
 };
 
+const themes = [
+  { p: '#00ffd0', s: '#0088aa', v: '#ffaa00' }, // Cyan
+  { p: '#00ff00', s: '#008800', v: '#ffff00' }, // Matrix
+  { p: '#ff0055', s: '#880022', v: '#00ffff' }, // Red Alert
+  { p: '#ffffff', s: '#888888', v: '#ff0000' }  // B&W
+];
+
+// --- STATE ---
 const state = {
-  audioContext: null,
-  analyser: null,
-  gainNode: null,
-  dataArray: null,
-  stream: null,
-  videoStream: null,
-  recorder: null,
-  isRecording: false,
-  initialized: false,
-  librariesLoaded: { three: false, tfjs: false },
-  radarAngle: 0
+  ctx: null, analyser: null, gainNode: null, filterNode: null, source: null,
+  micStream: null, vidStream: null, recorder: null, isRec: false,
+  running: false, radarAngle: 0,
+  dataArray: null, bufferLength: 0,
+  wakeLock: null
 };
 
-const elements = {
-  loadingScreen: document.getElementById('loadingScreen'),
-  micStatus: document.getElementById('micStatus'),
-  aiStatus: document.getElementById('aiStatus'),
-  voiceBar: document.getElementById('voiceBar'),
-  thresholdBar: document.getElementById('thresholdBar'),
-  logZone: document.getElementById('logZone'),
-  visualization: document.getElementById('visualization'),
-  cameraFeed: document.getElementById('cameraFeed'),
-  // Buttons
-  startBtn: document.getElementById('startBtn'),
-  fftBtn: document.getElementById('fftBtn'),
-  recBtn: document.getElementById('recBtn'),
-  evpBtn: document.getElementById('evpBtn'),
-  radarBtn: document.getElementById('radarBtn'),
-  camBtn: document.getElementById('camBtn'),
-  flashBtn: document.getElementById('flashBtn'),
-  wavBtn: document.getElementById('wavBtn'),
-  settingsBtn: document.getElementById('settingsBtn'),
-  settingsPanel: document.getElementById('settingsPanel'),
-  // Sliders
-  gainSlider: document.getElementById('gainSlider'),
-  thresholdSlider: document.getElementById('thresholdSlider'),
-  radarSpeedSlider: document.getElementById('radarSpeedSlider')
+// --- DOM ELEMENTS ---
+const el = (id) => document.getElementById(id);
+const els = {
+  load: el('loading'), loadMsg: el('loadMsg'),
+  log: el('logZone'), mic: el('micStatus'), ai: el('aiStatus'), wake: el('wakeStatus'),
+  start: el('startBtn'), monitor: el('monitorBtn'), filter: el('filterBtn'),
+  rec: el('recBtn'), fft: el('fftBtn'), evp: el('evpBtn'), radar: el('radarBtn'),
+  cam: el('camBtn'), flash: el('flashBtn'), wake: el('wakeBtn'), theme: el('themeBtn'), clear: el('clearBtn'),
+  voice: el('voiceBar'), thresh: el('threshBar'),
+  viz: el('vizContainer'), video: el('cameraFeed'),
+  sGain: el('gainRange'), sThresh: el('threshRange'), sRadar: el('radarRange')
 };
 
-// --- LOGS ---
-function log(msg, type = 'info') {
-  const div = document.createElement("div");
+// --- LOG SYSTEM ---
+function log(msg, type='info') {
+  const div = document.createElement('div');
   div.textContent = `> ${msg}`;
-  if (type === 'error') div.style.color = "var(--error)";
-  if (type === 'success') div.style.color = "var(--success)";
-  if (type === 'warn') div.style.color = "var(--voice)";
-  elements.logZone.appendChild(div);
-  elements.logZone.scrollTop = elements.logZone.scrollHeight;
+  if(type==='err') div.className='log-err';
+  if(type==='warn') div.className='log-warn';
+  if(type==='suc') div.className='log-suc';
+  els.log.appendChild(div);
+  els.log.scrollTop = els.log.scrollHeight;
 }
 
-// --- AUDIO SYSTEM ---
-async function startApplication() {
-  elements.loadingScreen.style.display = 'flex';
+// --- INIT SYSTEM ---
+window.onload = async () => {
+  // Check IA
+  if (typeof tf !== 'undefined') {
+    els.ai.textContent = "READY (LOCAL)";
+    els.ai.style.color = "var(--success)";
+    // Wake up TF backend
+    tf.tidy(() => { const t = tf.tensor1d([1,2]); t.mul(2); });
+    log("TensorFlow.js initialisé (Mode Local)", "suc");
+  } else {
+    els.ai.textContent = "MISSING";
+    els.ai.style.color = "red";
+    log("TensorFlow.js introuvable", "err");
+  }
+  
+  els.load.style.display = 'none';
+  log("Système prêt. START pour commencer.");
+};
+
+// --- AUDIO ENGINE ---
+async function startSystem() {
+  els.load.style.display = 'flex';
+  els.loadMsg.textContent = "Accès Micro...";
+  
   try {
-    // 1. AUDIO
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-    state.stream = stream;
-    state.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    state.micStream = stream;
     
-    const source = state.audioContext.createMediaStreamSource(stream);
+    state.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    state.analyser = state.ctx.createAnalyser();
+    state.analyser.fftSize = config.fftSize;
+    state.bufferLength = state.analyser.frequencyBinCount;
+    state.dataArray = new Uint8Array(state.bufferLength);
     
-    // GAIN NODE (Volume Control)
-    state.gainNode = state.audioContext.createGain();
+    state.gainNode = state.ctx.createGain();
     state.gainNode.gain.value = config.gain;
     
-    // ANALYSER
-    state.analyser = state.audioContext.createAnalyser();
-    state.analyser.fftSize = config.fftSize;
-    state.dataArray = new Uint8Array(state.analyser.frequencyBinCount);
-    
-    // Connect: Source -> Gain -> Analyser
-    source.connect(state.gainNode);
+    state.filterNode = state.ctx.createBiquadFilter();
+    state.filterNode.type = 'highpass';
+    state.filterNode.frequency.value = config.filterFreq;
+    state.filterNode.Q.value = 1;
+
+    // Graph: Source -> Filter -> Gain -> Analyser -> (Destination)
+    state.source = state.ctx.createMediaStreamSource(stream);
+    state.source.connect(state.filterNode);
+    state.filterNode.connect(state.gainNode);
     state.gainNode.connect(state.analyser);
-    // Note: On ne connecte PAS à destination pour éviter le feedback (larsen)
+    
+    // Monitor init
+    if(config.monitor) state.analyser.connect(state.ctx.destination);
 
-    // RECORDER
+    // Recorder
     state.recorder = new MediaRecorder(stream);
-    state.recorder.ondataavailable = (e) => {
-        if (e.data.size > 0) {
-            const blob = new Blob([e.data], { type: "audio/webm" });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = `EVP_Capture_${Date.now()}.webm`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            log("Fichier EVP sauvé", "success");
-        }
+    state.recorder.ondataavailable = e => {
+      if(e.data.size > 0) saveBlob(e.data);
     };
+    state.recorder.onstop = () => { state.isRec = false; els.rec.classList.remove('active'); };
 
-    // UI UPDATE
-    elements.micStatus.textContent = "ON";
-    elements.micStatus.style.color = "var(--success)";
-    elements.startBtn.textContent = "STOP SYSTEM";
-    elements.startBtn.style.background = "var(--error)";
+    // UI Update
+    state.running = true;
+    els.mic.textContent = "ON"; els.mic.style.color = "#0f0";
+    els.start.textContent = "STOP SYSTEM";
+    els.start.style.background = "red";
+    enableButtons(true);
     
-    enableControls(true);
     initVisuals();
-    
-    state.initialized = true;
-    updateLoop();
-    log("Système actif. Micro OK.", "success");
+    loop();
+    log("Système Actif. Micro connecté.", "suc");
 
-  } catch (error) {
-    log(`Erreur Start: ${error.message}`, "error");
+  } catch (e) {
+    log("Erreur Micro: " + e.message, "err");
   } finally {
-    elements.loadingScreen.style.display = 'none';
+    els.load.style.display = 'none';
   }
 }
 
-function stopApplication() {
-  if (state.stream) state.stream.getTracks().forEach(t => t.stop());
-  if (state.videoStream) stopCamera();
-  if (state.audioContext) state.audioContext.close();
+function stopSystem() {
+  if(state.micStream) state.micStream.getTracks().forEach(t=>t.stop());
+  if(state.vidStream) stopCam();
+  if(state.ctx) state.ctx.close();
   
-  elements.visualization.innerHTML = ''; // Clear canvases
-  elements.visualization.appendChild(elements.cameraFeed); // Put video back
+  state.running = false;
+  els.mic.textContent = "OFF"; els.mic.style.color = "red";
+  els.start.textContent = "START SYSTEM";
+  els.start.style.background = "var(--success)";
+  enableButtons(false);
   
-  state.initialized = false;
-  enableControls(false);
-  
-  elements.micStatus.textContent = "OFF";
-  elements.micStatus.style.color = "var(--error)";
-  elements.startBtn.textContent = "START SYSTEM";
-  elements.startBtn.style.background = "var(--success)";
+  // Clear canvas
+  els.viz.innerHTML = ''; 
+  els.viz.appendChild(els.video); // Remettre video
   log("Système arrêté.");
 }
 
-// --- CAMERA & TOOLS ---
-async function toggleCamera() {
-  if (!state.camera) {
-    try {
-      log("Activation caméra...");
-      const vStream = await navigator.mediaDevices.getUserMedia({ 
-          video: { facingMode: 'environment' }, 
-          audio: false 
-      });
-      state.videoStream = vStream;
-      elements.cameraFeed.srcObject = vStream;
-      elements.cameraFeed.style.display = 'block';
-      state.camera = true;
-      elements.camBtn.classList.add('active-mode');
-    } catch(e) { log("Caméra refusée/erreur", "error"); }
+// --- FEATURE: MONITOR (ÉCOUTE) ---
+function toggleMonitor() {
+  config.monitor = !config.monitor;
+  if(config.monitor) {
+    state.analyser.connect(state.ctx.destination);
+    els.monitor.classList.add('active');
+    els.monitor.classList.add('danger');
+    log("MONITOR ON - Attention au feedback (Larsen) !", "warn");
   } else {
-    stopCamera();
+    state.analyser.disconnect(state.ctx.destination);
+    els.monitor.classList.remove('active');
+    els.monitor.classList.remove('danger');
+    log("MONITOR OFF");
   }
 }
 
-function stopCamera() {
-  if (state.videoStream) {
-    state.videoStream.getTracks().forEach(t => t.stop());
-    state.videoStream = null;
+// --- FEATURE: FILTER (Anti-Bruit) ---
+function toggleFilter() {
+  config.filter = !config.filter;
+  if(config.filter) {
+    state.filterNode.frequency.value = config.filterFreq; // 300Hz cutoff
+    els.filter.classList.add('active');
+    log(`Filtre Passe-Haut ON (> ${config.filterFreq}Hz)`);
+  } else {
+    state.filterNode.frequency.value = 0; // Flat
+    els.filter.classList.remove('active');
+    log("Filtre OFF");
   }
-  elements.cameraFeed.style.display = 'none';
-  state.camera = false;
-  elements.camBtn.classList.remove('active-mode');
 }
 
-async function toggleFlashlight() {
-  if (!state.videoStream) {
-    log("Activez la caméra d'abord", "warn");
-    return;
+// --- FEATURE: WAKE LOCK (Screen On) ---
+async function toggleWake() {
+  if (!state.wakeLock) {
+    try {
+      state.wakeLock = await navigator.wakeLock.request('screen');
+      els.wake.classList.add('active');
+      els.wake.textContent = "📱 LOCKED";
+      els.wakeStatus.textContent = "ON";
+      log("Écran verrouillé allumé.", "suc");
+    } catch (err) { log("Wake Lock error: " + err, "err"); }
+  } else {
+    state.wakeLock.release();
+    state.wakeLock = null;
+    els.wake.classList.remove('active');
+    els.wake.textContent = "📱 SCREEN ON";
+    els.wakeStatus.textContent = "OFF";
+    log("Wake Lock libéré.");
   }
-  try {
-    const track = state.videoStream.getVideoTracks()[0];
-    const capabilities = track.getCapabilities();
-    if (!capabilities.torch) {
-      log("Lampe non supportée par cet appareil", "error");
-      return;
-    }
-    await track.applyConstraints({
-      advanced: [{ torch: !elements.flashBtn.classList.contains('active-mode') }]
-    });
-    elements.flashBtn.classList.toggle('active-mode');
-  } catch(e) { log("Erreur lampe", "error"); }
 }
 
-// --- VISUALIZATION ENGINE ---
+// --- RECORDING ---
+function checkAutoRec(avg) {
+  if(config.autoRec && avg > config.threshold && !state.isRec) {
+    startRec();
+  }
+}
+
+function startRec() {
+  state.isRec = true;
+  state.recorder.start();
+  els.rec.classList.add('active');
+  log("🔴 ENREGISTREMENT DÉCLENCHÉ (Anomalie)", "warn");
+  setTimeout(() => {
+    if(state.isRec) state.recorder.stop();
+  }, 5000);
+}
+
+function saveBlob(blobData) {
+  const blob = new Blob([blobData], { type: 'audio/webm' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `EVP_${Date.now()}.webm`;
+  a.click(); log("Enregistrement sauvegardé.", "suc");
+}
+
+// --- VISUALIZATION LOOP ---
 function initVisuals() {
   // Waterfall
-  const canvas = document.createElement('canvas');
-  canvas.id = 'waterfallCanvas';
-  canvas.width = elements.visualization.clientWidth;
-  canvas.height = 80;
-  elements.visualization.appendChild(canvas);
-  state.wfCtx = canvas.getContext('2d');
-
+  const c1 = document.createElement('canvas');
+  c1.id='waterfallCanvas'; c1.width=els.viz.clientWidth; c1.height=60;
+  els.viz.appendChild(c1);
+  state.wfCtx = c1.getContext('2d');
+  
   // Radar
-  const rCanvas = document.createElement('canvas');
-  rCanvas.id = 'radarCanvas';
-  rCanvas.width = 150; rCanvas.height = 150;
-  elements.visualization.appendChild(rCanvas);
-  state.radarCtx = rCanvas.getContext('2d');
+  const c2 = document.createElement('canvas');
+  c2.id='radarCanvas'; c2.width=100; c2.height=100;
+  els.viz.appendChild(c2);
+  state.rdCtx = c2.getContext('2d');
 }
 
-function updateLoop() {
-  if (!state.initialized) return;
-  requestAnimationFrame(updateLoop);
-
+function loop() {
+  if(!state.running) return;
+  requestAnimationFrame(loop);
+  
   state.analyser.getByteFrequencyData(state.dataArray);
-
-  // Calcul Volume
-  const sum = state.dataArray.reduce((a,b)=>a+b,0);
-  const avg = sum / state.dataArray.length;
+  
+  // Calculs
+  let sum = 0;
+  for(let i=0; i<state.bufferLength; i++) sum += state.dataArray[i];
+  const avg = sum / state.bufferLength;
   
   // UI Bars
-  elements.voiceBar.style.width = Math.min(100, avg) + '%';
-  elements.thresholdBar.style.width = config.threshold + '%';
-
-  // AUTO REC Logic
-  if (config.autoRec && avg > config.threshold && !state.isRecording) {
-    startRecording();
-  }
-
-  // Visuals
-  drawWaterfall();
-  if (config.radar) drawRadar(avg);
-}
-
-function startRecording() {
-  state.isRecording = true;
-  state.recorder.start();
-  log(">>> ANOMALIE DÉTECTÉE - ENREGISTREMENT <<<", "warn");
-  elements.recBtn.classList.add('active-mode');
+  els.voice.style.width = Math.min(100, avg) + '%';
+  els.thresh.style.width = config.threshold + '%';
   
-  setTimeout(() => {
-    if (state.isRecording) {
-      state.recorder.stop();
-      state.isRecording = false;
-      elements.recBtn.classList.remove('active-mode');
-    }
-  }, 5000); // 5 sec d'enregistrement
+  // Logic
+  checkAutoRec(avg);
+  
+  // Draw
+  drawWaterfall();
+  if(config.radar) drawRadar(avg);
 }
 
 function drawWaterfall() {
-  const w = state.wfCtx.canvas.width;
-  const h = state.wfCtx.canvas.height;
+  const ctx = state.wfCtx, w=ctx.canvas.width, h=ctx.canvas.height;
+  const img = ctx.getImageData(0,0,w,h-1);
+  ctx.putImageData(img,0,1);
   
-  // Scroll down
-  const img = state.wfCtx.getImageData(0, 0, w, h-1);
-  state.wfCtx.putImageData(img, 0, 1);
-  
-  // Draw new line
-  for(let i=0; i<state.dataArray.length; i+=2) {
+  const hue = config.evp ? 280 : 180;
+  for(let i=0; i<state.bufferLength; i+=2) {
     const v = state.dataArray[i];
-    const hue = config.evpMode ? 280 : 180; // Violet si EVP, Cyan sinon
-    state.wfCtx.fillStyle = `hsl(${hue - v}, 100%, 50%)`;
-    state.wfCtx.fillRect(i * (w/state.dataArray.length), 0, 2, 1);
+    ctx.fillStyle = `hsl(${hue - v}, 100%, 50%)`;
+    ctx.fillRect(i*(w/state.bufferLength), 0, 2, 1);
   }
 }
 
 function drawRadar(intensity) {
-  const ctx = state.radarCtx;
-  const cx = 75, cy = 75;
+  const ctx = state.rdCtx, cx=50, cy=50;
+  ctx.fillStyle = 'rgba(0,0,0,0.2)'; ctx.fillRect(0,0,100,100);
   
-  ctx.fillStyle = 'rgba(0, 0, 0, 0.1)'; // Fade effect
-  ctx.fillRect(0, 0, 150, 150);
-
   // Grid
-  ctx.strokeStyle = '#004455';
-  ctx.beginPath(); ctx.arc(cx, cy, 70, 0, Math.PI*2); ctx.stroke();
-  ctx.beginPath(); ctx.arc(cx, cy, 35, 0, Math.PI*2); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(0,cy); ctx.lineTo(150,cy); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(cx,0); ctx.lineTo(cx,150); ctx.stroke();
-
-  // Scanner
-  state.radarAngle += config.radarSpeed;
-  ctx.save();
-  ctx.translate(cx, cy);
-  ctx.rotate(state.radarAngle);
+  ctx.strokeStyle = 'rgba(0,255,208,0.3)'; ctx.beginPath(); ctx.arc(cx,cy,40,0,7); ctx.stroke();
   
-  const grad = ctx.createLinearGradient(0, 0, 75, 0);
-  grad.addColorStop(0, 'rgba(0, 255, 208, 0)');
-  grad.addColorStop(1, 'rgba(0, 255, 208, 0.8)');
-  ctx.fillStyle = grad;
-  ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0, 70, -0.2, 0.2); ctx.lineTo(0,0); ctx.fill();
+  // Scan
+  state.radarAngle += config.radarSpeed;
+  ctx.save(); ctx.translate(cx,cy); ctx.rotate(state.radarAngle);
+  ctx.fillStyle = 'rgba(0,255,208,0.5)';
+  ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0,45,-0.2,0.2); ctx.fill();
   ctx.restore();
-
-  // Blips (Simulated based on audio intensity)
-  if (intensity > config.threshold && Math.random() > 0.9) {
-      const r = Math.random() * 60 + 5;
-      const a = Math.random() * Math.PI * 2;
-      const bx = cx + Math.cos(a) * r;
-      const by = cy + Math.sin(a) * r;
-      ctx.fillStyle = '#ff0000';
-      ctx.beginPath(); ctx.arc(bx, by, 3, 0, Math.PI*2); ctx.fill();
+  
+  // Blips
+  if(intensity > config.threshold && Math.random()>0.8) {
+    const r = Math.random()*35; const a = Math.random()*6.28;
+    ctx.fillStyle='red'; ctx.beginPath(); ctx.arc(cx+Math.cos(a)*r, cy+Math.sin(a)*r, 2,0,7); ctx.fill();
   }
 }
 
-// --- UI HELPERS ---
-function enableControls(enabled) {
-  const btns = [elements.fftBtn, elements.recBtn, elements.evpBtn, elements.radarBtn, elements.camBtn, elements.flashBtn, elements.wavBtn];
-  btns.forEach(b => b.disabled = !enabled);
+// --- CAMERA ---
+async function toggleCam() {
+  if(!state.vidStream) {
+    try {
+      state.vidStream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
+      els.video.srcObject = state.vidStream;
+      els.video.style.display = 'block';
+      els.cam.classList.add('active');
+      log("Caméra active.");
+    } catch(e) { log("Erreur caméra", "err"); }
+  } else {
+    stopCam();
+  }
+}
+function stopCam() {
+  if(state.vidStream) state.vidStream.getTracks().forEach(t=>t.stop());
+  state.vidStream = null; els.video.style.display = 'none'; els.cam.classList.remove('active');
 }
 
-// --- EVENT LISTENERS ---
+// --- UTILS ---
+function enableButtons(en) {
+  const btns = [els.monitor, els.filter, els.rec, els.fft, els.evp, els.radar, els.cam, els.flash];
+  btns.forEach(b => b.disabled = !en);
+}
+function toggleTheme() {
+  config.theme = (config.theme + 1) % themes.length;
+  const t = themes[config.theme];
+  document.documentElement.style.setProperty('--primary', t.p);
+  document.documentElement.style.setProperty('--secondary', t.s);
+  document.documentElement.style.setProperty('--voice', t.v);
+  log("Thème changé.");
+}
 
-// Toggle Buttons
-elements.startBtn.onclick = () => state.initialized ? stopApplication() : startApplication();
-
-elements.fftBtn.onclick = function() {
-  config.fftSize = config.fftSize === 1024 ? 2048 : 1024;
-  if(state.analyser) state.analyser.fftSize = config.fftSize;
-  if(state.analyser) state.dataArray = new Uint8Array(state.analyser.frequencyBinCount);
-  this.textContent = `FFT ${config.fftSize}`;
-  this.classList.toggle('active-mode');
-  log(`FFT: ${config.fftSize}`);
+// --- EVENTS ---
+els.start.onclick = () => state.running ? stopSystem() : startSystem();
+els.monitor.onclick = toggleMonitor;
+els.filter.onclick = toggleFilter;
+els.rec.onclick = () => { config.autoRec = !config.autoRec; els.rec.classList.toggle('active'); log(`Auto Rec: ${config.autoRec}`); };
+els.fft.onclick = () => { config.fftSize = config.fftSize===1024?2048:1024; state.analyser.fftSize=config.fftSize; state.dataArray = new Uint8Array(state.analyser.frequencyBinCount); els.fft.textContent=`FFT ${config.fftSize}`; };
+els.evp.onclick = () => { config.evp = !config.evp; els.evp.classList.toggle('active'); log(`Mode EVP: ${config.evp}`); };
+els.radar.onclick = () => { config.radar = !config.radar; els.radar.classList.toggle('active'); };
+els.cam.onclick = toggleCam;
+els.flash.onclick = async () => {
+  if(!state.vidStream) return log("Caméra requise", "warn");
+  try {
+    const track = state.vidStream.getVideoTracks()[0];
+    const caps = track.getCapabilities();
+    if(!caps.torch) return log("Pas de torche", "err");
+    await track.applyConstraints({advanced: [{torch: !els.flash.classList.contains('active')}]});
+    els.flash.classList.toggle('active');
+  } catch(e){ log("Erreur torche", "err"); }
 };
-
-elements.evpBtn.onclick = function() {
-  config.evpMode = !config.evpMode;
-  this.classList.toggle('active-mode');
-  log(`Mode EVP: ${config.evpMode ? 'ON' : 'OFF'}`);
-};
-
-elements.radarBtn.onclick = function() {
-  config.radar = !config.radar;
-  this.classList.toggle('active-mode');
-  // Show/Hide canvas
-  const c = document.getElementById('radarCanvas');
-  if(c) c.style.display = config.radar ? 'block' : 'none';
-  log(`Radar: ${config.radar ? 'ON' : 'OFF'}`);
-};
-
-elements.recBtn.onclick = function() {
-  config.autoRec = !config.autoRec;
-  this.classList.toggle('active-mode');
-  log(`Auto-Rec: ${config.autoRec ? 'ON' : 'OFF'} (Seuil: ${config.threshold})`);
-};
-
-elements.camBtn.onclick = toggleCamera;
-elements.flashBtn.onclick = toggleFlashlight;
-elements.wavBtn.onclick = () => log("Export WAV complet non implémenté", "warn");
-
-// Settings Panel
-elements.settingsBtn.onclick = () => {
-  elements.settingsPanel.classList.toggle('open');
-  elements.settingsBtn.textContent = elements.settingsPanel.classList.contains('open') ? "FERMER PARAMÈTRES" : "⚙️ PARAMÈTRES";
-};
+els.wake.onclick = toggleWake;
+els.theme.onclick = toggleTheme;
+els.clear.onclick = () => { els.log.innerHTML = ''; };
 
 // Sliders
-elements.gainSlider.oninput = function() {
-  config.gain = parseFloat(this.value);
-  if(state.gainNode) state.gainNode.gain.value = config.gain;
+els.sGain.oninput = (e) => { config.gain = parseFloat(e.target.value); if(state.gainNode) state.gainNode.gain.value = config.gain; };
+els.sThresh.oninput = (e) => { config.threshold = parseInt(e.target.value); els.thresh.style.width = config.threshold + '%'; };
+els.sRadar.oninput = (e) => { config.radarSpeed = parseInt(e.target.value)/100; };
+
+// Resize
+window.onresize = () => {
+  if(state.wfCtx) { state.wfCtx.canvas.width = els.viz.clientWidth; }
 };
 
-elements.thresholdSlider.oninput = function() {
-  config.threshold = parseInt(this.value);
-  elements.thresholdBar.style.width = config.threshold + '%';
-};
-
-elements.radarSpeedSlider.oninput = function() {
-  config.radarSpeed = parseInt(this.value) / 100;
-};
-
-// --- INIT ---
-window.onload = () => {
-  state.librariesLoaded.three = typeof THREE !== 'undefined';
-  state.librariesLoaded.tfjs = typeof tf !== 'undefined';
-  
-  if (state.librariesLoaded.tfjs) {
-      elements.aiStatus.textContent = "READY";
-      elements.aiStatus.style.color = "var(--success)";
-      log("IA Module: CHARGÉ", "success");
-      // On lance un calcul bidon pour "réveiller" TensorFlow et le GPU
-      tf.tidy(() => { const x = tf.tensor1d([1,2,3]); x.mul(2); });
-  } else {
-      elements.aiStatus.textContent = "ERR";
-      elements.aiStatus.style.color = "var(--error)";
-      log("IA Module: ABSENT", "error");
-  }
-
-  elements.loadingScreen.style.display = 'none';
-  log("ETERNITY LAB PRÊT. Appuyez sur START.");
-  
-  // Resize listener
-  window.addEventListener('resize', () => {
-    const w = elements.visualization.clientWidth;
-    if(state.wfCtx) state.wfCtx.canvas.width = w;
-  });
-};
 </script>
 </body>
 </html>
