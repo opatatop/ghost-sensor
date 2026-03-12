@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>ETERNITY LAB - TSE de iufULTIMATE BUILD</title>
+<title>ETERNITY LAB - DIAGNOSTIC</title>
 <style>
 :root {
-  --primary: #00ff00; /* Vert Matrix */
-  --alert: #ff0000; /* Rouge Alerte */
+  --primary: #00ff00;
+  --alert: #ff0000;
   --bg: #000000;
   --panel: #050a05;
   --btn-bg: #111;
@@ -17,23 +17,13 @@
 
 body {
   margin: 0; padding: 0;
-  font-family: 'Consolas', 'Courier New', monospace;
+  font-family: 'Consolas', monospace;
   background: var(--bg);
   color: var(--text);
   height: 100vh;
   display: flex; flex-direction: column;
   overflow: hidden;
   touch-action: manipulation;
-}
-
-/* ANIMATION ALERTE */
-body.alert-mode {
-  animation: pulseRed 0.5s infinite;
-}
-@keyframes pulseRed {
-  0% { box-shadow: inset 0 0 0 red; }
-  50% { box-shadow: inset 0 0 50px red; }
-  100% { box-shadow: inset 0 0 0 red; }
 }
 
 #header {
@@ -45,10 +35,10 @@ body.alert-mode {
   font-size: 0.8rem; color: var(--primary);
 }
 .status-light {
-  width: 10px; height: 10px; background: #333; border-radius: 50%; display: inline-block; margin-right: 5px;
+  width: 12px; height: 12px; background: #333; border-radius: 50%; display: inline-block; margin-right: 5px; border: 1px solid #555;
 }
-.status-light.on { background: #0f0; box-shadow: 0 0 5px #0f0; }
-.status-light.alert { background: #f00; box-shadow: 0 0 5px #f00; }
+.status-light.on { background: #0f0; box-shadow: 0 0 10px #0f0; border-color: #0f0; }
+.status-light.alert { background: #f00; box-shadow: 0 0 10px #f00; border-color: #f00; }
 
 #mainStage {
   flex: 1; position: relative;
@@ -98,69 +88,59 @@ button.active { background: var(--btn-active); color: #000; box-shadow: 0 0 10px
 button:disabled { opacity: 0.3; cursor: not-allowed; }
 
 #startBtn {
-  width: 100%; font-size: 1.2rem; padding: 15px;
+  grid-column: span 4; font-size: 1.2rem; padding: 15px;
   background: #000; color: var(--primary); border: 2px solid var(--primary);
   font-weight: 900; text-transform: uppercase;
 }
-#alertBtn {
-  width: 100%; font-size: 1rem; padding: 12px;
-  background: #330000; color: #ffcccc; border: 1px solid red;
-  font-weight: bold;
+#startBtn.running {
+  background: var(--btn-active); color: #000;
 }
-#alertBtn.active { background: red; color: white; animation: blink 0.2s infinite; }
-@keyframes blink { 50% { opacity: 0.5; } }
 
 #logZone {
-  height: 40px; background: #000; border-top: 1px solid #333;
+  height: 60px; background: #000; border-top: 1px solid #333;
   padding: 5px; font-size: 0.7rem; overflow-y: auto; color: #888;
+  font-family: monospace;
 }
 .log-sys { color: yellow; }
 .log-suc { color: var(--primary); font-weight: bold; }
 .log-err { color: red; font-weight: bold; }
-.log-warn { color: orange; }
 
 /* VISUALS */
 #canvas {
   position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; opacity: 0.5;
 }
-#cameraFeed {
-  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-  object-fit: cover; opacity: 0.2; z-index: 0; display: none;
-}
 </style>
 </head>
 <body>
 
-<video id="cameraFeed" autoplay playsinline muted></video>
 <canvas id="canvas"></canvas>
 
 <div id="header">
-  <div>ETERNITY LAB <span style="font-size:0.7em; opacity:0.7">ULTIMATE</span></div>
+  <div>ETERNITY LAB <span style="font-size:0.7em; opacity:0.7">DIAGNOSTIC</span></div>
   <div>
     <span id="micLed" class="status-light"></span> 
     <span id="aiLed" class="status-light"></span> 
-    <span id="sensorLed" class="status-light"></span> SENSORS
+    <span id="sysLed" class="status-light"></span> SYS
   </div>
 </div>
 
 <div id="mainStage">
-  <div id="iaText">... EN ATTENTE DE DÉMARRAGE ...</div>
+  <div id="iaText">... CLIQUEZ SUR ACTIVER ...</div>
 </div>
 
 <div id="controls">
   <div id="meters">
-    <div class="meter-box" title="Audio"><div id="audioMeter" class="meter-fill" style="background:var(--primary)"></div></div>
-    <div class="meter-box" title="Sensors (Motion/Mag)"><div id="sensorMeter" class="meter-fill" style="background:yellow"></div></div>
+    <div class="meter-box" title="Audio Input"><div id="audioMeter" class="meter-fill" style="background:var(--primary)"></div></div>
   </div>
 
-  <button id="startBtn" onclick="startSystem()">ACTIVER LE SYSTÈME</button>
-  <button id="alertBtn" onclick="toggleAlert()">⚠ MODE ALERTE (TOUS SENS)</button>
+  <button id="startBtn" onclick="startSystem()">ACTIVER SYSTÈME (BIP TEST)</button>
+  <button id="alertBtn" onclick="toggleHack()" style="border-color:red; color:red; margin-top:5px">🚨 HACK / ALERT MODE (TEST)</button>
 
   <div class="button-grid">
     <button id="monitorBtn" onclick="toggleOpt('monitor')">🎧 ÉCOUTE</button>
-    <button id="boostBtn" class="active" onclick="toggleOpt('boost')">⚡ BOOST AUDIO</button>
+    <button id="boostBtn" onclick="toggleOpt('boost')">⚡ BOOST AUDIO</button>
     <button id="recBtn" onclick="toggleOpt('autoRec')">⏺ AUTO REC</button>
-    <button id="camBtn" onclick="toggleOpt('cam')">📷 CAMÉRA</button>
+    <button id="camBtn" onclick="toggleOpt('cam')">📷 CAM</button>
     
     <button id="vizSpec" class="active" onclick="setViz('spectrum')">SPECTRE</button>
     <button id="vizWave" onclick="setViz('wave')">ONDE</button>
@@ -169,50 +149,37 @@ button:disabled { opacity: 0.3; cursor: not-allowed; }
   </div>
   
   <div style="font-size:0.7rem; color:#666; text-align:center; margin-top:5px;">
-    Build Final : IA Réelle + Watchdog + Capteurs Physiques.
+    Mode Diag: Force l'affichage des alertes et l'audio.
   </div>
 </div>
 
 <div id="logZone"></div>
 
-<!-- CHARGEMENT DIFFÉRÉ DES LIBS LOURDES POUR NE PAS BLOQUER LE BOUTON -->
-<script>
-  // On charge les grosses libs de manière asynchrone
-  function loadScript(src, callback) {
-    var s = document.createElement('script');
-    s.src = src;
-    s.onload = callback;
-    s.onerror = () => { log("Erreur chargement lib", 'log-err'); };
-    document.head.appendChild(s);
-  }
-  
-  // On ne lance pas les libs immédiatement, on attend le clic
-</script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.11.0/dist/tf.min.js"></script>
 
 <script>
 // --- CONFIGURATION ---
 let app = {
   running: false,
-  redAlert: false,
+  hackMode: false,
   ctx: null, stream: null, vidStream: null,
   source: null, analyser: null,
   monitorGain: null, booster: null, filter: null,
   recorder: null, isRec: false,
   recognition: null, keepAliveOsc: null, aiWatchdog: null,
   lastAIActivityTime: 0, lastSpeechTime: 0,
-  // State
   config: { monitor: false, boost: true, autoRec: false, cam: false, vizMode: 'spectrum' },
-  // Sensors
-  motionBaseline: null, magBaseline: 0,
+  canvas: null, cCtx: null, width: 0, height: 0,
   wakeLock: null
 };
 
 const el = (id) => document.getElementById(id);
 const els = {
   log: el('logZone'), ia: el('iaText'),
-  micLed: el('micLed'), aiLed: el('aiLed'), sensorLed: el('sensorLed'),
-  audioMeter: el('audioMeter'), sensorMeter: el('sensorMeter'),
-  canvas: el('canvas'), camera: el('cameraFeed')
+  micLed: el('micLed'), aiLed: el('aiLed'), sysLed: el('sysLed'),
+  audioMeter: el('audioMeter'),
+  canvas: el('canvas')
 };
 
 function log(msg, type='') {
@@ -223,63 +190,71 @@ function log(msg, type='') {
   console.log(msg);
 }
 
-// --- START SYSTEM (LE COEUR DU PROBLÈME) ---
+// --- FONCTION BIP (PREUVE AUDIO) ---
+function playTestBeep(freq=440, type='sine', dur=0.1) {
+  if(!app.ctx) return;
+  const osc = app.ctx.createOscillator();
+  const g = app.ctx.createGain();
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, app.ctx.currentTime);
+  osc.connect(g);
+  g.connect(app.ctx.destination);
+  g.gain.setValueAtTime(0.5, app.ctx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.01, app.ctx.currentTime + dur);
+  osc.start();
+  osc.stop(app.ctx.currentTime + dur);
+  log("BIP TEST AUDIO...", 'log-sys');
+}
+
+// --- START SYSTEM ---
 
 async function startSystem() {
-  // 1. FEEDBACK VISUEL IMMÉDIAT (Pour prouver que le bouton marche)
+  if(app.running) return;
+  
   const btn = el('startBtn');
-  btn.textContent = "INITIALISATION...";
+  btn.textContent = "INIT EN COURS...";
   btn.disabled = true;
-  log("Tentative de démarrage...", 'log-sys');
-
-  // 2. CHARGEMENT LIBS SI NÉCESSAIRE (Lazy load)
-  if (typeof THREE === 'undefined' || typeof tf === 'undefined') {
-      log("Chargement des librairies...", 'log-sys');
-      await new Promise(resolve => loadScript('https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js', resolve));
-      await new Promise(resolve => loadScript('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.11.0/dist/tf.min.js', resolve));
-      log("Librairies chargées.", 'log-suc');
-  }
 
   try {
-    // 3. AUDIO
+    // 1. ALERTE PERMISSION (FORCE L'AFFICHAGE POPUP)
+    alert("AUTORISATION MICRO REQUISE. Cliquez sur OK pour entendre le bip de test.");
+
+    // 2. CONTEXTE AUDIO & RESUME
     app.ctx = new (window.AudioContext || window.webkitAudioContext)();
     if (app.ctx.state === 'suspended') await app.ctx.resume();
 
-    if (!app.stream) {
-      log("Demande Micro...", 'log-sys');
-      app.stream = await navigator.mediaDevices.getUserMedia({ 
-          audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false }, 
-          video: false 
-      });
-    }
+    // 3. MICRO
+    log("Connexion Micro...", 'log-sys');
+    app.stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false }, 
+        video: false 
+    });
 
     setupAudioGraph();
     startAIWithWatchdog();
-    initSensors();
     
     try { app.wakeLock = await navigator.wakeLock.request('screen'); } catch(e){}
-
     startKeepAlive();
     initViz();
 
     app.running = true;
     btn.textContent = "SYSTÈME ACTIF";
-    btn.classList.add('active');
+    btn.classList.add('running');
     els.micLed.classList.add('on');
+    els.sysLed.classList.add('on');
     
+    // BIP DE DÉMARRAGE
+    playTestBeep(880, 'square', 0.2); 
+
     drawLoop();
-    log("Système Ultimate démarré.", 'log-suc');
+    log("Système Diagnostic Actif. Audio OK.", 'log-suc');
 
   } catch (err) {
     console.error(err);
     log("ERREUR BLOQUANTE: " + err.message, 'log-err');
-    // Réactiver le bouton en cas d'erreur
+    alert("ERREUR CRITIQUE: " + err.message + "\n\nVérifiez : \n1. Paramètres > Chrome > Permissions > Microphone (Autoriser)\n2. Autres sites n'utilisent pas le micro ?");
     btn.disabled = false;
     btn.textContent = "ERREUR (VOIR LOG)";
-    
-    if(err.name === 'NotAllowedError') {
-        alert("Permission Micro refusée. Vérifiez les paramètres de votre navigateur.");
-    }
   }
 }
 
@@ -290,22 +265,16 @@ function stopSystem() {
   if(app.recognition) stopAI();
   if(app.ctx) app.ctx.close();
   
-  // Stop Sensors
-  window.removeEventListener('devicemotion', handleMotion);
-  window.removeEventListener('deviceorientation', handleMagnetic);
-
   app.running = false;
   
   el('startBtn').disabled = false;
-  el('startBtn').textContent = "ACTIVER LE SYSTÈME";
-  el('startBtn').classList.remove('active');
+  el('startBtn').textContent = "ACTIVER SYSTÈME (BIP TEST)";
+  el('startBtn').classList.remove('running');
   els.micLed.classList.remove('on');
   els.aiLed.classList.remove('on');
-  els.sensorLed.classList.remove('on');
+  els.sysLed.classList.remove('on');
   
   els.ia.textContent = "ARRÊTÉ";
-  document.body.classList.remove('alert-mode');
-  el('alertBtn').classList.remove('active');
   document.querySelectorAll('.active').forEach(b => b.classList.remove('active'));
 }
 
@@ -313,27 +282,18 @@ function stopSystem() {
 
 function setupAudioGraph() {
   app.source = app.ctx.createMediaStreamSource(app.stream);
-  
-  // Filtre Passe-Haut (Enlève le ronronnement du téléphone)
   app.filter = app.ctx.createBiquadFilter();
   app.filter.type = 'highpass';
   app.filter.frequency.value = 300;
-
-  // Booster (Augmente le gain)
   app.booster = app.ctx.createGain();
   app.booster.gain.value = app.config.boost ? 3.0 : 1.0;
-
-  // Monitor
   app.monitorGain = app.ctx.createGain();
-  app.monitorGain.gain.value = 0;
-
-  // Analyser
+  app.monitorGain.gain.value = 0; // Écoute coupée par défaut
   app.analyser = app.ctx.createAnalyser();
   app.analyser.fftSize = 2048;
   app.analyser.smoothingTimeConstant = 0.5;
   app.dataArray = new Uint8Array(app.analyser.frequencyBinCount);
 
-  // Route: Source -> Filter -> Booster -> Analyser
   app.source.connect(app.filter);
   app.filter.connect(app.booster);
   app.booster.connect(app.analyser);
@@ -344,16 +304,15 @@ function setupAudioGraph() {
   app.recorder.ondataavailable = e => saveBlob(e.data);
 }
 
-// --- IA & WATCHDOG ---
+// --- IA WATCHDOG ---
 
 function startAIWithWatchdog() {
   startRealAI();
-  // Watchdog toutes les 3 secondes
   app.aiWatchdog = setInterval(() => {
     if(!app.running) { clearInterval(app.aiWatchdog); return; }
     const now = Date.now();
     if (now - app.lastAIActivityTime > 4000) {
-      log("Watchdog: Redémarrage IA...", 'log-warn');
+      log("Watchdog: Redémarrage IA...", 'log-sys');
       stopAI();
       setTimeout(() => startRealAI(), 200);
     }
@@ -394,114 +353,40 @@ function startRealAI() {
               if (isFinal) {
                   log(`MOT: "${txt}"`, 'log-suc');
                   app.lastSpeechTime = Date.now();
+                  playTestBeep(600, 'sine', 0.05); // Petit bip quand mot trouvé
               }
           }
       };
       
-      app.recognition.onerror = (e) => { if(e.error !== 'no-speech') log(`IA Err: ${e.error}`, 'log-warn'); };
+      app.recognition.onerror = (e) => { if(e.error !== 'no-speech') log(`IA Err: ${e.error}`, 'log-sys'); };
       app.recognition.onend = () => { };
       try { app.recognition.start(); } catch(e){}
-  } else { log("IA non dispo", 'log-err'); }
+  } else { log("IA non dispo", 'log-sys'); }
 }
 
-// --- SENSORS (MOTION & MAG) ---
+// --- HACK / ALERT MODE ---
 
-function initSensors() {
-  // Motion
-  if (window.DeviceMotionEvent) {
-      window.addEventListener('devicemotion', handleMotion);
-      // Calibration
-      window.addEventListener('devicemotion', (e) => {
-          if(!app.motionBaseline && e.accelerationIncludingGravity) {
-              app.motionBaseline = e.accelerationIncludingGravity;
-              window.removeEventListener('devicemotion', arguments.callee);
-          }
-      }, {once:true});
+function toggleHack() {
+  if(!app.running) { 
+    alert("DÉMARREZ LE SYSTÈME D'ABORD !");
+    el('startBtn').focus(); // Focus visuel sur le bouton
+    return; 
   }
   
-  // Magnetic
-  if (window.DeviceOrientationEvent) {
-      window.addEventListener('deviceorientation', handleMagnetic);
-      window.addEventListener('deviceorientation', (e) => {
-          if(!app.magBaseline && e.alpha !== null) {
-              app.magBaseline = e.alpha;
-              window.removeEventListener('deviceorientation', arguments.callee);
-          }
-      }, {once:true});
-  }
-  els.sensorLed.classList.add('on');
-}
-
-function handleMotion(e) {
-  if(!app.redAlert) return;
-  const cur = e.accelerationIncludingGravity || e.acceleration;
-  if(!cur) return;
-  
-  const diff = Math.abs(cur.x - app.motionBaseline.x) + Math.abs(cur.y - app.motionBaseline.y) + Math.abs(cur.z - app.motionBaseline.z);
-  if (diff > 2.0) {
-    triggerSensorAlert("MOTION");
-    if(navigator.vibrate) navigator.vibrate(200);
-  }
-}
-
-function handleMagnetic(e) {
-  if(!app.redAlert) return;
-  if (e.alpha === null) return;
-  const diff = Math.abs(e.alpha - app.magBaseline);
-  if (diff > 10) {
-    triggerSensorAlert("MAGNÉTIQUE");
-    if(navigator.vibrate) navigator.vibrate(50);
-  }
-}
-
-function toggleAlert() {
-  if(!app.running) { log("Démarrez d'abord", 'log-warn'); return; }
-  app.redAlert = !app.redAlert;
+  app.hackMode = !app.hackMode;
   const btn = el('alertBtn');
   btn.classList.toggle('active');
   
-  if(app.redAlert) {
-    document.body.classList.add('alert-mode');
-    log("⚠ MODE ALERTE ACTIVÉ", 'log-warn');
+  if (app.hackMode) {
+    log("⚠ HACK MODE ACTIVÉ. Sensibilité MAX.", 'log-sys');
+    // BIP pour confirmer l'activation
+    playTestBeep(200, 'sawtooth', 0.1);
   } else {
-    document.body.classList.remove('alert-mode');
     log("Mode Normal", 'log-sys');
   }
 }
 
-function triggerSensorAlert(type) {
-  // Flash visuel
-  const flash = document.createElement('div');
-  flash.style.cssText = "position:fixed; inset:0; background:white; z-index:999; opacity:0.8;";
-  document.body.appendChild(flash);
-  setTimeout(() => flash.remove(), 100);
-  
-  // Log & Audio Beep
-  log(`⚠ ${type} DÉTECTÉ`, 'log-warn');
-  playBeep();
-  
-  els.ia.textContent = `⚠ ${type}`;
-  els.ia.style.color = "red";
-  els.ia.style.fontSize = "1.5rem";
-  
-  els.sensorMeter.style.width = "100%";
-  setTimeout(() => els.sensorMeter.style.width = "0%", 500);
-}
-
-function playBeep() {
-  if(!app.ctx) return;
-  const osc = app.ctx.createOscillator();
-  const g = app.ctx.createGain();
-  osc.connect(g);
-  g.connect(app.ctx.destination);
-  osc.frequency.setValueAtTime(800, app.ctx.currentTime);
-  osc.frequency.exponentialRampToValueAtTime(400, app.ctx.currentTime + 0.1);
-  g.gain.setValueAtTime(0.5, app.ctx.currentTime);
-  g.gain.linearRampToValueAtTime(0, app.ctx.currentTime + 0.1);
-  osc.start(); osc.stop(app.ctx.currentTime + 0.1);
-}
-
-// --- MAIN LOOP ---
+// --- LOOP & LOGIC ---
 
 function drawLoop() {
   if(!app.running) return;
@@ -509,41 +394,36 @@ function drawLoop() {
   
   app.analyser.getByteFrequencyData(app.dataArray);
   
-  // Volume
   let sum = 0;
   for(let i=0; i<app.dataArray.length; i++) sum += app.dataArray[i];
   const avg = sum / app.dataArray.length;
   
   els.audioMeter.style.width = Math.min(100, avg) + '%';
   
-  // Traduction / Signal
-  const now = Date.now();
-  // Seuil bas si Alerte (sensible)
-  const threshold = app.redAlert ? 15 : 30; 
+  // LOGIQUE HACK (Seuil très bas)
+  const threshold = app.hackMode ? 10 : 30; 
   
   if (avg > threshold) {
+      const now = Date.now();
       if (now - app.lastSpeechTime > 1000) {
-          // Son sans mot
-          if(app.redAlert) {
-              triggerSensorAlert("BRUIT INCOMPRÉHENSIBLE");
-              if(navigator.vibrate) navigator.vibrate(50);
+          // En mode hack, on affiche tout comme "DETECTÉ"
+          if(app.hackMode) {
+              els.ia.textContent = "⚠ SIGNAL INCONNU";
+              els.ia.style.color = "red";
+              playTestBeep(150, 'triangle', 0.1); // Bip rapide
           } else {
-              els.ia.textContent = "[SIGNAL AUDIO - NON TRADUIT]";
+              els.ia.textContent = "[SIGNAL AUDIO]";
               els.ia.style.color = "yellow";
           }
-          els.audioMeter.style.background = "red";
       }
-  } else {
-      els.audioMeter.style.background = "var(--primary)";
-      if(els.ia.textContent.includes("SIGNAL") && !app.redAlert) els.ia.textContent = "...";
   }
 
   if(app.config.autoRec && avg > 60 && !app.isRec) {
-      app.isRec = true; app.recorder.start(); log("⚠ ENREGISTREMENT", 'log-warn');
+      app.isRec = true; app.recorder.start(); log("⚠ REC AUTO", 'log-sys');
       setTimeout(() => { if(app.isRec) { app.recorder.stop(); app.isRec=false; }}, 3000);
   }
 
-  // Dessin
+  // DESSIN
   const ctx = app.cCtx, w = app.width, h = app.height;
   ctx.fillStyle = 'rgba(0, 10, 0, 0.2)';
   ctx.fillRect(0,0,w,h);
@@ -594,12 +474,15 @@ async function toggleCam() {
   if(!app.config.cam) {
       try {
           app.vidStream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
-          els.camera.srcObject = app.vidStream;
-          els.camera.style.display = 'block';
+          const vid = document.createElement('video');
+          vid.srcObject = app.vidStream;
+          vid.autoplay = true; vid.muted = true; vid.playsInline = true;
+          vid.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; object-fit:cover; opacity:0.3; z-index:0;";
+          document.body.appendChild(vid);
       } catch(e) { log("Erreur Cam"); app.config.cam=false; el('camBtn').classList.remove('active'); }
   } else {
       if(app.vidStream) app.vidStream.getTracks().forEach(t=>t.stop());
-      app.vidStream = null; els.camera.style.display = 'none';
+      app.vidStream = null; document.querySelector('video')?.remove();
   }
 }
 
@@ -627,7 +510,7 @@ function resize() {
 
 function saveBlob(data) {
   const url = URL.createObjectURL(new Blob([data], {type:'audio/webm'}));
-  const a = document.createElement('a'); a.href=url; a.download=`ULTIMATE_${Date.now()}.webm`; a.click();
+  const a = document.createElement('a'); a.href=url; a.download=`DIAG_${Date.now()}.webm`; a.click();
   log("Fichier sauvé", 'log-suc');
 }
 
@@ -645,9 +528,9 @@ function startKeepAlive() {
 
 function clearLog() { els.log.innerHTML = ''; }
 
-// INIT GLOBAL
+// INIT
 window.onload = () => {
-    log("ETERNITY LAB ULTIMATE PRÊT. Bouton actif.", 'log-suc');
+    log("DIAGNOSTIC TOOL PRÊT.", 'log-suc');
 };
 </script>
 </body>
