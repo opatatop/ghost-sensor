@@ -3,15 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>ETERNITY MOI FORCE START</title>
+<title>ETERNITY LAB FINAL</title>
 <style>
 :root {
-  --primary: #ffff00; /* Jaune pour bien voir */
-  --bg: #000;
-  --panel: #111;
-  --btn-bg: #333;
-  --btn-active: #ffff00;
-  --text: #fff;
+  --primary: #00ff00;
+  --bg: #000500;
+  --panel: #001100;
+  --btn-bg: #003300;
+  --btn-active: #00ff00;
+  --text: #ccffcc;
 }
 
 body {
@@ -22,93 +22,99 @@ body {
   height: 100vh;
   display: flex; flex-direction: column;
   overflow: hidden;
+  touch-action: manipulation; /* Améliore la réactivité tactile */
 }
 
 #header {
-  padding: 10px; background: var(--panel);
-  border-bottom: 2px solid var(--primary);
+  padding: 8px; background: var(--panel);
+  border-bottom: 1px solid var(--primary);
   display: flex; justify-content: space-between;
-  font-size: 0.8rem;
+  font-size: 0.75rem; flex-shrink: 0;
 }
 
 #vizContainer {
   flex: 1; position: relative; background: #000;
-  display: flex; justify-content: center; align-items: center;
+  display: flex; flex-direction: column; justify-content: center; align-items: center;
   overflow: hidden;
 }
 
 #iaBox {
-  z-index: 10; text-align: center;
+  z-index: 10; text-align: center; width: 90%;
+  pointer-events: none;
 }
+#iaLabel { color: var(--primary); font-size: 0.8rem; letter-spacing: 2px; margin-bottom: 5px; }
 #iaText {
-  font-size: 2rem; font-weight: bold; color: #fff;
-  text-shadow: 0 0 10px var(--primary);
-  background: rgba(0,0,0,0.8); padding: 10px;
+  font-size: 2.2rem; font-weight: 900; color: #fff;
+  text-shadow: 0 0 15px var(--primary);
+  background: rgba(0,0,0,0.8); padding: 5px 10px;
+  min-height: 3rem;
+  border: 1px solid var(--primary);
 }
 
-canvas { width: 100%; height: 100%; position: absolute; top:0; left:0; z-index: 1; }
-#cameraFeed { width: 100%; height: 100%; object-fit: cover; position: absolute; z-index: 0; opacity: 0.3; }
+canvas { width: 100%; height: 100%; position: absolute; top:0; left:0; z-index: 1; opacity: 0.5; }
+#cameraFeed { width: 100%; height: 100%; object-fit: cover; position: absolute; z-index: 0; opacity: 0.3; display: none; }
 
 #controlsArea {
   background: var(--panel); border-top: 2px solid var(--primary);
-  height: 40vh; overflow-y: auto; padding: 10px;
-  display: flex; flex-direction: column; gap: 10px;
+  height: 42vh; overflow-y: auto; padding: 5px;
+  display: flex; flex-direction: column; gap: 8px; flex-shrink: 0;
 }
 
 .button-grid {
-  display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px;
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px;
 }
 
 button {
   background: var(--btn-bg); border: 1px solid var(--primary);
-  color: var(--primary); padding: 10px; font-size: 0.7rem;
-  font-weight: bold; cursor: pointer; border-radius: 5px;
+  color: var(--primary); padding: 10px 2px; font-size: 0.65rem;
+  font-weight: bold; cursor: pointer; border-radius: 4px;
   text-transform: uppercase;
+  touch-action: manipulation;
 }
+button:active { background: #005500; }
 button.active {
-  background: var(--btn-active); color: #000;
-  box-shadow: 0 0 15px var(--primary);
+  background: var(--btn-active); color: #000; box-shadow: 0 0 10px var(--primary);
 }
 
 #startBtn {
-  grid-column: span 4; font-size: 1.5rem; padding: 20px;
-  background: #fff; color: #000; border: 4px solid var(--primary);
-  font-weight: 900;
+  grid-column: span 4; font-size: 1.3rem; padding: 15px;
+  background: #000; color: #fff; border: 2px solid var(--primary);
+  font-weight: 900; letter-spacing: 1px;
+}
+#startBtn.running {
+  background: var(--primary); color: #000;
 }
 
 /* BARS */
 #barsArea { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; font-size: 0.7rem; }
-.bar-box { background: #333; height: 15px; width: 100%; border: 1px solid #555; margin-top:2px; }
+.bar-box { background: #222; height: 10px; width: 100%; border: 1px solid #444; margin-top:2px; }
 .bar-fill { height: 100%; width: 0%; transition: width 0.1s; background: var(--primary); }
 
 #logZone {
-  height: 80px; background: #000; border-top: 1px solid #333;
-  padding: 5px; font-size: 0.7rem; overflow-y: auto; color: #888;
+  height: 60px; background: #000; border-top: 1px solid #333;
+  padding: 2px 5px; font-size: 0.65rem; overflow-y: auto; color: #888;
+  flex-shrink: 0;
 }
+.log-sim { color: orange !important; } /* Pour le mode simulation */
 .log-suc { color: #0f0 !important; }
 .log-err { color: #f00 !important; }
-.log-warn { color: #ff0 !important; }
 
-#loading {
-  position: fixed; inset: 0; background: #000; z-index: 1000;
-  display: flex; justify-content: center; align-items: center;
-}
 </style>
 </head>
 <body>
 
-<div id="loading">CHARGEMENT...</div>
-
 <div id="header">
-  <div>MIC: <span id="micStatus" style="color:red">OFF</span></div>
-  <div>IA: <span id="aiStatus">...</span></div>
+  <div>MIC: <span id="micStatus">OFF</span></div>
+  <div>IA: <span id="aiStatus">READY</span></div>
+  <div>MODE: <span id="modeStatus">IDLE</span></div>
 </div>
 
 <div id="vizContainer">
   <video id="cameraFeed" autoplay playsinline muted></video>
   <canvas id="canvas"></canvas>
   <div id="iaBox">
-    <div id="iaText">ATTENTE START...</div>
+    <div id="iaLabel">TRADUCTION BRUIT -> MOTS</div>
+    <div id="iaText">... EN ATTENTE START ...</div>
   </div>
 </div>
 
@@ -118,7 +124,7 @@ button.active {
     <div>TRIGGER <div class="bar-box"><div id="threshBar" class="bar-fill" style="width:20%"></div></div></div>
   </div>
 
-  <!-- LE BOUTON A UN ONCLICK DIRECT -->
+  <!-- LE BOUTON START A UN APPEL DIRECT -->
   <button id="startBtn" onclick="forceStart()">START SYSTEM</button>
 
   <div class="button-grid">
@@ -129,9 +135,9 @@ button.active {
     <button id="recBtn" onclick="toggleOpt('autoRec')">⏺ AUTO REC</button>
     <button id="evpBtn" onclick="toggleOpt('evp')">🔮 EVP MODE</button>
     <button id="radarBtn" onclick="toggleOpt('radar')">📡 RADAR</button>
-    <button id="camBtn" onclick="toggleOpt('cam')">📷 CAM</button>
-    <button id="flashBtn" onclick="toggleOpt('flash')">🔦 TORCHE</button>
-    <button id="stopBtn" style="border-color:red; color:red" onclick="forceStop()">⏹ STOP</button>
+    <button id="camBtn" onclick="toggleOpt('cam')">📷 CAMERA</button>
+    <button id="themeBtn" onclick="toggleTheme()">🎨 THEME</button>
+    <button id="stopBtn" style="border-color:red; color:red" onclick="stopSystem()">⏹ STOP</button>
   </div>
 </div>
 
@@ -142,184 +148,179 @@ button.active {
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.11.0/dist/tf.min.js"></script>
 
 <script>
-// --- ETAT GLOBAL ---
-let state = {
+let app = {
   running: false,
-  ctx: null, source: null, gain: null, analyser: null, invert: null, ghost: null, ghostGain: null,
+  simulation: false, // Mode secours
+  ctx: null, source: null, gain: null, analyser: null, invert: null,
+  ghost: null, ghostGain: null,
   stream: null, vidStream: null, recorder: null, isRec: false,
   recognition: null,
-  config: { monitor: false, invert: false, ghostBox: false, voice: false, autoRec: false, evp: false, radar: false, cam: false, flash: false },
-  canvas: null, cCtx: null, width: 0, height: 0
+  config: { monitor: false, invert: false, ghostBox: false, voice: false, autoRec: false, evp: false, radar: false, cam: false },
+  canvas: null, cCtx: null, width: 0, height: 0,
+  simData: [], // Données simulées
+  simIndex: 0
 };
 
 const el = (id) => document.getElementById(id);
 const els = {
-  log: el('logZone'), mic: el('micStatus'), ai: el('aiStatus'),
-  voiceBar: el('voiceBar'), threshBar: el('threshBar'), iaText: el('iaText'),
+  log: el('logZone'), mic: el('micStatus'), mode: el('modeStatus'),
+  voiceBar: el('voiceBar'), iaText: el('iaText'),
   canvas: el('canvas'), camera: el('cameraFeed')
 };
 
-// --- FONCTIONS DE DEBUG ---
-
+// --- LOGS ---
 function log(msg, type='') {
   const d = document.createElement('div');
-  d.textContent = `[${new Date().toLocaleTimeString().split(' ')[0]}] ${msg}`;
+  d.textContent = `> ${msg}`;
   if(type) d.className = type;
   els.log.appendChild(d); els.log.scrollTop = els.log.scrollHeight;
-  console.log(msg);
 }
 
-// --- FORCE START (LE CŒUR DU PROBLÈME) ---
+// --- START FORCE (REAL OR SIM) ---
 async function forceStart() {
-  if(state.running) return;
+  if(app.running) return;
   
-  // 1. Feedback Visuel Immédiat
-  alert("Bouton cliqué ! Lancement de l'initialisation audio...");
+  // 1. Feedback Immédiat (Preuve que le bouton marche)
   el('startBtn').textContent = "INIT...";
   el('startBtn').style.background = "orange";
-  log("Tentative de démarrage forcé...", 'log-warn');
+  log("Tentative de démarrage...", 'log-suc');
 
   try {
-    // 2. Réveil du Context Audio (Très important sur Android)
-    if (!state.ctx) {
-        state.ctx = new (window.AudioContext || window.webkitAudioContext)();
-    }
-    if (state.ctx.state === 'suspended') {
-        log("AudioContext suspendu. Réveil...", 'log-warn');
-        await state.ctx.resume();
-    }
-    log(`AudioContext État: ${state.ctx.state}`, 'log-suc');
+    // 2. Tentative Audio Réel
+    app.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    if (app.ctx.state === 'suspended') await app.ctx.resume();
 
-    // 3. Demande Micro
-    log("Demande permission micro...", 'log-warn');
-    const stream = await navigator.mediaDevices.getUserMedia({ 
+    app.stream = await navigator.mediaDevices.getUserMedia({ 
         audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false }, 
         video: false 
     });
-    state.stream = stream;
-    log("Micro OK !", 'log-suc');
 
-    // 4. Création Noeuds
-    state.source = state.ctx.createMediaStreamSource(stream);
-    state.invert = state.ctx.createGain();
-    state.gain = state.ctx.createGain();
-    state.analyser = state.ctx.createAnalyser();
-    state.analyser.fftSize = 2048;
-    state.dataArray = new Uint8Array(state.analyser.frequencyBinCount);
-    
-    // Ghost Box Setup
-    state.ghost = state.ctx.createOscillator();
-    state.ghost.type = 'sawtooth';
-    state.ghostGain = state.ctx.createGain();
-    state.ghostGain.gain.value = 0;
-    state.ghost.connect(state.ghostGain);
-    state.ghost.connect(state.gain); // Mix
-    state.ghost.start();
-
-    // Connexion: Source -> Invert -> Gain -> Analyser
-    state.source.connect(state.invert);
-    state.invert.connect(state.gain);
-    state.gain.connect(state.analyser);
-
-    // Recorder
-    state.recorder = new MediaRecorder(stream);
-    state.recorder.ondataavailable = e => {
-        if(e.data.size > 0) {
-            const url = URL.createObjectURL(new Blob([e.data], {type:'audio/webm'}));
-            const a = document.createElement('a'); a.href=url; a.download=`evp.webm`; a.click();
-            log("Enregistrement sauvé", 'log-suc');
-        }
-    };
-
-    // UI Mise à jour
-    state.running = true;
-    el('startBtn').textContent = "SYSTEM RUNNING";
-    el('startBtn').style.background = "#0f0";
-    el('startBtn').style.color = "#000";
-    els.mic.textContent = "ON"; els.mic.style.color = "#0f0";
-    els.iaText.textContent = "ECOUTE...";
-
-    log("SYSTÈME ACTIF", 'log-suc');
-    
-    // Loop
-    resize();
-    drawLoop();
+    // Succès Audio
+    setupAudioNodes(app.stream);
+    app.running = true;
+    app.simulation = false;
+    startUI("REAL AUDIO");
 
   } catch (err) {
-    console.error(err);
-    log("ERREUR: " + err.message, 'log-err');
-    el('startBtn').textContent = "ERREUR (VOIR LOG)";
-    el('startBtn').style.background = "red";
-    alert("ERREUR CRITIQUE: " + err.message);
+    // ÉCHEC AUDIO -> PASSAGE EN MODE SIMULATION
+    console.warn(err);
+    log("Micro bloqué. Passage en MODE SIMULATION.", 'log-err');
+    log("(Vérifiez permissions Chrome)", 'log-sim');
+    
+    setupSimulation();
+    app.running = true;
+    app.simulation = true;
+    startUI("SIMULATION");
   }
 }
 
-function forceStop() {
-  if(!state.running) return;
-  if(state.stream) state.stream.getTracks().forEach(t=>t.stop());
-  if(state.vidStream) state.vidStream.getTracks().forEach(t=>t.stop());
-  if(state.ctx) state.ctx.close();
+function setupAudioNodes(stream) {
+  app.source = app.ctx.createMediaStreamSource(stream);
+  app.invert = app.ctx.createGain();
+  app.gain = app.ctx.createGain();
+  app.analyser = app.ctx.createAnalyser();
+  app.analyser.fftSize = 2048;
+  app.dataArray = new Uint8Array(app.analyser.frequencyBinCount);
   
-  state.running = false;
-  el('startBtn').textContent = "START SYSTEM";
-  el('startBtn').style.background = "#fff";
+  // Ghost Box
+  app.ghost = app.ctx.createOscillator();
+  app.ghost.type = 'sawtooth';
+  app.ghostGain = app.ctx.createGain();
+  app.ghostGain.gain.value = 0;
+  app.ghost.connect(app.ghostGain);
+  app.ghost.connect(app.gain);
+  app.ghost.start();
+
+  // Route
+  app.source.connect(app.invert);
+  app.invert.connect(app.gain);
+  app.gain.connect(app.analyser);
+
+  // Recorder
+  app.recorder = new MediaRecorder(stream);
+  app.recorder.ondataavailable = e => saveBlob(e.data);
+}
+
+function setupSimulation() {
+  // Créer des fausses données pour l'analyser
+  app.dataArray = new Uint8Array(1024);
+  for(let i=0; i<1024; i++) app.simData.push(Math.random() * 50);
+}
+
+function startUI(modeName) {
+  el('startBtn').textContent = "RUNNING (" + modeName + ")";
+  el('startBtn').classList.add('running');
+  el('startBtn').style.background = "var(--primary)";
   el('startBtn').style.color = "#000";
-  els.mic.textContent = "OFF"; els.mic.style.color = "red";
-  els.iaText.textContent = "STOP";
   
-  // Reset Buttons
-  Object.keys(state.config).forEach(k => { state.config[k] = false; el(k+'Btn').classList.remove('active'); });
+  els.mic.textContent = app.simulation ? "SIM" : "ON";
+  els.mic.style.color = app.simulation ? "orange" : "#0f0";
+  els.mode.textContent = modeName;
+  els.iaText.textContent = "ECOUTE...";
+
+  resize();
+  drawLoop();
+  
+  if(app.config.voice) startVoice();
+}
+
+function stopSystem() {
+  if(app.stream) app.stream.getTracks().forEach(t=>t.stop());
+  if(app.vidStream) app.vidStream.getTracks().forEach(t=>t.stop());
+  if(app.ctx) app.ctx.close();
+  if(app.recognition) app.recognition.stop();
+  
+  app.running = false;
+  app.simulation = false;
+  
+  el('startBtn').textContent = "START SYSTEM";
+  el('startBtn').classList.remove('running');
+  el('startBtn').style.background = "#000";
+  el('startBtn').style.color = "#fff";
+  
+  els.mic.textContent = "OFF"; els.mic.style.color = "red";
+  els.mode.textContent = "IDLE";
+  els.iaText.textContent = "STOPPED";
+  
+  // Reset UI
+  document.querySelectorAll('.active').forEach(b => b.classList.remove('active'));
+  Object.keys(app.config).forEach(k => app.config[k] = false);
+  
   log("Système arrêté.");
 }
 
-// --- GESTION OPTIONS UNIVERSELLE ---
+// --- OPTIONS & LOGIC ---
+
 function toggleOpt(key) {
-  if(!state.running) {
-      alert("VEUILLEZ CLIQUER SUR START SYSTEM D'ABORD !");
+  if(!app.running) {
+      log("START requis !", 'log-err');
       return;
   }
-  
+  app.config[key] = !app.config[key];
   const btn = el(key + 'Btn');
-  state.config[key] = !state.config[key];
+  if(btn) btn.classList.toggle('active');
   
-  if(state.config[key]) btn.classList.add('active');
-  else btn.classList.remove('active');
+  log(`${key}: ${app.config[key]}`);
   
-  log(`Option ${key}: ${state.config[key]?'ON':'OFF'}`);
-  
-  // Logique spécifique
-  if(key === 'monitor') {
-      if(state.config[key]) state.gain.connect(state.ctx.destination);
-      else state.gain.disconnect(state.ctx.destination);
+  if(key === 'monitor' && !app.simulation) {
+      if(app.config[key]) app.gain.connect(app.ctx.destination);
+      else app.gain.disconnect(app.ctx.destination);
   }
-  if(key === 'invert') state.invert.gain.value = state.config[key] ? -1 : 1;
-  if(key === 'ghostBox') state.ghostGain.gain.value = state.config[key] ? 0.1 : 0;
+  if(key === 'invert' && !app.simulation) app.invert.gain.value = app.config[key] ? -1 : 1;
+  if(key === 'ghostBox' && !app.simulation) app.ghostGain.gain.value = app.config[key] ? 0.1 : 0;
   if(key === 'voice') toggleVoice();
   if(key === 'cam') toggleCam();
-  if(key === 'flash') toggleFlash();
 }
 
-// --- LOGIQUE MODULES ---
-
-function toggleVoice() {
-  if(!state.recognition) return;
-  if(state.config.voice) {
-      state.recognition.start();
-      log("IA VOICE ON");
-  } else {
-      state.recognition.stop();
-      log("IA VOICE OFF");
-  }
-}
-
+// --- IA VOICE ---
 function initIA() {
   const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (SpeechRec) {
-      state.recognition = new SpeechRec();
-      state.recognition.continuous = true;
-      state.recognition.interimResults = true;
-      state.recognition.lang = 'fr-FR';
-      state.recognition.onresult = (e) => {
+      app.recognition = new SpeechRec();
+      app.recognition.continuous = true;
+      app.recognition.interimResults = true;
+      app.recognition.lang = 'fr-FR';
+      app.recognition.onresult = (e) => {
           let txt = '';
           for(let i=e.resultIndex; i<e.results.length; i++) txt += e.results[i][0].transcript;
           if(txt) {
@@ -327,105 +328,134 @@ function initIA() {
               if(e.results[e.results.length-1].isFinal) log(`IA: "${txt}"`, 'log-suc');
           }
       };
-      state.recognition.onerror = (e) => { if(e.error!=='no-speech') log(`IA Err: ${e.error}`); };
-      state.recognition.onend = () => { if(state.config.voice && state.running) try{state.recognition.start()}catch(e){} };
-      
-      els.ai.textContent = "READY";
+      app.recognition.onerror = (e) => { if(e.error!=='no-speech') log(`IA Err: ${e.error}`); };
+      app.recognition.onend = () => { if(app.config.voice && app.running) startVoice(); };
+  } else {
+      log("IA Non supportée", 'log-err');
   }
 }
 
+function toggleVoice() {
+  if(!app.recognition) return;
+  if(app.config.voice) startVoice();
+  else app.recognition.stop();
+}
+
+function startVoice() {
+  try { app.recognition.start(); } catch(e){}
+}
+
+// --- CAM & REC ---
 async function toggleCam() {
-  if(!state.config.cam) {
+  if(!app.config.cam) {
       try {
-          state.vidStream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
-          els.camera.srcObject = state.vidStream;
+          app.vidStream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
+          els.camera.srcObject = app.vidStream;
           els.camera.style.display = 'block';
-      } catch(e) { log("Erreur Cam", 'log-err'); state.config.cam=false; el('camBtn').classList.remove('active'); }
+      } catch(e) { log("Erreur Cam", 'log-err'); app.config.cam=false; el('camBtn').classList.remove('active'); }
   } else {
-      if(state.vidStream) state.vidStream.getTracks().forEach(t=>t.stop());
-      state.vidStream = null;
+      if(app.vidStream) app.vidStream.getTracks().forEach(t=>t.stop());
+      app.vidStream = null;
       els.camera.style.display = 'none';
   }
 }
 
-async function toggleFlash() {
-  if(!state.vidStream) return log("Caméra requise", 'log-warn');
-  try {
-      const track = state.vidStream.getVideoTracks()[0];
-      await track.applyConstraints({advanced: [{torch: state.config.flash}]});
-  } catch(e) { log("Erreur Torche", 'log-err'); }
+function saveBlob(data) {
+  if(app.simulation) return; // Pas de save en sim
+  const url = URL.createObjectURL(new Blob([data], {type:'audio/webm'}));
+  const a = document.createElement('a'); a.href=url; a.download=`EVP_${Date.now()}.webm`; a.click();
+  log("Enregistrement sauvé", 'log-suc');
 }
 
-// --- VISUALISATION & LOGIC ---
-
+// --- DRAW LOOP ---
 function drawLoop() {
-  if(!state.running) return;
+  if(!app.running) return;
   requestAnimationFrame(drawLoop);
   
-  state.analyser.getByteFrequencyData(state.dataArray);
-  
-  // Auto Rec
-  let sum = 0;
-  for(let i=0; i<state.dataArray.length; i++) sum += state.dataArray[i];
-  const avg = sum / state.dataArray.length;
-  
-  els.voiceBar.style.width = Math.min(100, avg) + '%';
-  
-  if(state.config.autoRec && avg > 20 && !state.isRec) {
-      state.isRec = true; state.recorder.start(); log("⚠️ REC AUTO", 'log-warn');
-      setTimeout(() => { if(state.isRec) { state.recorder.stop(); state.isRec=false; }}, 4000);
+  // 1. Données Audio (Réelles ou Simulées)
+  if(app.simulation) {
+      // Simulation : on génère des vagues
+      const time = Date.now() / 100;
+      for(let i=0; i<1024; i++) {
+          const v = (Math.sin(i * 0.05 + time) + 1) * 50 + (Math.random() * 50);
+          app.dataArray[i] = app.config.ghostBox ? Math.random()*255 : v; // Ghost Box rend la sim folle
+      }
+      els.mic.textContent = "SIM";
+  } else {
+      app.analyser.getByteFrequencyData(app.dataArray);
   }
+
+  // 2. Calcul Volume & Trigger
+  let sum = 0;
+  for(let i=0; i<app.dataArray.length; i++) sum += app.dataArray[i];
+  const avg = sum / app.dataArray.length;
+  els.voiceBar.style.width = Math.min(100, avg) + '%';
+
+  // 3. Auto Rec (Seulement si audio réel)
+  if(app.config.autoRec && !app.simulation && avg > 20 && !app.isRec) {
+      app.isRec = true; app.recorder.start(); log("⚠️ REC AUTO", 'log-suc');
+      setTimeout(() => { if(app.isRec) { app.recorder.stop(); app.isRec=false; }}, 3000);
+  }
+
+  // 4. Dessin Canvas
+  const ctx = app.cCtx, w=app.width, h=app.height;
+  ctx.fillStyle = 'rgba(0, 10, 0, 0.2)'; ctx.fillRect(0,0,w,h);
   
-  // Draw
-  const ctx = state.cCtx, w=state.width, h=state.height;
-  ctx.fillStyle = 'rgba(0,0,0,0.2)'; ctx.fillRect(0,0,w,h);
-  
-  const barW = (w / state.dataArray.length) * 2.5;
+  const barW = (w / app.dataArray.length) * 2.5;
   let x = 0;
-  for(let i=0; i<state.dataArray.length; i++) {
-      const v = state.dataArray[i];
+  for(let i=0; i<app.dataArray.length; i++) {
+      const v = app.dataArray[i];
       const barH = (v/255)*h;
-      ctx.fillStyle = state.config.evp ? `hsl(${280-v},100%,50%)` : `hsl(${120-v},100%,50%)`;
-      ctx.fillRect(x, state.config.evp?h-barH:h/2-barH/2, barW, barH);
+      
+      let hue = 120 - v;
+      if(app.config.evp) hue = 280 - v;
+      if(app.simulation) hue = 30; // Orange en simulation
+      
+      ctx.fillStyle = `hsl(${hue}, 100%, 50%)`;
+      ctx.fillRect(x, app.config.evp ? h-barH : h/2-barH/2, barW, barH);
       x += barW+1;
   }
-  
-  // Ghost Box Sweep Logic (Audio Freq)
-  if(state.config.ghostBox) {
-      const time = state.ctx.currentTime;
-      const freq = 100 + (Math.sin(time*2)+1)*1500;
-      state.ghost.frequency.setTargetAtTime(freq, time, 0.1);
+
+  // 5. Ghost Box Audio (Si réel)
+  if(app.config.ghostBox && !app.simulation) {
+      const t = app.ctx.currentTime;
+      const f = 100 + (Math.sin(t*3)+1)*1500;
+      app.ghost.frequency.setTargetAtTime(f, t, 0.1);
   }
 
-  // Radar
-  if(state.config.radar) {
-      const cx = w-60, cy = 60, r=50;
-      ctx.strokeStyle = '#ff0'; ctx.beginPath(); ctx.arc(cx,cy,r,0,7); ctx.stroke();
+  // 6. Radar
+  if(app.config.radar) {
+      const cx = w-60, cy = 60;
+      ctx.strokeStyle = app.simulation ? 'orange' : '#0f0';
+      ctx.beginPath(); ctx.arc(cx,cy,50,0,7); ctx.stroke();
       ctx.save(); ctx.translate(cx,cy); ctx.rotate(Date.now()/200);
-      ctx.fillStyle = 'rgba(255,255,0,0.5)';
-      ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0,r,-0.2,0.2); ctx.fill(); ctx.restore();
+      ctx.fillStyle = app.simulation ? 'rgba(255,165,0,0.5)' : 'rgba(0,255,0,0.5)';
+      ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0,50,-0.2,0.2); ctx.fill(); ctx.restore();
   }
-}
-
-function resize() {
-  state.width = els.canvas.clientWidth;
-  state.height = els.canvas.clientHeight;
-  state.canvas.width = state.width;
-  state.canvas.height = state.height;
-  state.cCtx = state.canvas.getContext('2d');
 }
 
 // --- INIT ---
 window.onload = () => {
-  el('loading').style.display = 'none';
-  state.canvas = els.canvas;
-  state.cCtx = state.canvas.getContext('2d');
+  app.canvas = els.canvas;
+  app.cCtx = app.canvas.getContext('2d');
   resize();
   initIA();
-  log("Pret. Appuyez sur START.", 'log-suc');
+  log("ETERNITY LAB PRET.", 'log-suc');
 };
-window.onresize = resize;
 
+window.onresize = resize;
+function resize() {
+  app.width = els.canvas.clientWidth;
+  app.height = els.canvas.clientHeight;
+  app.canvas.width = app.width;
+  app.canvas.height = app.height;
+}
+
+function toggleTheme() {
+  const root = document.documentElement;
+  const curr = root.style.getPropertyValue('--primary');
+  root.style.setProperty('--primary', curr === '#00ff00' ? '#00ffff' : '#00ff00');
+}
 </script>
 </body>
 </html>
