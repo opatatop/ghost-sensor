@@ -3,703 +3,930 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PUISSANCE MAXIMUM - GHOSTBOX AI</title>
+    <title>TONNERRE DE ZEUS</title>
     <style>
         /* 
          * ==========================================
-         * CSS - THÈME TONNERRE DE ZEUS
+         * CSS COMPLET ET DÉTAILLÉ (Thème ZEUS)
          * ==========================================
          */
+        
         :root {
             --primary-color: #00ccff;      /* Bleu Néon */
             --secondary-color: #ffd700;    /* Or Divin */
-            --alert-color: #ff3333;        /* Rouge Alerte */
-            --bg-color: #050510;           /* Noir Profond */
-            --panel-bg: #0a0a20;           /* Gris Sombre */
-            --grid-color: rgba(0, 204, 255, 0.1);
+            --background-color: #050510;   /* Noir Profond */
+            --panel-color: #0a0a20;       /* Gris Sombre */
+            --text-color: #e0e0ff;        /* Blanc Cassé */
+            --grid-color: #1a2a3a;        /* Grille Subtile */
+            --alert-color: #ff3333;       /* Rouge Alerte */
+            --lcd-bg: #000810;            /* Fond LCD */
         }
 
-        * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
 
         body {
-            margin: 0; padding: 0;
+            margin: 0;
+            padding: 0;
             font-family: 'Courier New', Courier, monospace;
-            background-color: var(--bg-color);
-            color: #e0e0ff;
-            height: 100vh;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
-            overflow: hidden;
+            overflow-y: auto;
         }
 
         /* --- HEADER --- */
         header {
-            background: rgba(0,0,0,0.9);
+            background-color: #000000;
             border-bottom: 2px solid var(--secondary-color);
-            padding: 10px;
+            padding: 8px 15px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            z-index: 10;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.5);
         }
 
-        h1 { margin: 0; font-size: 1rem; color: var(--primary-color); text-shadow: 0 0 8px var(--primary-color); }
-        .status { font-size: 0.7rem; color: var(--secondary-color); border: 1px solid var(--secondary-color); padding: 2px 6px; border-radius: 4px; }
+        h1 {
+            margin: 0;
+            font-size: 1.1rem;
+            color: var(--primary-color);
+            text-shadow: 0 0 10px var(--primary-color);
+        }
 
-        /* --- ZONE CAPTEURS --- */
+        .status-badge {
+            padding: 4px 8px;
+            border: 1px solid var(--secondary-color);
+            border-radius: 4px;
+            color: var(--secondary-color);
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .status-badge.active {
+            background-color: var(--secondary-color);
+            color: #000000;
+            box-shadow: 0 0 10px var(--secondary-color);
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        /* --- GRILLE CAPTEURS --- */
         #sensorGrid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 1px;
-            background: #000;
-            border-bottom: 1px solid #333;
-        }
-        .sensor {
-            background: var(--panel-bg);
+            background-color: #000000;
+            border-bottom: 1px solid var(--primary-color);
             padding: 5px;
-            text-align: center;
-            font-size: 0.7rem;
+            font-size: 0.65rem;
         }
-        .sensor span { display: block; color: #666; font-size: 0.6rem; }
-        .sensor div { color: var(--primary-color); font-weight: bold; }
-        .sensor.active { background: rgba(255, 51, 51, 0.2); animation: blink 0.2s infinite; }
 
-        /* --- ZONE VISUELLE (SCOPE + WEBGL) --- */
-        #visualContainer {
+        .sensor-cell {
+            background-color: var(--panel-color);
+            text-align: center;
+            padding: 6px 0;
+            border: 1px solid #222;
+            transition: background-color 0.1s;
+        }
+
+        .sensor-label {
+            color: #666666;
+            font-size: 0.55rem;
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        .sensor-value {
+            color: var(--primary-color);
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .sensor-alert {
+            background-color: #330000 !important;
+            border-color: var(--alert-color) !important;
+            color: var(--alert-color) !important;
+            animation: blinkRed 0.2s infinite;
+        }
+
+        @keyframes blinkRed {
+            50% { opacity: 0.5; background-color: #550000; }
+        }
+
+        /* --- SCOPE --- */
+        #mainScope {
             position: relative;
             flex: 1;
-            background: #000;
-            overflow: hidden;
+            min-height: 300px;
+            max-height: 45vh;
+            background-color: #000000;
             border-bottom: 2px solid var(--primary-color);
+            overflow: hidden;
         }
 
-        canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
-        
-        /* Oscilloscope (2D) au dessus */
-        #scopeCanvas { z-index: 2; pointer-events: none; opacity: 0.8; }
-        /* Spectrogramme 3D (WebGL) en fond */
-        #webglCanvas { z-index: 1; }
+        canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
 
-        /* Overlay AI */
+        .grid-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(var(--grid-color) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+            background-size: 30px 30px;
+            pointer-events: none;
+            opacity: 0.3;
+        }
+
+        #flashOverlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #ffffff;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        .flash-active {
+            animation: flashScreen 0.3s ease-out;
+        }
+
+        @keyframes flashScreen {
+            0% { opacity: 0.8; }
+            100% { opacity: 0; }
+        }
+
+        /* --- AI OVERLAY --- */
         #aiOverlay {
             position: absolute;
             bottom: 20px;
-            left: 0; width: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
             text-align: center;
-            z-index: 5;
             pointer-events: none;
+            z-index: 10;
         }
+
         #aiText {
-            font-size: 1.8rem;
+            font-size: 2.0rem;
             font-weight: 900;
-            color: #fff;
+            color: #ffffff;
+            background-color: rgba(0, 0, 0, 0.8);
+            border: 2px solid var(--secondary-color);
+            padding: 10px;
             text-transform: uppercase;
-            text-shadow: 0 0 10px var(--secondary-color), 0 0 20px var(--primary-color);
+            box-shadow: 0 0 15px var(--secondary-color);
+            min-height: 2.5rem;
+            margin-bottom: 5px;
+            text-shadow: 0 0 5px var(--primary-color);
+        }
+
+        #aiSub {
+            font-size: 0.75rem;
+            color: var(--primary-color);
+            letter-spacing: 2px;
             background: rgba(0,0,0,0.6);
             display: inline-block;
-            padding: 5px 15px;
-            border: 1px solid var(--secondary-color);
-        }
-        #aiSub { font-size: 0.8rem; color: var(--primary-color); margin-top: 5px; letter-spacing: 2px; }
-
-        /* --- CONTROLES --- */
-        #controls {
-            background: var(--panel-bg);
-            padding: 10px;
-            height: 35vh;
-            overflow-y: auto;
-            border-top: 1px solid #333;
+            padding: 2px 8px;
+            border-radius: 4px;
         }
 
-        .control-group { margin-bottom: 15px; border: 1px solid #333; padding: 8px; border-radius: 4px; }
-        .group-title { color: var(--secondary-color); font-size: 0.7rem; text-transform: uppercase; margin-bottom: 8px; border-bottom: 1px solid #333; padding-bottom: 2px;}
+        /* --- CONTROLS --- */
+        #controlsArea {
+            background-color: var(--panel-color);
+            padding: 15px;
+            padding-bottom: 80px;
+        }
 
-        .btn-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
-        .btn-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
+        .control-group {
+            margin-bottom: 20px;
+            border: 1px solid #333;
+            background-color: rgba(0,0,0,0.2);
+            padding: 12px;
+            border-radius: 4px;
+        }
+
+        .group-title {
+            color: var(--secondary-color);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            border-bottom: 1px solid #333;
+            margin-bottom: 12px;
+            padding-bottom: 6px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .btn-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
 
         button {
-            background: #111; border: 1px solid var(--primary-color);
-            color: var(--primary-color); padding: 10px;
-            font-family: inherit; font-size: 0.7rem; font-weight: bold;
-            cursor: pointer; text-transform: uppercase;
-            border-radius: 2px;
+            background-color: #111;
+            border: 1px solid var(--primary-color);
+            color: var(--primary-color);
+            padding: 12px 5px;
+            font-family: inherit;
+            font-size: 0.7rem;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: all 0.2s;
+            border-radius: 3px;
         }
-        button:active { background: var(--primary-color); color: #000; }
-        button.active { background: var(--primary-color); color: #000; box-shadow: 0 0 8px var(--primary-color); }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        button.active {
+            background-color: var(--primary-color);
+            color: #000000;
+            box-shadow: 0 0 10px var(--primary-color);
+            border-color: #ffffff;
+        }
+
+        #startBtn {
+            background-color: #ffffff;
+            color: #000000;
+            font-size: 1rem;
+            padding: 16px;
+            border: 2px solid var(--secondary-color);
+            width: 100%;
+            margin-bottom: 10px;
+        }
         
-        #btnStart { background: var(--secondary-color); color: #000; border: none; font-size: 1rem; width: 100%; }
-        #btnStart:active { background: #fff; }
+        #stopBtn {
+            border-color: var(--alert-color);
+            color: var(--alert-color);
+            background-color: #220000;
+            width: 100%;
+        }
+
+        #stopBtn.active {
+            background-color: var(--alert-color);
+            color: #ffffff;
+        }
 
         /* Sliders */
-        .slider-row { display: flex; align-items: center; margin-bottom: 8px; font-size: 0.7rem; }
-        .slider-row label { flex: 1; color: #aaa; }
-        input[type="range"] { flex: 2; accent-color: var(--secondary-color); }
-        .val { width: 30px; text-align: right; color: var(--secondary-color); }
+        .slider-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            font-size: 0.75rem;
+        }
+
+        .slider-row label {
+            flex: 1;
+            color: #aaaaaa;
+        }
+
+        input[type="range"] {
+            flex: 2;
+            height: 4px;
+            background-color: #333;
+            -webkit-appearance: none;
+            border-radius: 2px;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background-color: var(--primary-color);
+            border-radius: 50%;
+            cursor: pointer;
+            border: 1px solid #fff;
+        }
+
+        .val-display {
+            width: 35px;
+            text-align: right;
+            color: var(--secondary-color);
+            font-weight: bold;
+        }
 
         /* Terminal */
-        #terminal {
-            height: 80px; background: #000; color: #888; font-size: 0.6rem;
-            padding: 5px; overflow-y: auto; border: 1px solid #333; margin-top: 10px;
+        #sysTerminal {
+            height: 80px;
+            background-color: #000000;
+            border-top: 1px solid var(--primary-color);
+            padding: 8px;
+            font-size: 0.65rem;
+            overflow-y: auto;
+            color: #888888;
+            margin-top: 10px;
             font-family: monospace;
+            border-radius: 4px;
         }
-        .log-sys { color: #aaa; }
-        .log-ai { color: var(--secondary-color); }
-        .log-emp { color: var(--alert-color); font-weight: bold; }
 
-        @keyframes blink { 50% { opacity: 0.3; } }
+        .log-entry { margin-bottom: 4px; border-left: 2px solid transparent; padding-left: 6px; }
+        .log-sys { border-color: #666666; color: #aaaaaa; }
+        .log-ai { border-color: var(--primary-color); color: #ffffff; background-color: #002220; }
+        .log-emp { border-color: var(--alert-color); color: var(--alert-color); font-weight: bold; }
     </style>
 </head>
 <body>
 
+    <!-- HEADER PRINCIPAL -->
     <header>
-        <h1>PUISSANCE <span style="color:var(--secondary-color)">MAXIMUM</span></h1>
-        <div id="sysStatus" class="status">OFFLINE</div>
+        <h1>PuiSSancE <span style="font-size:0.6em; color:var(--secondary-color)">MAXIMUM</span></h1>
+        <div>
+            <span id="sysStatus" class="status-badge">OFFLINE</span>
+        </div>
     </header>
 
+    <!-- GRILLE DES CAPTEURS (DÉTECTION EMP/ACC) -->
     <div id="sensorGrid">
-        <div class="sensor" id="sAcc"><span>ACC (G)</span><div id="valAcc">0.00</div></div>
-        <div class="sensor" id="sMag"><span>MAG (µT)</span><div id="valMag">0</div></div>
-        <div class="sensor" id="sEmp"><span>EMP DETECT</span><div id="valEmp">NON</div></div>
+        <div class="sensor-cell" id="cellAcc">
+            <span class="sensor-label">MVT (ACC)</span>
+            <span class="sensor-value" id="valAcc">0.0</span>
+        </div>
+        <div class="sensor-cell" id="cellMag">
+            <span class="sensor-label">MAG (µT)</span>
+            <span class="sensor-value" id="valMag">0</span>
+        </div>
+        <div class="sensor-cell" id="cellEmp">
+            <span class="sensor-label">EMP DETECT</span>
+            <span class="sensor-value" id="valEmp">NON</span>
+        </div>
     </div>
 
-    <div id="visualContainer">
-        <!-- Canvas WebGL pour le Spectrogramme 3D -->
-        <canvas id="webglCanvas"></canvas>
-        <!-- Canvas 2D pour l'Oscilloscope -->
+    <!-- ZONE VISUELLE PRINCIPALE -->
+    <div id="mainScope">
+        <div class="grid-overlay"></div>
+        <div id="flashOverlay"></div>
         <canvas id="scopeCanvas"></canvas>
-        
         <div id="aiOverlay">
             <div id="aiText">INITIALISATION...</div>
-            <div id="aiSub">SYSTÈME EN ATTENTE</div>
+            <div id="aiSub">SYSTEM STANDBY</div>
         </div>
     </div>
 
-    <div id="controls">
-        <!-- Group: Alimentation -->
+    <!-- ZONE DE CONTRÔLE -->
+    <div id="controlsArea">
+        
+        <!-- GROUPE ALIMENTATION -->
         <div class="control-group">
-            <button id="btnStart" onclick="toggleSystem()">⚡ DÉMARRER SYSTÈME AUDIO</button>
+            <div class="group-title">Système d'Alimentation Principal</div>
+            <button id="btnStart" onclick="startPowerSystem()">⚡ DÉMARRER SYSTÈME AUDIO</button>
         </div>
 
-        <!-- Group: Modules Actifs -->
+        <!-- GROUPE CHAÎNE AUDIO (BOUCLE) -->
         <div class="control-group" id="moduleControls" style="opacity:0.5; pointer-events:none;">
-            <div class="group-title">Modules Actifs</div>
-            <div class="btn-grid-4">
-                <button id="btnMic" class="active" onclick="setMod('mic')">MIC</button>
-                <button id="btnLoop" class="active" onclick="setMod('loop')">LOOP IA</button>
-                <button id="btnFilter" onclick="setMod('filter')">FILTRE</button>
-                <button id="btnGhost" class="active" onclick="setMod('ghost')">GHOST</button>
+            <div class="group-title">Modules Actifs & IA</div>
+            <div class="btn-grid">
+                <button id="btnMic" class="active" onclick="toggleAudioModule('microphone')">🎧 MICRO</button>
+                <button id="btnLoop" class="active" onclick="toggleAudioModule('ttsEngine')">🔊 LOOP IA</button>
+                <button id="btnGhost" class="active" onclick="toggleAudioModule('ghostMode')">👻 TRAD. BRUIT</button>
+                <button id="btnRec" onclick="toggleAudioModule('recorder')">⏺ ENREGISTREUR</button>
             </div>
         </div>
 
-        <!-- Group: Paramètres -->
-        <div class="control-group" id="paramControls" style="opacity:0.5; pointer-events:none;">
-            <div class="group-title">Traitement Signal & Synthèse</div>
+        <!-- GROUPE RÉGLAGES RAPIDES -->
+        <div class="control-group" id="sliderControls" style="opacity:0.5; pointer-events:none;">
+            <div class="group-title">Paramètres Rapides</div>
             
             <div class="slider-row">
-                <label>Seuil Energie</label>
-                <input type="range" id="threshSlider" min="0" max="100" value="15" oninput="updateParam('threshold', this.value)">
-                <span class="val" id="dispThresh">15</span>
-            </div>
-            
-            <div class="slider-row">
-                <label>Sensibilité Ghost</label>
-                <input type="range" id="ghostSlider" min="0" max="100" value="50" oninput="updateParam('ghostSens', this.value)">
-                <span class="val" id="dispGhost">50</span>
+                <label>Seuil Énergie (Bruit)</label>
+                <input type="range" id="sliderThresh" min="0" max="100" value="30" oninput="updateLiveConfig('energyThreshold', this.value)">
+                <span class="val-display" id="dispThresh">30</span>
             </div>
 
             <div class="slider-row">
-                <label>Volume Voix (TTS)</label>
-                <input type="range" id="volSlider" min="0" max="100" value="80" oninput="updateParam('volume', this.value)">
-                <span class="val" id="dispVol">80</span>
+                <label>Volume Voix (Sortie)</label>
+                <input type="range" id="sliderVoiceVol" min="0" max="1" step="0.1" value="1.0" oninput="updateLiveConfig('voiceVolume', this.value)">
+                <span class="val-display" id="dispVoiceVol">1.0</span>
             </div>
         </div>
 
-        <div id="terminal">
-            <div class="log-sys">> Prêt. Appuyez sur DÉMARRER.</div>
+        <!-- TERMINAL DE LOGS -->
+        <div id="sysTerminal">
+            <div class="log-entry log-sys">> Système initialisé. En attente de commande.</div>
         </div>
     </div>
 
-    <!-- SCRIPT PRINCIPAL -->
+    <!-- SCRIPT COMPLET -->
     <script>
-        // --- 1. CONFIGURATION & ÉTAT ---
-        const CONFIG = {
-            fftSize: 4096,
+        /**
+         * =========================================================================
+         * PuiSSancE MAXIMUM - VERSION GHOSTBOX ULTIME
+         * =========================================================================
+         */
+
+        // --- 1. CONFIGURATION & DICTIONNAIRE PARANORMAL ---
+        const AVAILABLE_THEMES = {
+            'zeus': { primary: '#00ccff', secondary: '#ffd700' },
+            'hades': { primary: '#aa00ff', secondary: '#ff0000' },
+            'ares': { primary: '#ff3300', secondary: '#ffff00' },
+        };
+
+        const GHOST_DICTIONARY = [
+            "bruit sourd", "onde magnétique", "impulsion", "statique", 
+            "énergie", "fréquence", "grondement", "souffle", "vibration", 
+            "champ", "spectre", "alpha", "thêta", "résonance", "vide",
+            "écho", "larsen", "décharge", "magma", "éther", "présence", "sortez"
+        ];
+
+        const GHOST_CHARS = ['#', '%', '$', '*', '§', '@', '!'];
+
+        const DEFAULT_SYSTEM_CONFIG = {
+            microphone: true,
+            ttsEngine: true,      // Répète ce que vous dites
+            ghostMode: true,      // Traduit les bruits
+            recorder: false,
+            voiceVolume: 1.0,
+            voicePitch: 0.6,      // Voix grave par défaut
+            speechRate: 1.1,
+            energyThreshold: 30,  // Seuil pour déclencher la traduction de bruit
+            fftSize: 2048,
             smoothing: 0.8,
-            bandsCount: 40, // Bandes de fréquences analysées
-            ghostWords: [
-                "énergie", "magnétique", "présence", "esprit", "qui est là", "obscurité", 
-                "aidez-moi", "sortez", "sueur froide", "vision", "passage", "onde",
-                "fréquence", "porte", "entre deux mondes", "silence", "écoute", "thêta",
-                "alpha", "impulsion", "écho", "tempête", " Zeus", "foudre"
-            ]
+            currentTheme: 'zeus'
         };
 
-        const STATE = {
+        // --- 2. OBJET PRINCIPAL ---
+        const POWER_SYSTEM = {
             isRunning: false,
-            modules: { mic: true, loop: true, filter: false, ghost: true },
-            params: { threshold: 15, ghostSens: 50, volume: 0.8 },
-            audioCtx: null,
-            micSource: null,
-            analyser: null,
-            gainNode: null,
-            recognition: null,
-            synthesis: window.speechSynthesis,
-            lastSpeechTime: 0,
-            micLevel: 0
+            audioContext: null,
+            microphoneSource: null,
+            analyserNode: null,
+            mediaStream: null,
+            mediaRecorder: null,
+            isRecording: false,
+            speechRecognition: null,
+            speechSynthesis: window.speechSynthesis,
+            frequencyData: null,
+            timeDomainData: null,
+            config: { ...DEFAULT_SYSTEM_CONFIG },
+            lastSpeakTime: 0,
+            sensors: { lastAlpha: 0, lastAcc: 0 }
         };
 
-        // --- 2. WEBGL ENGINE (Spectrogramme 3D) ---
-        // Un moteur WebGL simple pour dessiner des barres de fréquence en 3D
-        const GL = {
-            canvas: document.getElementById('webglCanvas'),
-            gl: null,
-            program: null,
-            positionLocation: null,
-            colorLocation: null,
-            matrixLocation: null,
-            count: 0
-        };
+        // --- 3. UTILITAIRES ---
+        function getEl(id) { return document.getElementById(id); }
 
-        function initWebGL() {
-            const gl = GL.canvas.getContext('webgl');
-            if (!gl) { log("WebGL non supporté", "sys"); return; }
-            GL.gl = gl;
-
-            // Shaders simples
-            const vs = `
-                attribute vec4 a_position;
-                attribute vec4 a_color;
-                uniform mat4 u_matrix;
-                varying vec4 v_color;
-                void main() { gl_Position = u_matrix * a_position; v_color = a_color; gl_PointSize = 4.0; }
-            `;
-            const fs = `
-                precision mediump float;
-                varying vec4 v_color;
-                void main() { gl_FragColor = v_color; }
-            `;
-
-            const program = createProgram(gl, vs, fs);
-            GL.program = program;
-            GL.positionLocation = gl.getAttribLocation(program, "a_position");
-            GL.colorLocation = gl.getAttribLocation(program, "a_color");
-            GL.matrixLocation = gl.getUniformLocation(program, "u_matrix");
+        function logMessage(message, type = 'sys') {
+            const terminal = getEl('sysTerminal');
+            const logEntry = document.createElement('div');
+            logEntry.className = 'log-entry log-' + type;
+            const timestamp = new Date().toLocaleTimeString('fr-FR', { hour12: false });
+            logEntry.innerText = `[${timestamp}] > ${message}`;
+            terminal.appendChild(logEntry);
+            terminal.scrollTop = terminal.scrollHeight;
         }
 
-        function createProgram(gl, vs, fs) {
-            const p = gl.createProgram();
-            const v = gl.createShader(gl.VERTEX_SHADER);
-            const f = gl.createShader(gl.FRAGMENT_SHADER);
-            gl.shaderSource(v, vs); gl.compileShader(v);
-            gl.shaderSource(f, fs); gl.compileShader(f);
-            gl.attachShader(p, v); gl.attachShader(p, f);
-            gl.linkProgram(p);
-            return p;
+        // --- 4. GESTION THÈMES & CONFIG ---
+        function setAppTheme(themeName) {
+            const theme = AVAILABLE_THEMES[themeName];
+            if (!theme) return;
+            const root = document.documentElement;
+            root.style.setProperty('--primary-color', theme.primary);
+            root.style.setProperty('--secondary-color', theme.secondary);
+            POWER_SYSTEM.config.currentTheme = themeName;
         }
 
-        // Matrice de projection simple (Perspective)
-        function makeProjection(w, h) {
-            const fov = 60 * Math.PI / 180;
-            const aspect = w / h;
-            const near = 1;
-            const far = 2000;
-            const f = Math.tan(Math.PI * 0.5 - 0.5 * fov);
-            const rangeInv = 1.0 / (near - far);
-            return [
-                f / aspect, 0, 0, 0,
-                0, f, 0, 0,
-                0, 0, (near + far) * rangeInv, -1,
-                0, 0, near * far * rangeInv * 2, 0
-            ];
-        }
-
-        // --- 3. SYSTÈME AUDIO & IA ---
-
-        async function toggleSystem() {
-            if (STATE.isRunning) {
-                stopSystem();
-            } else {
-                await startSystem();
-            }
-        }
-
-        async function startSystem() {
-            const btn = document.getElementById('btnStart');
-            btn.innerText = "INITIALISATION...";
+        function updateLiveConfig(key, value) {
+            const numValue = parseFloat(value);
+            POWER_SYSTEM.config[key] = numValue;
             
+            // Mise à jour affichage
+            if (key === 'energyThreshold') getEl('dispThresh').innerText = numValue;
+            if (key === 'voiceVolume') getEl('dispVoiceVol').innerText = numValue;
+        }
+
+        function toggleAudioModule(moduleName) {
+            POWER_SYSTEM.config[moduleName] = !POWER_SYSTEM.config[moduleName];
+            
+            // Mapping ID bouton
+            let btnId = '';
+            if(moduleName === 'microphone') btnId = 'btnMic';
+            else if(moduleName === 'ttsEngine') btnId = 'btnLoop';
+            else if(moduleName === 'ghostMode') btnId = 'btnGhost';
+            else if(moduleName === 'recorder') btnId = 'btnRec';
+
+            const btn = getEl(btnId);
+            if (POWER_SYSTEM.config[moduleName]) btn.classList.add('active');
+            else btn.classList.remove('active');
+
+            logMessage(`Module ${moduleName}: ${POWER_SYSTEM.config[moduleName] ? 'ACTIVÉ' : 'DÉSACTIVÉ'}`, 'sys');
+            
+            if (moduleName === 'recorder') handleRecordingState();
+        }
+
+        // --- 5. MOTEUR AUDIO (START/STOP) ---
+
+        async function startPowerSystem() {
+            if (POWER_SYSTEM.isRunning) return;
+            
+            const btn = getEl('btnStart');
+            btn.innerText = "INITIALISATION...";
+            btn.disabled = true;
+
             try {
-                // Contexte Audio
-                const AudioContext = window.AudioContext || window.webkitAudioContext;
-                STATE.audioCtx = new AudioContext();
+                const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                POWER_SYSTEM.audioContext = new AudioContextClass();
                 
+                if (POWER_SYSTEM.audioContext.state === 'suspended') {
+                    await POWER_SYSTEM.audioContext.resume();
+                }
+
                 // Microphone
-                const stream = await navigator.mediaDevices.getUserMedia({ 
-                    audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } 
-                });
-                STATE.micSource = STATE.audioCtx.createMediaStreamSource(stream);
+                try {
+                    POWER_SYSTEM.mediaStream = await navigator.mediaDevices.getUserMedia({
+                        audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
+                        video: false
+                    });
+                    POWER_SYSTEM.microphoneSource = POWER_SYSTEM.audioContext.createMediaStreamSource(POWER_SYSTEM.mediaStream);
+                    
+                    POWER_SYSTEM.analyserNode = POWER_SYSTEM.audioContext.createAnalyser();
+                    POWER_SYSTEM.analyserNode.fftSize = POWER_SYSTEM.config.fftSize;
+                    POWER_SYSTEM.analyserNode.smoothingTimeConstant = POWER_SYSTEM.config.smoothing;
+                    
+                    POWER_SYSTEM.microphoneSource.connect(POWER_SYSTEM.analyserNode);
 
-                // Analyseur
-                STATE.analyser = STATE.audioCtx.createAnalyser();
-                STATE.analyser.fftSize = CONFIG.fftSize;
-                STATE.analyser.smoothingTimeConstant = CONFIG.smoothing;
-                STATE.micSource.connect(STATE.analyser);
+                    const bufferLength = POWER_SYSTEM.analyserNode.frequencyBinCount;
+                    POWER_SYSTEM.frequencyData = new Uint8Array(bufferLength);
+                    POWER_SYSTEM.timeDomainData = new Uint8Array(bufferLength);
 
-                // Gain (Volume In)
-                STATE.gainNode = STATE.audioCtx.createGain();
-                STATE.micSource.connect(STATE.gainNode);
+                    logMessage("Microphone connecté. Analyse 40 bandes prête.", 'sys');
+                } catch (e) {
+                    logMessage("Erreur Micro: " + e.message, 'warn');
+                }
 
-                // Initialisation IA (Speech Recognition)
-                initAI();
+                // Enregistreur
+                if (POWER_SYSTEM.mediaStream) {
+                    try {
+                        POWER_SYSTEM.mediaRecorder = new MediaRecorder(POWER_SYSTEM.mediaStream);
+                        POWER_SYSTEM.mediaRecorder.ondataavailable = e => {
+                            const blob = new Blob([e.data], { type: 'audio/webm' });
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url; a.download = `GhostBox_${Date.now()}.webm`;
+                            a.click();
+                            logMessage("Enregistrement sauvegardé.", 'sys');
+                        };
+                        logMessage("Enregistreur prêt.", 'sys');
+                    } catch (e) { logMessage("Enregistreur indisponible.", 'warn'); }
+                }
 
-                // UI Updates
-                STATE.isRunning = true;
-                document.getElementById('sysStatus').innerText = "ONLINE";
-                document.getElementById('sysStatus').style.background = "var(--secondary-color)";
-                document.getElementById('sysStatus').style.color = "#000";
-                document.getElementById('moduleControls').style.opacity = "1";
-                document.getElementById('moduleControls').style.pointerEvents = "auto";
-                document.getElementById('paramControls').style.opacity = "1";
-                document.getElementById('paramControls').style.pointerEvents = "auto";
+                // Moteurs IA & Visuels
+                initSpeechToTextEngine();
+                startVisualLoop();
+                startSensorsMonitoring();
+
+                POWER_SYSTEM.isRunning = true;
                 btn.innerText = "⏹ ARRÊTER SYSTÈME";
                 btn.style.background = "var(--alert-color)";
                 btn.style.color = "#fff";
-
-                log("Système Démarré. FFT 4096 actif.", "sys");
-
-                // Démarrage Boucles Visuelles
-                initWebGL();
-                resizeCanvas();
-                requestAnimationFrame(renderLoop);
-                startSensors();
-
-            } catch (e) {
-                log("Erreur: " + e.message, "sys");
-                btn.innerText = "ERREUR";
-            }
-        }
-
-        function stopSystem() {
-            if (STATE.audioCtx) STATE.audioCtx.close();
-            if (STATE.recognition) STATE.recognition.stop();
-            STATE.synthesis.cancel();
-            STATE.isRunning = false;
-            location.reload(); // Simple reload pour reset propre
-        }
-
-        function initAI() {
-            // Speech to Text (Boucle d'écoute)
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (SpeechRecognition) {
-                STATE.recognition = new SpeechRecognition();
-                STATE.recognition.continuous = true;
-                STATE.recognition.interimResults = true;
-                STATE.recognition.lang = 'fr-FR';
-
-                STATE.recognition.onresult = (event) => {
-                    if (!STATE.modules.loop) return;
-
-                    let final = "";
-                    for (let i = event.resultIndex; i < event.results.length; ++i) {
-                        if (event.results[i].isFinal) {
-                            final += event.results[i][0].transcript;
-                        }
-                    }
-
-                    if (final) {
-                        // Traduction et Répétition
-                        handleVoiceInput(final);
-                    }
-                };
-
-                STATE.recognition.onend = () => {
-                    if (STATE.isRunning) STATE.recognition.start(); // Auto-restart
-                };
-
-                STATE.recognition.start();
-                log("Moteur IA (STT) Actif", "sys");
-            } else {
-                log("Reconnaissance vocale non supportée", "sys");
-            }
-        }
-
-        function handleVoiceInput(text) {
-            log("Detecté: " + text, "ai");
-            document.getElementById('aiText').innerText = text;
-            
-            // Effet visuel sur l'interface
-            document.getElementById('visualContainer').style.boxShadow = "inset 0 0 50px rgba(255, 215, 0, 0.2)";
-            setTimeout(() => document.getElementById('visualContainer').style.boxShadow = "none", 200);
-
-            // Répétition vocale (TTS)
-            speak(text);
-        }
-
-        function speak(text) {
-            STATE.synthesis.cancel();
-            const u = new SpeechSynthesisUtterance(text);
-            u.lang = 'fr-FR';
-            u.volume = STATE.params.volume;
-            u.rate = 1.2; // Un peu plus rapide pour effet GhostBox
-            u.pitch = 0.8; // Voix plus grave
-            STATE.synthesis.speak(u);
-        }
-
-        // --- 4. LOGIQUE PARANORMALE (Traduction Bruit/Emp) ---
-        
-        function checkPhoneticTranslation(energy, freqBands) {
-            if (!STATE.modules.ghost || !STATE.isRunning) return;
-
-            const now = Date.now();
-            // Si l'énergie dépasse le seuil et qu'on n'a pas parlé depuis 2 secondes
-            if (energy > STATE.params.threshold && (now - STATE.lastSpeechTime > 2000)) {
+                btn.classList.add('active'); // Utiliser classe active pour le style
+                btn.disabled = false;
                 
-                // Chance aléatoire basée sur la sensibilité
-                const chance = Math.random() * 100;
-                if (chance < STATE.params.ghostSens) {
+                getEl('sysStatus').classList.add('active');
+                getEl('sysStatus').innerText = "ONLINE";
+                getEl('moduleControls').style.opacity = "1";
+                getEl('moduleControls').style.pointerEvents = "auto";
+                getEl('sliderControls').style.opacity = "1";
+                getEl('sliderControls').style.pointerEvents = "auto";
+                getEl('aiText').innerText = "ÉCOUTE ACTIVE...";
+
+            } catch (err) {
+                logMessage("Erreur critique: " + err.message, 'warn');
+                btn.innerText = "ERREUR";
+                btn.disabled = false;
+            }
+        }
+
+        function stopPowerSystem() {
+            if (!POWER_SYSTEM.isRunning) return;
+            logMessage("Arrêt système...", 'sys');
+            
+            if (POWER_SYSTEM.audioContext) POWER_SYSTEM.audioContext.close();
+            if (POWER_SYSTEM.mediaStream) POWER_SYSTEM.mediaStream.getTracks().forEach(t => t.stop());
+            if (POWER_SYSTEM.speechRecognition) POWER_SYSTEM.speechRecognition.stop();
+            if (POWER_SYSTEM.speechSynthesis) POWER_SYSTEM.speechSynthesis.cancel();
+            if (POWER_SYSTEM.mediaRecorder && POWER_SYSTEM.isRecording) POWER_SYSTEM.mediaRecorder.stop();
+
+            location.reload(); // Reload pour un reset propre
+        }
+
+        // --- 6. MOTEUR IA (RECONNAISSANCE & TRADUCTION) ---
+
+        function initSpeechToTextEngine() {
+            const SpeechRecognitionClass = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognitionClass) return logMessage("API Vocale non supportée", 'warn');
+
+            POWER_SYSTEM.speechRecognition = new SpeechRecognitionClass();
+            POWER_SYSTEM.speechRecognition.continuous = true;
+            POWER_SYSTEM.speechRecognition.interimResults = true;
+            POWER_SYSTEM.speechRecognition.lang = 'fr-FR';
+
+            POWER_SYSTEM.speechRecognition.onresult = (event) => {
+                if (!POWER_SYSTEM.config.ttsEngine) return;
+
+                let finalTranscript = '';
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    if (event.results[i].isFinal) {
+                        finalTranscript += event.results[i][0].transcript;
+                    }
+                }
+
+                if (finalTranscript) {
+                    // C'est une voix humaine -> On répète avec effet GhostBox
+                    handleHumanSpeech(finalTranscript);
+                }
+            };
+
+            POWER_SYSTEM.speechRecognition.onend = () => { if (POWER_SYSTEM.isRunning) POWER_SYSTEM.speechRecognition.start(); };
+            POWER_SYSTEM.speechRecognition.start();
+            logMessage("IA Vocale Active.", 'sys');
+        }
+
+        // --- 7. TRAITEMENT AUDIO (BOUCLE 40 BANDES) ---
+
+        function process40BandAnalysis() {
+            if (!POWER_SYSTEM.analyserNode) return 0;
+
+            const bufferLength = POWER_SYSTEM.analyserNode.frequencyBinCount;
+            const data = POWER_SYSTEM.frequencyData; // Utilise le buffer global pour perf
+            
+            // Analyse 40 bandes logarithmiques (simplifiée pour la performance)
+            const bandCount = 40;
+            const bands = new Array(bandCount).fill(0);
+            let totalEnergy = 0;
+            
+            // On saute des échantillons pour simuler 40 bandes
+            const step = Math.floor(bufferLength / bandCount);
+
+            for (let i = 0; i < bandCount; i++) {
+                let sum = 0;
+                for (let j = 0; j < step; j++) {
+                    sum += data[i * step + j];
+                }
+                bands[i] = sum / step; // Moyenne de la bande
+                totalEnergy += bands[i];
+            }
+
+            const avgEnergy = totalEnergy / bandCount; // Énergie moyenne 0-255
+
+            // --- LOGIQUE DE TRADUCTION ÉNERGÉTIQUE ---
+            if (POWER_SYSTEM.config.ghostMode) {
+                const now = Date.now();
+                // Si l'énergie est haute et qu'on n'a pas parlé depuis 2 secondes
+                if (avgEnergy > POWER_SYSTEM.config.energyThreshold && (now - POWER_SYSTEM.lastSpeakTime > 2000)) {
                     
-                    // Choisir un mot aléatoire
-                    const word = CONFIG.ghostWords[Math.floor(Math.random() * CONFIG.ghostWords.length)];
-                    
-                    document.getElementById('aiText').innerText = word;
-                    document.getElementById('aiSub').innerText = "TRADUCTION ÉNERGÉTIQUE";
-                    
-                    log("Traduction Signal: " + word, "ai");
-                    speak(word);
-                    STATE.lastSpeechTime = now;
+                    // Probabilité de parler (évite le spam)
+                    if (Math.random() > 0.85) {
+                        // Traduction du bruit en mot
+                        const word = GHOST_DICTIONARY[Math.floor(Math.random() * GHOST_DICTIONARY.length)];
+                        handleEnergyTranslation(word);
+                    }
                 }
             }
+            
+            return avgEnergy;
         }
 
-        // --- 5. CAPTEURS (EMP/MAG) ---
-        function startSensors() {
+        // --- 8. FONCTIONS DE PAROLE (TTS) ---
+
+        function handleHumanSpeech(text) {
+            logMessage(`Voix détectée: "${text}"`, 'ai');
+            speakGhostBox(text, true); // true = humain
+        }
+
+        function handleEnergyTranslation(word) {
+            logMessage(`Traduction Énergie: "${word}"`, 'ai');
+            speakGhostBox(word, false); // false = paranormal
+        }
+
+        function speakGhostBox(text, isHuman) {
+            POWER_SYSTEM.speechSynthesis.cancel();
+            POWER_SYSTEM.lastSpeakTime = Date.now();
+
+            // Effet visuel "Glitch" sur le texte
+            let displayText = text;
+            if (isHuman) {
+                // Si c'est humain, on parasite le texte (ex: "O$kay$*")
+                displayText = garbleText(text);
+            }
+            
+            getEl('aiText').innerText = displayText;
+            getEl('aiSub').innerText = isHuman ? "RÉPÉTION AUDIO" : "TRADUCTION SIGNAL";
+
+            const utterance = new SpeechSynthesisUtterance(text); // On prononce le texte clair pour la compréhension, ou le mot
+            utterance.lang = 'fr-FR';
+            utterance.volume = POWER_SYSTEM.config.voiceVolume;
+
+            if (isHuman) {
+                // Effet GhostBox sur la voix humaine : Pitch et Rate aléatoires
+                utterance.pitch = 0.3 + Math.random() * 0.5; 
+                utterance.rate = 0.8 + Math.random() * 0.6;
+            } else {
+                // Voix Paranormale : plus grave et lente
+                utterance.pitch = POWER_SYSTEM.config.voicePitch;
+                utterance.rate = 0.9;
+            }
+
+            POWER_SYSTEM.speechSynthesis.speak(utterance);
+        }
+
+        function garbleText(str) {
+            return str.split('').map(char => {
+                // 30% de chance de remplacer une lettre par un symbole
+                if (Math.random() < 0.3) return GHOST_CHARS[Math.floor(Math.random() * GHOST_CHARS.length)];
+                return char;
+            }).join('');
+        }
+
+        // --- 9. VISUALISATION & BOUCLE DE RENDU ---
+
+        function startVisualLoop() {
+            const canvas = getEl('scopeCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            function drawFrame() {
+                if (!POWER_SYSTEM.isRunning) return;
+                requestAnimationFrame(drawFrame);
+
+                // Resize si besoin
+                if (canvas.width !== canvas.clientWidth) {
+                    canvas.width = canvas.clientWidth;
+                    canvas.height = canvas.clientHeight;
+                }
+
+                const w = canvas.width;
+                const h = canvas.height;
+
+                // Effacement (trainée)
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+                ctx.fillRect(0, 0, w, h);
+
+                // Récupérer données
+                POWER_SYSTEM.analyserNode.getByteFrequencyData(POWER_SYSTEM.frequencyData);
+                POWER_SYSTEM.analyserNode.getByteTimeDomainData(POWER_SYSTEM.timeDomainData);
+
+                // 1. OSCILLOSCOPE (Ligne blanche)
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = '#fff';
+                ctx.beginPath();
+                const sliceW = w * 1.0 / POWER_SYSTEM.timeDomainData.length;
+                let x = 0;
+                for (let i = 0; i < POWER_SYSTEM.timeDomainData.length; i++) {
+                    const v = POWER_SYSTEM.timeDomainData[i] / 128.0;
+                    const y = v * h / 2;
+                    if (i === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                    x += sliceW;
+                }
+                ctx.stroke();
+
+                // 2. SPECTRE (Barres colorées basées sur 40 bandes)
+                const avgEnergy = process40BandAnalysis(); // Déclenche aussi la traduction
+                
+                const barWidth = (w / POWER_SYSTEM.frequencyData.length) * 2.5;
+                let bx = 0;
+                
+                for (let i = 0; i < POWER_SYSTEM.frequencyData.length; i++) {
+                    const barHeight = (POWER_SYSTEM.frequencyData[i] / 255) * (h / 2);
+                    
+                    // Couleur dynamique (Bleu -> Or -> Rouge)
+                    const val = POWER_SYSTEM.frequencyData[i];
+                    let r=0, g=0, b=0;
+                    if(val < 150) { b=val; g=val; } // Bleu clair
+                    else if(val < 220) { r=255; g=215; b=0; } // Or
+                    else { r=255; g=0; b=0; } // Rouge alerte
+
+                    ctx.fillStyle = `rgb(${r},${g},${b})`;
+                    ctx.fillRect(bx, h - barHeight, barWidth, barHeight);
+                    bx += barWidth + 1;
+                }
+
+                // 3. FLASH SI ÉNERGIE MAX
+                if (avgEnergy > 200 && Math.random() > 0.95) {
+                    triggerLightningEffect();
+                }
+            }
+            drawFrame();
+        }
+
+        function triggerLightningEffect() {
+            const el = getEl('flashOverlay');
+            el.classList.remove('flash-active');
+            void el.offsetWidth; // Reflow
+            el.classList.add('flash-active');
+            
+            // Son de tonnerre basique via Oscillator
+            if (POWER_SYSTEM.audioContext) {
+                const osc = POWER_SYSTEM.audioContext.createOscillator();
+                const gain = POWER_SYSTEM.audioContext.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(50, POWER_SYSTEM.audioContext.currentTime);
+                gain.gain.setValueAtTime(0.5, POWER_SYSTEM.audioContext.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, POWER_SYSTEM.audioContext.currentTime + 0.3);
+                osc.connect(gain);
+                gain.connect(POWER_SYSTEM.audioContext.destination);
+                osc.start();
+                osc.stop(POWER_SYSTEM.audioContext.currentTime + 0.3);
+            }
+        }
+
+        // --- 10. CAPTEURS & EMP ---
+
+        function startSensorsMonitoring() {
+            // Mouvement (Accéléromètre)
             if (window.DeviceMotionEvent) {
                 window.addEventListener('devicemotion', (e) => {
                     const acc = e.accelerationIncludingGravity;
-                    if (!acc) return;
-
-                    const totalAcc = Math.abs(acc.x || 0) + Math.abs(acc.y || 0) + Math.abs(acc.z || 0);
-                    document.getElementById('valAcc').innerText = totalAcc.toFixed(2);
-
-                    // Simulation Magnétomètre via Orientation (plus dispo)
-                    if (window.DeviceOrientationEvent) {
-                        window.addEventListener('deviceorientation', (evt) => {
-                             if(evt.alpha) document.getElementById('valMag').innerText = Math.floor(evt.alpha);
-                        });
+                    if (acc) {
+                        const total = Math.abs(acc.x || 0) + Math.abs(acc.y || 0) + Math.abs(acc.z || 0);
+                        getEl('valAcc').innerText = total.toFixed(1);
+                        
+                        // Détection choc simple
+                        if (total > 25) triggerEMP();
                     }
+                });
+            }
 
-                    // Détection EMP (Choc soudain)
-                    if (totalAcc > 25) { // Seuil arbitraire haut
-                        triggerEMP();
+            // Magnétisme (Orientation simulée)
+            if (window.DeviceOrientationEvent) {
+                window.addEventListener('deviceorientation', (e) => {
+                    if (e.alpha !== null) {
+                        getEl('valMag').innerText = Math.floor(e.alpha);
+                        
+                        // Détection changement brusque
+                        if (Math.abs(e.alpha - POWER_SYSTEM.sensors.lastAlpha) > 15) {
+                            triggerEMP();
+                        }
+                        POWER_SYSTEM.sensors.lastAlpha = e.alpha;
                     }
                 });
             }
         }
 
         function triggerEMP() {
-            const el = document.getElementById('sEmp');
-            el.classList.add('active');
-            document.getElementById('valEmp').innerText = "DETECTÉ";
-            document.getElementById('valEmp').style.color = "red";
-            log("IMPULSION ÉLECTROMAGNÉTIQUE DÉTECTÉE", "emp");
+            const cell = getEl('cellEmp');
+            const val = getEl('valEmp');
             
-            // Jouer un son ou parler
-            if (STATE.modules.ghost) {
-                speak("Impulsion");
-                document.getElementById('aiText').innerText = "EMP";
+            cell.classList.add('sensor-alert');
+            val.innerText = "OUI";
+            logMessage("ALERTHE: IMPULSION ÉLECTROMAGNÉTIQUE", 'emp');
+            
+            // Parler si mode actif
+            if (POWER_SYSTEM.isRunning && POWER_SYSTEM.config.ghostMode) {
+                speakGhostBox("IMPULSION DÉTECTÉE", false);
+                triggerLightningEffect();
             }
 
             setTimeout(() => {
-                el.classList.remove('active');
-                document.getElementById('valEmp').innerText = "NON";
-                document.getElementById('valEmp').style.color = "var(--primary-color)";
+                cell.classList.remove('sensor-alert');
+                val.innerText = "NON";
             }, 1000);
         }
 
-        // --- 6. BOUCLE DE RENDU (CORE) ---
-
-        function renderLoop() {
-            if (!STATE.isRunning) return;
-
-            // 1. Get Audio Data
-            const bufferLength = STATE.analyser.frequencyBinCount;
-            const dataArray = new Uint8Array(bufferLength);
-            STATE.analyser.getByteFrequencyData(dataArray);
-
-            // 2. Calcul 40 Bandes (Logarithmique) & Niveau Moyen
-            const bands = new Array(CONFIG.bandsCount).fill(0);
-            let sum = 0;
-            const step = Math.floor(bufferLength / CONFIG.bandsCount);
-
-            for (let i = 0; i < CONFIG.bandsCount; i++) {
-                // Moyenne de la bande
-                let bandSum = 0;
-                for (let j = 0; j < step; j++) {
-                    bandSum += dataArray[i * step + j];
-                }
-                bands[i] = bandSum / step;
-                sum += bands[i];
+        function handleRecordingState() {
+            if (!POWER_SYSTEM.mediaRecorder) return;
+            if (POWER_SYSTEM.config.recorder && !POWER_SYSTEM.isRecording) {
+                try { POWER_SYSTEM.mediaRecorder.start(); POWER_SYSTEM.isRecording = true; } 
+                catch(e) { logMessage("Erreur Rec", 'warn'); }
+            } else if (!POWER_SYSTEM.config.recorder && POWER_SYSTEM.isRecording) {
+                POWER_SYSTEM.mediaRecorder.stop();
+                POWER_SYSTEM.isRecording = false;
             }
-            const avgLevel = sum / CONFIG.bandsCount; // 0-255
-
-            // 3. Logique IA (Trigger)
-            checkPhoneticTranslation(avgLevel, bands);
-
-            // 4. Rendu Canvas 2D (Oscilloscope)
-            drawOscilloscope();
-
-            // 5. Rendu WebGL (Spectrogramme 3D)
-            drawWebGLSpectrum(bands);
-
-            requestAnimationFrame(renderLoop);
         }
 
-        function drawOscilloscope() {
-            const canvas = document.getElementById('scopeCanvas');
-            const ctx = canvas.getContext('2d');
-            const w = canvas.width;
-            const h = canvas.height;
-            const bufferLength = STATE.analyser.frequencyBinCount;
-            const timeData = new Uint8Array(bufferLength);
-            STATE.analyser.getByteTimeDomainData(timeData);
-
-            ctx.clearRect(0, 0, w, h);
-            ctx.lineWidth = 2;
-            ctx.strokeStyle = "rgba(0, 204, 255, 0.5)";
-            ctx.beginPath();
-
-            const sliceWidth = w * 1.0 / bufferLength;
-            let x = 0;
-
-            for (let i = 0; i < bufferLength; i++) {
-                const v = timeData[i] / 128.0;
-                const y = v * h / 2;
-
-                if (i === 0) ctx.moveTo(x, y);
-                else ctx.lineTo(x, y);
-
-                x += sliceWidth;
-            }
-            ctx.stroke();
-        }
-
-        function drawWebGLSpectrum(bands) {
-            const gl = GL.gl;
-            if (!gl) return;
-
-            gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-            gl.clearColor(0, 0, 0, 0); // Transparent pour voir le scope au dessus
-            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-            gl.useProgram(GL.program);
-
-            // Préparer les données vertex (Barres 3D)
-            // On dessine des points ou lignes qui montent en fonction de l'amplitude
-            const positions = [];
-            const colors = [];
-            const numBars = bands.length;
-            
-            // Caméra simple
-            const aspect = gl.canvas.width / gl.canvas.height;
-            const projection = makeProjection(gl.canvas.width, gl.canvas.height);
-            // Rotation légère automatique
-            const time = Date.now() * 0.001;
-            const matrix = m4RotateY(projection, time);
-            matrix[14] = -6.0; // Zoom arrière
-
-            gl.uniformMatrix4fv(GL.matrixLocation, false, matrix);
-
-            // Générer géométrie pour les 40 bandes
-            for (let i = 0; i < numBars; i++) {
-                const val = bands[i]; // 0-255
-                const height = (val / 255) * 4.0; // Hauteur max 4.0 en 3D
-                
-                // Position X centrée
-                const x = (i - numBars / 2) * 0.3;
-                
-                // Couleur basée sur l'intensité (Bleu -> Or -> Rouge)
-                let r = 0, g = 0.8, b = 1;
-                if (val > 150) { r = 1; g = 0.8; b = 0; } // Or
-                if (val > 220) { r = 1; g = 0.2; b = 0.2; } // Rouge Alerte
-
-                // Créer une ligne verticale (bas -> haut)
-                positions.push(x, -2, 0);
-                positions.push(x, -2 + height, 0);
-                
-                colors.push(r, g, b, 1);
-                colors.push(r, g, b, 0.5);
-            }
-
-            // Buffer Position
-            const pBuffer = gl.createBuffer();
-            gl.bindBuffer(gl.ARRAY_BUFFER, pBuffer);
-            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.DYNAMIC_DRAW);
-            gl.enableVertexAttribArray(GL.positionLocation);
-            gl.vertexAttribPointer(GL.positionLocation, 3, gl.FLOAT, false, 0, 0);
-
-            // Buffer Couleur
-            const cBuffer = gl.createBuffer();
-            gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer);
-            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.DYNAMIC_DRAW);
-            gl.enableVertexAttribArray(GL.colorLocation);
-            gl.vertexAttribPointer(GL.colorLocation, 4, gl.FLOAT, false, 0, 0);
-
-            gl.drawArrays(gl.LINES, 0, positions.length / 3);
-        }
-
-        // --- UTILITAIRES MATHS (Matrice simple pour WebGL) ---
-        function m4RotateY(m, angleInRadians) {
-            const c = Math.cos(angleInRadians);
-            const s = Math.sin(angleInRadians);
-            // Copie simple de la matrice de projection
-            const dst = new Float32Array(m);
-            
-            // Rotation sur l'axe Y (modifie les indices 0,2,8,10)
-            const m00 = m[0], m01 = m[1], m02 = m[2], m03 = m[3];
-            const m20 = m[8], m21 = m[9], m22 = m[10], m23 = m[11];
-
-            dst[0] = c * m00 - s * m20;
-            dst[2] = c * m02 - s * m22;
-            dst[8] = c * m20 + s * m00;
-            dst[10] = c * m22 + s * m02;
-            return dst;
-        }
-
-        // --- GESTION UI ---
-        function setMod(mod) {
-            STATE.modules[mod] = !STATE.modules[mod];
-            const btn = document.getElementById('btn' + mod.charAt(0).toUpperCase() + mod.slice(1));
-            if (STATE.modules[mod]) btn.classList.add('active');
-            else btn.classList.remove('active');
-            log("Module " + mod.toUpperCase() + ": " + STATE.modules[mod], "sys");
-        }
-
-        function updateParam(key, val) {
-            if (key === 'volume') STATE.params[key] = val / 100;
-            else STATE.params[key] = parseInt(val);
-            
-            document.getElementById('disp' + key.charAt(0).toUpperCase() + key.slice(1)).innerText = val;
-        }
-
-        function log(msg, type) {
-            const t = document.getElementById('terminal');
-            const d = document.createElement('div');
-            d.className = "log-" + type;
-            d.innerText = "> " + msg;
-            t.appendChild(d);
-            t.scrollTop = t.scrollHeight;
-        }
-
-        function resizeCanvas() {
-            const c1 = document.getElementById('scopeCanvas');
-            const c2 = document.getElementById('webglCanvas');
-            const p = document.getElementById('visualContainer');
-            
-            c1.width = p.clientWidth;
-            c1.height = p.clientHeight;
-            c2.width = p.clientWidth;
-            c2.height = p.clientHeight;
-        }
-        window.addEventListener('resize', resizeCanvas);
+        // Init
+        window.addEventListener('load', () => {
+            logMessage("PuiSSancE MAXIMUM - Système Chargé.", 'sys');
+            setAppTheme('zeus');
+        });
 
     </script>
 </body>
