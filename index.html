@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TONERRE DE ZEUS ECLAIR AU BOUT DES DOIGTS v3.3</title>
+    <title>TONERRE DE ZEUS ECLAIR AU BOUT DES DOIGTS v3.4</title>
     <style>
         :root {
             --primary-color: #00ccff;
@@ -311,7 +311,7 @@
 <body>
 
 <header>
-    <h1>PuiSSancE <span style="font-size:0.6em;color:var(--secondary-color)">MAXIMUM v3.3</span></h1>
+    <h1>PuiSSancE <span style="font-size:0.6em;color:var(--secondary-color)">MAXIMUM v3.4</span></h1>
     <span id="sysStatus" class="status-badge">OFFLINE</span>
 </header>
 
@@ -365,7 +365,7 @@
         <button onclick="testTTS()" style="width:100%;margin-top:8px;background:#00ff00;color:#000;font-weight:bold;">🔊 TEST HAUT-PARLEUR</button>
         <button onclick="repeatLastText()" style="width:100%;margin-top:5px;background:#ffff00;color:#000;font-weight:bold;">🔁 RÉPÉTER DERNIER TEXTE</button>
         <button onclick="switchToVoiceOnlyMode()" style="width:100%;margin-top:5px;background:#ff00ff;color:#000;font-weight:bold;">🎤 MODE VOIX SEULE (FIX REALME)</button>
-        <p style="font-size:0.6rem;color:#666;margin-top:5px;text-align:center;">Dis "salut" → il répète sur le haut-parleur</p>
+        <p style="font-size:0.6rem;color:#666;margin-top:5px;text-align:center;">Mode Voix Seule + Puissance Complète = répétition vocale continue</p>
     </div>
 
     <div class="control-group">
@@ -392,7 +392,7 @@
     </div>
 
     <div id="sysTerminal">
-        <div class="log-entry log-sys">> v3.3 chargée - Appuie sur MODE VOIX SEULE puis parle</div>
+        <div class="log-entry log-sys">> v3.4 chargée - Appuie sur MODE VOIX SEULE puis sur Puissance Complète</div>
     </div>
 </div>
 
@@ -412,7 +412,8 @@
 
 <script>
 /* =========================================================================
-   PuiSSancE MAXIMUM v3.3 - CODE HTML COMPLET ET CORRIGÉ (TOUTES LES LIGNES)
+   PuiSSancE MAXIMUM v3.4 - CODE HTML ENTIER ET COMPLET
+   Répétition vocale reste active même après "DÉMARRER PUISSANCE COMPLÈTE"
    ========================================================================= */
 const AVAILABLE_THEMES = {
     'zeus': {primary:'#00ccff',secondary:'#ffd700'},
@@ -477,64 +478,44 @@ function logMessage(msg, type = 'sys') {
     term.scrollTop = term.scrollHeight;
 }
 
-// CHARGEMENT VOIX
 function loadFrenchVoices() {
     const voices = window.speechSynthesis.getVoices();
     frenchVoice = voices.find(v => v.lang === 'fr-FR') || voices.find(v => v.lang.startsWith('fr'));
-    if (frenchVoice) logMessage(`VOIX FRANÇAISE CHARGÉE : ${frenchVoice.name}`, 'ai');
+    if (frenchVoice) logMessage(`VOIX FR : ${frenchVoice.name}`, 'ai');
 }
 window.speechSynthesis.onvoiceschanged = loadFrenchVoices;
 setTimeout(loadFrenchVoices, 300);
 
-// PAROLE (corrigé : pas de cancel incessant)
 function speakText(text) {
     if (!text || !POWER_SYSTEM.config.ttsEngine) return;
     lastSpokenText = text;
-
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'fr-FR';
-    utterance.volume = POWER_SYSTEM.config.voiceVolume;
-    utterance.pitch = POWER_SYSTEM.config.voicePitch;
-    utterance.rate = POWER_SYSTEM.config.speechRate;
-    if (frenchVoice) utterance.voice = frenchVoice;
-
-    utterance.onstart = () => logMessage(`🎤 PARLE : "${text}"`, 'ai');
-    utterance.onend = () => logMessage(`✅ PAROLE TERMINÉE`, 'ai');
-    utterance.onerror = (e) => logMessage(`❌ ERREUR TTS : ${e.error}`, 'warn');
-
-    window.speechSynthesis.speak(utterance);
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'fr-FR';
+    u.volume = POWER_SYSTEM.config.voiceVolume;
+    u.pitch = POWER_SYSTEM.config.voicePitch;
+    u.rate = POWER_SYSTEM.config.speechRate;
+    if (frenchVoice) u.voice = frenchVoice;
+    window.speechSynthesis.speak(u);
 }
 
-// TEST + RÉPÉTITION
-function testTTS() {
-    speakText("Test haut-parleur Realme Note 60. Je répète tout ce que tu dis.");
-    logMessage("TEST HAUT-PARLEUR LANCÉ", 'ai');
-}
+function testTTS() { speakText("Test haut-parleur Realme Note 60"); logMessage("TEST TTS", 'ai'); }
+function repeatLastText() { if (lastSpokenText) speakText(lastSpokenText); else speakText("salut"); }
 
-function repeatLastText() {
-    if (lastSpokenText) {
-        speakText(lastSpokenText);
-    } else {
-        speakText("Test répétition - salut");
-    }
-}
-
-// MODE VOIX SEULE
 function switchToVoiceOnlyMode() {
     if (POWER_SYSTEM.audioContext) POWER_SYSTEM.audioContext.close();
     POWER_SYSTEM.voiceOnlyMode = true;
     POWER_SYSTEM.isRunning = true;
-    logMessage("MODE VOIX SEULE ACTIVÉ - micro libre", 'warn');
+    logMessage("MODE VOIX SEULE ACTIVÉ", 'warn');
     initSpeechToTextEngine();
 }
 
-// RECONNAISSANCE (seulement sur final)
 function initSpeechToTextEngine() {
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SR) {
-        logMessage("SpeechRecognition non supporté par ce navigateur", 'warn');
+    if (POWER_SYSTEM.speechRecognition) {
+        logMessage("Reconnaissance déjà active", 'sys');
         return;
     }
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) { logMessage("SpeechRecognition non supporté", 'warn'); return; }
     POWER_SYSTEM.speechRecognition = new SR();
     POWER_SYSTEM.speechRecognition.continuous = true;
     POWER_SYSTEM.speechRecognition.interimResults = true;
@@ -556,10 +537,9 @@ function initSpeechToTextEngine() {
     POWER_SYSTEM.speechRecognition.onend = () => { if (POWER_SYSTEM.isRunning) POWER_SYSTEM.speechRecognition.start(); };
 
     POWER_SYSTEM.speechRecognition.start();
-    logMessage("MICRO ACTIF - parle maintenant !", 'sys');
+    logMessage("MICRO + RÉPÉTITION ACTIFS", 'sys');
 }
 
-// === TOUTES LES FONCTIONS COMPLÈTES ===
 async function startPowerSystem() {
     if (POWER_SYSTEM.isRunning) return;
     const startBtn = getEl('btnStart');
@@ -582,7 +562,6 @@ async function startPowerSystem() {
         POWER_SYSTEM.timeDomainData = new Uint8Array(bufferLength);
         POWER_SYSTEM.peakDataArray = new Uint8Array(bufferLength).fill(0);
 
-        // Bruit blanc + filtre
         const bufferSize = POWER_SYSTEM.audioContext.sampleRate * 2;
         const noiseBuffer = POWER_SYSTEM.audioContext.createBuffer(1, bufferSize, POWER_SYSTEM.audioContext.sampleRate);
         const data = noiseBuffer.getChannelData(0);
@@ -601,7 +580,8 @@ async function startPowerSystem() {
         POWER_SYSTEM.noiseGainNode.connect(POWER_SYSTEM.audioContext.destination);
         POWER_SYSTEM.noiseSource.start(0);
 
-        initSpeechToTextEngine();
+        if (!POWER_SYSTEM.speechRecognition) initSpeechToTextEngine();
+
         startVisualLoop();
         startSensorsMonitoring();
         setInterval(checkParanormalAudioPatterns, 800);
@@ -613,7 +593,7 @@ async function startPowerSystem() {
         getEl('sysStatus').innerText = "ONLINE";
         getEl('aiText').innerText = "ÉCOUTE + BRUITS...";
     } catch (e) {
-        logMessage("ERREUR DÉMARRAGE : " + e.message, 'warn');
+        logMessage("ERREUR : " + e.message, 'warn');
     }
 }
 
@@ -622,8 +602,6 @@ function stopPowerSystem() {
     POWER_SYSTEM.isRunning = false;
     if (POWER_SYSTEM.audioContext) POWER_SYSTEM.audioContext.close();
     if (POWER_SYSTEM.mediaStream) POWER_SYSTEM.mediaStream.getTracks().forEach(t => t.stop());
-    if (POWER_SYSTEM.speechRecognition) POWER_SYSTEM.speechRecognition.stop();
-    window.speechSynthesis.cancel();
     getEl('btnStart').classList.remove('active');
     getEl('btnStart').innerText = "⚡ DÉMARRER PUISSANCE COMPLÈTE";
     getEl('sysStatus').classList.remove('active');
@@ -634,13 +612,6 @@ function toggleAudioModule(m) {
     POWER_SYSTEM.config[m] = !POWER_SYSTEM.config[m];
     const btn = getEl('btn' + (m === 'microphone' ? 'Mic' : m.charAt(0).toUpperCase() + m.slice(1)));
     if (btn) btn.classList.toggle('active', POWER_SYSTEM.config[m]);
-}
-
-function applyNoiseVolume() {
-    if (POWER_SYSTEM.noiseGainNode) {
-        const vol = POWER_SYSTEM.config.noiseGenerator ? POWER_SYSTEM.config.noiseVolume / 100 : 0;
-        POWER_SYSTEM.noiseGainNode.gain.setTargetAtTime(vol, POWER_SYSTEM.audioContext.currentTime, 0.1);
-    }
 }
 
 function get40BandEnergies() {
@@ -665,7 +636,7 @@ function get40BandEnergies() {
 function checkParanormalAudioPatterns() {
     if (!POWER_SYSTEM.isRunning || !POWER_SYSTEM.analyserNode || POWER_SYSTEM.voiceOnlyMode) return;
     POWER_SYSTEM.analyserNode.getByteFrequencyData(POWER_SYSTEM.frequencyData);
-    const avg = get40BandEnergies().reduce((a,b)=>a+b,0) / 40;
+    const avg = get40BandEnergies().reduce((a,b) => a + b, 0) / 40;
     const now = Date.now();
     if (now - POWER_SYSTEM.lastDetectionTime > POWER_SYSTEM.config.detectionCooldown && avg > POWER_SYSTEM.config.energyThreshold) {
         const phrases = ["BRUIT MAGNÉTIQUE DÉTECTÉ","ÉNERGIE ANORMALE TRÈS FORTE","CHAMP ÉLECTROMAGNÉTIQUE PRÉSENT","BRUIT SOURD ÉNERGIE BASSE","IMPULSION MAGNÉTIQUE CAPTÉE"];
@@ -801,8 +772,8 @@ function openConfigModal() { getEl('configModal').style.display = 'flex'; }
 function closeConfigModal() { getEl('configModal').style.display = 'none'; }
 
 window.addEventListener('load', () => {
-    logMessage("PuiSSancE MAXIMUM v3.3 - CODE COMPLET REFAIT", 'sys');
-    logMessage("Appuie d'abord sur MODE VOIX SEULE puis parle", 'warn');
+    logMessage("PuiSSancE MAXIMUM v3.4 - CODE COMPLET", 'sys');
+    logMessage("Appuie sur MODE VOIX SEULE puis sur DÉMARRER PUISSANCE COMPLÈTE", 'warn');
     loadFrenchVoices();
     loadSystemConfiguration();
 });
