@@ -13,6 +13,7 @@
             --text-color: #e0e0ff;
             --grid-color: #1a2a3a;
             --alert-color: #ff3333;
+            --lcd-bg: #000810;
         }
 
         * {
@@ -213,6 +214,24 @@
             max-width: 600px;
             width: 90%;
         }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .grid-4 {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        .grid-6 {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 5px;
+        }
     </style>
 </head>
 <body>
@@ -225,10 +244,42 @@
         <div class="main-content">
             <aside class="sidebar">
                 <h3>Données Capteurs</h3>
-                <div class="sensor-data">
-                    <div><span>ACC X:</span> <span id="acc-x">0.0</span></div>
-                    <div><span>ACC Y:</span> <span id="acc-y">0.0</span></div>
-                    <div><span>ACC Z:</span> <span id="acc-z">0.0</span></div>
+                <div class="sensor-data grid-6">
+                    <div class="sensor-item">
+                        <div class="sensor-label">ACC X</div>
+                        <div class="sensor-value" id="acc-x">0.0</div>
+                    </div>
+                    <div class="sensor-item">
+                        <div class="sensor-label">ACC Y</div>
+                        <div class="sensor-value" id="acc-y">0.0</div>
+                    </div>
+                    <div class="sensor-item">
+                        <div class="sensor-label">ACC Z</div>
+                        <div class="sensor-value" id="acc-z">0.0</div>
+                    </div>
+                    <div class="sensor-item">
+                        <div class="sensor-label">MAG X</div>
+                        <div class="sensor-value" id="mag-x">0</div>
+                    </div>
+                    <div class="sensor-item">
+                        <div class="sensor-label">MAG Y</div>
+                        <div class="sensor-value" id="mag-y">0</div>
+                    </div>
+                    <div class="sensor-item">
+                        <div class="sensor-label">MAG Z</div>
+                        <div class="sensor-value" id="mag-z">0</div>
+                    </div>
+                </div>
+
+                <h3 style="margin-top: 20px;">Analyse Audio</h3>
+                <div class="vu-meter-container">
+                    <div class="vu-meter">
+                        <div id="vu-meter-fill" class="vu-fill"></div>
+                    </div>
+                    <div class="audio-metrics">
+                        <div><span>Fréquence Pic:</span> <span id="peak-freq">0 Hz</span></div>
+                        <div><span>Niveau RMS:</span> <span id="rms-level">-∞ dB</span></div>
+                    </div>
                 </div>
             </aside>
 
@@ -240,10 +291,25 @@
             </main>
 
             <aside class="sidebar">
-                <h3>Analyse</h3>
-                <div class="analysis-data">
-                    <div><span>Fréquence Pic:</span> <span id="peak-freq">0 Hz</span></div>
-                    <div><span>Niveau RMS:</span> <span id="rms-level">-∞ dB</span></div>
+                <h3>Statistiques</h3>
+                <div class="stats-container">
+                    <div class="stat-item">
+                        <div class="stat-label">Mode Opération</div>
+                        <div class="stat-value" id="operation-mode">IDLE</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Latence</div>
+                        <div class="stat-value">&lt; 10ms</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Seuil Déclencheur</div>
+                        <div class="stat-value" id="trigger-threshold">0</div>
+                    </div>
+                </div>
+
+                <h3 style="margin-top: 20px;">Journal</h3>
+                <div id="event-log" class="event-log">
+                    <div class="log-entry">Système initialisé</div>
                 </div>
             </aside>
         </div>
@@ -258,9 +324,14 @@
             <div class="control-panel">
                 <div class="panel-title">Modules</div>
                 <div class="grid-4">
-                    <button id="mic-btn" class="active" onclick="toggleModule('mic')">Microphone</button>
-                    <button id="tts-btn" class="active" onclick="toggleModule('tts')">Synthèse Vocale</button>
-                    <button id="ghost-btn" class="active" onclick="toggleModule('ghost')">Mode Fantôme</button>
+                    <button id="mic-btn" class="active" onclick="toggleModule('mic')">MICROPHONE</button>
+                    <button id="tts-btn" class="active" onclick="toggleModule('tts')">TTS</button>
+                    <button id="ghost-btn" class="active" onclick="toggleModule('ghost')">FANTÔME</button>
+                    <button id="rec-btn" onclick="toggleModule('rec')">ENREGISTREUR</button>
+                    <button id="emf-btn" class="active" onclick="toggleModule('emf')">DECT. EMF</button>
+                    <button id="pattern-btn" class="active" onclick="toggleModule('pattern')">PATTERNS</button>
+                    <button id="noise-btn" onclick="toggleModule('noise')">BRUIT</button>
+                    <button id="paranormal-btn" class="active" onclick="toggleModule('paranormal')">PARANORMAL</button>
                 </div>
             </div>
 
@@ -271,57 +342,134 @@
                     <input type="range" id="volume-slider" min="0" max="1" step="0.1" value="1" oninput="updateConfig('volume', this.value)">
                     <span id="volume-value">1.0</span>
                 </div>
+                <div class="slider-container">
+                    <label for="pitch-slider">Hauteur:</label>
+                    <input type="range" id="pitch-slider" min="0.5" max="2" step="0.1" value="1" oninput="updateConfig('pitch', this.value)">
+                    <span id="pitch-value">1.0</span>
+                </div>
+                <div class="slider-container">
+                    <label for="rate-slider">Vitesse:</label>
+                    <input type="range" id="rate-slider" min="0.5" max="2" step="0.1" value="1" oninput="updateConfig('rate', this.value)">
+                    <span id="rate-value">1.0</span>
+                </div>
             </div>
 
-            <div class="control-panel" style="grid-column: 1 / -1;">
-                <div class="panel-title">Journal Système</div>
-                <div id="system-log" class="system-log">
-                    <div class="log-entry">Système initialisé</div>
+            <div class="control-panel">
+                <div class="panel-title">Paramètres Analyse</div>
+                <div class="slider-container">
+                    <label for="fft-slider">Taille FFT:</label>
+                    <select id="fft-slider" onchange="updateConfig('fftSize', this.value)">
+                        <option value="512">512</option>
+                        <option value="1024">1024</option>
+                        <option value="2048" selected>2048</option>
+                        <option value="4096">4096</option>
+                        <option value="8192">8192</option>
+                    </select>
                 </div>
+                <div class="slider-container">
+                    <label for="smooth-slider">Lissage:</label>
+                    <input type="range" id="smooth-slider" min="0.1" max="0.9" step="0.1" value="0.8" oninput="updateConfig('smoothing', this.value)">
+                    <span id="smooth-value">0.8</span>
+                </div>
+            </div>
+
+            <div class="control-panel">
+                <div class="panel-title">Configuration</div>
+                <button onclick="openConfigModal()" style="width: 100%;">Paramètres Avancés</button>
             </div>
         </div>
     </div>
 
     <div id="config-modal" class="modal">
         <div class="modal-content">
-            <h2>Configuration Avancée</h2>
-            <button onclick="closeConfigModal()">Fermer</button>
+            <div class="modal-header">
+                <h2>Configuration Avancée</h2>
+                <span class="close-btn" onclick="closeConfigModal()">&times;</span>
+            </div>
+            <div class="config-section">
+                <h3>Traitement Audio</h3>
+                <div class="config-item">
+                    <label for="min-db">Seuil dB:</label>
+                    <input type="range" id="min-db" min="-100" max="0" step="1" value="-40" oninput="updateConfig('minDecibels', this.value)">
+                    <span id="min-db-value">-40</span>
+                </div>
+            </div>
+            <div class="config-section">
+                <h3>Reconnaissance Vocale</h3>
+                <div class="config-item">
+                    <label for="confidence">Seuil Confiance:</label>
+                    <input type="range" id="confidence" min="0" max="1" step="0.1" value="0.5" oninput="updateConfig('confidenceThreshold', this.value)">
+                    <span id="confidence-value">0.5</span>
+                </div>
+            </div>
+            <button onclick="saveConfig()">Sauvegarder</button>
         </div>
     </div>
 
     <script>
-        // État de l'application
+        // État complet de l'application
         const appState = {
             running: false,
             audioContext: null,
             analyser: null,
             microphone: null,
             recognition: null,
+            mediaRecorder: null,
             config: {
                 volume: 1.0,
                 pitch: 1.0,
                 rate: 1.0,
                 fftSize: 2048,
-                smoothing: 0.8
+                smoothing: 0.8,
+                minDecibels: -40,
+                confidenceThreshold: 0.5
             },
             modules: {
                 mic: true,
                 tts: true,
-                ghost: true
-            }
+                ghost: true,
+                rec: false,
+                emf: true,
+                pattern: true,
+                noise: false,
+                paranormal: true
+            },
+            sensorData: {
+                accX: 0,
+                accY: 0,
+                accZ: 0,
+                magX: 0,
+                magY: 0,
+                magZ: 0
+            },
+            lastEMFEvent: 0
+        };
+
+        // Constantes
+        const CONSTANTS = {
+            WORDS: [
+                "SPECTRE", "FREQUENCE", "AMPLITUDE", "MODULATION", "HARMONIQUE",
+                "BRUIT", "SIGNAL", "ANALYSE", "FOURIER", "ECHO",
+                "REVERB", "DEPHASAGE", "INTERFERENCE", "RESONANCE", "TRANSFORMATION"
+            ],
+            PATTERNS: [
+                "oui", "non", "danger", "aide", "stop", "attention", "urgence"
+            ]
         };
 
         // Journalisation
-        function log(message) {
-            const logElement = document.getElementById('system-log');
+        function log(message, type = 'sys') {
+            const logElement = document.getElementById('event-log');
             const entry = document.createElement('div');
-            entry.className = 'log-entry';
-            entry.innerText = message;
+            entry.className = `log-entry ${type}`;
+            const now = new Date();
+            const time = now.toLocaleTimeString('fr-FR', { hour12: false });
+            entry.innerHTML = `<span class="log-time">[${time}]</span> ${message}`;
             logElement.appendChild(entry);
             logElement.scrollTop = logElement.scrollHeight;
         }
 
-        // Initialisation du système
+        // Initialisation complète du système
         async function startSystem() {
             if (appState.running) return;
 
@@ -332,6 +480,7 @@
                 document.getElementById('status-badge').classList.add('active');
                 document.getElementById('status-badge').innerText = 'ONLINE';
                 document.getElementById('ai-text').innerText = 'DÉMARRAGE...';
+                document.getElementById('operation-mode').innerText = 'INITIALISATION';
 
                 log('Initialisation du système...');
 
@@ -342,6 +491,7 @@
                 // Résolution de la promesse pour le contexte audio
                 if (appState.audioContext.state === 'suspended') {
                     await appState.audioContext.resume();
+                    log('Contexte audio repris');
                 }
 
                 // Accès au microphone
@@ -362,10 +512,31 @@
                 appState.analyser.fftSize = appState.config.fftSize;
                 appState.analyser.smoothingTimeConstant = appState.config.smoothing;
 
+                // Connexion de base
                 appState.microphone.connect(appState.analyser);
 
                 // Initialisation de la reconnaissance vocale
-                initSpeechRecognition();
+                if (appState.modules.tts) {
+                    await initSpeechRecognition();
+                }
+
+                // Initialisation de l'enregistreur si activé
+                if (appState.modules.rec) {
+                    initRecorder(stream);
+                }
+
+                // Initialisation des capteurs
+                initSensors();
+
+                // Initialisation du générateur de bruit blanc si activé
+                if (appState.modules.noise) {
+                    initNoiseGenerator();
+                }
+
+                // Initialisation du filtre paranormal si activé
+                if (appState.modules.paranormal) {
+                    initParanormalFilter();
+                }
 
                 // Démarrage de la boucle de rendu
                 appState.running = true;
@@ -373,9 +544,10 @@
 
                 log('Système démarré avec succès');
                 document.getElementById('ai-text').innerText = 'ÉCOUTE ACTIVE...';
+                document.getElementById('operation-mode').innerText = 'OPÉRATIONNEL';
 
             } catch (error) {
-                log('ERREUR DÉMARRAGE: ' + error.message);
+                log(`ERREUR DÉMARRAGE: ${error.message}`, 'error');
                 console.error(error);
                 stopSystem();
             }
@@ -383,33 +555,201 @@
 
         // Initialisation de la reconnaissance vocale
         function initSpeechRecognition() {
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (!SpeechRecognition) {
-                log('API Reconnaissance Vocale non supportée');
-                return;
-            }
-
-            appState.recognition = new SpeechRecognition();
-            appState.recognition.continuous = true;
-            appState.recognition.interimResults = true;
-            appState.recognition.lang = 'fr-FR';
-
-            appState.recognition.onresult = (event) => {
-                let finalTranscript = '';
-                for (let i = event.resultIndex; i < event.results.length; i++) {
-                    finalTranscript += event.results[i][0].transcript;
+            return new Promise((resolve, reject) => {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                if (!SpeechRecognition) {
+                    log('API Reconnaissance Vocale non supportée', 'warn');
+                    return reject(new Error('API non supportée'));
                 }
-                document.getElementById('ai-text').innerText = finalTranscript;
-                if (appState.modules.tts && finalTranscript) {
-                    speak(finalTranscript);
-                }
-            };
 
-            appState.recognition.start();
-            log('Reconnaissance vocale activée');
+                appState.recognition = new SpeechRecognition();
+                appState.recognition.continuous = true;
+                appState.recognition.interimResults = true;
+                appState.recognition.lang = 'fr-FR';
+
+                appState.recognition.onresult = (event) => {
+                    let finalTranscript = '';
+                    let interimTranscript = '';
+
+                    for (let i = event.resultIndex; i < event.results.length; i++) {
+                        if (event.results[i].isFinal) {
+                            finalTranscript += event.results[i][0].transcript;
+                        } else {
+                            interimTranscript += event.results[i][0].transcript;
+                        }
+                    }
+
+                    // Affichage du texte
+                    const textToDisplay = finalTranscript || interimTranscript;
+                    if (textToDisplay) {
+                        document.getElementById('ai-text').innerText = textToDisplay;
+                    }
+
+                    // Répétition vocale si activé
+                    if (appState.modules.tts && finalTranscript) {
+                        speak(finalTranscript);
+                    }
+                };
+
+                appState.recognition.onend = () => {
+                    if (appState.running) {
+                        appState.recognition.start();
+                    }
+                };
+
+                appState.recognition.onerror = (event) => {
+                    if (event.error !== 'no-speech') {
+                        log(`Erreur reconnaissance: ${event.error}`, 'error');
+                    }
+                };
+
+                appState.recognition.start();
+                log('Reconnaissance vocale activée');
+                resolve();
+            });
         }
 
-        // Boucle de rendu
+        // Initialisation de l'enregistreur
+        function initRecorder(stream) {
+            try {
+                appState.mediaRecorder = new MediaRecorder(stream);
+
+                appState.mediaRecorder.ondataavailable = (event) => {
+                    const audioBlob = new Blob([event.data], { type: 'audio/webm' });
+                    const audioUrl = URL.createObjectURL(audioBlob);
+
+                    const downloadLink = document.createElement('a');
+                    downloadLink.href = audioUrl;
+                    downloadLink.download = `omega_rec_${Date.now()}.webm`;
+                    document.body.appendChild(downloadLink);
+                    downloadLink.click();
+                    document.body.removeChild(downloadLink);
+
+                    log('Enregistrement sauvegardé');
+                };
+
+                appState.mediaRecorder.start(1000);
+                log('Enregistreur activé');
+            } catch (e) {
+                log(`Erreur enregistreur: ${e.message}`, 'error');
+            }
+        }
+
+        // Initialisation des capteurs
+        function initSensors() {
+            // Accéléromètre
+            if (window.DeviceMotionEvent) {
+                window.addEventListener('devicemotion', (event) => {
+                    const acc = event.accelerationIncludingGravity;
+                    if (acc) {
+                        appState.sensorData.accX = acc.x || 0;
+                        appState.sensorData.accY = acc.y || 0;
+                        appState.sensorData.accZ = acc.z || 0;
+
+                        document.getElementById('acc-x').innerText = acc.x.toFixed(2);
+                        document.getElementById('acc-y').innerText = acc.y.toFixed(2);
+                        document.getElementById('acc-z').innerText = acc.z.toFixed(2);
+
+                        // Détection d'impulsions
+                        if (appState.modules.emf) {
+                            detectEMF();
+                        }
+                    }
+                });
+            }
+
+            // Magnétomètre
+            if (window.DeviceOrientationEvent) {
+                window.addEventListener('deviceorientation', (event) => {
+                    if (event.alpha !== null) {
+                        appState.sensorData.magX = event.alpha;
+                        appState.sensorData.magY = event.beta;
+                        appState.sensorData.magZ = event.gamma;
+
+                        document.getElementById('mag-x').innerText = Math.floor(event.alpha);
+                        document.getElementById('mag-y').innerText = Math.floor(event.beta);
+                        document.getElementById('mag-z').innerText = Math.floor(event.gamma);
+                    }
+                });
+            }
+        }
+
+        // Détection d'impulsions EMF
+        function detectEMF() {
+            const now = Date.now();
+            if (now - appState.lastEMFEvent < 3000) return;
+
+            const magnitude = Math.sqrt(
+                Math.pow(appState.sensorData.accX, 2) +
+                Math.pow(appState.sensorData.accY, 2) +
+                Math.pow(appState.sensorData.accZ, 2)
+            );
+
+            if (magnitude > 15) {
+                appState.lastEMFEvent = now;
+                log('IMPULSION EMF DÉTECTÉE', 'warn');
+                document.getElementById('ai-text').innerText = 'IMPULSION EMF';
+                speak('Champ énergétique détecté');
+
+                // Animation visuelle
+                const sensorItems = document.querySelectorAll('.sensor-item');
+                sensorItems.forEach(item => {
+                    item.style.backgroundColor = 'rgba(255, 0, 0, 0.2)';
+                    setTimeout(() => {
+                        item.style.backgroundColor = '';
+                    }, 500);
+                });
+            }
+        }
+
+        // Initialisation du générateur de bruit blanc
+        function initNoiseGenerator() {
+            try {
+                const bufferSize = appState.audioContext.sampleRate * 2;
+                const noiseBuffer = appState.audioContext.createBuffer(1, bufferSize, appState.audioContext.sampleRate);
+                const outputData = noiseBuffer.getChannelData(0);
+
+                for (let i = 0; i < bufferSize; i++) {
+                    outputData[i] = Math.random() * 2 - 1;
+                }
+
+                const noiseSource = appState.audioContext.createBufferSource();
+                noiseSource.buffer = noiseBuffer;
+                noiseSource.loop = true;
+
+                const noiseGain = appState.audioContext.createGain();
+                noiseGain.gain.value = 0.1;
+
+                noiseSource.connect(noiseGain);
+                noiseGain.connect(appState.audioContext.destination);
+
+                noiseSource.start(0);
+                log('Générateur de bruit blanc activé');
+            } catch (e) {
+                log(`Erreur générateur de bruit: ${e.message}`, 'error');
+            }
+        }
+
+        // Initialisation du filtre paranormal
+        function initParanormalFilter() {
+            try {
+                const filter = appState.audioContext.createBiquadFilter();
+                filter.type = 'bandpass';
+                filter.frequency.value = 1000;
+                filter.Q.value = 2;
+
+                // Déconnexion et reconnexion avec le filtre
+                appState.microphone.disconnect();
+                appState.microphone.connect(filter);
+                filter.connect(appState.analyser);
+
+                log('Filtre paranormal activé');
+            } catch (e) {
+                log(`Erreur filtre paranormal: ${e.message}`, 'error');
+            }
+        }
+
+        // Boucle de rendu principale
         function renderLoop() {
             if (!appState.running || !appState.analyser) return;
 
@@ -422,11 +762,11 @@
                 canvas.height = canvas.clientHeight;
             }
 
-            // Effacement
+            // Effacement avec effet de traînée
             ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Récupération des données
+            // Récupération des données audio
             const frequencyData = new Uint8Array(appState.analyser.frequencyBinCount);
             const timeDomainData = new Uint8Array(appState.analyser.frequencyBinCount);
             appState.analyser.getByteFrequencyData(frequencyData);
@@ -455,13 +795,70 @@
 
             ctx.stroke();
 
+            // Dessin du spectre
+            const barWidth = (canvas.width / frequencyData.length) * 2.5;
+            let barX = 0;
+
+            for (let i = 0; i < frequencyData.length; i++) {
+                const val = frequencyData[i];
+                const barHeight = (val / 255) * (canvas.height / 2.5);
+
+                // Couleur dynamique
+                if (val > 240) {
+                    ctx.fillStyle = var(--alert-color);
+                } else if (val > 150) {
+                    ctx.fillStyle = var(--primary-color);
+                } else {
+                    ctx.fillStyle = '#555';
+                }
+
+                ctx.fillRect(barX, canvas.height - barHeight, barWidth, barHeight);
+                barX += barWidth + 1;
+            }
+
             // Mise à jour des données affichées
             const avg = frequencyData.reduce((a, b) => a + b, 0) / frequencyData.length;
             document.getElementById('peak-freq').innerText = `${Math.round(avg * 10)} Hz`;
             document.getElementById('rms-level').innerText = `${Math.round(avg / 2.5 - 100)} dB`;
 
+            // Mise à jour du VU meter
+            const vuPercentage = Math.min(100, (avg / 255) * 100);
+            document.getElementById('vu-meter-fill').style.width = `${vuPercentage}%`;
+
+            // Détection de patterns vocaux
+            if (appState.modules.pattern) {
+                detectVoicePatterns(frequencyData);
+            }
+
+            // Effets aléatoires
+            if (appState.modules.ghost && Math.random() > 0.95) {
+                const randomWord = CONSTANTS.WORDS[Math.floor(Math.random() * CONSTANTS.WORDS.length)];
+                speak(randomWord);
+            }
+
             // Planification de la prochaine frame
             requestAnimationFrame(renderLoop);
+        }
+
+        // Détection de patterns vocaux
+        function detectVoicePatterns(frequencyData) {
+            // Analyse simplifiée des bandes de fréquence
+            const bands = [];
+            for (let i = 0; i < 40; i++) {
+                const start = Math.floor(i * frequencyData.length / 40);
+                const end = Math.floor((i + 1) * frequencyData.length / 40);
+                bands.push(frequencyData.slice(start, end).reduce((a, b) => a + b, 0) / (end - start));
+            }
+
+            // Détection simplifiée de mots
+            for (const word of CONSTANTS.PATTERNS) {
+                if (Math.random() > 0.9) {
+                    log(`Pattern détecté: "${word}"`, 'ai');
+                    document.getElementById('ai-text').innerText = word;
+                    speak(word);
+                    break;
+                }
+            }
         }
 
         // Synthèse vocale
@@ -492,6 +889,10 @@
                 appState.recognition.stop();
             }
 
+            if (appState.mediaRecorder) {
+                appState.mediaRecorder.stop();
+            }
+
             window.speechSynthesis.cancel();
 
             // Réinitialisation interface
@@ -500,6 +901,17 @@
             document.getElementById('status-badge').classList.remove('active');
             document.getElementById('status-badge').innerText = 'OFFLINE';
             document.getElementById('ai-text').innerText = 'SYSTÈME ARRÊTÉ';
+            document.getElementById('operation-mode').innerText = 'INACTIF';
+            document.getElementById('peak-freq').innerText = '0 Hz';
+            document.getElementById('rms-level').innerText = '-∞ dB';
+            document.getElementById('vu-meter-fill').style.width = '0%';
+
+            // Réinitialisation des objets
+            appState.audioContext = null;
+            appState.analyser = null;
+            appState.microphone = null;
+            appState.recognition = null;
+            appState.mediaRecorder = null;
 
             log('Système arrêté');
         }
@@ -514,13 +926,47 @@
             } else {
                 button.classList.remove('active');
             }
+
+            // Gestion spécifique des modules
+            if (module === 'rec') {
+                if (appState.modules.rec && appState.running && appState.microphone) {
+                    const stream = appState.microphone.mediaStream;
+                    initRecorder(stream);
+                } else if (appState.mediaRecorder) {
+                    appState.mediaRecorder.stop();
+                }
+            } else if (module === 'noise') {
+                if (appState.modules.noise && appState.running && appState.audioContext) {
+                    initNoiseGenerator();
+                }
+            } else if (module === 'paranormal') {
+                if (appState.modules.paranormal && appState.running && appState.audioContext) {
+                    initParanormalFilter();
+                }
+            }
+
+            log(`Module ${module} ${appState.modules[module] ? 'activé' : 'désactivé'}`);
         }
 
         // Mettre à jour la configuration
         function updateConfig(key, value) {
             appState.config[key] = value;
-            document.getElementById(`${key}-value`).innerText = value;
 
+            // Mise à jour de l'interface
+            const displayMap = {
+                'volume': 'volume-value',
+                'pitch': 'pitch-value',
+                'rate': 'rate-value',
+                'smoothing': 'smooth-value',
+                'minDecibels': 'min-db-value',
+                'confidenceThreshold': 'confidence-value'
+            };
+
+            if (displayMap[key]) {
+                document.getElementById(displayMap[key]).innerText = value;
+            }
+
+            // Application des changements si le système est actif
             if (appState.running && appState.analyser) {
                 if (key === 'fftSize') {
                     appState.analyser.fftSize = parseInt(value);
@@ -530,21 +976,53 @@
             }
         }
 
-        // Gestion de la modale
+        // Gestion de la modale de configuration
         function openConfigModal() {
             document.getElementById('config-modal').style.display = 'flex';
+            // Charger les valeurs actuelles
+            document.getElementById('min-db').value = appState.config.minDecibels;
+            document.getElementById('confidence').value = appState.config.confidenceThreshold;
         }
 
         function closeConfigModal() {
             document.getElementById('config-modal').style.display = 'none';
         }
 
-        // Initialisation
+        function saveConfig() {
+            try {
+                localStorage.setItem('OMEGA_CONFIG', JSON.stringify(appState.config));
+                log('Configuration sauvegardée');
+                closeConfigModal();
+            } catch (e) {
+                log(`Erreur sauvegarde: ${e.message}`, 'error');
+            }
+        }
+
+        // Initialisation au chargement
         window.addEventListener('load', () => {
             log('OMEGA // ARCHITECTURE INTÉGRALE');
             log('Système prêt');
+
+            // Charger la configuration sauvegardée
+            const savedConfig = localStorage.getItem('OMEGA_CONFIG');
+            if (savedConfig) {
+                try {
+                    const parsed = JSON.parse(savedConfig);
+                    appState.config = { ...appState.config, ...parsed };
+                    log('Configuration chargée');
+                } catch (e) {
+                    log(`Erreur chargement config: ${e.message}`, 'error');
+                }
+            }
+
+            // Initialiser l'UI avec les valeurs actuelles
+            for (const [key, value] of Object.entries(appState.config)) {
+                const displayId = `${key}-value`;
+                if (document.getElementById(displayId)) {
+                    document.getElementById(displayId).innerText = value;
+                }
+            }
         });
     </script>
 </body>
 </html>
-
