@@ -3,15 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PuiSSancE MAXIMUM - RECHERCHE WEB IA</title>
+    <title>PuiSSancE MAXIMUM - VOIX PURE</title>
     <style>
         :root {
             --primary: #00ffcc;
-            --secondary: #ff00ff;
+            --secondary: #00aaff;
             --bg: #050505;
             --panel: #111;
             --text: #eee;
-            --danger: #ff3333;
             --search: #ffaa00;
         }
         * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
@@ -40,50 +39,46 @@
             text-align: center; pointer-events: none; z-index: 10;
         }
         #mainText {
-            font-size: 1.8rem; font-weight: bold; color: #fff;
-            background: rgba(0,0,0,0.7); padding: 10px;
+            font-size: 2rem; font-weight: bold; color: #fff;
+            background: rgba(0,0,0,0.8); padding: 15px;
             text-transform: uppercase; border: 2px solid var(--primary);
-            margin-bottom: 5px; min-height: 3rem;
+            margin-bottom: 5px; min-height: 3.5rem;
         }
-        #subText { font-size: 0.8rem; color: var(--secondary); letter-spacing: 1px; }
+        #subText { font-size: 0.9rem; color: var(--secondary); letter-spacing: 2px; text-transform: uppercase; font-weight: bold;}
 
         #controls {
             background: var(--panel); padding: 15px;
             display: grid; gap: 10px;
-            max-height: 45vh; overflow-y: auto;
+            max-height: 40vh; overflow-y: auto;
         }
         .control-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .control-row.full { grid-template-columns: 1fr; }
 
         button {
             background: #222; border: 1px solid var(--primary); color: var(--primary);
-            padding: 15px; font-size: 0.85rem; font-weight: bold; cursor: pointer;
+            padding: 18px; font-size: 0.9rem; font-weight: bold; cursor: pointer;
             text-transform: uppercase; transition: 0.2s; font-family: inherit;
         }
         button:active { transform: scale(0.98); }
         button.active-mode { background: var(--primary); color: #000; box-shadow: 0 0 15px var(--primary); }
-        button.danger { border-color: var(--danger); color: var(--danger); }
-        button.danger:active { background: var(--danger); color: #fff; }
-        
-        .btn-ia { border-color: var(--secondary); color: var(--secondary); }
-        .btn-ia.active-mode { background: var(--secondary); color: #000; box-shadow: 0 0 15px var(--secondary); }
+        button.danger { border-color: #ff3333; color: #ff3333; }
+        button.danger:active { background: #ff3333; color: #fff; }
         .btn-search { border-color: var(--search); color: var(--search); }
 
         #terminal {
-            height: 100px; background: #000; border-top: 1px solid #333;
+            height: 120px; background: #000; border-top: 1px solid #333;
             padding: 8px; font-size: 0.7rem; overflow-y: auto; color: #888; font-family: monospace;
         }
         .log-line { margin-bottom: 4px; border-left: 2px solid #555; padding-left: 5px; }
         .log-sys { color: #aaa; }
-        .log-ia { border-color: var(--secondary); color: #fff; background: #220022; }
-        .log-search { border-color: var(--search); color: #ffffaa; background: #332200; }
-        .log-err { border-color: var(--danger); color: var(--danger); }
+        .log-ia { border-color: var(--primary); color: #fff; background: #002222; }
+        .log-search { border-color: var(--search); color: #ffffaa; background: #222200; }
     </style>
 </head>
 <body>
 
 <header>
-    <h1>PUISSANCE <span style="font-size:0.6em">v5.0 WEB SEARCH</span></h1>
+    <h1>PUISSANCE <span style="font-size:0.6em">v6.0 PURE VOICE</span></h1>
     <div id="status">OFFLINE</div>
 </header>
 
@@ -92,37 +87,33 @@
         <canvas id="scopeCanvas"></canvas>
         <div id="displayOverlay">
             <div id="mainText">SYSTÈME PRÊT</div>
-            <div id="subText">CONNECTÉ AU WEB</div>
+            <div id="subText">MODE RECHERCHE SANS PAGE WEB</div>
         </div>
     </div>
 </main>
 
 <div id="controls">
     <div class="control-row full">
-        <button class="btn-ia" onclick="App.startVoiceOnlyMode()">🎤 MODE IA & RECHERCHE</button>
+        <button class="btn-search active-mode" onclick="App.startVoiceOnlyMode()">🎤 MODE RECHERCHE VOCALE</button>
     </div>
     <div class="control-row">
-        <button onclick="App.startFullSystem()">⚡ DÉMARRER COMPLET</button>
+        <button onclick="App.startFullSystem()">⚡ MODE COMPLET</button>
         <button class="danger" onclick="App.stopSystem()">⏹ ARRÊTER</button>
-    </div>
-    <div class="control-row full" style="font-size: 0.7rem; color:#aaa; text-align:center; padding:5px;">
-        Dis : <span style="color:var(--search)">"Cherche..."</span> ou <span style="color:var(--search)">"C'est quoi..."</span>
     </div>
 </div>
 
 <div id="terminal">
-    <div class="log-line log-sys">> Noyau v5.0 chargé.</div>
-    <div class="log-line log-sys">> Module de recherche Web actif.</div>
+    <div class="log-line log-sys">> v6.0 Initialisée.</div>
+    <div class="log-line log-sys">> Lecture audio uniquement. Pas d'ouverture de fenêtre.</div>
 </div>
 
 <script>
 /**
  * =========================================================================
- * ARCHITECTURE v5.0 - AVEC MOTEUR DE RECHERCHE WEB
+ * ARCHITECTURE v6.0 - LECTURE AUDIO SEULE (PAS DE POPUP)
  * =========================================================================
  */
 
-// --- ENTITÉ 1 : AUDIO ---
 const AudioEngine = {
     ctx: null, stream: null, analyser: null, isInit: false,
     async init() {
@@ -138,7 +129,7 @@ const AudioEngine = {
             this.isInit = true;
             return true;
         } catch (e) {
-            App.log("Erreur Audio : " + e.message, 'err');
+            App.log("Erreur Micro : " + e.message, 'sys');
             return false;
         }
     },
@@ -155,7 +146,6 @@ const AudioEngine = {
     }
 };
 
-// --- ENTITÉ 2 : VISUEL ---
 const VisualEngine = {
     canvas: null, ctx: null, isRunning: false, animId: null,
     init() {
@@ -177,13 +167,12 @@ const VisualEngine = {
         const w = this.canvas.width, h = this.canvas.height;
         this.ctx.fillStyle = 'rgba(0,0,0,0.2)';
         this.ctx.fillRect(0,0,w,h);
-
-        let data = AudioEngine.isInit ? AudioEngine.getDataArray() : new Uint8Array(128).map(()=>Math.random()*30);
+        let data = AudioEngine.isInit ? AudioEngine.getDataArray() : new Uint8Array(128).map(()=>Math.random()*20);
         const barW = (w/data.length)*2.5;
         let x = 0;
         for(let i=0; i<data.length; i++) {
             const barH = (data[i]/255)*h;
-            this.ctx.fillStyle = `rgb(0, ${data[i]+50}, 255)`;
+            this.ctx.fillStyle = `rgb(0, ${data[i]+100}, 255)`;
             this.ctx.fillRect(x, h-barH, barW, barH);
             x+=barW+1;
         }
@@ -191,7 +180,6 @@ const VisualEngine = {
     }
 };
 
-// --- ENTITÉ 3 : CERVEAU IA + RECHERCHE WEB ---
 const BrainEngine = {
     recognition: null, synthesis: window.speechSynthesis, voice: null, isListening: false,
 
@@ -209,13 +197,16 @@ const BrainEngine = {
         };
 
         this.recognition.onend = () => {
+            // Si on est censé écouter mais qu'on s'est arrêté, on redémarre
             if (this.isListening && App.isRunning) {
-                setTimeout(() => { if (this.isListening) try{this.recognition.start()}catch(e){} }, 500);
+                setTimeout(() => { 
+                    if (this.isListening) try{this.recognition.start()}catch(e){} 
+                }, 500);
             }
         };
 
         this.recognition.onerror = (e) => {
-            if (e.error === 'not-allowed') { App.log("Micro refusé", 'err'); App.stopSystem(); }
+            if (e.error === 'not-allowed') { App.log("Micro refusé", 'sys'); App.stopSystem(); }
         };
 
         this.loadVoice();
@@ -232,122 +223,166 @@ const BrainEngine = {
         if (!this.recognition) return;
         this.isListening = true;
         try { this.recognition.start(); } catch(e){}
-        App.updateSubText("ÉCOUTE ACTIVE...");
+        App.updateSubText("ÉCOUTE ACTIVE");
     },
 
     stopListening() {
         this.isListening = false;
         if (this.recognition) try { this.recognition.stop(); } catch(e){}
-        App.updateSubText("ÉCOUTE ARRÊTÉE");
+        App.updateSubText("TRAITEMENT...");
     },
 
-    speak(text) {
+    // FONCTION CRUCIALE : Parler et reprendre l'écoute ensuite
+    speak(text, autoResume = true) {
         this.synthesis.cancel();
         if (!text) return;
+        
+        // On arrête l'écoute pour éviter que l'IA s'entende elle-même
+        if(autoResume) this.stopListening();
+
         const u = new SpeechSynthesisUtterance(text);
         u.lang = 'fr-FR'; u.pitch = 0.6; u.rate = 1.1;
         if (this.voice) u.voice = this.voice;
-        u.onstart = () => { App.updateMainText("PARLE..."); App.log("Dit: " + text, 'ia'); };
-        u.onend = () => { if (this.isListening) App.updateMainText("ÉCOUTE..."); };
+        
+        u.onstart = () => { 
+            App.updateMainText("RÉPONSE..."); 
+            App.log("IA: " + text.substring(0, 50) + "...", 'ia'); 
+        };
+        
+        u.onend = () => {
+            // Une fois qu'elle a fini de parler, elle réécoute
+            if (autoResume && App.isRunning) {
+                App.updateMainText("ÉCOUTE...");
+                this.startListening();
+            } else {
+                App.updateMainText("ATTENTE");
+            }
+        };
+        
         this.synthesis.speak(u);
     },
 
-    // --- LOGIQUE DE RECHERCHE WEB (NOUVEAU) ---
+    // LOGIQUE DE RECHERCHE PUREMENT AUDIO
     async performWebSearch(query) {
-        App.log(`Recherche Web : "${query}"`, 'search');
-        this.speak("Je recherche sur internet...");
+        App.log(`Recherche audio pour : "${query}"`, 'search');
+        
+        // On arrête l'écoute pendant la recherche
+        this.stopListening();
+        this.speak("Je cherche sur internet...", false); // false = ne pas relancer l'écoute tout de suite
 
         try {
-            // 1. Essayer Wikipedia (Gratuit, Open Source, Rapide)
+            // Timeout de sécurité pour ne pas bloquer éternellement
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 5000);
+
             const url = `https://fr.wikipedia.org/w/api.php?origin=*&action=query&format=json&prop=extracts&exintro&explaintext&redirects=1&titles=${encodeURIComponent(query)}`;
             
-            const response = await fetch(url);
+            const response = await fetch(url, { signal: controller.signal });
+            clearTimeout(timeoutId);
+            
             const data = await response.json();
             const pages = data.query.pages;
             const pageId = Object.keys(pages)[0];
 
             if (pageId !== "-1" && pages[pageId].extract) {
                 let fullText = pages[pageId].extract;
-                // Réduire le texte aux 2 premières phrases pour la voix
-                let sentences = fullText.split('.').filter(s => s.trim().length > 10).slice(0, 2);
-                let summary = sentences.join('. ') + ".";
                 
-                this.speak("J'ai trouvé : " + summary);
+                // Nettoyage intelligent : on garde les 3 premières phrases
+                // On filtre les lignes vides ou parenthèses seules
+                let sentences = fullText.split('.').filter(s => {
+                    s = s.trim();
+                    return s.length > 20 && !s.startsWith('(');
+                });
+
+                // On limite à 3 phrases max pour la lecture
+                let summary = sentences.slice(0, 3).join('. ') + ".";
                 
-                // Ouvrir quand même le navigateur pour les détails
-                setTimeout(() => {
-                    window.open(`https://duckduckgo.com/?q=${encodeURIComponent(query)}`, '_blank');
-                }, 4000); // Ouvre après avoir parlé
+                // Si le résumé est trop court (cas équivoque), on le dit
+                if (summary.length < 30) {
+                    this.speak("Je n'ai trouvé qu'une information brève. " + summary, true);
+                } else {
+                    this.speak("Voici ce que j'ai trouvé : " + summary, true);
+                }
+
             } else {
-                throw new Error("Pas de résultat Wiki");
+                throw new Error("Non trouvé");
             }
         } catch (e) {
-            // 2. Fallback : Ouverture directe du navigateur
-            App.log("Wiki échoué, ouverture navigateur...", 'sys');
-            this.speak("Je n'ai pas pu trouver l'information, j'ouvre la recherche complète.");
-            window.open(`https://duckduckgo.com/?q=${encodeURIComponent(query)}`, '_blank');
+            console.error(e);
+            this.speak("Désolé, je n'ai pas trouvé d'information sur ce sujet.", true);
         }
     },
 
-    // --- TRAITEMENT DE LA PHRASE ---
     processInput(text) {
         App.updateMainText(text.toUpperCase());
         const lower = text.toLowerCase();
 
-        // 1. COMMANDES SYSTÈME
-        if (lower === 'stop' || lower === 'arrête') {
-            this.isListening = false; this.recognition.stop();
-            this.speak("Mode pause.");
-            return;
-        }
-        if (lower.includes('réécoute') || lower.includes('re écoute')) {
-            if (!this.isListening) { this.isListening = true; this.recognition.start(); }
-            this.speak("J'écoute à nouveau.");
+        // 1. COMMANDE STOP
+        if (lower === 'stop' || lower === 'arrête' || lower === 'tais-toi') {
+            this.isListening = false; 
+            if (this.recognition) this.recognition.stop();
+            this.synthesis.cancel();
+            App.updateSubText("PAUSE");
+            this.speak("Mode arrêt.", false); // On relance pas l'écoute
             return;
         }
 
-        // 2. DÉTECTION RECHERCHE WEB (Nouveau)
-        // Mots clés déclencheurs
-        const searchKeywords = ['recherche', 'cherche', 'trouve', 'internet', 'c\'est quoi', 'qui est', 'qu\'est-ce que', 'info sur', 'wikipédia'];
-        const isSearchQuery = searchKeywords.some(keyword => lower.includes(keyword));
+        // 2. COMMANDE RE ÉCOUTE
+        if (lower.includes('réécoute') || lower.includes('re écoute') || lower === 'écoute') {
+            if (!this.isListening) {
+                this.startListening();
+                this.speak("J'écoute.", false);
+            }
+            return;
+        }
 
-        if (isSearchQuery) {
-            // Nettoyer la requête (enlever "recherche" ou "c'est quoi")
-            let cleanQuery = text.replace(/recherche|cherche|trouve|sur internet|c'est quoi|qui est|qu'est-ce que|info sur|wikipédia/gi, '').trim();
+        // 3. MOTS CLÉS DE RECHERCHE
+        // Liste étendue pour capter "c'est quoi", "dis moi", "info", etc.
+        const searchKeywords = ['cherche', 'recherche', 'trouve', 'c\'est quoi', 'qu\'est-ce que', 'qui est', 'dis moi sur', 'info sur', 'wikipédia', 'explique'];
+        
+        // On vérifie si un mot clé est présent
+        const isSearchIntent = searchKeywords.some(kw => lower.includes(kw));
+
+        if (isSearchIntent) {
+            // Extraction du sujet (on enlève les mots clés)
+            let cleanQuery = text;
+            searchKeywords.forEach(kw => {
+                // Regex pour remplacer le mot clé (insensible à la casse) par vide
+                const regex = new RegExp(kw, 'gi');
+                cleanQuery = cleanQuery.replace(regex, '');
+            });
+            cleanQuery = cleanQuery.trim();
+
             if (cleanQuery.length > 2) {
                 this.performWebSearch(cleanQuery);
                 return;
             }
         }
 
-        // 3. QUESTIONS IA LOCALES
+        // 4. QUESTIONS LOCALES
         let response = null;
-        if (lower.includes('qui es-tu') || lower.includes('ton nom')) response = "Je suis PuiSSancE, assistant connecté au web.";
+        if (lower.includes('qui es-tu') || lower.includes('ton nom')) response = "Je suis PuiSSancE, votre assistant vocal connecté.";
         else if (lower.includes('heure')) {
             const d = new Date();
-            response = `Il est actuellement ${d.getHours()} heures ${d.getMinutes()}.`;
+            response = `Il est ${d.getHours()} heures ${d.getMinutes()}.`;
         }
-        else if (lower.includes('où') && (lower.includes('bruit') || lower.includes('esprit'))) {
-            const dirs = ["Nord", "Sud", "Est", "Ouest", "Derrière toi"];
-            response = "Le signal vient du " + dirs[Math.floor(Math.random() * dirs.length)] + ".";
-        }
+        else if (lower.includes('merci')) response = "Je vous en prie.";
 
         if (response) {
-            this.speak(response);
+            this.speak(response, true);
         } else if (this.isListening) {
-            // Par défaut : Répète si pas de commande spéciale
-            this.speak(text);
+            // Comportement par défaut : Répétition
+            this.speak(text, true);
         }
     }
 };
 
-// --- APPLICATION PRINCIPALE ---
 const App = {
-    isRunning: false, mode: null,
+    isRunning: false,
     init() {
         VisualEngine.init();
         BrainEngine.init();
-        this.log("v5.0 Prête. Recherche Web intégrée.", 'sys');
+        this.log("v6.0 Prête. Mode Audio Pur.", 'sys');
     },
     log(msg, type='sys') {
         const t = document.getElementById('terminal');
@@ -358,35 +393,31 @@ const App = {
     },
     updateMainText(t) { document.getElementById('mainText').innerText = t; },
     updateSubText(t) { document.getElementById('subText').innerText = t; },
-    updateStatus(active, m) {
+    updateStatus(active) {
         const b = document.getElementById('status');
-        const s = document.getElementById('sysMode');
-        if (active) {
-            b.classList.add('active'); b.innerText="ONLINE"; 
-            if(s) s.innerText=m;
-        } else {
-            b.classList.remove('active'); b.innerText="OFFLINE"; 
-            if(s) s.innerText="Aucun";
-        }
+        if (active) { b.classList.add('active'); b.innerText="ONLINE"; }
+        else { b.classList.remove('active'); b.innerText="OFFLINE"; }
     },
     startFullSystem() {
         this.stopSystem();
-        this.log("Démarrage complet...", 'sys');
+        this.log("Démarrage Complet...", 'sys');
         AudioEngine.init().then(ok => {
             if(!ok) return;
             VisualEngine.start();
             BrainEngine.startListening();
-            this.isRunning=true; this.mode='FULL';
-            this.speak("Système complet et recherche web activés.");
+            this.isRunning=true;
+            this.updateStatus(true);
+            BrainEngine.speak("Système complet actif.");
         });
     },
     startVoiceOnlyMode() {
         this.stopSystem();
-        this.log("Mode Voix Seule + Recherche...", 'sys');
+        this.log("Mode Voix Seule...", 'sys');
         VisualEngine.start();
         BrainEngine.startListening();
-        this.isRunning=true; this.mode='VOICE';
-        this.speak("Mode recherche activé. Demande moi ce que tu veux savoir.");
+        this.isRunning=true;
+        this.updateStatus(true);
+        BrainEngine.speak("Mode recherche activé. Posez vos questions.");
     },
     stopSystem() {
         this.isRunning=false;
@@ -394,11 +425,12 @@ const App = {
         VisualEngine.stop();
         BrainEngine.stopListening();
         BrainEngine.synthesis.cancel();
-        this.updateMainText("ARRÊT"); this.updateSubText("");
+        this.updateMainText("SYSTÈME OFF"); 
+        this.updateSubText("");
+        this.updateStatus(false);
         const c = document.getElementById('scopeCanvas');
         c.getContext('2d').clearRect(0,0,c.width,c.height);
-    },
-    speak(t) { BrainEngine.speak(t); }
+    }
 };
 
 window.onload = () => App.init();
