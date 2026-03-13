@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PuiSSancE MAXIMUM - ARCHITECTURE STABLE</title>
+    <title>PuiSSancE MAXIMUM - RECHERCHE WEB IA</title>
     <style>
         :root {
             --primary: #00ffcc;
@@ -12,6 +12,7 @@
             --panel: #111;
             --text: #eee;
             --danger: #ff3333;
+            --search: #ffaa00;
         }
         * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
         body {
@@ -27,7 +28,6 @@
         #status { font-size: 0.8rem; font-weight: bold; padding: 5px 10px; border: 1px solid var(--secondary); color: var(--secondary); }
         #status.active { background: var(--secondary); color: #000; box-shadow: 0 0 10px var(--secondary); }
 
-        /* ZONE PRINCIPALE */
         main { flex: 1; position: relative; display: flex; flex-direction: column; overflow: hidden; }
         
         #visualizer {
@@ -40,25 +40,24 @@
             text-align: center; pointer-events: none; z-index: 10;
         }
         #mainText {
-            font-size: 2rem; font-weight: bold; color: #fff;
+            font-size: 1.8rem; font-weight: bold; color: #fff;
             background: rgba(0,0,0,0.7); padding: 10px;
             text-transform: uppercase; border: 2px solid var(--primary);
             margin-bottom: 5px; min-height: 3rem;
         }
         #subText { font-size: 0.8rem; color: var(--secondary); letter-spacing: 1px; }
 
-        /* CONTRÔLES */
         #controls {
             background: var(--panel); padding: 15px;
             display: grid; gap: 10px;
-            max-height: 40vh; overflow-y: auto;
+            max-height: 45vh; overflow-y: auto;
         }
         .control-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .control-row.full { grid-template-columns: 1fr; }
 
         button {
             background: #222; border: 1px solid var(--primary); color: var(--primary);
-            padding: 15px; font-size: 0.9rem; font-weight: bold; cursor: pointer;
+            padding: 15px; font-size: 0.85rem; font-weight: bold; cursor: pointer;
             text-transform: uppercase; transition: 0.2s; font-family: inherit;
         }
         button:active { transform: scale(0.98); }
@@ -68,8 +67,8 @@
         
         .btn-ia { border-color: var(--secondary); color: var(--secondary); }
         .btn-ia.active-mode { background: var(--secondary); color: #000; box-shadow: 0 0 15px var(--secondary); }
+        .btn-search { border-color: var(--search); color: var(--search); }
 
-        /* LOG */
         #terminal {
             height: 100px; background: #000; border-top: 1px solid #333;
             padding: 8px; font-size: 0.7rem; overflow-y: auto; color: #888; font-family: monospace;
@@ -77,13 +76,14 @@
         .log-line { margin-bottom: 4px; border-left: 2px solid #555; padding-left: 5px; }
         .log-sys { color: #aaa; }
         .log-ia { border-color: var(--secondary); color: #fff; background: #220022; }
+        .log-search { border-color: var(--search); color: #ffffaa; background: #332200; }
         .log-err { border-color: var(--danger); color: var(--danger); }
     </style>
 </head>
 <body>
 
 <header>
-    <h1>PUISSANCE <span style="font-size:0.6em">v4.0 STABLE</span></h1>
+    <h1>PUISSANCE <span style="font-size:0.6em">v5.0 WEB SEARCH</span></h1>
     <div id="status">OFFLINE</div>
 </header>
 
@@ -92,213 +92,134 @@
         <canvas id="scopeCanvas"></canvas>
         <div id="displayOverlay">
             <div id="mainText">SYSTÈME PRÊT</div>
-            <div id="subText">EN ATTENTE D'ORDRE</div>
+            <div id="subText">CONNECTÉ AU WEB</div>
         </div>
     </div>
 </main>
 
 <div id="controls">
     <div class="control-row full">
-        <button class="btn-ia" onclick="App.startVoiceOnlyMode()">🎤 MODE VOIX SEULE (IA)</button>
+        <button class="btn-ia" onclick="App.startVoiceOnlyMode()">🎤 MODE IA & RECHERCHE</button>
     </div>
     <div class="control-row">
-        <button onclick="App.startFullSystem()">⚡ DÉMARRER SYSTÈME COMPLET</button>
-        <button class="danger" onclick="App.stopSystem()">⏹ ARRÊTER TOUT</button>
+        <button onclick="App.startFullSystem()">⚡ DÉMARRER COMPLET</button>
+        <button class="danger" onclick="App.stopSystem()">⏹ ARRÊTER</button>
     </div>
-    <div class="control-row full" style="font-size: 0.7rem; color:#666; text-align:center; border:1px solid #333; padding:5px;">
-        Système : <span id="sysMode">Aucun</span>
+    <div class="control-row full" style="font-size: 0.7rem; color:#aaa; text-align:center; padding:5px;">
+        Dis : <span style="color:var(--search)">"Cherche..."</span> ou <span style="color:var(--search)">"C'est quoi..."</span>
     </div>
 </div>
 
 <div id="terminal">
-    <div class="log-line log-sys">> Initialisation du noyau...</div>
+    <div class="log-line log-sys">> Noyau v5.0 chargé.</div>
+    <div class="log-line log-sys">> Module de recherche Web actif.</div>
 </div>
 
 <script>
 /**
  * =========================================================================
- * ARCHITECTURE EN ENTITÉS RÉELLES (Audio, Visual, Brain)
+ * ARCHITECTURE v5.0 - AVEC MOTEUR DE RECHERCHE WEB
  * =========================================================================
  */
 
-// --- ENTITÉ 1 : MOTEUR AUDIO (Gère le micro et le contexte audio) ---
+// --- ENTITÉ 1 : AUDIO ---
 const AudioEngine = {
-    ctx: null,
-    stream: null,
-    analyser: null,
-    isInit: false,
-
+    ctx: null, stream: null, analyser: null, isInit: false,
     async init() {
         if (this.isInit) return true;
-        
         try {
-            const AudioContext = window.AudioContext || window.webkitAudioContext;
-            this.ctx = new AudioContext();
-            // CRUCIAL : Réveiller le contexte audio immédiatement
-            if (this.ctx.state === 'suspended') {
-                await this.ctx.resume();
-            }
-
-            this.stream = await navigator.mediaDevices.getUserMedia({ 
-                audio: { 
-                    echoCancellation: false, 
-                    noiseSuppression: false, 
-                    autoGainControl: false 
-                } 
-            });
-
+            const AC = window.AudioContext || window.webkitAudioContext;
+            this.ctx = new AC();
+            if (this.ctx.state === 'suspended') await this.ctx.resume();
+            this.stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
             this.analyser = this.ctx.createAnalyser();
             this.analyser.fftSize = 256;
-            const source = this.ctx.createMediaStreamSource(this.stream);
-            source.connect(this.analyser);
-            
+            this.ctx.createMediaStreamSource(this.stream).connect(this.analyser);
             this.isInit = true;
             return true;
         } catch (e) {
-            console.error("AudioEngine Error:", e);
             App.log("Erreur Audio : " + e.message, 'err');
             return false;
         }
     },
-
     getDataArray() {
         if (!this.analyser) return new Uint8Array(0);
-        const array = new Uint8Array(this.analyser.frequencyBinCount);
-        this.analyser.getByteFrequencyData(array);
-        return array;
+        const arr = new Uint8Array(this.analyser.frequencyBinCount);
+        this.analyser.getByteFrequencyData(arr);
+        return arr;
     },
-
     destroy() {
-        if (this.stream) {
-            this.stream.getTracks().forEach(track => track.stop());
-            this.stream = null;
-        }
-        if (this.ctx) {
-            this.ctx.close();
-            this.ctx = null;
-        }
-        this.analyser = null;
+        if (this.stream) this.stream.getTracks().forEach(t => t.stop());
+        if (this.ctx) this.ctx.close();
         this.isInit = false;
     }
 };
 
-// --- ENTITÉ 2 : MOTEUR VISUEL (Gère le Canvas) ---
+// --- ENTITÉ 2 : VISUEL ---
 const VisualEngine = {
-    canvas: null,
-    ctx: null,
-    animationId: null,
-    isRunning: false,
-
+    canvas: null, ctx: null, isRunning: false, animId: null,
     init() {
         this.canvas = document.getElementById('scopeCanvas');
         this.ctx = this.canvas.getContext('2d');
         this.resize();
         window.addEventListener('resize', () => this.resize());
     },
-
     resize() {
         if (this.canvas) {
             this.canvas.width = this.canvas.parentElement.clientWidth;
             this.canvas.height = this.canvas.parentElement.clientHeight;
         }
     },
-
-    start() {
-        if (this.isRunning) return;
-        this.isRunning = true;
-        this.loop();
-    },
-
-    stop() {
-        this.isRunning = false;
-        if (this.animationId) cancelAnimationFrame(this.animationId);
-    },
-
+    start() { if (!this.isRunning) { this.isRunning = true; this.loop(); } },
+    stop() { this.isRunning = false; if (this.animId) cancelAnimationFrame(this.animId); },
     loop() {
         if (!this.isRunning) return;
-        
-        const w = this.canvas.width;
-        const h = this.canvas.height;
-        
-        // Fond semi-transparent pour effet de traînée
-        this.ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
-        this.ctx.fillRect(0, 0, w, h);
+        const w = this.canvas.width, h = this.canvas.height;
+        this.ctx.fillStyle = 'rgba(0,0,0,0.2)';
+        this.ctx.fillRect(0,0,w,h);
 
-        let data = new Uint8Array(0);
-        if (AudioEngine.isInit) {
-            data = AudioEngine.getDataArray();
-        } else {
-            // Simulation si pas de micro connecté (Mode Voix Seule)
-            data = new Uint8Array(128).map(() => Math.random() * 50);
-        }
-
-        const barWidth = (w / data.length) * 2.5;
+        let data = AudioEngine.isInit ? AudioEngine.getDataArray() : new Uint8Array(128).map(()=>Math.random()*30);
+        const barW = (w/data.length)*2.5;
         let x = 0;
-
-        for (let i = 0; i < data.length; i++) {
-            const barHeight = (data[i] / 255) * h;
-            
-            // Couleur dynamique
-            const r = 0;
-            const g = data[i] + 50;
-            const b = 255;
-
-            this.ctx.fillStyle = `rgb(${r},${g},${b})`;
-            this.ctx.fillRect(x, h - barHeight, barWidth, barHeight);
-            
-            x += barWidth + 1;
+        for(let i=0; i<data.length; i++) {
+            const barH = (data[i]/255)*h;
+            this.ctx.fillStyle = `rgb(0, ${data[i]+50}, 255)`;
+            this.ctx.fillRect(x, h-barH, barW, barH);
+            x+=barW+1;
         }
-
-        this.animationId = requestAnimationFrame(() => this.loop());
+        this.animId = requestAnimationFrame(()=>this.loop());
     }
 };
 
-// --- ENTITÉ 3 : CERVEAU IA (Reconnaissance et Synthèse) ---
+// --- ENTITÉ 3 : CERVEAU IA + RECHERCHE WEB ---
 const BrainEngine = {
-    recognition: null,
-    synthesis: window.speechSynthesis,
-    voice: null,
-    isListening: false,
+    recognition: null, synthesis: window.speechSynthesis, voice: null, isListening: false,
 
     init() {
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (!SpeechRecognition) return false;
-
-        // Configuration de la reconnaissance
-        this.recognition = new SpeechRecognition();
+        const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SR) return false;
+        this.recognition = new SR();
         this.recognition.continuous = true;
         this.recognition.interimResults = false;
         this.recognition.lang = 'fr-FR';
 
-        // Gestion des résultats
-        this.recognition.onresult = (event) => {
-            const last = event.results.length - 1;
-            const text = event.results[last][0].transcript.trim();
+        this.recognition.onresult = (e) => {
+            const text = e.results[e.results.length-1][0].transcript.trim();
             this.processInput(text);
         };
 
-        // Gestion de la fin (redémarrage automatique si actif)
         this.recognition.onend = () => {
             if (this.isListening && App.isRunning) {
-                // Petit délai pour éviter boucle infinie trop rapide
-                setTimeout(() => {
-                    if (this.isListening) try { this.recognition.start(); } catch(e){}
-                }, 500);
-            }
-        };
-        
-        // Gestion erreurs
-        this.recognition.onerror = (e) => {
-            if (e.error === 'not-allowed') {
-                App.log("Microphone refusé !", 'err');
-                App.stopSystem();
+                setTimeout(() => { if (this.isListening) try{this.recognition.start()}catch(e){} }, 500);
             }
         };
 
-        // Chargement voix
+        this.recognition.onerror = (e) => {
+            if (e.error === 'not-allowed') { App.log("Micro refusé", 'err'); App.stopSystem(); }
+        };
+
         this.loadVoice();
         window.speechSynthesis.onvoiceschanged = () => this.loadVoice();
-        
         return true;
     },
 
@@ -323,62 +244,94 @@ const BrainEngine = {
     speak(text) {
         this.synthesis.cancel();
         if (!text) return;
-        
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = 'fr-FR';
-        utterance.pitch = 0.6;
-        utterance.rate = 1.1;
-        if (this.voice) utterance.voice = this.voice;
-
-        utterance.onstart = () => {
-            App.updateMainText("PARLE...");
-            App.log("IA: " + text, 'ia');
-        };
-        utterance.onend = () => {
-            if (this.isListening) App.updateMainText("ÉCOUTE...");
-        };
-
-        this.synthesis.speak(utterance);
+        const u = new SpeechSynthesisUtterance(text);
+        u.lang = 'fr-FR'; u.pitch = 0.6; u.rate = 1.1;
+        if (this.voice) u.voice = this.voice;
+        u.onstart = () => { App.updateMainText("PARLE..."); App.log("Dit: " + text, 'ia'); };
+        u.onend = () => { if (this.isListening) App.updateMainText("ÉCOUTE..."); };
+        this.synthesis.speak(u);
     },
 
-    // LOGIQUE INTELLIGENTE
+    // --- LOGIQUE DE RECHERCHE WEB (NOUVEAU) ---
+    async performWebSearch(query) {
+        App.log(`Recherche Web : "${query}"`, 'search');
+        this.speak("Je recherche sur internet...");
+
+        try {
+            // 1. Essayer Wikipedia (Gratuit, Open Source, Rapide)
+            const url = `https://fr.wikipedia.org/w/api.php?origin=*&action=query&format=json&prop=extracts&exintro&explaintext&redirects=1&titles=${encodeURIComponent(query)}`;
+            
+            const response = await fetch(url);
+            const data = await response.json();
+            const pages = data.query.pages;
+            const pageId = Object.keys(pages)[0];
+
+            if (pageId !== "-1" && pages[pageId].extract) {
+                let fullText = pages[pageId].extract;
+                // Réduire le texte aux 2 premières phrases pour la voix
+                let sentences = fullText.split('.').filter(s => s.trim().length > 10).slice(0, 2);
+                let summary = sentences.join('. ') + ".";
+                
+                this.speak("J'ai trouvé : " + summary);
+                
+                // Ouvrir quand même le navigateur pour les détails
+                setTimeout(() => {
+                    window.open(`https://duckduckgo.com/?q=${encodeURIComponent(query)}`, '_blank');
+                }, 4000); // Ouvre après avoir parlé
+            } else {
+                throw new Error("Pas de résultat Wiki");
+            }
+        } catch (e) {
+            // 2. Fallback : Ouverture directe du navigateur
+            App.log("Wiki échoué, ouverture navigateur...", 'sys');
+            this.speak("Je n'ai pas pu trouver l'information, j'ouvre la recherche complète.");
+            window.open(`https://duckduckgo.com/?q=${encodeURIComponent(query)}`, '_blank');
+        }
+    },
+
+    // --- TRAITEMENT DE LA PHRASE ---
     processInput(text) {
         App.updateMainText(text.toUpperCase());
         const lower = text.toLowerCase();
 
-        // 1. COMMANDE STOP
+        // 1. COMMANDES SYSTÈME
         if (lower === 'stop' || lower === 'arrête') {
-            this.isListening = false; // Flag logique
-            this.recognition.stop(); // Arrêt physique
-            this.speak("Mode pause activé.");
+            this.isListening = false; this.recognition.stop();
+            this.speak("Mode pause.");
             return;
         }
-
-        // 2. COMMANDE RE ÉCOUTE
-        if (lower.includes('réécoute') || lower.includes('re écoute') || lower.includes('écoute encore')) {
-            if (!this.isListening) {
-                this.isListening = true;
-                try { this.recognition.start(); } catch(e){}
-            }
+        if (lower.includes('réécoute') || lower.includes('re écoute')) {
+            if (!this.isListening) { this.isListening = true; this.recognition.start(); }
             this.speak("J'écoute à nouveau.");
             return;
         }
 
-        // 3. QUESTIONS IA
-        let response = null;
+        // 2. DÉTECTION RECHERCHE WEB (Nouveau)
+        // Mots clés déclencheurs
+        const searchKeywords = ['recherche', 'cherche', 'trouve', 'internet', 'c\'est quoi', 'qui est', 'qu\'est-ce que', 'info sur', 'wikipédia'];
+        const isSearchQuery = searchKeywords.some(keyword => lower.includes(keyword));
 
-        if (lower.includes('qui es-tu') || lower.includes('ton nom')) {
-            response = "Je suis PuiSSancE, entité artificielle de détection spectrale.";
-        } 
+        if (isSearchQuery) {
+            // Nettoyer la requête (enlever "recherche" ou "c'est quoi")
+            let cleanQuery = text.replace(/recherche|cherche|trouve|sur internet|c'est quoi|qui est|qu'est-ce que|info sur|wikipédia/gi, '').trim();
+            if (cleanQuery.length > 2) {
+                this.performWebSearch(cleanQuery);
+                return;
+            }
+        }
+
+        // 3. QUESTIONS IA LOCALES
+        let response = null;
+        if (lower.includes('qui es-tu') || lower.includes('ton nom')) response = "Je suis PuiSSancE, assistant connecté au web.";
+        else if (lower.includes('heure')) {
+            const d = new Date();
+            response = `Il est actuellement ${d.getHours()} heures ${d.getMinutes()}.`;
+        }
         else if (lower.includes('où') && (lower.includes('bruit') || lower.includes('esprit'))) {
-            const dirs = ["Nord", "Sud", "Est", "Ouest", "Derrière toi", "À gauche"];
+            const dirs = ["Nord", "Sud", "Est", "Ouest", "Derrière toi"];
             response = "Le signal vient du " + dirs[Math.floor(Math.random() * dirs.length)] + ".";
         }
-        else if (lower.includes('aide') || lower.includes('comment puis-je t\'aider')) {
-            response = "Tu peux me demander où est l'esprit, qui je suis, ou dire Stop pour m'arrêter.";
-        }
 
-        // 4. RÉPONSE
         if (response) {
             this.speak(response);
         } else if (this.isListening) {
@@ -388,125 +341,67 @@ const BrainEngine = {
     }
 };
 
-// --- ENTITÉ 4 : CONTRÔLEUR PRINCIPAL (Application) ---
+// --- APPLICATION PRINCIPALE ---
 const App = {
-    isRunning: false,
-    mode: null, // 'FULL' ou 'VOICE_ONLY'
-
+    isRunning: false, mode: null,
     init() {
         VisualEngine.init();
         BrainEngine.init();
-        this.log("Système initialisé. Prêt.", 'sys');
+        this.log("v5.0 Prête. Recherche Web intégrée.", 'sys');
     },
-
-    log(msg, type = 'sys') {
-        const term = document.getElementById('terminal');
-        const div = document.createElement('div');
-        div.className = 'log-line log-' + type;
-        div.innerText = `[${new Date().toLocaleTimeString('fr-FR')}] ${msg}`;
-        term.appendChild(div);
-        term.scrollTop = term.scrollHeight;
+    log(msg, type='sys') {
+        const t = document.getElementById('terminal');
+        const d = document.createElement('div');
+        d.className = 'log-line log-'+type;
+        d.innerText = `[${new Date().toLocaleTimeString('fr-FR')}] ${msg}`;
+        t.appendChild(d); t.scrollTop = t.scrollHeight;
     },
-
-    updateMainText(text) {
-        document.getElementById('mainText').innerText = text;
-    },
-
-    updateSubText(text) {
-        document.getElementById('subText').innerText = text;
-    },
-
-    updateStatus(active, modeName) {
-        const badge = document.getElementById('status');
-        const modeSpan = document.getElementById('sysMode');
-        
+    updateMainText(t) { document.getElementById('mainText').innerText = t; },
+    updateSubText(t) { document.getElementById('subText').innerText = t; },
+    updateStatus(active, m) {
+        const b = document.getElementById('status');
+        const s = document.getElementById('sysMode');
         if (active) {
-            badge.classList.add('active');
-            badge.innerText = "ONLINE";
-            modeSpan.innerText = modeName;
-            modeSpan.style.color = 'var(--primary)';
+            b.classList.add('active'); b.innerText="ONLINE"; 
+            if(s) s.innerText=m;
         } else {
-            badge.classList.remove('active');
-            badge.innerText = "OFFLINE";
-            modeSpan.innerText = "Aucun";
-            modeSpan.style.color = '#666';
+            b.classList.remove('active'); b.innerText="OFFLINE"; 
+            if(s) s.innerText="Aucun";
         }
     },
-
-    // --- MODE 1 : SYSTÈME COMPLET (Audio + Visuel + IA) ---
-    async startFullSystem() {
-        this.stopSystem(); // Reset propre avant de démarrer
-        
-        this.log("Démarrage Système Complet...", 'sys');
-        
-        // 1. Init Audio (Micro + Analyser)
-        const audioOk = await AudioEngine.init();
-        if (!audioOk) {
-            alert("Impossible d'accéder au micro.");
-            return;
-        }
-
-        // 2. Démarrer Visuel
-        VisualEngine.start();
-
-        // 3. Démarrer Cerveau
-        BrainEngine.startListening();
-
-        // 4. État
-        this.isRunning = true;
-        this.mode = 'FULL';
-        this.updateStatus(true, "SYSTÈME COMPLET (VISUEL + IA)");
-        this.speak("Système complet activé.");
+    startFullSystem() {
+        this.stopSystem();
+        this.log("Démarrage complet...", 'sys');
+        AudioEngine.init().then(ok => {
+            if(!ok) return;
+            VisualEngine.start();
+            BrainEngine.startListening();
+            this.isRunning=true; this.mode='FULL';
+            this.speak("Système complet et recherche web activés.");
+        });
     },
-
-    // --- MODE 2 : VOIX SEULE (IA Uniquement) ---
     startVoiceOnlyMode() {
-        this.stopSystem(); // Reset propre
-
-        this.log("Activation Mode Voix Seule...", 'sys');
-        
-        // NOTE: Pas d'AudioEngine.init() ici pour éviter les conflits de micro si non utilisé
-        // Le navigateur gère le micro interne pour SpeechRecognition
-        
-        VisualEngine.start(); // On garde le visuel en mode simulation (cool factor)
-
+        this.stopSystem();
+        this.log("Mode Voix Seule + Recherche...", 'sys');
+        VisualEngine.start();
         BrainEngine.startListening();
-
-        this.isRunning = true;
-        this.mode = 'VOICE_ONLY';
-        this.updateStatus(true, "MODE VOIX SEULE (IA UNIQUEMENT)");
-        this.speak("Mode voix seule activé.");
+        this.isRunning=true; this.mode='VOICE';
+        this.speak("Mode recherche activé. Demande moi ce que tu veux savoir.");
     },
-
     stopSystem() {
-        this.log("Arrêt en cours...", 'sys');
-        this.isRunning = false;
-        this.mode = null;
-
-        // Arrêt de tout
+        this.isRunning=false;
         AudioEngine.destroy();
         VisualEngine.stop();
         BrainEngine.stopListening();
         BrainEngine.synthesis.cancel();
-
-        this.updateStatus(false, "");
-        this.updateMainText("SYSTÈME ARRÊTÉ");
-        this.updateSubText("EN ATTENTE");
-        
-        // Nettoyage visuel
-        const canvas = document.getElementById('scopeCanvas');
-        const ctx = canvas.getContext('2d');
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        this.updateMainText("ARRÊT"); this.updateSubText("");
+        const c = document.getElementById('scopeCanvas');
+        c.getContext('2d').clearRect(0,0,c.width,c.height);
     },
-
-    speak(text) {
-        BrainEngine.speak(text);
-    }
+    speak(t) { BrainEngine.speak(t); }
 };
 
-// Lancement au chargement
 window.onload = () => App.init();
-
 </script>
 </body>
 </html>
