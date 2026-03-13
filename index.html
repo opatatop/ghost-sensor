@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TONNERRE DE ZEUS ECLAIR AU BOUT DES DOIGTS</title>
+    <title>TONNERRE DE ZEUS - TOUT PUISSANT</title>
     <style>
         :root {
             --primary-color: #00ccff;
@@ -388,7 +388,7 @@
 <body>
 
     <header>
-        <h1>PuiSSancE <span style="font-size:0.6em; color:var(--secondary-color)">MAXIMUM</span></h1>
+        <h1>TOUT PUISSANT <span style="font-size:0.6em; color:var(--secondary-color)">MAXIMUM</span></h1>
         <div>
             <span id="sysStatus" class="status-badge">OFFLINE</span>
         </div>
@@ -437,10 +437,10 @@
         <div class="control-group">
             <div class="group-title">Chaîne Audio Complète (Loop)</div>
             <div class="btn-grid">
-                <button id="btnMic" onclick="toggleAudioModule('microphone')">🎧 MICRO</button>
-                <button id="btnNoise" onclick="toggleAudioModule('noiseGenerator')">⚡ BRUIT BLANC</button>
+                <button id="btnMic" class="active" onclick="toggleAudioModule('microphone')">🎧 MICRO</button>
+                <button id="btnNoise" class="active" onclick="toggleAudioModule('noiseGenerator')">⚡ BRUIT BLANC</button>
                 <button id="btnTTS" class="active" onclick="toggleAudioModule('ttsEngine')">🔊 VOIX (LOOP)</button>
-                <button id="btnRec" onclick="toggleAudioModule('recorder')">⏺ ENREGISTREUR</button>
+                <button id="btnRec" class="active" onclick="toggleAudioModule('recorder')">⏺ ENREGISTREUR</button>
             </div>
             <p style="font-size:0.6rem; color:#666; margin-top:5px; text-align:center;">* Activez "VOIX (LOOP)" pour que le système redise ce qu'il entend.</p>
         </div>
@@ -462,18 +462,28 @@
 
             <div class="slider-row">
                 <label>Volume Bruit (Bruit Blanc)</label>
-                <input type="range" id="sliderNoiseVol" min="0" max="100" step="1" value="30" oninput="updateLiveConfig('noiseVolume', this.value)">
-                <span class="val-display" id="dispNoiseVol">30</span>
+                <input type="range" id="sliderNoiseVol" min="0" max="100" step="1" value="50" oninput="updateLiveConfig('noiseVolume', this.value)">
+                <span class="val-display" id="dispNoiseVol">50</span>
             </div>
         </div>
 
         <div class="control-group">
             <div class="group-title">Détection et Analyse</div>
             <div class="btn-grid">
-                <button id="btnFreq" onclick="toggleAudioModule('frequencyAnalysis')">📊 40 BANDES</button>
-                <button id="btnEMF" onclick="toggleAudioModule('emfDetection')">🔋 DÉTECTION ÉNERGIE</button>
-                <button id="btnPattern" onclick="toggleAudioModule('patternDetection')">🔍 PATTERNS</button>
-                <button id="btnParanormal" onclick="toggleAudioModule('paranormalFilter')">👻 FILTRE PARANORMAL</button>
+                <button id="btnFreq" class="active" onclick="toggleAudioModule('frequencyAnalysis')">📊 40 BANDES</button>
+                <button id="btnEMF" class="active" onclick="toggleAudioModule('emfDetection')">🔋 DÉTECTION ÉNERGIE</button>
+                <button id="btnPattern" class="active" onclick="toggleAudioModule('patternDetection')">🔍 PATTERNS</button>
+                <button id="btnParanormal" class="active" onclick="toggleAudioModule('paranormalFilter')">👻 FILTRE PARANORMAL</button>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <div class="group-title">Traduction des Bruits</div>
+            <div class="btn-grid">
+                <button id="btnMagnetic" class="active" onclick="toggleAudioModule('magneticDetection')">🧲 MAGNÉTIQUE</button>
+                <button id="btnEnergy" class="active" onclick="toggleAudioModule('energyDetection')">⚡ ÉNERGIE</button>
+                <button id="btnDeaf" class="active" onclick="toggleAudioModule('deafDetection')">🔇 SOURD</button>
+                <button id="btnAll" class="active" onclick="toggleAudioModule('allDetection')">🔊 TOUS</button>
             </div>
         </div>
 
@@ -498,8 +508,8 @@
                     <select id="cfgFFT" style="flex:2; background:#000; color:#fff; border:1px solid #444;" onchange="updateLiveConfig('fftSize', this.value)">
                         <option value="512">512 (Ultra Rapide)</option>
                         <option value="1024">1024 (Rapide)</option>
-                        <option value="2048" selected>2048 (Standard)</option>
-                        <option value="4096">4096 (Haute Précision)</option>
+                        <option value="2048">2048 (Standard)</option>
+                        <option value="4096" selected>4096 (Haute Précision)</option>
                         <option value="8192">8192 (Ultra)</option>
                     </select>
                 </div>
@@ -519,8 +529,8 @@
                 </div>
                 <div class="slider-row">
                     <label>Seuil de Confiance</label>
-                    <input type="range" id="cfgConf" min="0" max="1" step="0.1" value="0.0" oninput="updateLiveConfig('confidenceThreshold', this.value)">
-                    <span class="val-display" id="dispConf">0.0</span>
+                    <input type="range" id="cfgConf" min="0" max="1" step="0.1" value="0.3" oninput="updateLiveConfig('confidenceThreshold', this.value)">
+                    <span class="val-display" id="dispConf">0.3</span>
                 </div>
                 <p style="font-size:0.65rem; color:#888; line-height:1.4;">
                     * Si le seuil est à 0.0, l'IA traduit et redit ABSOLUMENT TOUT, y compris les bruits parasites et le magnétisme interprété.
@@ -536,7 +546,7 @@
     <script>
         /**
          * =========================================================================
-         * PuiSSancE MAXIMUM - MOTEUR JAVASCRIPT COMPLET
+         * TOUT PUISSANT - MOTEUR JAVASCRIPT COMPLET
          * =========================================================================
          */
 
@@ -551,26 +561,30 @@
 
         // --- 2. CONFIGURATION PAR DÉFAUT ---
         const DEFAULT_SYSTEM_CONFIG = {
-            // États des modules
+            // États des modules (tous activés par défaut)
             microphone: true,
-            noiseGenerator: false,
+            noiseGenerator: true,
             ttsEngine: true,
-            recorder: false,
-            frequencyAnalysis: false,
-            emfDetection: false,
-            patternDetection: false,
-            paranormalFilter: false,
+            recorder: true,
+            frequencyAnalysis: true,
+            emfDetection: true,
+            patternDetection: true,
+            paranormalFilter: true,
+            magneticDetection: true,
+            energyDetection: true,
+            deafDetection: true,
+            allDetection: true,
 
             // Paramètres Audio
             voiceVolume: 1.0,
             voicePitch: 0.6,
             speechRate: 1.1,
-            noiseVolume: 30,
+            noiseVolume: 50,
 
             // Paramètres Analyse
-            fftSize: 2048,
+            fftSize: 4096,
             smoothing: 0.8,
-            confidenceThreshold: 0.0,
+            confidenceThreshold: 0.3,
 
             // Visuel
             currentTheme: 'zeus'
@@ -611,8 +625,12 @@
             soundDictionary: {
                 "low_rumble": { text: "Bruit sourd détecté", threshold: 0.2, lastTriggered: 0 },
                 "magnetic": { text: "Champ magnétique", threshold: 0.5, lastTriggered: 0 },
-                "energy": { text: "Énergie détectée", threshold: 0.3, lastTriggered: 0 }
-            },
+                "energy": { text: "Énergie détectée", threshold: 0.3, lastTriggered: 0 },
+                "patterns": {
+                    "oui": { frequencies: [100, 200, 300], threshold: 0.7, lastTriggered: 0 },
+                    "non": { frequencies: [400, 500, 600], threshold: 0.7, lastTriggered: 0 },
+                    "danger": { frequencies: [700, 800, 900], threshold: 0.7, lastTriggered: 0 }
+                },
 
             // Données des capteurs
             sensorData: {
@@ -623,6 +641,13 @@
                 magY: 0,
                 magZ: 0,
                 lastEMFEvent: 0
+            },
+
+            // Effets audio
+            effects: {
+                reverb: null,
+                delay: null,
+                distortion: null
             }
         };
 
@@ -658,7 +683,7 @@
         }
 
         function loadSystemConfiguration() {
-            const savedData = localStorage.getItem('PuiSSancE_Max_Config');
+            const savedData = localStorage.getItem('TOUT_PUISSANT_Config');
             if (savedData) {
                 try {
                     const parsedConfig = JSON.parse(savedData);
@@ -674,7 +699,7 @@
 
         function saveSystemConfiguration() {
             try {
-                localStorage.setItem('PuiSSancE_Max_Config', JSON.stringify(POWER_SYSTEM.config));
+                localStorage.setItem('TOUT_PUISSANT_Config', JSON.stringify(POWER_SYSTEM.config));
                 logMessage("Configuration sauvegardée avec succès.", 'sys');
             } catch (error) {
                 logMessage("Erreur de sauvegarde : " + error.message, 'warn');
@@ -691,14 +716,12 @@
 
             getEl('cfgFFT').value = POWER_SYSTEM.config.fftSize;
 
-            toggleButtonVisual('btnMic', POWER_SYSTEM.config.microphone);
-            toggleButtonVisual('btnNoise', POWER_SYSTEM.config.noiseGenerator);
-            toggleButtonVisual('btnTTS', POWER_SYSTEM.config.ttsEngine);
-            toggleButtonVisual('btnRec', POWER_SYSTEM.config.recorder);
-            toggleButtonVisual('btnFreq', POWER_SYSTEM.config.frequencyAnalysis);
-            toggleButtonVisual('btnEMF', POWER_SYSTEM.config.emfDetection);
-            toggleButtonVisual('btnPattern', POWER_SYSTEM.config.patternDetection);
-            toggleButtonVisual('btnParanormal', POWER_SYSTEM.config.paranormalFilter);
+            // Mise à jour de tous les boutons
+            Object.keys(POWER_SYSTEM.config).forEach(key => {
+                if (key.endsWith('Detection') || key.endsWith('Filter') || key === 'microphone' || key === 'noiseGenerator' || key === 'ttsEngine' || key === 'recorder') {
+                    toggleButtonVisual('btn' + key.charAt(0).toUpperCase() + key.slice(1), POWER_SYSTEM.config[key]);
+                }
+            });
         }
 
         function updateSliderUI(inputId, displayId, value) {
@@ -721,14 +744,8 @@
             const numValue = parseFloat(value);
             POWER_SYSTEM.config[key] = numValue;
 
-            // Mises à jour spécifiques immédiates
-            if (key === 'noiseVolume') {
-                applyNoiseVolume();
-            } else if (key === 'smoothing') {
-                if (POWER_SYSTEM.analyserNode) {
-                    POWER_SYSTEM.analyserNode.smoothingTimeConstant = numValue;
-                }
-            }
+            if (key === 'noiseVolume') applyNoiseVolume();
+            else if (key === 'smoothing' && POWER_SYSTEM.analyserNode) POWER_SYSTEM.analyserNode.smoothingTimeConstant = numValue;
 
             const map = {
                 'voiceVolume': 'dispVoiceVol',
@@ -738,9 +755,7 @@
                 'speechRate': 'dispRate',
                 'confidenceThreshold': 'dispConf'
             };
-            if (map[key]) {
-                getEl(map[key]).innerText = numValue;
-            }
+            if (map[key]) getEl(map[key]).innerText = numValue;
         }
 
         function toggleAudioModule(moduleName) {
@@ -748,33 +763,42 @@
             const stateText = POWER_SYSTEM.config[moduleName] ? "ACTIVÉ" : "DÉSACTIVÉ";
             logMessage(`Module ${moduleName.toUpperCase()} : ${stateText}`, 'sys');
 
-            // Mise à jour visuelle du bouton
-            const btnId = 'btn' + moduleName.charAt(0).toUpperCase() + moduleName.slice(1);
-            toggleButtonVisual(btnId, POWER_SYSTEM.config[moduleName]);
+            toggleButtonVisual('btn' + moduleName.charAt(0).toUpperCase() + moduleName.slice(1), POWER_SYSTEM.config[moduleName]);
 
-            // Application logique
-            if (moduleName === 'noiseGenerator') {
-                applyNoiseVolume();
-            }
-            if (moduleName === 'recorder') {
-                handleRecordingState();
-            }
-            if (moduleName === 'paranormalFilter') {
-                applyParanormalFilter();
-            }
+            if (moduleName === 'noiseGenerator') applyNoiseVolume();
+            else if (moduleName === 'recorder') handleRecordingState();
+            else if (moduleName === 'paranormalFilter') applyParanormalFilter();
         }
 
         function applyNoiseVolume() {
             if (!POWER_SYSTEM.noiseGainNode) return;
-
             const targetVolume = POWER_SYSTEM.config.noiseGenerator ? (POWER_SYSTEM.config.noiseVolume / 100) : 0;
             POWER_SYSTEM.noiseGainNode.gain.setTargetAtTime(targetVolume, POWER_SYSTEM.audioContext.currentTime, 0.1);
         }
 
         function applyParanormalFilter() {
-            // Implémentation simplifiée du filtre paranormal
-            // En réalité, cela nécessiterait un AudioWorklet ou un script de traitement plus complexe
-            logMessage(`Filtre paranormal ${POWER_SYSTEM.config.paranormalFilter ? 'activé' : 'désactivé'}`, 'sys');
+            if (!POWER_SYSTEM.audioContext) return;
+
+            // Création d'un filtre passe-bande pour l'effet paranormal
+            if (POWER_SYSTEM.config.paranormalFilter) {
+                if (!POWER_SYSTEM.effects.paranormalFilter) {
+                    POWER_SYSTEM.effects.paranormalFilter = POWER_SYSTEM.audioContext.createBiquadFilter();
+                    POWER_SYSTEM.effects.paranormalFilter.type = "bandpass";
+                    POWER_SYSTEM.effects.paranormalFilter.frequency.value = 1000;
+                    POWER_SYSTEM.effects.paranormalFilter.Q.value = 2;
+
+                    // Connexion du filtre
+                    POWER_SYSTEM.microphoneSource.disconnect();
+                    POWER_SYSTEM.microphoneSource.connect(POWER_SYSTEM.effects.paranormalFilter);
+                    POWER_SYSTEM.effects.paranormalFilter.connect(POWER_SYSTEM.analyserNode);
+                }
+            } else {
+                if (POWER_SYSTEM.effects.paranormalFilter) {
+                    POWER_SYSTEM.microphoneSource.disconnect();
+                    POWER_SYSTEM.microphoneSource.connect(POWER_SYSTEM.analyserNode);
+                    POWER_SYSTEM.effects.paranormalFilter = null;
+                }
+            }
         }
 
         function handleRecordingState() {
@@ -837,6 +861,7 @@
                     POWER_SYSTEM.analyserNode.fftSize = POWER_SYSTEM.config.fftSize;
                     POWER_SYSTEM.analyserNode.smoothingTimeConstant = POWER_SYSTEM.config.smoothing;
 
+                    // Connexion initiale
                     POWER_SYSTEM.microphoneSource.connect(POWER_SYSTEM.gainNode);
                     POWER_SYSTEM.gainNode.connect(POWER_SYSTEM.analyserNode);
 
@@ -865,7 +890,7 @@
                 POWER_SYSTEM.noiseSource.loop = true;
 
                 POWER_SYSTEM.noiseGainNode = POWER_SYSTEM.audioContext.createGain();
-                POWER_SYSTEM.noiseGainNode.gain.value = 0;
+                POWER_SYSTEM.noiseGainNode.gain.value = POWER_SYSTEM.config.noiseVolume / 100;
 
                 const noiseFilter = POWER_SYSTEM.audioContext.createBiquadFilter();
                 noiseFilter.type = 'bandpass';
@@ -890,7 +915,7 @@
 
                             const downloadLink = document.createElement('a');
                             downloadLink.href = audioUrl;
-                            downloadLink.download = `PuiSSancE_Rec_${Date.now()}.webm`;
+                            downloadLink.download = `TOUT_PUISSANT_Rec_${Date.now()}.webm`;
                             document.body.appendChild(downloadLink);
                             downloadLink.click();
                             document.body.removeChild(downloadLink);
@@ -925,7 +950,9 @@
                 getEl('sysStatus').innerText = "ONLINE";
                 getEl('aiText').innerText = "ÉCOUTE ACTIVE...";
 
+                // Appliquer les configurations initiales
                 applyNoiseVolume();
+                applyParanormalFilter();
 
                 if (POWER_SYSTEM.config.recorder) handleRecordingState();
 
@@ -1034,7 +1061,7 @@
         }
 
         function speakText(textToSpeak) {
-            if (!textToSpeak) return;
+            if (!textToSpeak || !POWER_SYSTEM.isRunning) return;
 
             POWER_SYSTEM.speechSynthesis.cancel();
 
@@ -1055,25 +1082,76 @@
                 aiSubElement.style.color = "var(--primary-color)";
             };
 
+            // Ajout d'effets audio pour la voix synthétique
+            if (POWER_SYSTEM.config.paranormalFilter) {
+                utterance.pitch = 0.8;
+                utterance.rate = 0.9;
+            }
+
             POWER_SYSTEM.speechSynthesis.speak(utterance);
         }
 
         function translateNoiseToSpeech(frequencyData) {
             const now = Date.now();
 
-            // Exemple simplifié de détection de patterns dans les fréquences
-            const lowFreqEnergy = frequencyData.slice(0, 10).reduce((a, b) => a + b, 0) / 10;
-            const midFreqEnergy = frequencyData.slice(10, 50).reduce((a, b) => a + b, 0) / 40;
-            const highFreqEnergy = frequencyData.slice(50, 100).reduce((a, b) => a + b, 0) / 50;
+            // Calcul des énergies par bandes de fréquence
+            const energyBands = [];
+            for (let i = 0; i < 40; i++) {
+                const start = Math.floor(i * frequencyData.length / 40);
+                const end = Math.floor((i + 1) * frequencyData.length / 40);
+                const bandEnergy = frequencyData.slice(start, end).reduce((a, b) => a + b, 0) / (end - start);
+                energyBands.push(bandEnergy);
+            }
 
-            // Détection des bruits selon leur signature fréquentielle
-            if (lowFreqEnergy > 100 && now - POWER_SYSTEM.soundDictionary.low_rumble.lastTriggered > 2000) {
+            // Détection des patterns
+            if (POWER_SYSTEM.config.patternDetection) {
+                detectKnownPatterns(energyBands);
+            }
+
+            // Détection des bruits spécifiques
+            if (POWER_SYSTEM.config.deafDetection && energyBands[0] > 100 && now - POWER_SYSTEM.soundDictionary.low_rumble.lastTriggered > 2000) {
                 speakText(POWER_SYSTEM.soundDictionary.low_rumble.text);
                 POWER_SYSTEM.soundDictionary.low_rumble.lastTriggered = now;
                 logMessage("Détection: " + POWER_SYSTEM.soundDictionary.low_rumble.text, 'ai');
             }
 
-            // Ajouter ici d'autres conditions de détection
+            if (POWER_SYSTEM.config.magneticDetection && energyBands[5] > 150 && now - POWER_SYSTEM.soundDictionary.magnetic.lastTriggered > 2000) {
+                speakText(POWER_SYSTEM.soundDictionary.magnetic.text);
+                POWER_SYSTEM.soundDictionary.magnetic.lastTriggered = now;
+                logMessage("Détection: " + POWER_SYSTEM.soundDictionary.magnetic.text, 'ai');
+            }
+
+            if (POWER_SYSTEM.config.energyDetection && energyBands[10] > 180 && now - POWER_SYSTEM.soundDictionary.energy.lastTriggered > 2000) {
+                speakText(POWER_SYSTEM.soundDictionary.energy.text);
+                POWER_SYSTEM.soundDictionary.energy.lastTriggered = now;
+                logMessage("Détection: " + POWER_SYSTEM.soundDictionary.energy.text, 'ai');
+            }
+        }
+
+        function detectKnownPatterns(energyBands) {
+            const now = Date.now();
+
+            // Détection simplifiée de patterns
+            if (energyBands[1] > 120 && energyBands[2] > 120 && energyBands[3] > 120 &&
+                now - POWER_SYSTEM.soundDictionary.patterns.oui.lastTriggered > 3000) {
+                speakText("Oui");
+                POWER_SYSTEM.soundDictionary.patterns.oui.lastTriggered = now;
+                logMessage("Pattern détecté: Oui", 'ai');
+            }
+
+            if (energyBands[8] > 130 && energyBands[9] > 130 && energyBands[10] > 130 &&
+                now - POWER_SYSTEM.soundDictionary.patterns.non.lastTriggered > 3000) {
+                speakText("Non");
+                POWER_SYSTEM.soundDictionary.patterns.non.lastTriggered = now;
+                logMessage("Pattern détecté: Non", 'ai');
+            }
+
+            if (energyBands[15] > 140 && energyBands[16] > 140 && energyBands[17] > 140 &&
+                now - POWER_SYSTEM.soundDictionary.patterns.danger.lastTriggered > 3000) {
+                speakText("Danger");
+                POWER_SYSTEM.soundDictionary.patterns.danger.lastTriggered = now;
+                logMessage("Pattern détecté: Danger", 'ai');
+            }
         }
 
         // --- 7. BOUCLE VISUELLE (CANVAS) ---
@@ -1114,11 +1192,8 @@
                     const v = POWER_SYSTEM.timeDomainData[i] / 128.0;
                     const y = v * height / 2;
 
-                    if (i === 0) {
-                        canvasCtx.moveTo(x, y);
-                    } else {
-                        canvasCtx.lineTo(x, y);
-                    }
+                    if (i === 0) canvasCtx.moveTo(x, y);
+                    else canvasCtx.lineTo(x, y);
 
                     x += sliceWidth;
                 }
@@ -1137,7 +1212,10 @@
 
                 for (let i = 0; i < POWER_SYSTEM.frequencyData.length; i++) {
                     const barHeight = (POWER_SYSTEM.frequencyData[i] / 255) * (height / 3);
-                    canvasCtx.fillStyle = `rgb(0, ${POWER_SYSTEM.frequencyData[i]}, ${POWER_SYSTEM.frequencyData[i]})`;
+
+                    // Couleur basée sur l'énergie
+                    const intensity = POWER_SYSTEM.frequencyData[i];
+                    canvasCtx.fillStyle = `rgb(0, ${Math.min(intensity * 2, 255)}, ${Math.min(intensity * 2, 255)})`;
                     canvasCtx.fillRect(barX, height - barHeight, barWidth, barHeight);
 
                     if (POWER_SYSTEM.frequencyData[i] > POWER_SYSTEM.peakDataArray[i]) {
@@ -1155,7 +1233,7 @@
                 }
 
                 // Effets spéciaux
-                if (maxEnergy > 200 && Math.random() > 0.98) {
+                if (maxEnergy > 200 && Math.random() > 0.95) {
                     triggerLightningEffect();
                 }
             }
@@ -1201,7 +1279,6 @@
                         getEl('valAccY').innerText = POWER_SYSTEM.sensorData.accY;
                         getEl('valAccZ').innerText = POWER_SYSTEM.sensorData.accZ;
 
-                        // Détection des mouvements brusques
                         detectEMFEvent();
                     }
                 });
@@ -1232,27 +1309,33 @@
             const now = Date.now();
             if (now - POWER_SYSTEM.sensorData.lastEMFEvent < 3000) return;
 
-            // Seuil arbitraire pour la détection d'un "événement EMF"
+            // Calcul de la magnitude de l'accélération
             const accMagnitude = Math.sqrt(
                 Math.pow(POWER_SYSTEM.sensorData.accX, 2) +
                 Math.pow(POWER_SYSTEM.sensorData.accY, 2) +
                 Math.pow(POWER_SYSTEM.sensorData.accZ, 2)
             );
 
-            if (accMagnitude > 15) {
+            // Seuil pour la détection d'un événement EMF
+            if (accMagnitude > 15 && POWER_SYSTEM.config.emfDetection) {
                 POWER_SYSTEM.sensorData.lastEMFEvent = now;
                 logMessage("Détection d'impulsion électromagnétique !", 'warn');
 
-                // Déclencher un effet sonore et vocal
-                if (POWER_SYSTEM.config.emfDetection) {
-                    speakText("Champ énergétique détecté !");
-                    triggerLightningEffect();
+                // Actions pour la détection EMF
+                speakText("Champ énergétique détecté !");
+                triggerLightningEffect();
 
-                    // Enregistrer automatiquement
-                    if (POWER_SYSTEM.mediaRecorder && !POWER_SYSTEM.isRecording) {
-                        handleRecordingState();
-                    }
+                // Enregistrement automatique
+                if (POWER_SYSTEM.mediaRecorder && !POWER_SYSTEM.isRecording) {
+                    handleRecordingState();
                 }
+
+                // Visual feedback
+                const sensorCells = document.querySelectorAll('.sensor-cell');
+                sensorCells.forEach(cell => {
+                    cell.classList.add('sensor-alert');
+                    setTimeout(() => cell.classList.remove('sensor-alert'), 500);
+                });
             }
         }
 
@@ -1269,7 +1352,7 @@
         // --- 10. INITIALISATION AU CHARGEMENT ---
 
         window.addEventListener('load', function() {
-            logMessage("PuiSSancE MAXIMUM - Système chargé.", 'sys');
+            logMessage("TOUT PUISSANT - Système chargé.", 'sys');
             loadSystemConfiguration();
         });
 
