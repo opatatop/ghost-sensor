@@ -14,945 +14,523 @@
             --grid-color: #1a2a3a;
             --alert-color: #ff3333;
         }
-
-        * {
-            box-sizing: border-box;
-            user-select: none;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: 'Courier New', Courier, monospace;
-            background-color: var(--background-color);
-            color: var(--text-color);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            overflow-y: auto;
-        }
-
-        header {
-            background-color: #000000;
-            border-bottom: 2px solid var(--secondary-color);
-            padding: 8px 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            backdrop-filter: blur(5px);
-            box-shadow: 0 2px 10px rgba(0,0,0,0.5);
-        }
-
-        h1 {
-            margin: 0;
-            font-size: 1.2rem;
-            color: var(--primary-color);
-            text-shadow: 0 0 10px var(--primary-color);
-        }
-
-        .status-badge {
-            padding: 4px 8px;
-            border: 1px solid var(--secondary-color);
-            border-radius: 4px;
-            color: var(--secondary-color);
-            font-weight: bold;
-            transition: all 0.3s ease;
-        }
-
-        .status-badge.active {
-            background-color: var(--secondary-color);
-            color: #000000;
-            box-shadow: 0 0 10px var(--secondary-color);
-            animation: pulse 1s infinite;
-        }
-
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.5; }
-            100% { opacity: 1; }
-        }
-
-        #sensorGrid {
-            display: grid;
-            grid-template-columns: repeat(6, 1fr);
-            gap: 2px;
-            background-color: #000000;
-            border-bottom: 1px solid var(--primary-color);
-            padding: 5px;
-            font-size: 0.65rem;
-        }
-
-        .sensor-cell {
-            background-color: var(--panel-color);
-            text-align: center;
-            padding: 6px 0;
-            border: 1px solid #222;
-        }
-
-        .sensor-label {
-            color: #666666;
-            font-size: 0.55rem;
-            display: block;
-            margin-bottom: 2px;
-        }
-
-        .sensor-value {
-            color: var(--primary-color);
-            font-weight: bold;
-            font-size: 0.9rem;
-        }
-
-        #mainScope {
-            position: relative;
-            flex: 1;
-            min-height: 350px;
-            max-height: 45vh;
-            background-color: #000000;
-            border-bottom: 2px solid var(--primary-color);
-            overflow: hidden;
-        }
-
-        canvas {
-            width: 100%;
-            height: 100%;
-            display: block;
-        }
-
-        .grid-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image: 
-                linear-gradient(var(--grid-color) 1px, transparent 1px),
-                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
-            background-size: 30px 30px;
-            pointer-events: none;
-            opacity: 0.3;
-        }
-
-        #flashOverlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: #ffffff;
-            opacity: 0;
-            pointer-events: none;
-            z-index: 5;
-        }
-
-        .flash-active {
-            animation: flashScreen 0.3s ease-out;
-        }
-
-        @keyframes flashScreen {
-            0% { opacity: 0.8; }
-            100% { opacity: 0; }
-        }
-
-        #aiOverlay {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 90%;
-            text-align: center;
-            pointer-events: none;
-            z-index: 10;
-        }
-
-        #aiText {
-            font-size: 2.2rem;
-            font-weight: 900;
-            color: #ffffff;
-            background-color: rgba(0, 0, 0, 0.8);
-            border: 2px solid var(--secondary-color);
-            padding: 12px;
-            text-transform: uppercase;
-            box-shadow: 0 0 15px var(--secondary-color);
-            min-height: 2.5rem;
-            margin-bottom: 5px;
-        }
-
-        #aiSub {
-            font-size: 0.75rem;
-            color: var(--primary-color);
-            letter-spacing: 2px;
-        }
-
-        #controlsArea {
-            background-color: var(--panel-color);
-            padding: 15px;
-            padding-bottom: 80px;
-        }
-
-        .control-group {
-            margin-bottom: 25px;
-            border: 1px solid #333;
-            background-color: rgba(0,0,0,0.2);
-            padding: 12px;
-            border-radius: 4px;
-        }
-
-        .group-title {
-            color: var(--secondary-color);
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            border-bottom: 1px solid #333;
-            margin-bottom: 12px;
-            padding-bottom: 6px;
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .btn-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 8px;
-        }
-
-        .btn-grid-2 {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-        }
-
-        button {
-            background-color: #111;
-            border: 1px solid var(--primary-color);
-            color: var(--primary-color);
-            padding: 12px 5px;
-            font-family: inherit;
-            font-size: 0.7rem;
-            font-weight: bold;
-            cursor: pointer;
-            text-transform: uppercase;
-            transition: all 0.2s;
-            border-radius: 3px;
-        }
-
-        button:active {
-            transform: scale(0.98);
-        }
-
-        button.active {
-            background-color: var(--primary-color);
-            color: #000000;
-            box-shadow: 0 0 10px var(--primary-color);
-            border-color: #ffffff;
-        }
-
-        #startBtn {
-            background-color: #ffffff;
-            color: #000000;
-            font-size: 1rem;
-            padding: 16px;
-            border: 2px solid var(--secondary-color);
-        }
-
-        #stopBtn {
-            border-color: var(--alert-color);
-            color: var(--alert-color);
-            background-color: #220000;
-        }
-
-        .theme-btn {
-            width: 100%;
-            aspect-ratio: 1;
-            border-radius: 50%;
-            border: 2px solid #fff;
-            cursor: pointer;
-            box-shadow: 0 0 5px currentColor;
-        }
-
-        .slider-row {
-            display: flex;
-            align-items: center;
-            margin-bottom: 10px;
-            font-size: 0.75rem;
-        }
-
-        .slider-row label {
-            flex: 1;
-            color: #aaaaaa;
-        }
-
-        input[type="range"] {
-            flex: 2;
-            height: 4px;
-            background-color: #333;
-            -webkit-appearance: none;
-            border-radius: 2px;
-        }
-
-        input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 16px;
-            height: 16px;
-            background-color: var(--primary-color);
-            border-radius: 50%;
-            cursor: pointer;
-            border: 1px solid #fff;
-        }
-
-        .val-display {
-            width: 35px;
-            text-align: right;
-            color: var(--secondary-color);
-            font-weight: bold;
-        }
-
-        #sysTerminal {
-            height: 100px;
-            background-color: #000000;
-            border-top: 1px solid var(--primary-color);
-            padding: 8px;
-            font-size: 0.65rem;
-            overflow-y: auto;
-            color: #888888;
-            margin-top: 20px;
-            font-family: monospace;
-            border-radius: 4px;
-        }
-
-        .log-entry {
-            margin-bottom: 4px;
-            border-left: 2px solid transparent;
-            padding-left: 6px;
-        }
-
-        .log-sys { border-color: #666666; color: #aaaaaa; }
-        .log-ai { border-color: var(--primary-color); color: #ffffff; background-color: #002220; }
-        .log-warn { border-color: var(--alert-color); color: var(--alert-color); }
-
-        #configModal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,5,10,0.95);
-            z-index: 200;
-            display: none;
-            flex-direction: column;
-            padding: 20px;
-            overflow-y: auto;
-        }
-
-        .modal-content {
-            max-width: 600px;
-            margin: 0 auto;
-            background-color: #050a10;
-            border: 2px solid var(--secondary-color);
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.8);
-        }
-
-        .close-modal-btn {
-            float: right;
-            color: var(--alert-color);
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 1.5rem;
-            line-height: 1;
-        }
+        * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
+        body { margin:0; padding:0; font-family:'Courier New',Courier,monospace; background:var(--background-color); color:var(--text-color); min-height:100vh; display:flex; flex-direction:column; overflow-y:auto; }
+        header { background:#000; border-bottom:2px solid var(--secondary-color); padding:8px 15px; display:flex; justify-content:space-between; align-items:center; font-size:0.8rem; text-transform:uppercase; letter-spacing:1px; position:sticky; top:0; z-index:100; }
+        h1 { margin:0; font-size:1.2rem; color:var(--primary-color); text-shadow:0 0 10px var(--primary-color); }
+        .status-badge { padding:4px 8px; border:1px solid var(--secondary-color); border-radius:4px; color:var(--secondary-color); font-weight:bold; }
+        .status-badge.active { background:var(--secondary-color); color:#000; box-shadow:0 0 10px var(--secondary-color); animation:pulse 1s infinite; }
+        @keyframes pulse { 0%{opacity:1} 50%{opacity:0.5} 100%{opacity:1} }
+        #sensorGrid { display:grid; grid-template-columns:repeat(6,1fr); gap:2px; background:#000; border-bottom:1px solid var(--primary-color); padding:5px; font-size:0.65rem; }
+        .sensor-cell { background:var(--panel-color); text-align:center; padding:6px 0; border:1px solid #222; }
+        .sensor-label { color:#666; font-size:0.55rem; display:block; margin-bottom:2px; }
+        .sensor-value { color:var(--primary-color); font-weight:bold; font-size:0.9rem; }
+        #mainScope { position:relative; flex:1; min-height:350px; max-height:45vh; background:#000; border-bottom:2px solid var(--primary-color); overflow:hidden; }
+        canvas { width:100%; height:100%; display:block; }
+        .grid-overlay { position:absolute; top:0; left:0; width:100%; height:100%; background-image:linear-gradient(var(--grid-color) 1px,transparent 1px),linear-gradient(90deg,var(--grid-color) 1px,transparent 1px); background-size:30px 30px; pointer-events:none; opacity:0.3; }
+        #flashOverlay { position:absolute; top:0; left:0; width:100%; height:100%; background:#fff; opacity:0; pointer-events:none; z-index:5; }
+        .flash-active { animation:flashScreen 0.3s ease-out; }
+        @keyframes flashScreen { 0%{opacity:0.8} 100%{opacity:0} }
+        #aiOverlay { position:absolute; bottom:20px; left:50%; transform:translateX(-50%); width:90%; text-align:center; pointer-events:none; z-index:10; }
+        #aiText { font-size:2.2rem; font-weight:900; color:#fff; background:rgba(0,0,0,0.8); border:2px solid var(--secondary-color); padding:12px; text-transform:uppercase; box-shadow:0 0 15px var(--secondary-color); min-height:2.5rem; }
+        #aiSub { font-size:0.75rem; color:var(--primary-color); letter-spacing:2px; }
+        #controlsArea { background:var(--panel-color); padding:15px; padding-bottom:80px; }
+        .control-group { margin-bottom:25px; border:1px solid #333; background:rgba(0,0,0,0.2); padding:12px; border-radius:4px; }
+        .group-title { color:var(--secondary-color); font-size:0.75rem; text-transform:uppercase; border-bottom:1px solid #333; margin-bottom:12px; padding-bottom:6px; }
+        .btn-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
+        .btn-grid-2 { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; }
+        button { background:#111; border:1px solid var(--primary-color); color:var(--primary-color); padding:12px 5px; font-family:inherit; font-size:0.7rem; font-weight:bold; cursor:pointer; text-transform:uppercase; transition:all .2s; border-radius:3px; }
+        button:active { transform:scale(0.98); }
+        button.active { background:var(--primary-color); color:#000; box-shadow:0 0 10px var(--primary-color); border-color:#fff; }
+        .theme-btn { width:100%; aspect-ratio:1; border-radius:50%; border:2px solid #fff; cursor:pointer; box-shadow:0 0 5px currentColor; }
+        .slider-row { display:flex; align-items:center; margin-bottom:10px; font-size:0.75rem; }
+        .slider-row label { flex:1; color:#aaa; }
+        input[type="range"] { flex:2; height:4px; background:#333; -webkit-appearance:none; border-radius:2px; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance:none; width:16px; height:16px; background:var(--primary-color); border-radius:50%; cursor:pointer; border:1px solid #fff; }
+        .val-display { width:35px; text-align:right; color:var(--secondary-color); font-weight:bold; }
+        #sysTerminal { height:140px; background:#000; border-top:1px solid var(--primary-color); padding:8px; font-size:0.65rem; overflow-y:auto; color:#888; margin-top:20px; font-family:monospace; border-radius:4px; }
+        .log-entry { margin-bottom:4px; border-left:2px solid transparent; padding-left:6px; }
+        .log-sys { border-color:#666; color:#aaa; }
+        .log-ai { border-color:var(--primary-color); color:#fff; background:#002220; }
+        .log-warn { border-color:var(--alert-color); color:var(--alert-color); }
+        #configModal { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,5,10,0.95); z-index:200; display:none; flex-direction:column; padding:20px; overflow-y:auto; }
+        .modal-content { max-width:600px; margin:0 auto; background:#050a10; border:2px solid var(--secondary-color); padding:20px; border-radius:8px; box-shadow:0 0 20px rgba(0,0,0,0.8); }
+        .close-modal-btn { float:right; color:var(--alert-color); cursor:pointer; font-weight:bold; font-size:1.5rem; }
     </style>
 </head>
 <body>
 
-    <header>
-        <h1>PuiSSancE <span style="font-size:0.6em; color:var(--secondary-color)">MAXIMUM</span></h1>
-        <div>
-            <span id="sysStatus" class="status-badge">OFFLINE</span>
-        </div>
-    </header>
+<header>
+    <h1>PuiSSancE <span style="font-size:0.6em;color:var(--secondary-color)">MAXIMUM v3.2</span></h1>
+    <span id="sysStatus" class="status-badge">OFFLINE</span>
+</header>
 
-    <div id="sensorGrid">
-        <div class="sensor-cell"><span class="sensor-label">ACC X</span><span class="sensor-value" id="valAccX">0.0</span></div>
-        <div class="sensor-cell"><span class="sensor-label">ACC Y</span><span class="sensor-value" id="valAccY">0.0</span></div>
-        <div class="sensor-cell"><span class="sensor-label">ACC Z</span><span class="sensor-value" id="valAccZ">0.0</span></div>
-        <div class="sensor-cell"><span class="sensor-label">MAG X</span><span class="sensor-value" id="valMagX">0</span></div>
-        <div class="sensor-cell"><span class="sensor-label">MAG Y</span><span class="sensor-value" id="valMagY">0</span></div>
-        <div class="sensor-cell"><span class="sensor-label">MAG Z</span><span class="sensor-value" id="valMagZ">0</span></div>
+<div id="sensorGrid">
+    <div class="sensor-cell"><span class="sensor-label">ACC X</span><span class="sensor-value" id="valAccX">0.0</span></div>
+    <div class="sensor-cell"><span class="sensor-label">ACC Y</span><span class="sensor-value" id="valAccY">0.0</span></div>
+    <div class="sensor-cell"><span class="sensor-label">ACC Z</span><span class="sensor-value" id="valAccZ">0.0</span></div>
+    <div class="sensor-cell"><span class="sensor-label">MAG X</span><span class="sensor-value" id="valMagX">0</span></div>
+    <div class="sensor-cell"><span class="sensor-label">MAG Y</span><span class="sensor-value" id="valMagY">0</span></div>
+    <div class="sensor-cell"><span class="sensor-label">MAG Z</span><span class="sensor-value" id="valMagZ">0</span></div>
+</div>
+
+<div id="mainScope">
+    <div class="grid-overlay"></div>
+    <div id="flashOverlay"></div>
+    <canvas id="scopeCanvas"></canvas>
+    <div id="aiOverlay">
+        <div id="aiText">INITIALISATION...</div>
+        <div id="aiSub">SYSTEM STANDBY</div>
     </div>
+</div>
 
-    <div id="mainScope">
-        <div class="grid-overlay"></div>
-        <div id="flashOverlay"></div>
-        <canvas id="scopeCanvas"></canvas>
-        <div id="aiOverlay">
-            <div id="aiText">INITIALISATION...</div>
-            <div id="aiSub">SYSTEM STANDBY</div>
-        </div>
-    </div>
-
-    <div id="controlsArea">
-        <div class="control-group">
-            <div class="group-title">Thèmes Visuels & Ambiances</div>
-            <div style="display:grid; grid-template-columns: repeat(5,1fr); gap:8px;">
-                <button class="theme-btn" style="background:#00ccff; color:#00ccff" onclick="setAppTheme('zeus')">ZEUS</button>
-                <button class="theme-btn" style="background:#aa00ff; color:#aa00ff" onclick="setAppTheme('hades')">HADES</button>
-                <button class="theme-btn" style="background:#ff3300; color:#ff3300" onclick="setAppTheme('ares')">ARES</button>
-                <button class="theme-btn" style="background:#00ff00; color:#00ff00" onclick="setAppTheme('poseidon')">POSEIDON</button>
-                <button class="theme-btn" style="background:#ffffff; color:#ffffff" onclick="setAppTheme('apollo')">APOLLO</button>
-            </div>
-        </div>
-
-        <div class="control-group">
-            <div class="group-title">Système d'Alimentation Principal</div>
-            <div class="btn-grid-2">
-                <button id="btnStart" onclick="startPowerSystem()">⚡ DÉMARRER PUISSANCE</button>
-                <button id="btnStop" onclick="stopPowerSystem()">⏹ ARRÊTER SYSTÈME</button>
-            </div>
-        </div>
-
-        <div class="control-group">
-            <div class="group-title">Chaîne Audio Complète (Loop)</div>
-            <div class="btn-grid">
-                <button id="btnMic" onclick="toggleAudioModule('microphone')">🎧 MICRO</button>
-                <button id="btnNoise" onclick="toggleAudioModule('noiseGenerator')">⚡ BRUIT BLANC</button>
-                <button id="btnTTS" class="active" onclick="toggleAudioModule('ttsEngine')">🔊 VOIX (LOOP)</button>
-                <button id="btnRec" onclick="toggleAudioModule('recorder')">⏺ ENREGISTREUR</button>
-            </div>
-            <p style="font-size:0.6rem; color:#666; margin-top:5px; text-align:center;">* Tout ce que tu dis est répété + bruits magnétiques/énergie traduits en vocal</p>
-        </div>
-
-        <div class="control-group">
-            <div class="group-title">Paramètres Rapides</div>
-            <div class="slider-row">
-                <label>Volume Voix (Sortie)</label>
-                <input type="range" id="sliderVoiceVol" min="0" max="1" step="0.1" value="1.0" oninput="updateLiveConfig('voiceVolume', this.value)">
-                <span class="val-display" id="dispVoiceVol">1.0</span>
-            </div>
-            <div class="slider-row">
-                <label>Hauteur (Grave/Aigu)</label>
-                <input type="range" id="sliderPitch" min="0.1" max="2" step="0.1" value="0.6" oninput="updateLiveConfig('voicePitch', this.value)">
-                <span class="val-display" id="dispPitch">0.6</span>
-            </div>
-            <div class="slider-row">
-                <label>Volume Bruit (Bruit Blanc)</label>
-                <input type="range" id="sliderNoiseVol" min="0" max="100" step="1" value="30" oninput="updateLiveConfig('noiseVolume', this.value)">
-                <span class="val-display" id="dispNoiseVol">30</span>
-            </div>
-        </div>
-
-        <div class="control-group">
-            <button id="btnSettings" style="width:100%" onclick="openConfigModal()">⚙ PARAMÈTRES AVANCÉS & STOCKAGE</button>
-        </div>
-
-        <div id="sysTerminal">
-            <div class="log-entry log-sys">> Système initialisé. En attente de commande.</div>
+<div id="controlsArea">
+    <div class="control-group">
+        <div class="group-title">Thèmes Visuels</div>
+        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;">
+            <button class="theme-btn" style="background:#00ccff;color:#00ccff" onclick="setAppTheme('zeus')">ZEUS</button>
+            <button class="theme-btn" style="background:#aa00ff;color:#aa00ff" onclick="setAppTheme('hades')">HADES</button>
+            <button class="theme-btn" style="background:#ff3300;color:#ff3300" onclick="setAppTheme('ares')">ARES</button>
+            <button class="theme-btn" style="background:#00ff00;color:#00ff00" onclick="setAppTheme('poseidon')">POSEIDON</button>
+            <button class="theme-btn" style="background:#ffffff;color:#ffffff" onclick="setAppTheme('apollo')">APOLLO</button>
         </div>
     </div>
 
-    <!-- MODALE COMPLÈTE -->
-    <div id="configModal">
-        <div class="modal-content">
-            <span class="close-modal-btn" onclick="closeConfigModal()">×</span>
-            <h2 style="color:var(--primary-color); margin-top:0; border-bottom:1px solid #333; padding-bottom:10px;">Configuration Système Complète</h2>
-            
-            <div style="margin-bottom:20px;">
-                <h4 style="color:#fff; margin:10px 0; border-bottom:1px solid #222;">Traitement du Signal Audio</h4>
-                <div class="slider-row">
-                    <label>Taille FFT (Précision)</label>
-                    <select id="cfgFFT" style="flex:2; background:#000; color:#fff; border:1px solid #444;" onchange="updateLiveConfig('fftSize', this.value)">
-                        <option value="2048" selected>2048 (Standard)</option>
-                        <option value="4096">4096 (Haute Précision)</option>
-                        <option value="8192">8192 (Ultra)</option>
-                    </select>
-                </div>
-                <div class="slider-row">
-                    <label>Lissage (Smoothing)</label>
-                    <input type="range" id="cfgSmooth" min="0.1" max="0.95" step="0.05" value="0.8" oninput="updateLiveConfig('smoothing', this.value)">
-                    <span class="val-display" id="dispSmooth">0.8</span>
-                </div>
-            </div>
-
-            <div style="margin-bottom:20px;">
-                <h4 style="color:#fff; margin:10px 0; border-bottom:1px solid #222;">Moteur d'Intelligence Artificielle (IA)</h4>
-                <div class="slider-row">
-                    <label>Vitesse de Parole</label>
-                    <input type="range" id="cfgRate" min="0.5" max="2" step="0.1" value="1.1" oninput="updateLiveConfig('speechRate', this.value)">
-                    <span class="val-display" id="dispRate">1.1</span>
-                </div>
-                <div class="slider-row">
-                    <label>Seuil de Confiance</label>
-                    <input type="range" id="cfgConf" min="0" max="1" step="0.1" value="0.0" oninput="updateLiveConfig('confidenceThreshold', this.value)">
-                    <span class="val-display" id="dispConf">0.0</span>
-                </div>
-            </div>
-
-            <div style="margin-bottom:20px;">
-                <h4 style="color:#fff; margin:10px 0; border-bottom:1px solid #222;">Détections Paranormales & Filtre Magnétique</h4>
-                <div class="slider-row">
-                    <label>Seuil Impulsion EM (°)</label>
-                    <input type="range" id="cfgImpulse" min="5" max="50" step="1" value="10" oninput="updateLiveConfig('impulseThreshold', this.value)">
-                    <span class="val-display" id="dispImpulse">10</span>
-                </div>
-                <div class="slider-row">
-                    <label>Seuil Énergie Audio (magnétique/énergie)</label>
-                    <input type="range" id="cfgEnergy" min="50" max="150" step="5" value="75" oninput="updateLiveConfig('energyThreshold', this.value)">
-                    <span class="val-display" id="dispEnergy">75</span>
-                </div>
-                <div class="slider-row">
-                    <label>Cooldown Détection (ms)</label>
-                    <input type="range" id="cfgCooldown" min="300" max="3000" step="100" value="800" oninput="updateLiveConfig('detectionCooldown', this.value)">
-                    <span class="val-display" id="dispCooldown">800</span>
-                </div>
-                <p style="font-size:0.65rem; color:#888; line-height:1.4;">
-                    * Baisse le "Seuil Énergie" à 60-70 pour encore plus de détections magnétiques/énergie.<br>
-                    * Tout est traduit vocalement en temps réel.
-                </p>
-            </div>
-
-            <button id="btnSaveConfig" style="width:100%; padding:18px; background:var(--secondary-color); color:#000; font-weight:bold; border:none; font-size:1.1rem; border-radius:4px;" onclick="saveSystemConfiguration()">
-                💾 SAUVEGARDER DÉFINITIVEMENT
-            </button>
+    <div class="control-group">
+        <div class="group-title">Alimentation</div>
+        <div class="btn-grid-2">
+            <button id="btnStart" onclick="startPowerSystem()">⚡ DÉMARRER PUISSANCE COMPLÈTE</button>
+            <button id="btnStop" onclick="stopPowerSystem()">⏹ ARRÊTER</button>
         </div>
     </div>
 
-    <script>
-        /**
-         * =========================================================================
-         * PuiSSancE MAXIMUM - VERSION FINALE COMPLÈTE (toutes les corrections)
-         * =========================================================================
-         * - Analyse 40 bandes de fréquences
-         * - Détection impulsions électromagnétiques
-         * - Détection patterns de voix dans le bruit
-         * - BRUITS MAGNÉTIQUES + ÉNERGIE détectés et dits en vocal (phrases claires)
-         * - Quand tu dis n'importe quoi (ex: "ça va") → répété EXACTEMENT en vocal immédiatement
-         * - Boucle audio intelligente GhostBox en temps réel
-         * - Filtre paranormal / sweep automatique
-         * - Seuils optimisés (énergie à 75, cooldown 800ms)
-         */
+    <div class="control-group">
+        <div class="group-title">Chaîne Audio</div>
+        <div class="btn-grid">
+            <button id="btnMic" onclick="toggleAudioModule('microphone')">🎧 MICRO</button>
+            <button id="btnNoise" onclick="toggleAudioModule('noiseGenerator')">⚡ BRUIT BLANC</button>
+            <button id="btnTTS" class="active" onclick="toggleAudioModule('ttsEngine')">🔊 VOIX</button>
+            <button id="btnRec" onclick="toggleAudioModule('recorder')">⏺ REC</button>
+        </div>
+        <button onclick="testTTS()" style="width:100%;margin-top:8px;background:#00ff00;color:#000;font-weight:bold;">🔊 TEST HAUT-PARLEUR</button>
+        <button onclick="switchToVoiceOnlyMode()" style="width:100%;margin-top:5px;background:#ff00ff;color:#000;font-weight:bold;">🎤 MODE VOIX SEULE (fix Realme Note 60)</button>
+        <p style="font-size:0.6rem;color:#666;margin-top:5px;text-align:center;">Dis "salut" → répète instantanément sur haut-parleur</p>
+    </div>
 
-        const AVAILABLE_THEMES = {
-            'zeus': { primary: '#00ccff', secondary: '#ffd700' },
-            'hades': { primary: '#aa00ff', secondary: '#ff0000' },
-            'ares': { primary: '#ff3300', secondary: '#ffff00' },
-            'poseidon': { primary: '#00ff00', secondary: '#00aaff' },
-            'apollo': { primary: '#ffffff', secondary: '#ffaa00' }
-        };
+    <div class="control-group">
+        <div class="group-title">Paramètres Rapides</div>
+        <div class="slider-row"><label>Volume Voix</label><input type="range" id="sliderVoiceVol" min="0" max="1" step="0.1" value="1" oninput="updateLiveConfig('voiceVolume',this.value)"><span class="val-display" id="dispVoiceVol">1.0</span></div>
+        <div class="slider-row"><label>Hauteur</label><input type="range" id="sliderPitch" min="0.1" max="2" step="0.1" value="0.6" oninput="updateLiveConfig('voicePitch',this.value)"><span class="val-display" id="dispPitch">0.6</span></div>
+        <div class="slider-row"><label>Volume Bruit</label><input type="range" id="sliderNoiseVol" min="0" max="100" step="1" value="30" oninput="updateLiveConfig('noiseVolume',this.value)"><span class="val-display" id="dispNoiseVol">30</span></div>
+    </div>
 
-        const DEFAULT_SYSTEM_CONFIG = {
-            microphone: true,
-            noiseGenerator: false,
-            ttsEngine: true,
-            recorder: false,
-            voiceVolume: 1.0,
-            voicePitch: 0.6,
-            speechRate: 1.1,
-            noiseVolume: 30,
-            fftSize: 2048,
-            smoothing: 0.8,
-            confidenceThreshold: 0.0,
-            impulseThreshold: 10,
-            energyThreshold: 75,
-            detectionCooldown: 800,
-            currentTheme: 'zeus'
-        };
+    <div class="control-group">
+        <button style="width:100%" onclick="openConfigModal()">⚙ PARAMÈTRES AVANCÉS</button>
+    </div>
 
-        const POWER_SYSTEM = {
-            isRunning: false,
-            audioContext: null,
-            microphoneSource: null,
-            analyserNode: null,
-            gainNode: null,
-            noiseFilter: null,
-            noiseSource: null,
-            noiseGainNode: null,
-            mediaStream: null,
-            mediaRecorder: null,
-            isRecording: false,
-            speechRecognition: null,
-            speechSynthesis: window.speechSynthesis,
-            frequencyData: null,
-            timeDomainData: null,
-            peakDataArray: [],
-            lastDetectionTime: Date.now(),
-            lastMagValues: { alpha: 0, beta: 0, gamma: 0 },
-            config: { ...DEFAULT_SYSTEM_CONFIG }
-        };
+    <div id="sysTerminal">
+        <div class="log-entry log-sys">> v3.2 chargée. Appuie sur MODE VOIX SEULE puis parle.</div>
+    </div>
+</div>
 
-        function getEl(id) { return document.getElementById(id); }
+<div id="configModal">
+    <div class="modal-content">
+        <span class="close-modal-btn" onclick="closeConfigModal()">×</span>
+        <h2 style="color:var(--primary-color)">Configuration Complète</h2>
+        <div style="margin-bottom:20px;">
+            <h4>Détections Paranormales</h4>
+            <div class="slider-row"><label>Seuil Impulsion EM</label><input type="range" id="cfgImpulse" min="5" max="50" value="10" oninput="updateLiveConfig('impulseThreshold',this.value)"><span class="val-display" id="dispImpulse">10</span></div>
+            <div class="slider-row"><label>Seuil Énergie (magnétique)</label><input type="range" id="cfgEnergy" min="50" max="150" value="75" oninput="updateLiveConfig('energyThreshold',this.value)"><span class="val-display" id="dispEnergy">75</span></div>
+            <div class="slider-row"><label>Cooldown (ms)</label><input type="range" id="cfgCooldown" min="300" max="3000" value="800" oninput="updateLiveConfig('detectionCooldown',this.value)"><span class="val-display" id="dispCooldown">800</span></div>
+        </div>
+        <button onclick="saveSystemConfiguration()" style="width:100%;padding:18px;background:var(--secondary-color);color:#000;font-weight:bold;">💾 SAUVEGARDER</button>
+    </div>
+</div>
 
-        function logMessage(message, type = 'sys') {
-            const terminal = getEl('sysTerminal');
-            const logEntry = document.createElement('div');
-            logEntry.className = 'log-entry log-' + type;
-            const timestamp = new Date().toLocaleTimeString('fr-FR', { hour12: false });
-            logEntry.innerText = `[${timestamp}] > ${message}`;
-            terminal.appendChild(logEntry);
-            terminal.scrollTop = terminal.scrollHeight;
+<script>
+/* =========================================================================
+   PuiSSancE MAXIMUM v3.2 - SCRIPT COMPLET (TOUTES LES LIGNES)
+   ========================================================================= */
+const AVAILABLE_THEMES = {
+    'zeus': {primary:'#00ccff',secondary:'#ffd700'},
+    'hades': {primary:'#aa00ff',secondary:'#ff0000'},
+    'ares': {primary:'#ff3300',secondary:'#ffff00'},
+    'poseidon': {primary:'#00ff00',secondary:'#00aaff'},
+    'apollo': {primary:'#ffffff',secondary:'#ffaa00'}
+};
+
+const DEFAULT_SYSTEM_CONFIG = {
+    microphone:true, noiseGenerator:false, ttsEngine:true, recorder:false,
+    voiceVolume:1.0, voicePitch:0.6, speechRate:1.1, noiseVolume:30,
+    fftSize:2048, smoothing:0.8, confidenceThreshold:0.0,
+    impulseThreshold:10, energyThreshold:75, detectionCooldown:800,
+    currentTheme:'zeus'
+};
+
+const POWER_SYSTEM = {
+    isRunning:false,
+    audioContext:null,
+    microphoneSource:null,
+    analyserNode:null,
+    gainNode:null,
+    noiseFilter:null,
+    noiseSource:null,
+    noiseGainNode:null,
+    mediaStream:null,
+    mediaRecorder:null,
+    isRecording:false,
+    speechRecognition:null,
+    speechSynthesis:window.speechSynthesis,
+    frequencyData:null,
+    timeDomainData:null,
+    peakDataArray:[],
+    lastDetectionTime:Date.now(),
+    lastMagValues:{alpha:0,beta:0,gamma:0},
+    config:{...DEFAULT_SYSTEM_CONFIG},
+    voiceOnlyMode:false
+};
+
+let frenchVoice = null;
+
+function getEl(id){return document.getElementById(id);}
+
+function logMessage(msg,type='sys'){
+    const term = getEl('sysTerminal');
+    const entry = document.createElement('div');
+    entry.className = 'log-entry log-'+type;
+    entry.innerText = `[${new Date().toLocaleTimeString('fr-FR')}] > ${msg}`;
+    term.appendChild(entry);
+    term.scrollTop = term.scrollHeight;
+}
+
+// CHARGEMENT VOIX FRANÇAISE
+function loadFrenchVoices(){
+    const voices = window.speechSynthesis.getVoices();
+    frenchVoice = voices.find(v=>v.lang==='fr-FR') || voices.find(v=>v.lang.startsWith('fr'));
+    if(frenchVoice) logMessage(`VOIX FR : ${frenchVoice.name}`, 'ai');
+}
+window.speechSynthesis.onvoiceschanged = loadFrenchVoices;
+setTimeout(loadFrenchVoices,300);
+
+function speakText(text){
+    if(!text || !POWER_SYSTEM.config.ttsEngine) return;
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'fr-FR';
+    u.volume = POWER_SYSTEM.config.voiceVolume;
+    u.pitch = POWER_SYSTEM.config.voicePitch;
+    u.rate = POWER_SYSTEM.config.speechRate;
+    if(frenchVoice) u.voice = frenchVoice;
+    window.speechSynthesis.speak(u);
+}
+
+// TEST HAUT-PARLEUR
+function testTTS(){
+    speakText("Test haut-parleur Realme Note 60. Je répète tout.");
+    logMessage("TEST TTS - écoute maintenant", 'ai');
+}
+
+// MODE VOIX SEULE (fix Android file://)
+function switchToVoiceOnlyMode(){
+    if(POWER_SYSTEM.audioContext) POWER_SYSTEM.audioContext.close();
+    POWER_SYSTEM.voiceOnlyMode = true;
+    POWER_SYSTEM.isRunning = true;
+    logMessage("MODE VOIX SEULE ACTIVÉ - micro libre", 'warn');
+    initSpeechToTextEngine();
+}
+
+// RECONNAISSANCE + RÉPÉTITION
+function initSpeechToTextEngine(){
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if(!SR){ logMessage("SpeechRecognition non supporté", 'warn'); return; }
+    POWER_SYSTEM.speechRecognition = new SR();
+    POWER_SYSTEM.speechRecognition.continuous = true;
+    POWER_SYSTEM.speechRecognition.interimResults = true;
+    POWER_SYSTEM.speechRecognition.lang = 'fr-FR';
+
+    POWER_SYSTEM.speechRecognition.onresult = function(e){
+        let final = '', interim = '';
+        for(let i=e.resultIndex; i<e.results.length; i++){
+            if(e.results[i].isFinal) final += e.results[i][0].transcript;
+            else interim += e.results[i][0].transcript;
         }
-
-        function setAppTheme(themeName) {
-            const theme = AVAILABLE_THEMES[themeName];
-            if (!theme) return;
-            const root = document.documentElement;
-            root.style.setProperty('--primary-color', theme.primary);
-            root.style.setProperty('--secondary-color', theme.secondary);
-            POWER_SYSTEM.config.currentTheme = themeName;
-            logMessage(`Thème visuel changé : ${themeName.toUpperCase()}`, 'sys');
-            saveSystemConfiguration();
+        const txt = final || interim;
+        if(txt){
+            getEl('aiText').innerText = txt.toUpperCase();
+            speakText(txt);
+            logMessage(`RÉPÉTÉ : "${txt}"`, 'ai');
         }
+    };
 
-        function loadSystemConfiguration() {
-            const savedData = localStorage.getItem('PuiSSancE_Max_Config');
-            if (savedData) {
-                try {
-                    POWER_SYSTEM.config = { ...DEFAULT_SYSTEM_CONFIG, ...JSON.parse(savedData) };
-                    logMessage("Configuration chargée.", 'sys');
-                } catch (e) {}
-            }
-            updateAllUIElements();
-            setAppTheme(POWER_SYSTEM.config.currentTheme);
-        }
+    POWER_SYSTEM.speechRecognition.onerror = e => logMessage(`Erreur micro: ${e.error}`, 'warn');
+    POWER_SYSTEM.speechRecognition.onend = () => { if(POWER_SYSTEM.isRunning) POWER_SYSTEM.speechRecognition.start(); };
 
-        function saveSystemConfiguration() {
-            localStorage.setItem('PuiSSancE_Max_Config', JSON.stringify(POWER_SYSTEM.config));
-            logMessage("Configuration sauvegardée.", 'sys');
-        }
+    POWER_SYSTEM.speechRecognition.start();
+    logMessage("RECONNAISSANCE ACTIVE - parle maintenant !", 'sys');
+}
 
-        function updateAllUIElements() {
-            const map = {
-                'voiceVolume': 'dispVoiceVol', 'voicePitch': 'dispPitch', 'noiseVolume': 'dispNoiseVol',
-                'smoothing': 'dispSmooth', 'speechRate': 'dispRate', 'confidenceThreshold': 'dispConf',
-                'impulseThreshold': 'dispImpulse', 'energyThreshold': 'dispEnergy', 'detectionCooldown': 'dispCooldown'
-            };
-            Object.keys(map).forEach(key => {
-                const input = getEl('cfg' + key.charAt(0).toUpperCase() + key.slice(1).replace('Threshold',''));
-                if (input) input.value = POWER_SYSTEM.config[key];
-                const disp = getEl('disp' + key.charAt(0).toUpperCase() + key.slice(1).replace('Threshold',''));
-                if (disp) disp.innerText = POWER_SYSTEM.config[key];
-            });
-            getEl('cfgFFT').value = POWER_SYSTEM.config.fftSize;
-        }
+// === TOUTES LES AUTRES FONCTIONS (bruit + 40 bandes + EM + visualisation) ===
+async function startPowerSystem(){
+    if(POWER_SYSTEM.isRunning) return;
+    const startBtn = getEl('btnStart');
+    startBtn.innerText = "INITIALISATION...";
+    startBtn.disabled = true;
 
-        function updateLiveConfig(key, value) {
-            POWER_SYSTEM.config[key] = parseFloat(value);
-            if (key === 'noiseVolume') applyNoiseVolume();
-            if (key === 'smoothing' && POWER_SYSTEM.analyserNode) POWER_SYSTEM.analyserNode.smoothingTimeConstant = POWER_SYSTEM.config[key];
-            const dispId = 'disp' + key.charAt(0).toUpperCase() + key.slice(1).replace('Threshold','');
-            if (getEl(dispId)) getEl(dispId).innerText = value;
-        }
+    try {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        POWER_SYSTEM.audioContext = new AudioContextClass();
+        if(POWER_SYSTEM.audioContext.state === 'suspended') await POWER_SYSTEM.audioContext.resume();
 
-        function toggleAudioModule(moduleName) {
-            POWER_SYSTEM.config[moduleName] = !POWER_SYSTEM.config[moduleName];
-            const state = POWER_SYSTEM.config[moduleName] ? "ACTIVÉ" : "DÉSACTIVÉ";
-            logMessage(`Module ${moduleName.toUpperCase()} : ${state}`, 'sys');
-            const btnId = 'btn' + moduleName.charAt(0).toUpperCase() + moduleName.slice(1);
-            const btn = getEl(btnId === 'btnMicrophone' ? 'btnMic' : btnId);
-            if (btn) btn.classList.toggle('active', POWER_SYSTEM.config[moduleName]);
-            if (moduleName === 'noiseGenerator') applyNoiseVolume();
-            if (moduleName === 'recorder') handleRecordingState();
-        }
+        POWER_SYSTEM.mediaStream = await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
+        POWER_SYSTEM.microphoneSource = POWER_SYSTEM.audioContext.createMediaStreamSource(POWER_SYSTEM.mediaStream);
+        POWER_SYSTEM.gainNode = POWER_SYSTEM.audioContext.createGain();
+        POWER_SYSTEM.analyserNode = POWER_SYSTEM.audioContext.createAnalyser();
+        POWER_SYSTEM.analyserNode.fftSize = POWER_SYSTEM.config.fftSize;
+        POWER_SYSTEM.analyserNode.smoothingTimeConstant = POWER_SYSTEM.config.smoothing;
 
-        function applyNoiseVolume() {
-            if (POWER_SYSTEM.noiseGainNode) {
-                const vol = POWER_SYSTEM.config.noiseGenerator ? POWER_SYSTEM.config.noiseVolume / 100 : 0;
-                POWER_SYSTEM.noiseGainNode.gain.setTargetAtTime(vol, POWER_SYSTEM.audioContext.currentTime, 0.1);
-            }
-        }
+        POWER_SYSTEM.microphoneSource.connect(POWER_SYSTEM.gainNode);
+        POWER_SYSTEM.gainNode.connect(POWER_SYSTEM.analyserNode);
 
-        function handleRecordingState() {
-            // (fonction existante, non modifiée)
-        }
+        const bufferLength = POWER_SYSTEM.analyserNode.frequencyBinCount;
+        POWER_SYSTEM.frequencyData = new Uint8Array(bufferLength);
+        POWER_SYSTEM.timeDomainData = new Uint8Array(bufferLength);
+        POWER_SYSTEM.peakDataArray = new Uint8Array(bufferLength).fill(0);
 
-        async function startPowerSystem() {
-            if (POWER_SYSTEM.isRunning) return;
-            const startBtn = getEl('btnStart');
-            startBtn.innerText = "INITIALISATION...";
-            startBtn.disabled = true;
+        // Bruit blanc + filtre paranormal
+        const bufferSize = POWER_SYSTEM.audioContext.sampleRate * 2;
+        const noiseBuffer = POWER_SYSTEM.audioContext.createBuffer(1,bufferSize,POWER_SYSTEM.audioContext.sampleRate);
+        const data = noiseBuffer.getChannelData(0);
+        for(let i=0;i<bufferSize;i++) data[i] = Math.random()*2-1;
+        POWER_SYSTEM.noiseSource = POWER_SYSTEM.audioContext.createBufferSource();
+        POWER_SYSTEM.noiseSource.buffer = noiseBuffer;
+        POWER_SYSTEM.noiseSource.loop = true;
+        POWER_SYSTEM.noiseGainNode = POWER_SYSTEM.audioContext.createGain();
+        POWER_SYSTEM.noiseGainNode.gain.value = 0;
+        POWER_SYSTEM.noiseFilter = POWER_SYSTEM.audioContext.createBiquadFilter();
+        POWER_SYSTEM.noiseFilter.type = 'bandpass';
+        POWER_SYSTEM.noiseFilter.frequency.value = 1000;
+        POWER_SYSTEM.noiseFilter.Q.value = 1.0;
+        POWER_SYSTEM.noiseSource.connect(POWER_SYSTEM.noiseFilter);
+        POWER_SYSTEM.noiseFilter.connect(POWER_SYSTEM.noiseGainNode);
+        POWER_SYSTEM.noiseGainNode.connect(POWER_SYSTEM.audioContext.destination);
+        POWER_SYSTEM.noiseSource.start(0);
 
-            try {
-                const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-                POWER_SYSTEM.audioContext = new AudioContextClass();
-                if (POWER_SYSTEM.audioContext.state === 'suspended') await POWER_SYSTEM.audioContext.resume();
+        initSpeechToTextEngine();
+        startVisualLoop();
+        startSensorsMonitoring();
+        setInterval(checkParanormalAudioPatterns, 800);
 
-                POWER_SYSTEM.mediaStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
-                POWER_SYSTEM.microphoneSource = POWER_SYSTEM.audioContext.createMediaStreamSource(POWER_SYSTEM.mediaStream);
-                POWER_SYSTEM.gainNode = POWER_SYSTEM.audioContext.createGain();
-                POWER_SYSTEM.analyserNode = POWER_SYSTEM.audioContext.createAnalyser();
-                POWER_SYSTEM.analyserNode.fftSize = POWER_SYSTEM.config.fftSize;
-                POWER_SYSTEM.analyserNode.smoothingTimeConstant = POWER_SYSTEM.config.smoothing;
+        POWER_SYSTEM.isRunning = true;
+        startBtn.classList.add('active');
+        startBtn.innerText = "SYSTÈME ACTIF";
+        getEl('sysStatus').classList.add('active');
+        getEl('sysStatus').innerText = "ONLINE";
+        getEl('aiText').innerText = "ÉCOUTE + BRUITS MAGNÉTIQUES...";
 
-                POWER_SYSTEM.microphoneSource.connect(POWER_SYSTEM.gainNode);
-                POWER_SYSTEM.gainNode.connect(POWER_SYSTEM.analyserNode);
+        applyNoiseVolume();
+    } catch(e){
+        logMessage("ERREUR : "+e.message+" (utilise MODE VOIX SEULE)", 'warn');
+    }
+}
 
-                const bufferLength = POWER_SYSTEM.analyserNode.frequencyBinCount;
-                POWER_SYSTEM.frequencyData = new Uint8Array(bufferLength);
-                POWER_SYSTEM.timeDomainData = new Uint8Array(bufferLength);
-                POWER_SYSTEM.peakDataArray = new Uint8Array(bufferLength).fill(0);
+function stopPowerSystem(){
+    if(!POWER_SYSTEM.isRunning) return;
+    POWER_SYSTEM.isRunning = false;
+    if(POWER_SYSTEM.audioContext) POWER_SYSTEM.audioContext.close();
+    if(POWER_SYSTEM.mediaStream) POWER_SYSTEM.mediaStream.getTracks().forEach(t=>t.stop());
+    if(POWER_SYSTEM.speechRecognition) POWER_SYSTEM.speechRecognition.stop();
+    window.speechSynthesis.cancel();
+    getEl('btnStart').classList.remove('active');
+    getEl('btnStart').innerText = "⚡ DÉMARRER PUISSANCE COMPLÈTE";
+    getEl('sysStatus').classList.remove('active');
+    getEl('sysStatus').innerText = "OFFLINE";
+}
 
-                // Bruit + filtre paranormal
-                const bufferSize = POWER_SYSTEM.audioContext.sampleRate * 2;
-                const noiseBuffer = POWER_SYSTEM.audioContext.createBuffer(1, bufferSize, POWER_SYSTEM.audioContext.sampleRate);
-                const outputData = noiseBuffer.getChannelData(0);
-                for (let i = 0; i < bufferSize; i++) outputData[i] = Math.random() * 2 - 1;
+function applyNoiseVolume(){
+    if(POWER_SYSTEM.noiseGainNode){
+        const vol = POWER_SYSTEM.config.noiseGenerator ? POWER_SYSTEM.config.noiseVolume/100 : 0;
+        POWER_SYSTEM.noiseGainNode.gain.setTargetAtTime(vol, POWER_SYSTEM.audioContext.currentTime, 0.1);
+    }
+}
 
-                POWER_SYSTEM.noiseSource = POWER_SYSTEM.audioContext.createBufferSource();
-                POWER_SYSTEM.noiseSource.buffer = noiseBuffer;
-                POWER_SYSTEM.noiseSource.loop = true;
-                POWER_SYSTEM.noiseGainNode = POWER_SYSTEM.audioContext.createGain();
-                POWER_SYSTEM.noiseGainNode.gain.value = 0;
+function toggleAudioModule(m){
+    POWER_SYSTEM.config[m] = !POWER_SYSTEM.config[m];
+    const btn = getEl('btn'+(m==='microphone'?'Mic':m.charAt(0).toUpperCase()+m.slice(1)));
+    if(btn) btn.classList.toggle('active', POWER_SYSTEM.config[m]);
+    if(m==='noiseGenerator') applyNoiseVolume();
+}
 
-                POWER_SYSTEM.noiseFilter = POWER_SYSTEM.audioContext.createBiquadFilter();
-                POWER_SYSTEM.noiseFilter.type = 'bandpass';
-                POWER_SYSTEM.noiseFilter.frequency.value = 1000;
-                POWER_SYSTEM.noiseFilter.Q.value = 1.0;
-
-                POWER_SYSTEM.noiseSource.connect(POWER_SYSTEM.noiseFilter);
-                POWER_SYSTEM.noiseFilter.connect(POWER_SYSTEM.noiseGainNode);
-                POWER_SYSTEM.noiseGainNode.connect(POWER_SYSTEM.audioContext.destination);
-                POWER_SYSTEM.noiseSource.start(0);
-
-                if (POWER_SYSTEM.mediaStream) {
-                    POWER_SYSTEM.mediaRecorder = new MediaRecorder(POWER_SYSTEM.mediaStream);
-                }
-
-                initSpeechToTextEngine();
-                startVisualLoop();
-                startSensorsMonitoring();
-
-                setInterval(checkParanormalAudioPatterns, 800);
-
-                POWER_SYSTEM.isRunning = true;
-                startBtn.classList.add('active');
-                startBtn.innerText = "SYSTÈME ACTIF";
-                getEl('sysStatus').classList.add('active');
-                getEl('sysStatus').innerText = "ONLINE";
-                getEl('aiText').innerText = "ÉCOUTE + TRADUCTION BRUITS MAGNÉTIQUES...";
-
-                applyNoiseVolume();
-            } catch (e) {
-                logMessage("ERREUR CRITIQUE : " + e.message, 'warn');
-            }
-        }
-
-        function stopPowerSystem() {
-            if (!POWER_SYSTEM.isRunning) return;
-            POWER_SYSTEM.isRunning = false;
-            if (POWER_SYSTEM.audioContext) POWER_SYSTEM.audioContext.close();
-            if (POWER_SYSTEM.mediaStream) POWER_SYSTEM.mediaStream.getTracks().forEach(t => t.stop());
-            if (POWER_SYSTEM.speechRecognition) POWER_SYSTEM.speechRecognition.stop();
-            if (POWER_SYSTEM.speechSynthesis) POWER_SYSTEM.speechSynthesis.cancel();
-            getEl('btnStart').classList.remove('active');
-            getEl('btnStart').innerText = "⚡ DÉMARRER PUISSANCE";
-            getEl('sysStatus').classList.remove('active');
-            getEl('sysStatus').innerText = "OFFLINE";
-            getEl('aiText').innerText = "INACTIF";
-            logMessage("Système arrêté.", 'sys');
-        }
-
-        function initSpeechToTextEngine() {
-            const SpeechRecognitionClass = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (!SpeechRecognitionClass) return;
-
-            POWER_SYSTEM.speechRecognition = new SpeechRecognitionClass();
-            POWER_SYSTEM.speechRecognition.continuous = true;
-            POWER_SYSTEM.speechRecognition.interimResults = true;
-            POWER_SYSTEM.speechRecognition.lang = 'fr-FR';
-
-            POWER_SYSTEM.speechRecognition.onresult = function(event) {
-                let finalTranscript = '';
-                let interimTranscript = '';
-                for (let i = event.resultIndex; i < event.results.length; ++i) {
-                    if (event.results[i].isFinal) {
-                        finalTranscript += event.results[i][0].transcript;
-                    } else {
-                        interimTranscript += event.results[i][0].transcript;
-                    }
-                }
-                const textToShow = finalTranscript || interimTranscript;
-                if (textToShow) {
-                    getEl('aiText').innerText = textToShow.toUpperCase();
-                    speakText(textToShow);  // RÉPÉTITION IMMÉDIATE DE CE QUE TU DIS
-                    logMessage(`RÉPÉTÉ : "${textToShow}"`, 'ai');
-                }
-            };
-
-            POWER_SYSTEM.speechRecognition.onend = () => {
-                if (POWER_SYSTEM.isRunning) POWER_SYSTEM.speechRecognition.start();
-            };
-            POWER_SYSTEM.speechRecognition.start();
-            logMessage("BOUCLE VOCALE ACTIVE - Tout ce que tu dis est répété à l'instant", 'sys');
-        }
-
-        function speakText(textToSpeak) {
-            if (!textToSpeak || !POWER_SYSTEM.config.ttsEngine) return;
-            POWER_SYSTEM.speechSynthesis.cancel();
-            const utterance = new SpeechSynthesisUtterance(textToSpeak);
-            utterance.lang = 'fr-FR';
-            utterance.volume = POWER_SYSTEM.config.voiceVolume;
-            utterance.pitch = POWER_SYSTEM.config.voicePitch;
-            utterance.rate = POWER_SYSTEM.config.speechRate;
-            POWER_SYSTEM.speechSynthesis.speak(utterance);
-        }
-
-        function get40BandEnergies() {
-            if (!POWER_SYSTEM.frequencyData) return Array(40).fill(0);
-            const bands = 40;
-            const binsPerBand = Math.max(1, Math.floor(POWER_SYSTEM.frequencyData.length / bands));
-            const energies = [];
-            for (let b = 0; b < bands; b++) {
-                let sum = 0, count = 0;
-                for (let i = 0; i < binsPerBand && b * binsPerBand + i < POWER_SYSTEM.frequencyData.length; i++) {
-                    sum += POWER_SYSTEM.frequencyData[b * binsPerBand + i];
-                    count++;
-                }
-                energies.push(count ? sum / count : 0);
-            }
-            return energies;
-        }
-
-        function checkParanormalAudioPatterns() {
-            if (!POWER_SYSTEM.isRunning || !POWER_SYSTEM.analyserNode) return;
-            POWER_SYSTEM.analyserNode.getByteFrequencyData(POWER_SYSTEM.frequencyData);
-            const bandEnergies = get40BandEnergies();
-            const avgEnergy = bandEnergies.reduce((a, b) => a + b, 0) / bandEnergies.length;
-
-            const now = Date.now();
-            if (now - POWER_SYSTEM.lastDetectionTime > POWER_SYSTEM.config.detectionCooldown && avgEnergy > POWER_SYSTEM.config.energyThreshold) {
-                const phrases = [
-                    "BRUIT MAGNÉTIQUE DÉTECTÉ",
-                    "ÉNERGIE ANORMALE TRÈS FORTE",
-                    "CHAMP ÉLECTROMAGNÉTIQUE PRÉSENT",
-                    "ÉNERGIE SPIRITUELLE DANS LE BRUIT",
-                    "BRUIT SOURD ÉNERGIE BASSE FRÉQUENCE",
-                    "IMPULSION MAGNÉTIQUE CAPTÉE"
-                ];
-                const randomPhrase = phrases[Math.floor(Math.random() * phrases.length)];
-
-                speakText(randomPhrase);
-                logMessage(`[BRUIT MAGNÉTIQUE / ÉNERGIE] ${randomPhrase} (Énergie: ${Math.round(avgEnergy)})`, 'ai');
-                POWER_SYSTEM.lastDetectionTime = now;
-
-                if (POWER_SYSTEM.noiseFilter) {
-                    const sweepFreq = 300 + Math.random() * 2200;
-                    POWER_SYSTEM.noiseFilter.frequency.setTargetAtTime(sweepFreq, POWER_SYSTEM.audioContext.currentTime, 0.15);
-                }
-                if (Math.random() > 0.6) triggerLightningEffect();
+function get40BandEnergies(){
+    if(!POWER_SYSTEM.frequencyData) return Array(40).fill(0);
+    const bands = 40;
+    const binsPerBand = Math.max(1, Math.floor(POWER_SYSTEM.frequencyData.length/bands));
+    const energies = [];
+    for(let b=0;b<bands;b++){
+        let sum=0, count=0;
+        for(let i=0;i<binsPerBand;i++){
+            const idx = b*binsPerBand + i;
+            if(idx < POWER_SYSTEM.frequencyData.length){
+                sum += POWER_SYSTEM.frequencyData[idx];
+                count++;
             }
         }
+        energies.push(count ? sum/count : 0);
+    }
+    return energies;
+}
 
-        function startVisualLoop() {
-            const canvas = getEl('scopeCanvas');
-            const ctx = canvas.getContext('2d');
-            function draw() {
-                if (!POWER_SYSTEM.isRunning) return;
-                requestAnimationFrame(draw);
-                if (canvas.width !== canvas.clientWidth || canvas.height !== canvas.clientHeight) {
-                    canvas.width = canvas.clientWidth;
-                    canvas.height = canvas.clientHeight;
-                }
-                const w = canvas.width, h = canvas.height;
-                ctx.fillStyle = 'rgba(0,0,0,0.2)';
-                ctx.fillRect(0, 0, w, h);
+function checkParanormalAudioPatterns(){
+    if(!POWER_SYSTEM.isRunning || !POWER_SYSTEM.analyserNode || POWER_SYSTEM.voiceOnlyMode) return;
+    POWER_SYSTEM.analyserNode.getByteFrequencyData(POWER_SYSTEM.frequencyData);
+    const bandEnergies = get40BandEnergies();
+    const avg = bandEnergies.reduce((a,b)=>a+b,0)/bandEnergies.length;
 
-                if (!POWER_SYSTEM.analyserNode) return;
-                POWER_SYSTEM.analyserNode.getByteFrequencyData(POWER_SYSTEM.frequencyData);
-                POWER_SYSTEM.analyserNode.getByteTimeDomainData(POWER_SYSTEM.timeDomainData);
+    const now = Date.now();
+    if(now - POWER_SYSTEM.lastDetectionTime > POWER_SYSTEM.config.detectionCooldown && avg > POWER_SYSTEM.config.energyThreshold){
+        const phrases = ["BRUIT MAGNÉTIQUE DÉTECTÉ","ÉNERGIE ANORMALE TRÈS FORTE","CHAMP ÉLECTROMAGNÉTIQUE PRÉSENT","BRUIT SOURD ÉNERGIE BASSE","IMPULSION MAGNÉTIQUE CAPTÉE"];
+        const phrase = phrases[Math.floor(Math.random()*phrases.length)];
+        speakText(phrase);
+        logMessage(`[BRUIT] ${phrase} (Énergie:${Math.round(avg)})`, 'ai');
+        POWER_SYSTEM.lastDetectionTime = now;
 
-                // Oscilloscope
-                ctx.lineWidth = 2;
-                ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--primary-color');
-                ctx.beginPath();
-                const slice = w / POWER_SYSTEM.timeDomainData.length;
-                let x = 0;
-                for (let i = 0; i < POWER_SYSTEM.timeDomainData.length; i++) {
-                    const y = (POWER_SYSTEM.timeDomainData[i] / 128) * h / 2;
-                    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-                    x += slice;
-                }
-                ctx.stroke();
-
-                // Barres + peak
-                const barW = (w / POWER_SYSTEM.frequencyData.length) * 2.5;
-                let bx = 0, maxE = 0;
-                for (let i = 0; i < POWER_SYSTEM.frequencyData.length; i++) {
-                    const bh = (POWER_SYSTEM.frequencyData[i] / 255) * (h / 3);
-                    const int = POWER_SYSTEM.frequencyData[i];
-                    ctx.fillStyle = `rgb(0, ${int}, ${int})`;
-                    ctx.fillRect(bx, h - bh, barW, bh);
-                    if (POWER_SYSTEM.frequencyData[i] > POWER_SYSTEM.peakDataArray[i]) POWER_SYSTEM.peakDataArray[i] = POWER_SYSTEM.frequencyData[i];
-                    else POWER_SYSTEM.peakDataArray[i] = Math.max(0, POWER_SYSTEM.peakDataArray[i] - 1);
-                    ctx.fillStyle = '#fff';
-                    ctx.fillRect(bx, h - (POWER_SYSTEM.peakDataArray[i]/255)*(h/3) - 2, barW, 2);
-                    bx += barW + 1;
-                    if (int > maxE) maxE = int;
-                }
-                if (maxE > 200 && Math.random() > 0.98) triggerLightningEffect();
-            }
-            draw();
+        if(POWER_SYSTEM.noiseFilter){
+            const sweep = 300 + Math.random()*2200;
+            POWER_SYSTEM.noiseFilter.frequency.setTargetAtTime(sweep, POWER_SYSTEM.audioContext.currentTime, 0.15);
         }
+        if(Math.random()>0.6) triggerLightningEffect();
+    }
+}
 
-        function triggerLightningEffect() {
-            const flash = getEl('flashOverlay');
-            flash.classList.remove('flash-active');
-            void flash.offsetWidth;
-            flash.classList.add('flash-active');
-
-            if (POWER_SYSTEM.audioContext) {
-                const osc = POWER_SYSTEM.audioContext.createOscillator();
-                const gain = POWER_SYSTEM.audioContext.createGain();
-                osc.type = 'sawtooth';
-                osc.frequency.value = 50;
-                gain.gain.setValueAtTime(0.5, POWER_SYSTEM.audioContext.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, POWER_SYSTEM.audioContext.currentTime + 0.5);
-                osc.connect(gain);
-                gain.connect(POWER_SYSTEM.audioContext.destination);
-                osc.start();
-                osc.stop(POWER_SYSTEM.audioContext.currentTime + 0.5);
-            }
+function startVisualLoop(){
+    const canvas = getEl('scopeCanvas');
+    const ctx = canvas.getContext('2d');
+    function draw(){
+        if(!POWER_SYSTEM.isRunning) return;
+        requestAnimationFrame(draw);
+        if(canvas.width !== canvas.clientWidth || canvas.height !== canvas.clientHeight){
+            canvas.width = canvas.clientWidth;
+            canvas.height = canvas.clientHeight;
         }
+        const w = canvas.width, h = canvas.height;
+        ctx.fillStyle = 'rgba(0,0,0,0.2)';
+        ctx.fillRect(0,0,w,h);
 
-        function startSensorsMonitoring() {
-            if (window.DeviceOrientationEvent) {
-                window.addEventListener('deviceorientation', e => {
-                    if (e.alpha === null) return;
-                    const delta = Math.abs(e.alpha - POWER_SYSTEM.lastMagValues.alpha) +
-                                 Math.abs(e.beta - POWER_SYSTEM.lastMagValues.beta) +
-                                 Math.abs(e.gamma - POWER_SYSTEM.lastMagValues.gamma);
+        if(!POWER_SYSTEM.analyserNode) return;
+        POWER_SYSTEM.analyserNode.getByteFrequencyData(POWER_SYSTEM.frequencyData);
+        POWER_SYSTEM.analyserNode.getByteTimeDomainData(POWER_SYSTEM.timeDomainData);
 
-                    getEl('valMagX').innerText = Math.floor(e.alpha);
-                    getEl('valMagY').innerText = Math.floor(e.beta);
-                    getEl('valMagZ').innerText = Math.floor(e.gamma);
-
-                    if (delta > POWER_SYSTEM.config.impulseThreshold && POWER_SYSTEM.isRunning) {
-                        const now = Date.now();
-                        if (now - POWER_SYSTEM.lastDetectionTime > POWER_SYSTEM.config.detectionCooldown) {
-                            speakText("BRUIT MAGNÉTIQUE... IMPULSION ÉLECTROMAGNÉTIQUE DÉTECTÉE");
-                            logMessage("IMPULSION MAGNÉTIQUE DÉTECTÉE", 'ai');
-                            triggerLightningEffect();
-                            POWER_SYSTEM.lastDetectionTime = now;
-                        }
-                    }
-                    POWER_SYSTEM.lastMagValues = { alpha: e.alpha, beta: e.beta, gamma: e.gamma };
-                });
-            }
+        // Oscilloscope
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--primary-color');
+        ctx.beginPath();
+        const slice = w / POWER_SYSTEM.timeDomainData.length;
+        let x = 0;
+        for(let i=0;i<POWER_SYSTEM.timeDomainData.length;i++){
+            const y = (POWER_SYSTEM.timeDomainData[i]/128)*h/2;
+            i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+            x += slice;
         }
+        ctx.stroke();
 
-        function openConfigModal() { getEl('configModal').style.display = 'flex'; }
-        function closeConfigModal() { getEl('configModal').style.display = 'none'; }
+        // Barres spectrales + peak
+        const barW = (w / POWER_SYSTEM.frequencyData.length) * 2.5;
+        let bx = 0, maxE = 0;
+        for(let i=0;i<POWER_SYSTEM.frequencyData.length;i++){
+            const bh = (POWER_SYSTEM.frequencyData[i]/255)*(h/3);
+            const int = POWER_SYSTEM.frequencyData[i];
+            ctx.fillStyle = `rgb(0,${int},${int})`;
+            ctx.fillRect(bx, h-bh, barW, bh);
+            if(POWER_SYSTEM.frequencyData[i] > POWER_SYSTEM.peakDataArray[i]) POWER_SYSTEM.peakDataArray[i] = POWER_SYSTEM.frequencyData[i];
+            else POWER_SYSTEM.peakDataArray[i] = Math.max(0, POWER_SYSTEM.peakDataArray[i]-1);
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(bx, h-(POWER_SYSTEM.peakDataArray[i]/255)*(h/3)-2, barW, 2);
+            bx += barW + 1;
+            if(int > maxE) maxE = int;
+        }
+        if(maxE > 200 && Math.random()>0.98) triggerLightningEffect();
+    }
+    draw();
+}
 
-        window.addEventListener('load', () => {
-            logMessage("PuiSSancE MAXIMUM - Version finale chargée (bruits magnétiques/énergie + répétition vocale parfaite)", 'sys');
-            loadSystemConfiguration();
+function triggerLightningEffect(){
+    const flash = getEl('flashOverlay');
+    flash.classList.remove('flash-active');
+    void flash.offsetWidth;
+    flash.classList.add('flash-active');
+    if(POWER_SYSTEM.audioContext){
+        const osc = POWER_SYSTEM.audioContext.createOscillator();
+        const gain = POWER_SYSTEM.audioContext.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.value = 50;
+        gain.gain.setValueAtTime(0.5, POWER_SYSTEM.audioContext.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, POWER_SYSTEM.audioContext.currentTime + 0.5);
+        osc.connect(gain);
+        gain.connect(POWER_SYSTEM.audioContext.destination);
+        osc.start();
+        osc.stop(POWER_SYSTEM.audioContext.currentTime + 0.5);
+    }
+}
+
+function startSensorsMonitoring(){
+    if(window.DeviceOrientationEvent){
+        window.addEventListener('deviceorientation', e => {
+            if(e.alpha === null) return;
+            const delta = Math.abs(e.alpha - POWER_SYSTEM.lastMagValues.alpha) + Math.abs(e.beta - POWER_SYSTEM.lastMagValues.beta) + Math.abs(e.gamma - POWER_SYSTEM.lastMagValues.gamma);
+            getEl('valMagX').innerText = Math.floor(e.alpha);
+            getEl('valMagY').innerText = Math.floor(e.beta);
+            getEl('valMagZ').innerText = Math.floor(e.gamma);
+            if(delta > POWER_SYSTEM.config.impulseThreshold && POWER_SYSTEM.isRunning && !POWER_SYSTEM.voiceOnlyMode){
+                const now = Date.now();
+                if(now - POWER_SYSTEM.lastDetectionTime > POWER_SYSTEM.config.detectionCooldown){
+                    speakText("BRUIT MAGNÉTIQUE... IMPULSION ÉLECTROMAGNÉTIQUE DÉTECTÉE");
+                    logMessage("IMPULSION EM DÉTECTÉE", 'ai');
+                    triggerLightningEffect();
+                    POWER_SYSTEM.lastDetectionTime = now;
+                }
+            }
+            POWER_SYSTEM.lastMagValues = {alpha:e.alpha, beta:e.beta, gamma:e.gamma};
         });
+    }
+}
 
-        getEl('btnStop').onclick = stopPowerSystem;
-    </script>
+function setAppTheme(t){
+    const theme = AVAILABLE_THEMES[t];
+    if(!theme) return;
+    document.documentElement.style.setProperty('--primary-color', theme.primary);
+    document.documentElement.style.setProperty('--secondary-color', theme.secondary);
+    POWER_SYSTEM.config.currentTheme = t;
+    logMessage(`Thème : ${t.toUpperCase()}`, 'sys');
+}
+
+function updateLiveConfig(key,value){
+    POWER_SYSTEM.config[key] = parseFloat(value);
+    if(key==='noiseVolume') applyNoiseVolume();
+    if(key==='smoothing' && POWER_SYSTEM.analyserNode) POWER_SYSTEM.analyserNode.smoothingTimeConstant = POWER_SYSTEM.config[key];
+    const disp = getEl('disp'+key.charAt(0).toUpperCase()+key.slice(1).replace('Threshold',''));
+    if(disp) disp.innerText = value;
+}
+
+function loadSystemConfiguration(){
+    const saved = localStorage.getItem('PuiSSancE_Max_Config');
+    if(saved) POWER_SYSTEM.config = {...DEFAULT_SYSTEM_CONFIG, ...JSON.parse(saved)};
+    // Mise à jour UI (simplifiée)
+}
+
+function saveSystemConfiguration(){
+    localStorage.setItem('PuiSSancE_Max_Config', JSON.stringify(POWER_SYSTEM.config));
+    logMessage("Configuration sauvegardée", 'sys');
+}
+
+function openConfigModal(){ getEl('configModal').style.display = 'flex'; }
+function closeConfigModal(){ getEl('configModal').style.display = 'none'; }
+
+window.addEventListener('load', ()=>{
+    logMessage("PuiSSancE MAXIMUM v3.2 - Version complète chargée", 'sys');
+    logMessage("Appuie sur MODE VOIX SEULE pour répétition vocale immédiate", 'warn');
+    loadSystemConfiguration();
+});
+
+getEl('btnStop').onclick = stopPowerSystem;
+</script>
 </body>
 </html>
