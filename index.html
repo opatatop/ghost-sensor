@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>ETERNITY LAB PRO MAX - REAL AI</title>
+<title>ETERNITY LAB PRO MAX - SPEAKING AI</title>
 <style>
 :root {
   /* Thème par défaut */
@@ -88,6 +88,16 @@ body {
   width: 90%;
   pointer-events: none;
   margin-top: 10px;
+  transition: transform 0.1s;
+}
+
+#iaBox.speaking {
+  animation: pulseText 0.5s infinite alternate;
+}
+
+@keyframes pulseText {
+  from { transform: scale(1); text-shadow: 0 0 10px var(--primary); }
+  to { transform: scale(1.05); text-shadow: 0 0 25px var(--primary); }
 }
 
 #iaLabel {
@@ -99,14 +109,14 @@ body {
 }
 
 #iaText {
-  font-size: 2rem;
+  font-size: 2.5rem;
   font-weight: 900;
   color: #fff;
-  background: rgba(0, 0, 0, 0.85);
+  background: rgba(0, 0, 0, 0.9);
   padding: 10px;
   border: 2px solid var(--primary);
   text-transform: uppercase;
-  box-shadow: 0 0 15px var(--primary);
+  box-shadow: 0 0 20px var(--primary);
   min-height: 3.5rem;
 }
 
@@ -259,7 +269,7 @@ button.active {
 <div id="header">
   <div>MIC: <span id="micStatus">OFF</span></div>
   <div>BAT: <span id="batStatus">--%</span></div>
-  <div>AI: <span id="aiStatus">READY</span></div>
+  <div>VOICE: <span id="voiceStatus">READY</span></div>
 </div>
 
 <!-- VISUALISATION -->
@@ -267,7 +277,7 @@ button.active {
   <video id="cameraFeed" autoplay playsinline muted></video>
   <canvas id="canvas"></canvas>
   <div id="iaBox">
-    <div id="iaLabel">NATIVE AI TRANSLATION</div>
+    <div id="iaLabel">GHOST BOX FEEDBACK LOOP</div>
     <div id="iaText">... EN ATTENTE ...</div>
   </div>
   <div id="transcriptionArea"></div>
@@ -277,11 +287,11 @@ button.active {
 <div id="controlsArea">
   <div id="barsArea">
     <div>INPUT <div class="bar-box"><div id="voiceBar" class="bar-fill"></div></div></div>
-    <div>CONFIDENCE <div class="bar-box"><div id="threshBar" class="bar-fill" style="width:0%; background: var(--ai-color);"></div></div></div>
+    <div>OUT VOL <div class="bar-box"><div id="threshBar" class="bar-fill" style="width:50%; background: var(--secondary);"></div></div></div>
   </div>
 
   <div class="controls-section">
-    <button id="startBtn">ACTIVER AI RÉELLE</button>
+    <button id="startBtn">ACTIVER BOUCLE AUDIO</button>
   </div>
 
   <!-- THÈMES -->
@@ -297,12 +307,12 @@ button.active {
   </div>
 
   <div class="controls-section">
-    <h3>AI & AUDIO (RÉEL)</h3>
+    <h3>CONTRÔLES IA</h3>
     <div class="button-grid col-4">
       <button id="monitorBtn">🎧 MICRO</button>
       <button id="ghostBoxBtn">📻 BRUIT BLANC</button>
       <button id="recBtn">⏺ REC</button>
-      <button id="evpBtn">🔮 AI TEXT</button>
+      <button id="evpBtn" class="active">🔮 PARLE (TTS)</button>
     </div>
   </div>
 
@@ -317,15 +327,22 @@ button.active {
   </div>
 
   <div class="controls-section">
-    <h3>RÉGLAGES AI</h3>
+    <h3>RÉGLAGES</h3>
     <div class="setting-group">
       <div class="setting-row">
-        <span>VOLUME BRUIT (SOURCE)</span>
+        <span>VOLUME BRUIT (INPUT)</span>
         <span id="volumeValue">30</span>%
       </div>
       <input type="range" class="slider" id="volumeSlider" min="0" max="100" value="30">
     </div>
-    <p style="font-size:0.6rem; color:#888;">Note: L'IA analyse le son réel. Elle peut interpréter le bruit statique comme des mots.</p>
+    <div class="setting-group">
+      <div class="setting-row">
+        <span>VITESSE VOIX (GHOST)</span>
+        <span id="rateValue">1.2</span>x
+      </div>
+      <input type="range" class="slider" id="rateSlider" min="0.5" max="2" step="0.1" value="1.2">
+    </div>
+    <p style="font-size:0.6rem; color:#888;">Avertissement: Si le volume est fort, l'IA peut s'entendre elle-même (effet Larsen/Loop).</p>
   </div>
 
   <div class="controls-section">
@@ -342,7 +359,7 @@ button.active {
 <!-- PANEL AVANCÉ -->
 <div id="settingsPanel">
   <button class="settings-close" id="closeSettingsBtn">X</button>
-  <div style="color:var(--text);">
+  <div style="color:var(--text;">
     <h2 style="color:var(--primary);">PARAMÈTRES SYSTÈME</h2>
     <div class="setting-group">
       <div class="setting-row">
@@ -375,20 +392,21 @@ function setTheme(name) {
 const app = {
   running: false, ctx: null, analyser: null, stream: null,
   vidStream: null, recorder: null, isRec: false, 
-  recognition: null, // API Native
+  recognition: null, // STT (Speech to Text)
+  synth: window.speechSynthesis, // TTS (Text to Speech)
   noiseNode: null, noiseGain: null, // Pour le bruit blanc
   config: {
-    monitor: false, ghostBox: false, autoRec: false, evp: false,
+    monitor: false, ghostBox: false, autoRec: false, evp: true, // EVP active par défaut pour parler
     radar: false, cam: false, flash: false, transcribe: true,
-    noiseVolume: 30, bgOpacity: 0
+    noiseVolume: 30, bgOpacity: 0, voiceRate: 1.2
   },
-  dataArray: null
+  dataArray: null, voices: []
 };
 
 const el = id => document.getElementById(id);
 const els = {
-  log: el('logZone'), mic: el('micStatus'), aiStatus: el('aiStatus'),
-  voiceBar: el('voiceBar'), iaText: el('iaText'), threshBar: el('threshBar'),
+  log: el('logZone'), mic: el('micStatus'), voiceStatus: el('voiceStatus'),
+  voiceBar: el('voiceBar'), iaText: el('iaText'), iaBox: el('iaBox'), threshBar: el('threshBar'),
   canvas: el('canvas'), camera: el('cameraFeed'),
   valMotion: el('valMotion'), boxMotion: el('boxMotion'),
   valMag: el('valMag'), boxMag: el('boxMag'),
@@ -401,29 +419,63 @@ function log(msg, t='') {
   els.log.appendChild(d); els.log.scrollTop = els.log.scrollHeight;
 }
 
-function addTranscription(text, confidence, isInterim) {
-  // Si c'est un résultat intérimaire (en cours de traduction), on met à jour le grand texte IA
-  // Si c'est final, on l'ajoute à l'historique
+// --- FONCTION PARLER (TTS) ---
+function speakGhost(text) {
+  if (!app.config.evp || !text || text.trim() === "") return;
+
+  // Annuler la parole en cours pour éviter l'accumulation (superposition)
+  app.synth.cancel();
+
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = 'fr-FR';
   
+  // Réglages "Spectre"
+  utterance.pitch = 0.6; // Voix très grave
+  utterance.rate = app.config.voiceRate; // Vitesse rapide
+  utterance.volume = 1.0;
+
+  // Sélection de voix Française si dispo
+  const frVoice = app.voices.find(v => v.lang.includes('fr'));
+  if (frVoice) utterance.voice = frVoice;
+
+  // Effets visuels quand ça parle
+  utterance.onstart = () => {
+    els.voiceStatus.textContent = "SPEAKING";
+    els.voiceStatus.style.color = "var(--secondary)";
+    els.iaBox.classList.add('speaking');
+  };
+
+  utterance.onend = () => {
+    els.voiceStatus.textContent = "LISTENING";
+    els.voiceStatus.style.color = "var(--ai-color)";
+    els.iaBox.classList.remove('speaking');
+  };
+
+  app.synth.speak(utterance);
+}
+
+function addTranscription(text, confidence, isInterim) {
   if (isInterim) {
     els.iaText.textContent = text;
-    els.iaText.style.color = "#aaa"; // Grisé pendant l'écoute
+    els.iaText.style.color = "#aaa";
   } else {
-    if(!text.trim()) return; // Ignorer les vides
+    if(!text.trim()) return;
     els.iaText.textContent = text;
-    els.iaText.style.color = "#fff"; // Blanc final
+    els.iaText.style.color = "#fff";
     
     const div = document.createElement('div');
     div.className = 'transcript-item';
     div.innerHTML = `
       <span class="transcript-time">${new Date().toLocaleTimeString().split(' ')[0]}</span>
-      <strong>${text}</strong> <span style="font-size:0.6em; color:var(--secondary)">[${Math.round(confidence*100)}%]</span>
+      <strong>${text}</strong>
     `;
     els.transcriptionArea.appendChild(div);
     els.transcriptionArea.scrollTop = els.transcriptionArea.scrollHeight;
-    log(`IA Détecté: "${text}"`, 'log-ai');
+    log(`Détecté: "${text}"`, 'log-ai');
     
-    // Mise à jour barre de confiance
+    // DÉCLENCHEMENT DE LA VOIX
+    speakGhost(text);
+    
     els.threshBar.style.width = (confidence * 100) + '%';
   }
 }
@@ -448,9 +500,9 @@ async function forceStart() {
       app.dataArray = new Uint8Array(app.analyser.frequencyBinCount);
       app.source.connect(app.analyser);
       els.mic.textContent = "ON"; els.mic.style.color = "var(--secondary)";
-    } catch(e) { log("Micro refusé ou absent", 'log-warn'); }
+    } catch(e) { log("Micro refusé", 'log-warn'); }
 
-    // 3. Générateur de Bruit Blanc (Ghost Box Audio)
+    // 3. Générateur de Bruit Blanc
     const bufferSize = app.ctx.sampleRate * 2; 
     const buffer = app.ctx.createBuffer(1, bufferSize, app.ctx.sampleRate);
     const data = buffer.getChannelData(0);
@@ -463,7 +515,6 @@ async function forceStart() {
     app.noiseGain = app.ctx.createGain();
     app.noiseGain.gain.value = 0; 
     
-    // Filtre pour que ça ressemble à une radio
     const filter = app.ctx.createBiquadFilter();
     filter.type = 'bandpass';
     filter.frequency.value = 1000;
@@ -474,17 +525,23 @@ async function forceStart() {
     app.noiseGain.connect(app.ctx.destination); 
     app.noiseNode.start(0);
 
-    // 4. Initialisation de l'IA NATIVE (Web Speech API)
+    // 4. Charger les voix TTS
+    app.voices = app.synth.getVoices();
+    if (app.synth.onvoiceschanged !== undefined) {
+      app.synth.onvoiceschanged = () => { app.voices = app.synth.getVoices(); };
+    }
+
+    // 5. IA Native
     initNativeAI();
 
-    // 5. Autres capteurs
+    // 6. Capteurs
     initSensors();
     
     app.running = true;
-    startUI("IA NATIVE ACTIVE");
+    startUI("BOUCLE ACTIVE");
     
   } catch (err) {
-    log("Erreur critique: " + err.message, 'log-err');
+    log("Erreur: " + err.message, 'log-err');
   }
 }
 
@@ -492,19 +549,18 @@ function initNativeAI() {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   
   if (!SpeechRecognition) {
-    log("IA Native non supportée par ce navigateur", 'log-err');
+    log("IA non supportée", 'log-err');
     return;
   }
 
   app.recognition = new SpeechRecognition();
-  app.recognition.continuous = true; // Écoute en continu
-  app.recognition.interimResults = true; // Résultats en direct
-  app.recognition.lang = 'fr-FR'; // Français
+  app.recognition.continuous = true;
+  app.recognition.interimResults = true;
+  app.recognition.lang = 'fr-FR';
 
   app.recognition.onstart = () => {
-    els.aiStatus.textContent = "LISTENING";
-    els.aiStatus.style.color = "var(--ai-color)";
-    log("IA Native: Écoute active", 'log-suc');
+    els.voiceStatus.textContent = "LISTENING";
+    log("Écoute active", 'log-suc');
   };
 
   app.recognition.onresult = (event) => {
@@ -521,36 +577,21 @@ function initNativeAI() {
       }
     }
 
-    // Affichage Direct (Interim)
-    if (interimTranscript) {
-      addTranscription(interimTranscript, 0, true);
-    }
-    // Affichage Final
-    if (finalTranscript) {
-      addTranscription(finalTranscript, confidence, false);
-    }
+    if (interimTranscript) addTranscription(interimTranscript, 0, true);
+    if (finalTranscript) addTranscription(finalTranscript, confidence, false);
   };
 
   app.recognition.onerror = (event) => {
-    if(event.error !== 'no-speech') log(`IA Err: ${event.error}`, 'log-warn');
+    if(event.error !== 'no-speech') log(`Err IA: ${event.error}`, 'log-warn');
   };
 
   app.recognition.onend = () => {
-    // Auto-redémarrage si le système tourne toujours (permet de garder l'IA active)
     if (app.running && (app.config.ghostBox || app.config.evp)) {
       try { app.recognition.start(); } catch(e) {}
-    } else {
-      els.aiStatus.textContent = "PAUSED";
-      els.aiStatus.style.color = "#888";
     }
   };
 
-  // Démarrage initial
-  try {
-    app.recognition.start();
-  } catch(e) {
-    log("Erreur démarrage IA (Permissions?)", 'log-warn');
-  }
+  try { app.recognition.start(); } catch(e) {}
 }
 
 function initSensors() {
@@ -559,7 +600,7 @@ function initSensors() {
     if(acc) {
       const m = Math.abs(acc.x)+Math.abs(acc.y)+Math.abs(acc.z);
       els.valMotion.textContent = Math.abs(m-9.8).toFixed(1);
-      if(Math.abs(m-9.8) > 2) triggerAlert('boxMotion', "SECousse");
+      if(Math.abs(m-9.8) > 2) triggerAlert('boxMotion');
     }
   });
   if (window.DeviceOrientationEvent) window.addEventListener('deviceorientation', e => {
@@ -577,7 +618,7 @@ function triggerAlert(id) {
 function startUI(msg) {
   el('startBtn').textContent = msg;
   el('startBtn').classList.add('active');
-  els.iaText.textContent = "ÉCOUTE DU BRUIT...";
+  els.iaText.textContent = "ÉCOUTE...";
   document.querySelectorAll('#controlsArea button:not(#startBtn)').forEach(b => b.disabled = false);
   resize();
   drawLoop();
@@ -585,13 +626,14 @@ function startUI(msg) {
 
 function stopSystem() {
   if(app.recognition) { app.recognition.stop(); app.recognition = null; }
+  if(app.synth) app.synth.cancel(); // Arrêter la voix
   if(app.ctx) app.ctx.close();
   if(app.stream) app.stream.getTracks().forEach(t=>t.stop());
   app.running = false;
   el('startBtn').classList.remove('active');
-  el('startBtn').textContent = "ACTIVER AI RÉELLE";
+  el('startBtn').textContent = "ACTIVER BOUCLE";
   els.iaText.textContent = "INACTIF";
-  els.aiStatus.textContent = "OFF";
+  els.voiceStatus.textContent = "OFF";
   document.querySelectorAll('#controlsArea button:not(#startBtn)').forEach(b => {
     b.disabled = true; b.classList.remove('active');
   });
@@ -604,17 +646,15 @@ function toggleOpt(key) {
   if(btn) btn.classList.toggle('active');
   log(`${key}: ${app.config[key]?'ON':'OFF'}`);
 
-  // GESTION DU BRUIT (GHOST BOX)
   if(key === 'ghostBox') {
     const vol = app.config[key] ? (app.config.noiseVolume / 100) : 0;
     if(app.noiseGain) app.noiseGain.gain.setTargetAtTime(vol, app.ctx.currentTime, 0.5);
   }
 
-  // GESTION IA
   if(key === 'evp') {
-    if(app.config.evp && app.recognition) {
-      try { app.recognition.start(); } catch(e){}
-      els.aiStatus.textContent = "ACTIVE";
+    if(!app.config.evp && app.synth) {
+      app.synth.cancel(); // Couper le son si désactivé
+      els.iaBox.classList.remove('speaking');
     }
   }
 
@@ -669,7 +709,7 @@ function resize() {
 
 // --- EVENTS ---
 window.onload = () => {
-  log("ETERNITY LAB 3.0 - Native AI Ready");
+  log("ETERNITY LAB 4.0 - Speaking AI Ready");
   document.querySelectorAll('#controlsArea button:not(#startBtn)').forEach(b => b.disabled = true);
   
   el('volumeSlider').oninput = (e) => {
@@ -678,6 +718,10 @@ window.onload = () => {
     if(app.config.ghostBox && app.noiseGain) {
       app.noiseGain.gain.setTargetAtTime(app.config.noiseVolume / 100, app.ctx.currentTime, 0.1);
     }
+  };
+  el('rateSlider').oninput = (e) => {
+    app.config.voiceRate = parseFloat(e.target.value);
+    el('rateValue').textContent = app.config.voiceRate;
   };
   el('bgOpacitySlider').oninput = (e) => {
     app.config.bgOpacity = parseFloat(e.target.value);
