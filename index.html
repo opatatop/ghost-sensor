@@ -3,517 +3,625 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>PuiSSancE v1.0 - SYSTEM ACTIVE</title>
+<title>PuiSSancE ULTIMATE - SYSTEM V4</title>
 <style>
+/* --- VARIABLES & THÈMES --- */
 :root {
-  --primary: #00ff41;      /* Vert Matrix */
-  --secondary: #008F11;    /* Vert Sombre */
-  --alert: #ff003c;        /* Rouge Alerte */
-  --bg: #0d0208;           /* Noir Profond */
-  --panel: #001a05;        /* Panneau Labo */
-  --grid: #0d2b0f;
-  --text: #003b00;
+  /* Thème par défaut : ZEUS (Bleu/Or) */
+  --primary: #00ccff;
+  --secondary: #ffd700;
+  --bg: #050510;
+  --panel: #0a0a20;
+  --text: #e0e0ff;
+  --grid: #1a2a3a;
+  --alert: #ff3333;
+  --lcd-bg: #000810;
 }
 
-* { box-sizing: border-box; user-select: none; }
-
+/* Reset & Base */
+* { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
 body {
   margin: 0; padding: 0;
-  font-family: 'Courier New', monospace;
-  background: var(--bg);
-  color: var(--primary);
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
+  font-family: 'Courier New', Courier, monospace;
+  background: var(--bg); color: var(--text);
+  min-height: 100vh; /* Permet le scroll */
+  display: flex; flex-direction: column;
+  overflow-y: auto; /* Scroll actif */
 }
 
-/* --- HEADER --- */
+/* --- HEADER TECHNIQUE --- */
 header {
-  background: #000;
-  border-bottom: 2px solid var(--primary);
-  padding: 5px 10px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  box-shadow: 0 0 15px var(--secondary);
+  background: #000; border-bottom: 2px solid var(--secondary);
+  padding: 5px 10px; display: flex; justify-content: space-between; align-items: center;
+  font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px;
+  position: sticky; top: 0; z-index: 100; backdrop-filter: blur(5px);
 }
-h1 { margin: 0; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 0 10px var(--primary); }
-.sys-status { font-size: 0.7rem; color: #555; }
-.sys-status.on { color: var(--primary); animation: pulse 1s infinite; }
+h1 { margin: 0; font-size: 1.1rem; color: var(--primary); text-shadow: 0 0 10px var(--primary); }
+.status-badge { padding: 2px 6px; border: 1px solid var(--secondary); border-radius: 2px; color: var(--secondary); }
+.status-badge.active { background: var(--secondary); color: #000; animation: pulse 1s infinite; }
 @keyframes pulse { 50% { opacity: 0.5; } }
 
-/* --- MAIN SCOPE --- */
-#scopeContainer {
-  flex: 1;
-  position: relative;
-  background: #000;
-  border-bottom: 1px solid var(--secondary);
-  overflow: hidden;
+/* --- GRILLE CAPTEURS --- */
+#sensorGrid {
+  display: grid; grid-template-columns: repeat(6, 1fr); gap: 1px;
+  background: #000; border-bottom: 1px solid var(--primary); padding: 2px; font-size: 0.6rem;
 }
-canvas { display: block; width: 100%; height: 100%; }
-.grid-bg {
-  position: absolute; top:0; left:0; width:100%; height:100%;
-  background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
-  background-size: 20px 20px; opacity: 0.3; pointer-events: none;
-}
+.s-cell { background: var(--panel); text-align: center; padding: 4px 0; border: 1px solid #222; }
+.s-label { color: #666; font-size: 0.5rem; display: block; }
+.s-val { color: var(--primary); font-weight: bold; }
+.s-alert { background: #330000; border-color: var(--alert); animation: blink 0.2s infinite; }
+@keyframes blink { 50% { opacity: 0.5; } }
 
-/* --- AI OVERLAY --- */
-#aiDisplay {
+/* --- ZONE VISUELLE PRINCIPALE --- */
+#mainScope {
+  position: relative; flex: 1; min-height: 350px; max-height: 45vh;
+  background: #000; border-bottom: 2px solid var(--primary); overflow: hidden;
+}
+canvas { width: 100%; height: 100%; display: block; }
+.grid-overlay {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 30px 30px; pointer-events: none; opacity: 0.3;
+}
+#flashOverlay {
+  position: absolute; top:0; left:0; width:100%; height:100%; background: #fff;
+  opacity: 0; pointer-events: none; z-index: 5;
+}
+.flash-anim { animation: flashScreen 0.3s ease-out; }
+@keyframes flashScreen { 0% { opacity: 0.8; } 100% { opacity: 0; } }
+
+/* --- OVERLAY IA --- */
+#aiOverlay {
   position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
-  width: 90%; text-align: center;
-  background: rgba(0, 20, 0, 0.85);
-  border: 1px solid var(--primary);
-  padding: 10px;
-  box-shadow: 0 0 20px rgba(0,255,65,0.2);
-  pointer-events: none;
+  width: 90%; text-align: center; pointer-events: none; z-index: 10;
 }
 #aiText {
-  font-size: 1.8rem; font-weight: bold; color: #fff;
-  text-shadow: 0 0 5px var(--primary);
-  text-transform: uppercase; min-height: 2rem;
+  font-size: 2rem; font-weight: 900; color: #fff;
+  background: rgba(0,0,0,0.8); border: 2px solid var(--secondary);
+  padding: 10px; text-transform: uppercase;
+  box-shadow: 0 0 15px var(--secondary); min-height: 2.2rem;
 }
-#aiSub { font-size: 0.7rem; color: var(--primary); letter-spacing: 2px; margin-top: 5px; }
+#aiSub { font-size: 0.7rem; color: var(--primary); margin-top: 5px; letter-spacing: 2px; }
 
-/* --- CONTROLS --- */
-#controlPanel {
-  height: 40vh;
-  background: var(--panel);
-  padding: 10px;
-  overflow-y: auto;
-  border-top: 2px solid var(--secondary);
+/* --- CONTROLES --- */
+#controlsArea {
+  background: var(--panel); padding: 15px; padding-bottom: 80px; /* Espace pour le scroll */
 }
-
-.section-box {
-  background: rgba(0,0,0,0.4);
-  border: 1px solid var(--secondary);
-  padding: 8px;
-  margin-bottom: 10px;
-}
-.section-title {
-  font-size: 0.7rem; color: #fff; text-transform: uppercase;
-  border-bottom: 1px solid var(--secondary); margin-bottom: 8px; padding-bottom: 4px;
-  display: flex; justify-content: space-between;
+.ctrl-group { margin-bottom: 20px; border: 1px solid #333; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 4px; }
+.ctrl-title {
+  color: var(--secondary); font-size: 0.75rem; text-transform: uppercase;
+  border-bottom: 1px solid #333; margin-bottom: 10px; padding-bottom: 5px; display: flex; justify-content: space-between;
 }
 
+/* Boutons */
 .btn-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-.btn-grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.btn-grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
 
 button {
-  background: #002200; border: 1px solid var(--primary); color: var(--primary);
+  background: #111; border: 1px solid var(--primary); color: var(--primary);
   padding: 12px 5px; font-family: inherit; font-size: 0.7rem; font-weight: bold;
-  cursor: pointer; text-transform: uppercase; transition: 0.2s;
+  cursor: pointer; text-transform: uppercase; transition: 0.2s; border-radius: 3px;
 }
-button:active { background: var(--primary); color: #000; }
+button:active { transform: scale(0.98); }
 button.active {
-  background: var(--primary); color: #000;
-  box-shadow: 0 0 10px var(--primary);
+  background: var(--primary); color: #000; box-shadow: 0 0 10px var(--primary); border-color: #fff;
 }
-button#stopBtn { border-color: var(--alert); color: var(--alert); background: #220000; }
-button#stopBtn.active { background: var(--alert); color: #fff; }
+#startBtn { background: #fff; color: #000; font-size: 1rem; padding: 15px; border: 2px solid var(--secondary); }
+#stopBtn { border-color: var(--alert); color: var(--alert); background: #220000; }
+#stopBtn.active { background: var(--alert); color: #fff; }
 
-/* SLIDERS */
-.slider-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: 0.65rem; color: #aaa; }
-.slider-row label { flex: 1; }
-input[type="range"] { flex: 2; height: 4px; background: #333; -webkit-appearance: none; }
-input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; background: var(--primary); cursor: pointer; }
-.val-disp { width: 30px; text-align: right; color: #fff; }
+/* Thèmes Colors */
+.theme-btn { width: 100%; aspect-ratio: 1; border-radius: 50%; border: 2px solid #fff; cursor: pointer; box-shadow: 0 0 5px currentColor; }
 
-/* LOG */
-#sysLog {
-  height: 60px; background: #000; border-top: 1px solid var(--secondary);
-  padding: 5px; font-size: 0.65rem; overflow-y: auto; color: #555;
+/* Sliders */
+.slider-row { display: flex; align-items: center; margin-bottom: 8px; font-size: 0.7rem; }
+.slider-row label { flex: 1; color: #aaa; }
+input[type="range"] { flex: 2; height: 4px; background: #333; -webkit-appearance: none; border-radius: 2px; }
+input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; background: var(--primary); border-radius: 50%; cursor: pointer; border: 1px solid #fff; }
+.val-display { width: 35px; text-align: right; color: var(--secondary); font-weight: bold; }
+
+/* --- TERMINAL --- */
+#term {
+  height: 80px; background: #000; border-top: 1px solid var(--primary);
+  padding: 5px; font-size: 0.65rem; overflow-y: auto; color: #888; margin-top: 20px;
+  font-family: monospace;
 }
-.log-item { margin-bottom: 2px; }
-.log-high { color: var(--primary); }
+.log-line { margin-bottom: 3px; border-left: 2px solid transparent; padding-left: 5px; }
+.log-sys { border-color: #666; color: #aaa; }
+.log-ai { border-color: var(--primary); color: #fff; background: #002220; }
+.log-err { border-color: var(--alert); color: var(--alert); }
 
-/* MODAL */
-#configModal {
+/* --- MODAL --- */
+#settingsModal {
   position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-  background: rgba(0,10,0,0.95); z-index: 100;
-  display: none; padding: 20px; overflow-y: auto;
+  background: rgba(0,5,10,0.95); z-index: 200; display: none; flex-direction: column;
+  padding: 20px; overflow-y: auto;
 }
-.modal-inner { max-width: 500px; margin: 0 auto; border: 1px solid var(--primary); padding: 20px; background: #000; }
-h2 { color: var(--primary); margin-top: 0; text-transform: uppercase; border-bottom: 1px solid #333; padding-bottom: 10px; }
-.close-btn { float: right; color: var(--alert); cursor: pointer; font-weight: bold; }
+.modal-box {
+  max-width: 500px; margin: 0 auto; background: #050a10;
+  border: 2px solid var(--secondary); padding: 20px; border-radius: 5px;
+}
+.close-btn { float: right; color: var(--alert); cursor: pointer; font-weight: bold; font-size: 1.2rem; }
 </style>
 </head>
 <body>
 
+<!-- HEADER -->
 <header>
-  <h1>PuiSSancE</h1>
+  <h1>PuiSSancE <span style="font-size:0.6em; color:var(--secondary)">ULTIMATE</span></h1>
   <div>
-    <span id="sysState" class="sys-status">STANDBY</span> | 
-    <span id="memStat">MEM: 0MB</span>
+    <span id="sysBadge" class="status-badge">OFFLINE</span>
   </div>
 </header>
 
-<div id="scopeContainer">
-  <div class="grid-bg"></div>
-  <canvas id="mainCanvas"></canvas>
-  <div id="aiDisplay">
+<!-- SENSORS -->
+<div id="sensorGrid">
+  <div class="s-cell"><span class="s-label">ACC X</span><span class="s-val" id="vX">0.0</span></div>
+  <div class="s-cell"><span class="s-label">ACC Y</span><span class="s-val" id="vY">0.0</span></div>
+  <div class="s-cell"><span class="s-label">ACC Z</span><span class="s-val" id="vZ">0.0</span></div>
+  <div class="s-cell"><span class="s-label">MAG X</span><span class="s-val" id="mX">0</span></div>
+  <div class="s-cell"><span class="s-label">MAG Y</span><span class="s-val" id="mY">0</span></div>
+  <div class="s-cell"><span class="s-label">MAG Z</span><span class="s-val" id="mZ">0</span></div>
+</div>
+
+<!-- VISUALS -->
+<div id="mainScope">
+  <div class="grid-overlay"></div>
+  <div id="flashOverlay"></div>
+  <canvas id="scopeCanvas"></canvas>
+  <div id="aiOverlay">
     <div id="aiText">INITIALISATION...</div>
-    <div id="aiSub">Neural Link Ready</div>
+    <div id="aiSub">SYSTEM STANDBY</div>
   </div>
 </div>
 
-<div id="controlPanel">
-  
-  <!-- MAIN POWER -->
-  <div class="section-box">
-    <div class="section-title">Power System</div>
+<!-- CONTROLS -->
+<div id="controlsArea">
+
+  <!-- THÈMES -->
+  <div class="ctrl-group">
+    <div class="ctrl-title">Thèmes Visuels</div>
+    <div style="display:grid; grid-template-columns: repeat(5,1fr); gap:5px;">
+      <button class="theme-btn" style="background:#00ccff; color:#00ccff" onclick="setTheme('zeus')"></button>
+      <button class="theme-btn" style="background:#aa00ff; color:#aa00ff" onclick="setTheme('hades')"></button>
+      <button class="theme-btn" style="background:#ff3300; color:#ff3300" onclick="setTheme('ares')"></button>
+      <button class="theme-btn" style="background:#00ff00; color:#00ff00" onclick="setTheme('poseidon')"></button>
+      <button class="theme-btn" style="background:#ffffff; color:#ffffff" onclick="setTheme('apollo')"></button>
+    </div>
+  </div>
+
+  <!-- POWER -->
+  <div class="ctrl-group">
+    <div class="ctrl-title">Alimentation Principale</div>
     <div class="btn-grid-2">
-      <button id="powerBtn">⚡ ACTIVER PUISSANCE</button>
-      <button id="stopBtn">⏹ ARRÊT COMPLET</button>
+      <button id="startBtn">⚡ DÉMARRER PUISSANCE</button>
+      <button id="stopBtn">⏹ ARRÊTER SYSTÈME</button>
     </div>
   </div>
 
-  <!-- AUDIO LOOPS -->
-  <div class="section-box">
-    <div class="section-title">Audio Loop Chain</div>
+  <!-- AUDIO CHAIN -->
+  <div class="ctrl-group">
+    <div class="ctrl-title">Chaîne Audio (Loop)</div>
     <div class="btn-grid">
-      <button id="micBtn">MIC IN</button>
-      <button id="noiseBtn">NOISE GEN</button>
-      <button id="ttsBtn" class="active">TTS LOOP (VOICE)</button>
-      <button id="recBtn">REC</button>
+      <button id="btnMic" onclick="toggle('mic')">🎧 MICRO</button>
+      <button id="btnNoise" onclick="toggle('noise')">⚡ BRUIT</button>
+      <button id="btnTTS" class="active" onclick="toggle('tts')">🔊 VOIX (LOOP)</button>
+      <button id="btnRec" onclick="toggle('rec')">⏺ REC</button>
     </div>
   </div>
 
-  <!-- SETTINGS LIVE -->
-  <div class="section-box">
-    <div class="section-title">Live Parameters</div>
+  <!-- RÉGLAGES RAPIDES -->
+  <div class="ctrl-group">
+    <div class="ctrl-title">Paramètres Rapides</div>
     <div class="slider-row">
-      <label>VOICE VOLUME</label>
-      <input type="range" id="volSlider" min="0" max="1" step="0.1" value="1">
-      <span class="val-disp" id="volVal">1.0</span>
+      <label>Volume Voix</label>
+      <input type="range" id="s_vol" min="0" max="1" step="0.1" oninput="updateCfg('vol', this.value)">
+      <span class="val-display" id="d_vol">1.0</span>
     </div>
     <div class="slider-row">
-      <label>VOICE PITCH</label>
-      <input type="range" id="pitchSlider" min="0.1" max="2" step="0.1" value="0.6">
-      <span class="val-disp" id="pitchVal">0.6</span>
+      <label>Hauteur Voix</label>
+      <input type="range" id="s_pitch" min="0.1" max="2" step="0.1" oninput="updateCfg('pitch', this.value)">
+      <span class="val-display" id="d_pitch">0.6</span>
     </div>
     <div class="slider-row">
-      <label>NOISE VOL</label>
-      <input type="range" id="noiseSlider" min="0" max="100" value="30">
-      <span class="val-disp" id="noiseVal">30</span>
+      <label>Volume Bruit</label>
+      <input type="range" id="s_noise" min="0" max="100" step="1" oninput="updateCfg('noiseVol', this.value)">
+      <span class="val-display" id="d_noise">30</span>
     </div>
   </div>
 
-  <button id="advBtn" style="width:100%; margin-bottom:10px;">⚙ CONFIGURATION AVANCÉE</button>
+  <!-- AVANCÉ -->
+  <div class="ctrl-group">
+    <button id="advBtn" style="width:100%" onclick="openSettings()">⚙ PARAMÈTRES AVANCÉS & STOCKAGE</button>
+  </div>
+
+  <!-- TERMINAL -->
+  <div id="term">
+    <div class="log-line log-sys">> Système Prêt. En attente d'initialisation.</div>
+  </div>
 
 </div>
 
-<div id="sysLog"></div>
-
-<!-- MODAL -->
-<div id="configModal">
-  <div class="modal-inner">
-    <span class="close-btn" id="closeModal">X</span>
-    <h2>Configuration Système</h2>
+<!-- MODAL AVANCÉE -->
+<div id="settingsModal">
+  <div class="modal-box">
+    <span class="close-btn" onclick="closeSettings()">X</span>
+    <h2 style="color:var(--primary); margin-top:0; border-bottom:1px solid #333; padding-bottom:10px;">Configuration Système</h2>
     
-    <div class="slider-row" style="color:#fff; margin-bottom:15px;">
-      <label>Vitesse de Parole (Rate)</label>
-      <input type="range" id="rateSlider" min="0.5" max="2" step="0.1" value="1.1">
-      <span class="val-disp" id="rateVal">1.1</span>
+    <div style="margin-bottom:20px;">
+      <h4 style="color:#fff; margin:5px 0;">Analyse Audio</h4>
+      <div class="slider-row">
+        <label>FFT Size (Précision)</label>
+        <select id="cfg_fft" style="flex:2; background:#000; color:#fff; border:1px solid #444;" onchange="updateCfg('fft', this.value)">
+          <option value="512">512 (Rapide)</option>
+          <option value="1024">1024</option>
+          <option value="2048" selected>2048 (Standard)</option>
+          <option value="4096">4096 (Haute)</option>
+        </select>
+      </div>
+      <div class="slider-row">
+        <label>Lissage (Smoothing)</label>
+        <input type="range" id="cfg_smooth" min="0.1" max="0.95" step="0.05" oninput="updateCfg('smooth', this.value)">
+        <span class="val-display" id="d_smooth">0.8</span>
+      </div>
     </div>
 
-    <div class="slider-row" style="color:#fff; margin-bottom:15px;">
-      <label>Seuil de Confiance (0=Tout)</label>
-      <input type="range" id="confSlider" min="0" max="1" step="0.1" value="0">
-      <span class="val-disp" id="confVal">0.0</span>
+    <div style="margin-bottom:20px;">
+      <h4 style="color:#fff; margin:5px 0;">Moteur Vocal (IA)</h4>
+      <div class="slider-row">
+        <label>Vitesse Parole</label>
+        <input type="range" id="cfg_rate" min="0.5" max="2" step="0.1" oninput="updateCfg('rate', this.value)">
+        <span class="val-display" id="d_rate">1.1</span>
+      </div>
+      <div class="slider-row">
+        <label>Seuil Confiance</label>
+        <input type="range" id="cfg_conf" min="0" max="1" step="0.1" oninput="updateCfg('conf', this.value)">
+        <span class="val-display" id="d_conf">0.0</span>
+      </div>
+      <p style="font-size:0.6rem; color:#888;">* 0.0 = Traduit tout le bruit immédiatement.</p>
     </div>
 
-    <button id="saveBtn" style="width:100%; padding:15px; background:var(--primary); color:#000; font-weight:bold; font-size:1rem;">SAUVEGARDER DÉFINITIVEMENT</button>
+    <button id="saveBtn" style="width:100%; padding:15px; background:var(--secondary); color:#000; font-weight:bold; border:none; font-size:1rem;" onclick="saveAll()">💾 SAUVEGARDER DÉFINITIVEMENT</button>
   </div>
 </div>
 
 <script>
-/* --- PuiSSancE CORE ENGINE --- */
-
-const defaultConfig = {
-  mic: false, noise: false, tts: true, rec: false,
-  vol: 1.0, pitch: 0.6, rate: 1.1,
-  noiseVol: 30, confidence: 0.0
+/* --- CONFIGURATION & ÉTAT --- */
+const THEMES = {
+  zeus: { p:'#00ccff', s:'#ffd700' },
+  hades: { p:'#aa00ff', s:'#ff0000' },
+  ares: { p:'#ff3300', s:'#ffff00' },
+  poseidon: { p:'#00ff00', s:'#00aaff' },
+  apollo: { p:'#ffffff', s:'#ffaa00' }
 };
 
-const app = {
-  running: false,
-  ctx: null, source: null, analyser: null, gainNode: null,
-  noiseNode: null, noiseGain: null,
+const DEF_CFG = {
+  mic: true, noise: false, tts: true, rec: false,
+  vol: 1.0, pitch: 0.6, rate: 1.1, noiseVol: 30,
+  fft: 2048, smooth: 0.8, conf: 0.0,
+  theme: 'zeus'
+};
+
+const APP = {
+  run: false,
+  ctx: null, src: null, analyser: null, gain: null,
+  noise: null, noiseGain: null,
   stream: null,
-  recognition: null, synth: window.speechSynthesis,
-  dataArray: null, timeData: null,
-  config: { ...defaultConfig }
+  rec: null, recOn: false,
+  stt: null, tts: window.speechSynthesis,
+  dataFreq: null, dataTime: null, peakData: [],
+  cfg: { ...DEF_CFG }
 };
 
-// --- LOGGER ---
-function log(msg, high=false) {
-  const l = el('sysLog');
+/* --- UTILITAIRES --- */
+const $ = id => document.getElementById(id);
+const log = (msg, t='sys') => {
   const d = document.createElement('div');
-  d.className = 'log-item' + (high ? ' log-high' : '');
-  d.textContent = `> ${msg}`;
-  l.appendChild(d);
-  l.scrollTop = l.scrollHeight;
+  d.className = `log-line log-${t}`;
+  d.innerText = `> ${msg}`;
+  const tdiv = $('term');
+  tdiv.appendChild(d);
+  tdiv.scrollTop = tdiv.scrollHeight;
+};
+
+/* --- GESTION THÈMES --- */
+function setTheme(name) {
+  const t = THEMES[name];
+  if(!t) return;
+  document.documentElement.style.setProperty('--primary', t.p);
+  document.documentElement.style.setProperty('--secondary', t.s);
+  APP.cfg.theme = name;
+  log(`Thème: ${name.toUpperCase()}`);
 }
 
-function el(id) { return document.getElementById(id); }
-
-// --- STORAGE ---
-function loadConfig() {
-  const saved = localStorage.getItem('PuiSSancE_Config');
-  if(saved) {
-    try { app.config = { ...defaultConfig, ...JSON.parse(saved) }; log("Config Chargée"); } 
-    catch(e) { log("Err Load Config"); }
+/* --- STOCKAGE --- */
+function loadCfg() {
+  const s = localStorage.getItem('PuiSSancE_v4');
+  if(s) {
+    try { APP.cfg = { ...DEF_CFG, ...JSON.parse(s) }; log("Configuration chargée."); }
+    catch(e) { log("Err load cfg", 'err'); }
   }
   updateUI();
-}
-
-function saveConfig() {
-  localStorage.setItem('PuiSSancE_Config', JSON.stringify(app.config));
-  log("Configuration Sauvegardée !", true);
-  applyAudioParams();
+  setTheme(APP.cfg.theme);
 }
 
 function updateUI() {
-  el('volSlider').value = app.config.vol; el('volVal').textContent = app.config.vol;
-  el('pitchSlider').value = app.config.pitch; el('pitchVal').textContent = app.config.pitch;
-  el('noiseSlider').value = app.config.noiseVol; el('noiseVal').textContent = app.config.noiseVol;
-  el('rateSlider').value = app.config.rate; el('rateVal').textContent = app.config.rate;
-  el('confSlider').value = app.config.confidence; el('confVal').textContent = app.config.confidence;
+  // Sliders
+  const map = {vol:'s_vol', pitch:'s_pitch', noiseVol:'s_noise', rate:'cfg_rate', smooth:'cfg_smooth', conf:'cfg_conf', fft:'cfg_fft'};
+  const disp = {vol:'d_vol', pitch:'d_pitch', noiseVol:'d_noise', rate:'d_rate', smooth:'d_smooth', conf:'d_conf'};
   
-  // Buttons state
-  if(app.config.mic) el('micBtn').classList.add('active');
-  if(app.config.noise) el('noiseBtn').classList.add('active');
-  if(app.config.tts) el('ttsBtn').classList.add('active');
+  for(let k in map) {
+    if($(map[k])) $(map[k]).value = APP.cfg[k];
+    if(disp[k]) $(disp[k]).innerText = APP.cfg[k];
+  }
+
+  // Toggles
+  if(APP.cfg.mic) $('btnMic').classList.add('active');
+  if(APP.cfg.noise) $('btnNoise').classList.add('active');
+  if(APP.cfg.tts) $('btnTTS').classList.add('active');
+  if(APP.cfg.rec) $('btnRec').classList.add('active');
 }
 
-// --- AUDIO SYSTEM ---
-async function initSystem() {
-  if(app.running) return;
-  el('powerBtn').textContent = "BOOT SEQUENCE...";
-  log("Initialisation PuiSSancE Core...", true);
+function updateCfg(k, v) {
+  APP.cfg[k] = parseFloat(v);
+  if(k === 'vol') $('d_vol').innerText = APP.cfg[k];
+  if(k === 'pitch') $('d_pitch').innerText = APP.cfg[k];
+  if(k === 'noiseVol') { $('d_noise').innerText = APP.cfg[k]; applyAudio(); }
+  if(k === 'smooth') { $('d_smooth').innerText = APP.cfg[k]; if(APP.analyser) APP.analyser.smoothingTimeConstant = APP.cfg[k]; }
+  if(k === 'conf') $('d_conf').innerText = APP.cfg[k];
+  if(k === 'rate') $('d_rate').innerText = APP.cfg[k];
+}
+
+function saveAll() {
+  localStorage.setItem('PuiSSancE_v4', JSON.stringify(APP.cfg));
+  log("Configuration Sauvegardée !", 'sys');
+  closeSettings();
+}
+
+function toggle(k) {
+  APP.cfg[k] = !APP.cfg[k];
+  const btn = $('btn'+k.charAt(0).toUpperCase()+k.slice(1));
+  btn.classList.toggle('active');
+  log(`${k.toUpperCase()}: ${APP.cfg[k]?'ON':'OFF'}`);
+  applyAudio();
+}
+
+/* --- MOTEUR AUDIO --- */
+async function start() {
+  if(APP.run) return;
+  $('startBtn').innerText = "INIT...";
+  log("Démarrage...", 'sys');
 
   try {
-    app.ctx = new (window.AudioContext || window.webkitAudioContext)();
-    await app.ctx.resume();
+    APP.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    await APP.ctx.resume();
 
-    // 1. MICRO & ANALYSER
+    // 1. MICRO
     try {
-      app.stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
-      app.source = app.ctx.createMediaStreamSource(app.stream);
-      app.gainNode = app.ctx.createGain();
-      app.gainNode.gain.value = 1.0;
+      APP.stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
+      APP.src = APP.ctx.createMediaStreamSource(APP.stream);
+      APP.gain = APP.ctx.createGain();
+      APP.analyser = APP.ctx.createAnalyser();
       
-      app.analyser = app.ctx.createAnalyser();
-      app.analyser.fftSize = 2048;
-      app.analyser.smoothingTimeConstant = 0.8;
+      APP.analyser.fftSize = APP.cfg.fft;
+      APP.analyser.smoothingTimeConstant = APP.cfg.smooth;
       
-      app.source.connect(app.gainNode);
-      app.gainNode.connect(app.analyser);
+      APP.src.connect(APP.gain);
+      APP.gain.connect(APP.analyser);
+      // Pas de connexion au dest pour éviter le larsen direct (sauf si voulu)
       
-      // Buffers
-      const len = app.analyser.frequencyBinCount;
-      app.dataArray = new Uint8Array(len);
-      app.timeData = new Uint8Array(len);
+      const len = APP.analyser.frequencyBinCount;
+      APP.dataFreq = new Uint8Array(len);
+      APP.dataTime = new Uint8Array(len);
+      APP.peakData = new Uint8Array(len).fill(0);
       
-      el('micBtn').classList.add('active'); app.config.mic = true;
-    } catch(e) { log("Erreur Micro: " + e.message); }
+      log("Audio Input OK", 'sys');
+    } catch(e) { log("Err Micro: " + e.message, 'err'); }
 
-    // 2. NOISE GENERATOR
-    const buffSize = app.ctx.sampleRate * 2;
-    const buff = app.ctx.createBuffer(1, buffSize, app.ctx.sampleRate);
-    const data = buff.getChannelData(0);
-    for(let i=0; i<buffSize; i++) data[i] = Math.random()*2 - 1;
+    // 2. NOISE
+    const bs = APP.ctx.sampleRate * 2;
+    const bf = APP.ctx.createBuffer(1, bs, APP.ctx.sampleRate);
+    const dt = bf.getChannelData(0);
+    for(let i=0; i<bs; i++) dt[i] = Math.random()*2-1;
     
-    app.noiseNode = app.ctx.createBufferSource();
-    app.noiseNode.buffer = buff;
-    app.noiseNode.loop = true;
-    app.noiseGain = app.ctx.createGain();
-    app.noiseGain.gain.value = 0;
+    APP.noise = APP.ctx.createBufferSource();
+    APP.noise.buffer = bf; APP.noise.loop = true;
+    APP.noiseGain = APP.ctx.createGain();
+    APP.noiseGain.gain.value = 0;
     
-    // Filtre Radio
-    const filter = app.ctx.createBiquadFilter();
-    filter.type = 'bandpass'; filter.frequency.value = 1000; filter.Q.value = 1;
-
-    app.noiseNode.connect(filter);
-    filter.connect(app.noiseGain);
-    app.noiseGain.connect(app.ctx.destination);
-    app.noiseNode.start(0);
-
-    // 3. SPEECH ENGINE (LOOP)
-    initSpeech();
-
-    app.running = true;
-    el('powerBtn').textContent = "SYSTEM ACTIVE";
-    el('powerBtn').classList.add('active');
-    el('sysState').classList.add('on');
-    el('sysState').textContent = "ONLINE";
-    el('aiText').textContent = "EN ÉCOUTE...";
+    const flt = APP.ctx.createBiquadFilter();
+    flt.type = 'bandpass'; flt.frequency.value = 1000; flt.Q.value = 1;
     
-    applyAudioParams();
-    drawLoop();
-    memLoop();
+    APP.noise.connect(flt);
+    flt.connect(APP.noiseGain);
+    APP.noiseGain.connect(APP.ctx.destination);
+    APP.noise.start(0);
+
+    // 3. RECORDER
+    if(APP.stream) {
+      APP.rec = new MediaRecorder(APP.stream);
+      APP.rec.ondataavailable = e => {
+        const blob = new Blob([e.data], {type:'audio/webm'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href=url; a.download=`rec_${Date.now()}.webm`; a.click();
+        log("Enregistrement sauvegardé", 'sys');
+      };
+      APP.rec.onstop = () => { APP.recOn = false; };
+    }
+
+    // 4. STT & TTS
+    initSTT();
+
+    APP.run = true;
+    $('startBtn').classList.add('active'); $('startBtn').innerText = "SYSTEM ACTIVE";
+    $('sysBadge').classList.add('active'); $('sysBadge').innerText = "ONLINE";
+    $('aiText').innerText = "ÉCOUTE ACTIVE...";
+    
+    applyAudio();
+    draw();
+    initSensors();
 
   } catch(e) {
-    log("CRITICAL FAIL: " + e.message);
-    el('powerBtn').textContent = "ERROR";
+    log("CRITICAL: " + e.message, 'err');
+    $('startBtn').innerText = "ERROR";
   }
 }
 
-function applyAudioParams() {
-  if(app.noiseGain) app.noiseGain.gain.value = app.config.noise ? (app.config.noiseVol/100) : 0;
+function stop() {
+  APP.run = false;
+  if(APP.ctx) APP.ctx.close();
+  if(APP.stream) APP.stream.getTracks().forEach(t=>t.stop());
+  if(APP.stt) APP.stt.stop();
+  if(APP.tts) APP.tts.cancel();
+  if(APP.rec && APP.recOn) APP.rec.stop();
+  
+  $('startBtn').classList.remove('active'); $('startBtn').innerText = "DÉMARRER PUISSANCE";
+  $('sysBadge').classList.remove('active'); $('sysBadge').innerText = "OFFLINE";
+  $('aiText').innerText = "INACTIF";
+  log("Système Arrêté");
 }
 
-// --- SPEECH & LOOP ---
-function initSpeech() {
-  if(!('webkitSpeechRecognition' in window)) { log("Speech API Indisponible"); return; }
+function applyAudio() {
+  if(APP.noiseGain) APP.noiseGain.gain.value = APP.cfg.noise ? (APP.cfg.noiseVol/100) : 0;
   
-  app.recognition = new webkitSpeechRecognition();
-  app.recognition.continuous = true;
-  app.recognition.interimResults = true; // Important pour réactivité
-  app.recognition.lang = 'fr-FR';
+  if(APP.rec && APP.cfg.rec && !APP.recOn) { APP.rec.start(); APP.recOn = true; log("Rec Start"); }
+  else if(APP.rec && !APP.cfg.rec && APP.recOn) { APP.rec.stop(); APP.recOn = false; log("Rec Stop"); }
+}
 
-  app.recognition.onresult = (e) => {
-    let text = "";
-    let isFinal = false;
-    let conf = 0;
+/* --- IA LOOP (STT -> TTS) --- */
+function initSTT() {
+  if(!('webkitSpeechRecognition' in window)) { log("STT Indisponible", 'err'); return; }
+  
+  APP.stt = new webkitSpeechRecognition();
+  APP.stt.continuous = true;
+  APP.stt.interimResults = true;
+  APP.stt.lang = 'fr-FR';
 
+  APP.stt.onresult = e => {
+    let txt = "", final = false, conf = 0;
     for(let i=e.resultIndex; i<e.results.length; i++) {
-      text += e.results[i][0].transcript;
-      if(e.results[i].isFinal) {
-        isFinal = true;
-        conf = e.results[i][0].confidence;
-      }
+      txt += e.results[i][0].transcript;
+      if(e.results[i].isFinal) { final = true; conf = e.results[i][0].confidence; }
     }
-
-    if(text) {
-      el('aiText').textContent = text;
-      // LOGIQUE DE BOUCLE ICI
-      // On parle si :
-      // 1. Le TTS est activé
-      // 2. Le texte est final (pour éviter de bégayer sur les mots en cours de formation) OU confiance haute
-      // Ici on accepte tout si seuil = 0
-      if(app.config.tts && (isFinal || conf > app.config.confidence)) {
-        speak(text);
-        if(isFinal) log(`LOOP: "${text}"`, true);
+    
+    if(txt) {
+      $('aiText').innerText = txt;
+      // LOGIQUE BOUCLE : Si TTS actif et (Final ou confiance > seuil)
+      if(APP.cfg.tts && (final || conf >= APP.cfg.conf)) {
+        speak(txt);
+        if(final) log(`LOOP: "${txt}"`, 'ai');
       }
     }
   };
 
-  app.recognition.onend = () => { 
-    if(app.running) { try{ app.recognition.start(); }catch(e){} } 
-  };
+  APP.stt.onerror = e => { if(e.error!=='no-speech') log(`STT Err: ${e.error}`, 'err'); };
+  APP.stt.onend = () => { if(APP.run) { try{APP.stt.start()}catch(e){} } };
   
-  app.recognition.start();
-  log("Moteur Vocal ACTIF");
+  APP.stt.start();
+  log("Moteur Vocal Actif", 'sys');
 }
 
-function speak(text) {
-  if(!text) return;
-  // Annule la parole en cours pour dire la nouvelle phrase (Réactivité max)
-  app.synth.cancel(); 
+function speak(txt) {
+  if(!txt) return;
+  APP.tts.cancel(); // Coupe la parole en cours pour réactivité immédiate
   
-  const u = new SpeechSynthesisUtterance(text);
+  const u = new SpeechSynthesisUtterance(txt);
   u.lang = 'fr-FR';
-  u.volume = app.config.vol;
-  u.pitch = app.config.pitch;
-  u.rate = app.config.rate;
+  u.volume = APP.cfg.vol;
+  u.pitch = APP.cfg.pitch;
+  u.rate = APP.cfg.rate;
   
-  u.onstart = () => { el('aiSub').textContent = "TRANSMISSION..."; };
-  u.onend = () => { el('aiSub').textContent = "ECOUTE..."; };
+  u.onstart = () => { $('aiSub').innerText = "TRANSMISSION..."; $('aiSub').style.color = "var(--secondary)"; };
+  u.onend = () => { $('aiSub').innerText = "ÉCOUTE..."; $('aiSub').style.color = "var(--primary)"; };
   
-  app.synth.speak(u);
+  APP.tts.speak(u);
 }
 
-// --- VISUALS ---
-function drawLoop() {
-  if(!app.running) return;
-  requestAnimationFrame(drawLoop);
+/* --- VISUELS --- */
+function draw() {
+  if(!APP.run) return;
+  requestAnimationFrame(draw);
   
-  const cvs = el('mainCanvas');
-  const ctx = cvs.getContext('2d');
-  const w = cvs.width = cvs.clientWidth;
-  const h = cvs.height = cvs.clientHeight;
+  const c = $('scopeCanvas');
+  const ctx = c.getContext('2d');
+  const w = c.width = c.clientWidth;
+  const h = c.height = c.clientHeight;
   
   ctx.fillStyle = '#000'; ctx.fillRect(0,0,w,h);
   
-  if(!app.analyser) return;
+  if(!APP.analyser) return;
   
-  app.analyser.getByteTimeDomainData(app.timeData);
-  app.analyser.getByteFrequencyData(app.dataArray);
-
-  // Waveform (Ligne verte)
-  ctx.lineWidth = 2; ctx.strokeStyle = '#00ff41'; ctx.beginPath();
-  const sliceW = w / app.timeData.length;
+  APP.analyser.getByteFrequencyData(APP.dataFreq);
+  APP.analyser.getByteTimeDomainData(APP.dataTime);
+  
+  // 1. OSCILLO (Ligne verte)
+  ctx.lineWidth = 2; ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--primary'); ctx.beginPath();
+  const sl = w / APP.dataTime.length;
   let x = 0;
-  for(let i=0; i<app.timeData.length; i++) {
-    const v = app.timeData[i] / 128.0;
+  for(let i=0; i<APP.dataTime.length; i++) {
+    const v = APP.dataTime[i]/128.0;
     const y = v * h/2;
     if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
-    x += sliceW;
+    x+=sl;
   }
   ctx.stroke();
-
-  // Spectrum (Barres en bas)
-  const barW = (w / app.dataArray.length) * 2.5;
+  
+  // 2. SPECTRE (Barres)
+  const bw = (w / APP.dataFreq.length) * 2.5;
   let bx = 0;
-  for(let i=0; i<app.dataArray.length; i++) {
-    const bh = (app.dataArray[i]/255) * (h/3);
-    ctx.fillStyle = `rgb(0, ${app.dataArray[i]}, 0)`;
-    ctx.fillRect(bx, h - bh, barW, bh);
-    bx += barW + 1;
+  let maxE = 0;
+  for(let i=0; i<APP.dataFreq.length; i++) {
+    const bh = (APP.dataFreq[i]/255) * h/3;
+    ctx.fillStyle = `rgb(0, ${APP.dataFreq[i]}, ${APP.dataFreq[i]})`;
+    ctx.fillRect(bx, h - bh, bw, bh);
+    
+    // Peak Hold
+    if(APP.dataFreq[i] > APP.peakData[i]) APP.peakData[i] = APP.dataFreq[i];
+    else APP.peakData[i] = Math.max(0, APP.peakData[i] - 2);
+    
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(bx, h - (APP.peakData[i]/255)*(h/3) - 2, bw, 2);
+    
+    bx += bw + 1;
+    if(APP.dataFreq[i] > maxE) maxE = APP.dataFreq[i];
+  }
+  
+  // 3. FLASH ÉCLAIR (Si énergie haute)
+  if(maxE > 200 && Math.random() > 0.98) triggerFlash();
+}
+
+function triggerFlash() {
+  const f = $('flashOverlay');
+  f.classList.remove('flash-anim');
+  void f.offsetWidth;
+  f.classList.add('flash-anim');
+  // Son de tonnerre simple (synth)
+  if(APP.ctx) {
+    const o = APP.ctx.createOscillator();
+    const g = APP.ctx.createGain();
+    o.type = 'sawtooth'; o.frequency.value = 50;
+    g.gain.setValueAtTime(0.5, APP.ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.01, APP.ctx.currentTime + 0.5);
+    o.connect(g); g.connect(APP.ctx.destination);
+    o.start(); o.stop(APP.ctx.currentTime + 0.5);
   }
 }
 
-function memLoop() {
-  if(!app.running) return;
-  setTimeout(memLoop, 2000);
-  const mem = (Math.random() * 50 + 100).toFixed(0);
-  el('memStat').textContent = `MEM: ${mem}MB`;
-}
-
-function toggle(id, key) {
-  app.config[key] = !app.config[key];
-  el(id).classList.toggle('active');
-  log(`${key} -> ${app.config[key]}`);
-  if(key === 'noise') applyAudioParams();
-}
-
-// --- EVENTS ---
-window.onload = () => {
-  loadConfig();
-  
-  // Sliders
-  ['vol', 'pitch', 'noise', 'rate', 'conf'].forEach(k => {
-    el(k+'Slider').oninput = (e) => {
-      const map = {vol:'vol', pitch:'pitch', noise:'noiseVol', rate:'rate', conf:'confidence'};
-      app.config[map[k]] = parseFloat(e.target.value);
-      el(k+'Val').textContent = app.config[map[k]];
-      if(k === 'noise') applyAudioParams();
-    };
+/* --- CAPTEURS --- */
+function initSensors() {
+  if(window.DeviceMotionEvent) window.addEventListener('devicemotion', e => {
+    const a = e.accelerationIncludingGravity;
+    if(a) { $('vX').innerText = (a.x||0).toFixed(1); $('vY').innerText = (a.y||0).toFixed(1); $('vZ').innerText = (a.z||0).toFixed(1); }
   });
+  if(window.DeviceOrientationEvent) window.addEventListener('deviceorientation', e => {
+    if(e.alpha) { $('mX').innerText = Math.floor(e.alpha); $('mY').innerText = Math.floor(e.beta); $('mZ').innerText = Math.floor(e.gamma); }
+  });
+}
 
-  el('powerBtn').onclick = initSystem;
-  el('stopBtn').onclick = () => {
-    app.running = false;
-    if(app.ctx) app.ctx.close();
-    if(app.stream) app.stream.getTracks().forEach(t=>t.stop());
-    if(app.recognition) app.recognition.stop();
-    if(app.synth) app.synth.cancel();
-    el('powerBtn').classList.remove('active'); el('powerBtn').textContent = "ACTIVER PUISSANCE";
-    el('sysState').classList.remove('on'); el('sysState').textContent = "OFFLINE";
-    log("SYSTEM HALTED");
-  };
-
-  el('micBtn').onclick = () => toggle('micBtn', 'mic');
-  el('noiseBtn').onclick = () => toggle('noiseBtn', 'noise');
-  el('ttsBtn').onclick = () => toggle('ttsBtn', 'tts');
-  el('recBtn').onclick = () => toggle('recBtn', 'rec');
-  
-  el('advBtn').onclick = () => el('configModal').style.display = 'block';
-  el('closeModal').onclick = () => el('configModal').style.display = 'none';
-  el('saveBtn').onclick = saveConfig;
-};
+/* --- UI EVENTS --- */
+ $('startBtn').onclick = start;
+ $('stopBtn').onclick = stop;
+window.onload = loadCfg;
 </script>
 </body>
 </html>
