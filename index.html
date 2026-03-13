@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PuiSSancE MAXIMUM - ARCHITECTURE STABLE</title>
+    <title>SUPRA ETERNITY ULTRA</title>
     <style>
         :root {
-            --primary: #00ffcc;
-            --secondary: #ff00ff;
-            --bg: #050505;
-            --panel: #111;
-            --text: #eee;
+            --primary: #00ffff; /* Cyan */
+            --secondary: #bc13fe; /* Violet */
+            --bg: #050510;
+            --panel: #0a0a20;
+            --text: #e0e0ff;
             --danger: #ff3333;
         }
         * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
@@ -21,18 +21,22 @@
         }
         header {
             background: #000; border-bottom: 2px solid var(--primary);
-            padding: 10px; display: flex; justify-content: space-between; align-items: center;
+            padding: 10px 15px; display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
         }
-        h1 { margin: 0; font-size: 1.2rem; color: var(--primary); text-shadow: 0 0 5px var(--primary); }
-        #status { font-size: 0.8rem; font-weight: bold; padding: 5px 10px; border: 1px solid var(--secondary); color: var(--secondary); }
-        #status.active { background: var(--secondary); color: #000; box-shadow: 0 0 10px var(--secondary); }
+        h1 { margin: 0; font-size: 1.2rem; color: var(--primary); text-shadow: 0 0 10px var(--primary); }
+        .header-icons { display: flex; gap: 10px; }
+        .icon-btn {
+            background: none; border: 1px solid var(--secondary); color: var(--secondary);
+            width: 35px; height: 35px; border-radius: 50%; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
+            transition: 0.2s;
+        }
+        .icon-btn:active { background: var(--secondary); color: #fff; transform: scale(0.9); }
 
         /* ZONE PRINCIPALE */
         main { flex: 1; position: relative; display: flex; flex-direction: column; overflow: hidden; }
-        
-        #visualizer {
-            flex: 1; background: #000; position: relative; border-bottom: 1px solid #333;
-        }
+        #visualizer { flex: 1; background: #000; position: relative; border-bottom: 1px solid #333; }
         canvas { width: 100%; height: 100%; display: block; }
         
         #displayOverlay {
@@ -40,51 +44,81 @@
             text-align: center; pointer-events: none; z-index: 10;
         }
         #mainText {
-            font-size: 2rem; font-weight: bold; color: #fff;
-            background: rgba(0,0,0,0.7); padding: 10px;
+            font-size: 1.8rem; font-weight: 900; color: #fff;
+            background: rgba(0,0,0,0.8); padding: 10px;
             text-transform: uppercase; border: 2px solid var(--primary);
             margin-bottom: 5px; min-height: 3rem;
         }
-        #subText { font-size: 0.8rem; color: var(--secondary); letter-spacing: 1px; }
+        #subText { font-size: 0.8rem; color: var(--secondary); letter-spacing: 2px; font-weight: bold; }
 
-        /* CONTRÔLES */
+        /* RACCOURCIS RAPIDES (GRID) */
+        #quickActions {
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 10px; background: var(--panel);
+            border-bottom: 1px solid #333;
+        }
+        .q-btn {
+            background: #1a1a1a; border: 1px solid #444; color: #fff;
+            padding: 12px 5px; border-radius: 6px; text-align: center; font-size: 0.8rem; cursor: pointer;
+            display: flex; flex-direction: column; align-items: center; gap: 5px;
+        }
+        .q-btn:active { background: var(--primary); color: #000; border-color: var(--primary); }
+        .q-icon { font-size: 1.2rem; }
+
+        /* CONTROLES */
         #controls {
             background: var(--panel); padding: 15px;
             display: grid; gap: 10px;
-            max-height: 40vh; overflow-y: auto;
+            max-height: 35vh; overflow-y: auto;
         }
         .control-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .control-row.full { grid-template-columns: 1fr; }
 
         button {
-            background: #222; border: 1px solid var(--primary); color: var(--primary);
-            padding: 15px; font-size: 0.9rem; font-weight: bold; cursor: pointer;
-            text-transform: uppercase; transition: 0.2s; font-family: inherit;
+            background: #111; border: 1px solid var(--primary); color: var(--primary);
+            padding: 15px; font-size: 0.85rem; font-weight: bold; cursor: pointer;
+            text-transform: uppercase; transition: 0.2s; font-family: inherit; border-radius: 4px;
         }
         button:active { transform: scale(0.98); }
         button.active-mode { background: var(--primary); color: #000; box-shadow: 0 0 15px var(--primary); }
         button.danger { border-color: var(--danger); color: var(--danger); }
         button.danger:active { background: var(--danger); color: #fff; }
-        
-        .btn-ia { border-color: var(--secondary); color: var(--secondary); }
-        .btn-ia.active-mode { background: var(--secondary); color: #000; box-shadow: 0 0 15px var(--secondary); }
 
-        /* LOG */
-        #terminal {
-            height: 100px; background: #000; border-top: 1px solid #333;
-            padding: 8px; font-size: 0.7rem; overflow-y: auto; color: #888; font-family: monospace;
+        /* MODAL RÉGLAGES */
+        #settingsModal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95); z-index: 200;
+            flex-direction: column; padding: 20px; overflow-y: auto;
         }
-        .log-line { margin-bottom: 4px; border-left: 2px solid #555; padding-left: 5px; }
+        .modal-content {
+            max-width: 500px; margin: 0 auto; width: 100%; background: #111;
+            border: 2px solid var(--secondary); padding: 20px; border-radius: 8px;
+        }
+        .setting-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        label { color: #fff; font-size: 0.9rem; }
+        input[type=range] { width: 50%; accent-color: var(--secondary); }
+        .theme-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 10px; }
+        .theme-btn { height: 40px; border-radius: 4px; border: 2px solid #fff; cursor: pointer; }
+        .close-btn { float: right; color: var(--danger); cursor: pointer; font-size: 1.5rem; }
+
+        /* TERMINAL */
+        #terminal {
+            height: 80px; background: #000; border-top: 1px solid #333;
+            padding: 8px; font-size: 0.6rem; overflow-y: auto; color: #888; font-family: monospace;
+        }
+        .log-line { margin-bottom: 2px; border-left: 2px solid #555; padding-left: 5px; }
         .log-sys { color: #aaa; }
         .log-ia { border-color: var(--secondary); color: #fff; background: #220022; }
+        .log-cmd { border-color: var(--primary); color: var(--primary); font-weight: bold; }
         .log-err { border-color: var(--danger); color: var(--danger); }
     </style>
 </head>
 <body>
 
 <header>
-    <h1>PUISSANCE <span style="font-size:0.6em">v4.0 STABLE</span></h1>
-    <div id="status">OFFLINE</div>
+    <h1>SUPRA <span style="font-size:0.6em; color:var(--secondary)">ETERNITY ULTRA</span></h1>
+    <div class="header-icons">
+        <button class="icon-btn" onclick="App.toggleSettings()">⚙</button>
+    </div>
 </header>
 
 <main>
@@ -92,421 +126,423 @@
         <canvas id="scopeCanvas"></canvas>
         <div id="displayOverlay">
             <div id="mainText">SYSTÈME PRÊT</div>
-            <div id="subText">EN ATTENTE D'ORDRE</div>
+            <div id="subText">ULTRA MODE</div>
         </div>
     </div>
 </main>
 
+<!-- RACCOURCIS RAPIDES -->
+<div id="quickActions">
+    <div class="q-btn" onclick="ControlEngine.triggerIntent('android.media.action.IMAGE_CAPTURE')">
+        <span class="q-icon">📷</span><span>CAMÉRA</span>
+    </div>
+    <div class="q-btn" onclick="ControlEngine.triggerIntent('android.settings.WIFI_SETTINGS')">
+        <span class="q-icon">📶</span><span>WIFI</span>
+    </div>
+    <div class="q-btn" onclick="ControlEngine.triggerIntent('android.settings.FLASHLIGHT_SETTINGS')">
+        <span class="q-icon">🔦</span><span>LAMPE</span>
+    </div>
+    <div class="q-btn" onclick="ControlEngine.openMap()">
+        <span class="q-icon">🗺️</span><span>CARTE</span>
+    </div>
+</div>
+
 <div id="controls">
     <div class="control-row full">
-        <button class="btn-ia" onclick="App.startVoiceOnlyMode()">🎤 MODE VOIX SEULE (IA)</button>
+        <button class="active-mode" onclick="App.startVoiceOnlyMode()">🎤 ACTIVER SUPRA</button>
     </div>
     <div class="control-row">
-        <button onclick="App.startFullSystem()">⚡ DÉMARRER SYSTÈME COMPLET</button>
-        <button class="danger" onclick="App.stopSystem()">⏹ ARRÊTER TOUT</button>
+        <button onclick="App.startFullSystem()">⚡ MODE COMPLET</button>
+        <button class="danger" onclick="App.stopSystem()">⏹ ARRÊTER</button>
     </div>
     <div class="control-row full" style="font-size: 0.7rem; color:#666; text-align:center; border:1px solid #333; padding:5px;">
-        Système : <span id="sysMode">Aucun</span>
+        Voice: "Calcule 5 fois 5", "Ouvre les données", "Itinéraire vers Paris"
     </div>
 </div>
 
 <div id="terminal">
-    <div class="log-line log-sys">> Initialisation du noyau...</div>
+    <div class="log-line log-sys">> Supra Eternity ULTRA chargé.</div>
+    <div class="log-line log-sys">> Modules : Calcul, Carte, Système, IA.</div>
+</div>
+
+<!-- MODAL DE RÉGLAGES -->
+<div id="settingsModal">
+    <div class="modal-content">
+        <span class="close-btn" onclick="App.toggleSettings()">×</span>
+        <h2 style="color:var(--primary); margin-top:0;">PARAMÈTRES</h2>
+        
+        <h3 style="color:#aaa; font-size:0.8rem;">VOIX</h3>
+        <div class="setting-row">
+            <label>Hauteur</label>
+            <input type="range" id="pitch" min="0.1" max="2" step="0.1" value="0.6" oninput="Config.update('pitch', this.value)">
+        </div>
+        <div class="setting-row">
+            <label>Vitesse</label>
+            <input type="range" id="rate" min="0.5" max="2" step="0.1" value="1.1" oninput="Config.update('rate', this.value)">
+        </div>
+
+        <h3 style="color:#aaa; font-size:0.8rem; margin-top:20px;">APPARENCE</h3>
+        <div class="theme-grid">
+            <div class="theme-btn" style="background:#00ffff" onclick="Config.setTheme('cyan')"></div>
+            <div class="theme-btn" style="background:#bc13fe" onclick="Config.setTheme('purple')"></div>
+            <div class="theme-btn" style="background:#ff3333" onclick="Config.setTheme('red')"></div>
+            <div class="theme-btn" style="background:#00ff00" onclick="Config.setTheme('green')"></div>
+        </div>
+
+        <button style="width:100%; margin-top:20px;" onclick="App.toggleSettings()">FERMER</button>
+    </div>
 </div>
 
 <script>
 /**
  * =========================================================================
- * ARCHITECTURE EN ENTITÉS RÉELLES (Audio, Visual, Brain)
+ * SUPRA ETERNITY ULTRA - VERSION ULTIME
  * =========================================================================
  */
 
-// --- ENTITÉ 1 : MOTEUR AUDIO (Gère le micro et le contexte audio) ---
-const AudioEngine = {
-    ctx: null,
-    stream: null,
-    analyser: null,
-    isInit: false,
-
-    async init() {
-        if (this.isInit) return true;
-        
-        try {
-            const AudioContext = window.AudioContext || window.webkitAudioContext;
-            this.ctx = new AudioContext();
-            // CRUCIAL : Réveiller le contexte audio immédiatement
-            if (this.ctx.state === 'suspended') {
-                await this.ctx.resume();
-            }
-
-            this.stream = await navigator.mediaDevices.getUserMedia({ 
-                audio: { 
-                    echoCancellation: false, 
-                    noiseSuppression: false, 
-                    autoGainControl: false 
-                } 
-            });
-
-            this.analyser = this.ctx.createAnalyser();
-            this.analyser.fftSize = 256;
-            const source = this.ctx.createMediaStreamSource(this.stream);
-            source.connect(this.analyser);
-            
-            this.isInit = true;
-            return true;
-        } catch (e) {
-            console.error("AudioEngine Error:", e);
-            App.log("Erreur Audio : " + e.message, 'err');
-            return false;
+// --- CONFIG ---
+const Config = {
+    data: { pitch: 0.6, rate: 1.1, volume: 1.0, theme: 'cyan', isActive: false },
+    themes: {
+        'cyan': { primary: '#00ffff', secondary: '#bc13fe' },
+        'purple': { primary: '#bc13fe', secondary: '#00ffff' },
+        'red': { primary: '#ff3333', secondary: '#ff9900' },
+        'green': { primary: '#00ff00', secondary: '#008800' }
+    },
+    load() {
+        const saved = localStorage.getItem('supra_ultra_config');
+        if (saved) this.data = { ...this.data, ...JSON.parse(saved) };
+        this.applyTheme(); this.updateUI();
+    },
+    save() { localStorage.setItem('supra_ultra_config', JSON.stringify(this.data)); },
+    update(key, value) { this.data[key] = value; this.save(); },
+    setTheme(name) { this.data.theme = name; this.applyTheme(); this.save(); },
+    applyTheme() {
+        const t = this.themes[this.data.theme];
+        if (t) {
+            document.documentElement.style.setProperty('--primary', t.primary);
+            document.documentElement.style.setProperty('--secondary', t.secondary);
         }
     },
-
-    getDataArray() {
-        if (!this.analyser) return new Uint8Array(0);
-        const array = new Uint8Array(this.analyser.frequencyBinCount);
-        this.analyser.getByteFrequencyData(array);
-        return array;
-    },
-
-    destroy() {
-        if (this.stream) {
-            this.stream.getTracks().forEach(track => track.stop());
-            this.stream = null;
-        }
-        if (this.ctx) {
-            this.ctx.close();
-            this.ctx = null;
-        }
-        this.analyser = null;
-        this.isInit = false;
+    updateUI() {
+        document.getElementById('pitch').value = this.data.pitch;
+        document.getElementById('rate').value = this.data.rate;
     }
 };
 
-// --- ENTITÉ 2 : MOTEUR VISUEL (Gère le Canvas) ---
-const VisualEngine = {
-    canvas: null,
-    ctx: null,
-    animationId: null,
-    isRunning: false,
+// --- AUDIO ENGINE ---
+const AudioEngine = {
+    ctx: null, stream: null, analyser: null, isInit: false,
+    async init() {
+        if (this.isInit) return true;
+        try {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            this.ctx = new AudioContext();
+            if (this.ctx.state === 'suspended') await this.ctx.resume();
+            this.stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
+            this.analyser = this.ctx.createAnalyser();
+            this.analyser.fftSize = 256;
+            this.ctx.createMediaStreamSource(this.stream).connect(this.analyser);
+            this.isInit = true;
+            App.log("Audio OK.", 'sys');
+            return true;
+        } catch (e) {
+            App.log("Erreur Micro: " + e.message, 'err');
+            return false;
+        }
+    },
+    getDataArray() {
+        if (!this.analyser) return new Uint8Array(0);
+        const arr = new Uint8Array(this.analyser.frequencyBinCount);
+        this.analyser.getByteFrequencyData(arr);
+        return arr;
+    },
+    destroy() {
+        if (this.stream) { this.stream.getTracks().forEach(t => t.stop()); this.stream = null; }
+        if (this.ctx) { this.ctx.close(); this.ctx = null; }
+        this.analyser = null; this.isInit = false;
+    }
+};
 
+// --- VISUAL ENGINE ---
+const VisualEngine = {
+    canvas: null, ctx: null, animId: null, isRunning: false,
     init() {
         this.canvas = document.getElementById('scopeCanvas');
         this.ctx = this.canvas.getContext('2d');
-        this.resize();
-        window.addEventListener('resize', () => this.resize());
+        this.resize(); window.addEventListener('resize', () => this.resize());
     },
-
     resize() {
         if (this.canvas) {
             this.canvas.width = this.canvas.parentElement.clientWidth;
             this.canvas.height = this.canvas.parentElement.clientHeight;
         }
     },
-
-    start() {
-        if (this.isRunning) return;
-        this.isRunning = true;
-        this.loop();
-    },
-
-    stop() {
-        this.isRunning = false;
-        if (this.animationId) cancelAnimationFrame(this.animationId);
-    },
-
+    start() { if (!this.isRunning) { this.isRunning = true; this.loop(); } },
+    stop() { this.isRunning = false; if (this.animId) cancelAnimationFrame(this.animId); },
     loop() {
         if (!this.isRunning) return;
-        
-        const w = this.canvas.width;
-        const h = this.canvas.height;
-        
-        // Fond semi-transparent pour effet de traînée
+        const w = this.canvas.width, h = this.canvas.height;
         this.ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
         this.ctx.fillRect(0, 0, w, h);
-
-        let data = new Uint8Array(0);
-        if (AudioEngine.isInit) {
-            data = AudioEngine.getDataArray();
-        } else {
-            // Simulation si pas de micro connecté (Mode Voix Seule)
-            data = new Uint8Array(128).map(() => Math.random() * 50);
-        }
-
-        const barWidth = (w / data.length) * 2.5;
+        let data = AudioEngine.isInit ? AudioEngine.getDataArray() : new Uint8Array(128).map(() => Math.random() * 30);
+        const barW = (w / data.length) * 2.5;
         let x = 0;
-
+        const primary = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim();
         for (let i = 0; i < data.length; i++) {
-            const barHeight = (data[i] / 255) * h;
-            
-            // Couleur dynamique
-            const r = 0;
-            const g = data[i] + 50;
-            const b = 255;
-
-            this.ctx.fillStyle = `rgb(${r},${g},${b})`;
-            this.ctx.fillRect(x, h - barHeight, barWidth, barHeight);
-            
-            x += barWidth + 1;
+            const barH = (data[i] / 255) * h;
+            this.ctx.fillStyle = primary;
+            this.ctx.shadowBlur = 10; this.ctx.shadowColor = primary;
+            this.ctx.fillRect(x, h - barH, barW, barH);
+            this.ctx.shadowBlur = 0;
+            x += barW + 1;
         }
-
-        this.animationId = requestAnimationFrame(() => this.loop());
+        this.animId = requestAnimationFrame(() => this.loop());
     }
 };
 
-// --- ENTITÉ 3 : CERVEAU IA (Reconnaissance et Synthèse) ---
+// --- MATH ENGINE (NOUVEAU) ---
+const MathEngine = {
+    calculate(text) {
+        // Nettoyer le texte pour ne garder que les chiffres et opérateurs
+        const cleanText = text.replace(/[^0-9\+\-\*\/\.\x]/g, '');
+        if (!cleanText.match(/[\d]+[\+\-\*\/][\d]+/)) return null;
+        
+        try {
+            // Utilisation de Function comme eval plus sûr pour cette contexte simple
+            const result = new Function('return ' + cleanText)();
+            return parseFloat(result.toFixed(2));
+        } catch (e) { return null; }
+    }
+};
+
+// --- CONTROL ENGINE (ÉTENDU) ---
+const ControlEngine = {
+    // Mapping des commandes vocales vers Intents ou URLs
+    commands: {
+        'mise à jour': 'android.settings.DEVICE_INFO_SETTINGS',
+        'réglage|paramètre': 'android.settings.SETTINGS',
+        'wi-fi|wifi': 'android.settings.WIFI_SETTINGS',
+        'bluetooth': 'android.settings.BLUETOOTH_SETTINGS',
+        'donnée|data': 'android.settings.DATA_ROAMING_SETTINGS',
+        'son|audio': 'android.settings.SOUND_SETTINGS',
+        'sécurité': 'android.settings.SECURITY_SETTINGS',
+        'développeur': 'android.settings.APPLICATION_DEVELOPMENT_SETTINGS',
+        'caméra|photo': 'android.media.action.IMAGE_CAPTURE',
+        'vidéo': 'android.media.action.VIDEO_CAPTURE',
+        'lampe|torche|flash': 'android.settings.FLASHLIGHT_SETTINGS'
+    },
+    
+    execute(text) {
+        const lower = text.toLowerCase();
+        let intent = null, msg = "", type = "intent", extra = "";
+
+        // 1. Itinéraire (Carte)
+        if (lower.includes('itinéraire') || lower.includes('comment aller') || lower.includes('carte')) {
+            // Extraire la destination (naïf)
+            let dest = text.replace(/itinéraire vers|comment aller|carte de|maps|ouvre la carte/gi, '').trim();
+            if (dest.length > 2) {
+                intent = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(dest)}`;
+                type = "window"; msg = "Recherche de " + dest + " sur la carte.";
+            }
+        }
+
+        // 2. Commandes Système (Boucle sur le mapping)
+        if (!intent) {
+            for (const [key, value] of Object.entries(this.commands)) {
+                if (lower.match(new RegExp(key))) {
+                    intent = "intent://#Intent;action=" + value + ";end";
+                    msg = "Ouverture " + key.split('|')[0] + ".";
+                    break;
+                }
+            }
+        }
+        
+        // 3. Applications Web
+        if (!intent && lower.includes('youtube')) { intent = "https://www.youtube.com"; type="window"; msg="Ouverture YouTube."; }
+        if (!intent && lower.includes('google')) { intent = "https://www.google.com"; type="window"; msg="Ouverture Google."; }
+
+        if (intent) {
+            App.log("SYSTÈME: " + intent, 'cmd');
+            BrainEngine.speak(msg, false); // Parle sans reprendre l'écoute tout de suite
+            setTimeout(() => {
+                if (type === 'intent') {
+                    Config.data.isActive = true; Config.save();
+                    window.location.href = intent;
+                } else {
+                    window.open(intent, '_blank');
+                    BrainEngine.speak("Ouvert. J'écoute.", true);
+                }
+            }, 1500);
+            return true;
+        }
+        return false;
+    },
+
+    // Pour les boutons rapides (ne parle pas, juste ouvre)
+    triggerIntent(action) {
+        if (navigator.vibrate) navigator.vibrate(50);
+        const url = "intent://#Intent;action=" + action + ";end";
+        window.location.href = url;
+    },
+
+    openMap() {
+        if (navigator.vibrate) navigator.vibrate(50);
+        window.open("https://www.google.com/maps", '_blank');
+    }
+};
+
+// --- BRAIN ENGINE (AVEC CALCUL) ---
 const BrainEngine = {
-    recognition: null,
-    synthesis: window.speechSynthesis,
-    voice: null,
-    isListening: false,
+    recognition: null, synthesis: window.speechSynthesis, voice: null, isListening: false,
 
     init() {
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (!SpeechRecognition) return false;
-
-        // Configuration de la reconnaissance
-        this.recognition = new SpeechRecognition();
+        const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SR) return false;
+        this.recognition = new SR();
         this.recognition.continuous = true;
         this.recognition.interimResults = false;
         this.recognition.lang = 'fr-FR';
 
-        // Gestion des résultats
-        this.recognition.onresult = (event) => {
-            const last = event.results.length - 1;
-            const text = event.results[last][0].transcript.trim();
-            this.processInput(text);
+        this.recognition.onresult = (e) => {
+            const text = e.results[e.results.length - 1][0].transcript.trim();
+            this.process(text);
         };
-
-        // Gestion de la fin (redémarrage automatique si actif)
         this.recognition.onend = () => {
-            if (this.isListening && App.isRunning) {
-                // Petit délai pour éviter boucle infinie trop rapide
-                setTimeout(() => {
-                    if (this.isListening) try { this.recognition.start(); } catch(e){}
-                }, 500);
+            if (this.isListening && Config.data.isActive) {
+                setTimeout(() => { if(this.isListening) try{this.recognition.start()}catch(e){} }, 800);
             }
         };
-        
-        // Gestion erreurs
         this.recognition.onerror = (e) => {
-            if (e.error === 'not-allowed') {
-                App.log("Microphone refusé !", 'err');
-                App.stopSystem();
-            }
+            if (e.error === 'not-allowed') { App.log("Micro refusé", 'err'); App.stopSystem(); }
         };
-
-        // Chargement voix
         this.loadVoice();
         window.speechSynthesis.onvoiceschanged = () => this.loadVoice();
-        
         return true;
     },
-
     loadVoice() {
         const voices = this.synthesis.getVoices();
-        this.voice = voices.find(v => v.lang === 'fr-FR') || voices.find(v => v.lang.startsWith('fr'));
+        this.voice = voices.find(v => v.lang === 'fr-FR') || voices[0];
     },
-
-    startListening() {
+    start() {
         if (!this.recognition) return;
         this.isListening = true;
-        try { this.recognition.start(); } catch(e){}
-        App.updateSubText("ÉCOUTE ACTIVE...");
+        try { this.recognition.start(); App.updateSub("ÉCOUTE ACTIVE"); } catch(e) {}
     },
-
-    stopListening() {
+    stop() {
         this.isListening = false;
-        if (this.recognition) try { this.recognition.stop(); } catch(e){}
-        App.updateSubText("ÉCOUTE ARRÊTÉE");
+        if (this.recognition) try { this.recognition.stop(); } catch(e) {}
+        App.updateSub("VEILLE");
     },
-
-    speak(text) {
+    speak(text, lang='fr', onEnd) {
         this.synthesis.cancel();
         if (!text) return;
+        if(lang !== 'fr') this.stop();
+
+        const u = new SpeechSynthesisUtterance(text);
+        u.lang = lang === 'fr' ? 'fr-FR' : lang + '-' + lang.toUpperCase();
+        u.pitch = Config.data.pitch;
+        u.rate = Config.data.rate;
+        u.volume = Config.data.volume;
         
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = 'fr-FR';
-        utterance.pitch = 0.6;
-        utterance.rate = 1.1;
-        if (this.voice) utterance.voice = this.voice;
+        const voices = this.synthesis.getVoices();
+        let v = voices.find(v => v.lang.startsWith(lang));
+        if(!v) v = this.voice; if(v) u.voice = v;
 
-        utterance.onstart = () => {
-            App.updateMainText("PARLE...");
-            App.log("IA: " + text, 'ia');
-        };
-        utterance.onend = () => {
-            if (this.isListening) App.updateMainText("ÉCOUTE...");
-        };
-
-        this.synthesis.speak(utterance);
+        u.onstart = () => { App.updateMain("PARLE..."); App.log("IA: " + text, 'ia'); };
+        u.onend = () => { if(onEnd) onEnd(); else if(this.isListening && lang==='fr') App.updateMain("ÉCOUTE..."); };
+        this.synthesis.speak(u);
     },
-
-    // LOGIQUE INTELLIGENTE
-    processInput(text) {
-        App.updateMainText(text.toUpperCase());
+    process(text) {
+        App.updateMain(text.toUpperCase());
         const lower = text.toLowerCase();
 
-        // 1. COMMANDE STOP
-        if (lower === 'stop' || lower === 'arrête') {
-            this.isListening = false; // Flag logique
-            this.recognition.stop(); // Arrêt physique
-            this.speak("Mode pause activé.");
-            return;
-        }
+        // 1. STOP / RESTART
+        if (lower === 'stop' || lower === 'arrête') { this.stop(); this.speak("Pause."); return; }
+        if (lower.includes('écoute')) { if(!this.isListening){ this.start(); this.speak("J'écoute."); } return; }
 
-        // 2. COMMANDE RE ÉCOUTE
-        if (lower.includes('réécoute') || lower.includes('re écoute') || lower.includes('écoute encore')) {
-            if (!this.isListening) {
-                this.isListening = true;
-                try { this.recognition.start(); } catch(e){}
+        // 2. CALCUL (NOUVEAU)
+        if (lower.includes('combien font') || lower.includes('calcule') || lower.includes('égal') || lower.match(/[\d]+[\+\-\*\/][\d]+/)) {
+            const result = MathEngine.calculate(text);
+            if (result !== null) {
+                this.speak("Le résultat est " + result, 'fr');
+                return;
             }
-            this.speak("J'écoute à nouveau.");
-            return;
         }
 
-        // 3. QUESTIONS IA
-        let response = null;
+        // 3. CONTRÔLE SYSTÈME
+        if (ControlEngine.execute(text)) return;
 
-        if (lower.includes('qui es-tu') || lower.includes('ton nom')) {
-            response = "Je suis PuiSSancE, entité artificielle de détection spectrale.";
-        } 
-        else if (lower.includes('où') && (lower.includes('bruit') || lower.includes('esprit'))) {
-            const dirs = ["Nord", "Sud", "Est", "Ouest", "Derrière toi", "À gauche"];
-            response = "Le signal vient du " + dirs[Math.floor(Math.random() * dirs.length)] + ".";
-        }
-        else if (lower.includes('aide') || lower.includes('comment puis-je t\'aider')) {
-            response = "Tu peux me demander où est l'esprit, qui je suis, ou dire Stop pour m'arrêter.";
-        }
-
-        // 4. RÉPONSE
-        if (response) {
-            this.speak(response);
-        } else if (this.isListening) {
-            // Par défaut : Répète si pas de commande spéciale
-            this.speak(text);
-        }
+        // 4. BASE
+        let rep = null;
+        if (lower.includes('qui es-tu')) rep = "Je suis Supra Eternity Ultra, votre assistant de contrôle total.";
+        else if (lower.includes('heure')) rep = `Il est ${new Date().getHours()} heures ${new Date().getMinutes()}.`;
+        
+        if (rep) { this.speak(rep, 'fr'); } 
+        else if (this.isListening) { this.speak(text, 'fr'); }
     }
 };
 
-// --- ENTITÉ 4 : CONTRÔLEUR PRINCIPAL (Application) ---
+// --- APP CONTROLLER ---
 const App = {
     isRunning: false,
-    mode: null, // 'FULL' ou 'VOICE_ONLY'
-
     init() {
+        Config.load();
         VisualEngine.init();
         BrainEngine.init();
-        this.log("Système initialisé. Prêt.", 'sys');
+        this.log("Supra Eternity ULTRA prêt.", 'sys');
+        if (Config.data.isActive) this.startVoiceOnlyMode(true);
     },
-
-    log(msg, type = 'sys') {
-        const term = document.getElementById('terminal');
-        const div = document.createElement('div');
-        div.className = 'log-line log-' + type;
-        div.innerText = `[${new Date().toLocaleTimeString('fr-FR')}] ${msg}`;
-        term.appendChild(div);
-        term.scrollTop = term.scrollHeight;
+    log(msg, type='sys') {
+        const t = document.getElementById('terminal');
+        const d = document.createElement('div');
+        d.className = 'log-line log-'+type;
+        d.innerText = `[${new Date().toLocaleTimeString('fr-FR')}] ${msg}`;
+        t.appendChild(d); t.scrollTop = t.scrollHeight;
     },
-
-    updateMainText(text) {
-        document.getElementById('mainText').innerText = text;
+    updateMain(t) { document.getElementById('mainText').innerText = t; },
+    updateSub(t) { document.getElementById('subText').innerText = t; },
+    toggleSettings() {
+        const m = document.getElementById('settingsModal');
+        m.style.display = m.style.display === 'flex' ? 'none' : 'flex';
     },
-
-    updateSubText(text) {
-        document.getElementById('subText').innerText = text;
-    },
-
-    updateStatus(active, modeName) {
-        const badge = document.getElementById('status');
-        const modeSpan = document.getElementById('sysMode');
-        
-        if (active) {
-            badge.classList.add('active');
-            badge.innerText = "ONLINE";
-            modeSpan.innerText = modeName;
-            modeSpan.style.color = 'var(--primary)';
-        } else {
-            badge.classList.remove('active');
-            badge.innerText = "OFFLINE";
-            modeSpan.innerText = "Aucun";
-            modeSpan.style.color = '#666';
-        }
-    },
-
-    // --- MODE 1 : SYSTÈME COMPLET (Audio + Visuel + IA) ---
     async startFullSystem() {
-        this.stopSystem(); // Reset propre avant de démarrer
-        
-        this.log("Démarrage Système Complet...", 'sys');
-        
-        // 1. Init Audio (Micro + Analyser)
-        const audioOk = await AudioEngine.init();
-        if (!audioOk) {
-            alert("Impossible d'accéder au micro.");
-            return;
-        }
-
-        // 2. Démarrer Visuel
+        this.stopSystem();
+        this.updateMain("DÉMARRAGE COMPLET...");
+        const ok = await AudioEngine.init();
+        if (!ok) return;
         VisualEngine.start();
-
-        // 3. Démarrer Cerveau
-        BrainEngine.startListening();
-
-        // 4. État
+        BrainEngine.start();
         this.isRunning = true;
-        this.mode = 'FULL';
-        this.updateStatus(true, "SYSTÈME COMPLET (VISUEL + IA)");
-        this.speak("Système complet activé.");
+        Config.data.isActive = true; Config.save();
+        this.log("Système Complet Actif", 'sys');
+        BrainEngine.speak("Système complet en ligne.");
     },
-
-    // --- MODE 2 : VOIX SEULE (IA Uniquement) ---
-    startVoiceOnlyMode() {
-        this.stopSystem(); // Reset propre
-
-        this.log("Activation Mode Voix Seule...", 'sys');
-        
-        // NOTE: Pas d'AudioEngine.init() ici pour éviter les conflits de micro si non utilisé
-        // Le navigateur gère le micro interne pour SpeechRecognition
-        
-        VisualEngine.start(); // On garde le visuel en mode simulation (cool factor)
-
-        BrainEngine.startListening();
-
+    async startVoiceOnlyMode(silent = false) {
+        this.stopSystem();
+        if(!silent) { this.updateMain("INITIALISATION..."); this.log("Activation Mode Voix...", 'sys'); }
+        VisualEngine.start();
+        BrainEngine.start();
         this.isRunning = true;
-        this.mode = 'VOICE_ONLY';
-        this.updateStatus(true, "MODE VOIX SEULE (IA UNIQUEMENT)");
-        this.speak("Mode voix seule activé.");
+        Config.data.isActive = true; Config.save();
+        if (!silent) BrainEngine.speak("Supra Eternity Ultra activé.");
+        else BrainEngine.speak("De retour.", 'fr', () => BrainEngine.start());
     },
-
     stopSystem() {
-        this.log("Arrêt en cours...", 'sys');
         this.isRunning = false;
-        this.mode = null;
-
-        // Arrêt de tout
         AudioEngine.destroy();
         VisualEngine.stop();
-        BrainEngine.stopListening();
+        BrainEngine.stop();
         BrainEngine.synthesis.cancel();
-
-        this.updateStatus(false, "");
-        this.updateMainText("SYSTÈME ARRÊTÉ");
-        this.updateSubText("EN ATTENTE");
-        
-        // Nettoyage visuel
-        const canvas = document.getElementById('scopeCanvas');
-        const ctx = canvas.getContext('2d');
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-    },
-
-    speak(text) {
-        BrainEngine.speak(text);
+        Config.data.isActive = false; Config.save();
+        this.updateMain("SYSTÈME ARRÊTÉ");
+        this.updateSub("EN ATTENTE");
+        const c = document.getElementById('scopeCanvas');
+        c.getContext('2d').clearRect(0,0,c.width,c.height);
     }
 };
 
-// Lancement au chargement
 window.onload = () => App.init();
-
 </script>
 </body>
 </html>
