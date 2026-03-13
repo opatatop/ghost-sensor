@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>ETERNITY LAB PRO MAX - AI GHOST BOX</title>
+<title>ETERNITY LAB PRO MAX - REAL AI</title>
 <style>
 :root {
   /* Thème par défaut */
@@ -259,7 +259,7 @@ button.active {
 <div id="header">
   <div>MIC: <span id="micStatus">OFF</span></div>
   <div>BAT: <span id="batStatus">--%</span></div>
-  <div>FREQ: <span id="freqStatus">0</span> Hz</div>
+  <div>AI: <span id="aiStatus">READY</span></div>
 </div>
 
 <!-- VISUALISATION -->
@@ -267,7 +267,7 @@ button.active {
   <video id="cameraFeed" autoplay playsinline muted></video>
   <canvas id="canvas"></canvas>
   <div id="iaBox">
-    <div id="iaLabel">IA GHOST TRANSLATOR</div>
+    <div id="iaLabel">NATIVE AI TRANSLATION</div>
     <div id="iaText">... EN ATTENTE ...</div>
   </div>
   <div id="transcriptionArea"></div>
@@ -277,11 +277,11 @@ button.active {
 <div id="controlsArea">
   <div id="barsArea">
     <div>INPUT <div class="bar-box"><div id="voiceBar" class="bar-fill"></div></div></div>
-    <div>AI GAIN <div class="bar-box"><div id="threshBar" class="bar-fill" style="width:50%; background: var(--ai-color);"></div></div></div>
+    <div>CONFIDENCE <div class="bar-box"><div id="threshBar" class="bar-fill" style="width:0%; background: var(--ai-color);"></div></div></div>
   </div>
 
   <div class="controls-section">
-    <button id="startBtn">ACTIVER SYSTÈME COMPLET</button>
+    <button id="startBtn">ACTIVER AI RÉELLE</button>
   </div>
 
   <!-- THÈMES -->
@@ -297,12 +297,12 @@ button.active {
   </div>
 
   <div class="controls-section">
-    <h3>TRADUCTION IA & AUDIO</h3>
+    <h3>AI & AUDIO (RÉEL)</h3>
     <div class="button-grid col-4">
-      <button id="monitorBtn">🎧 MIC</button>
-      <button id="ghostBoxBtn">📻 BRUIT + IA</button>
+      <button id="monitorBtn">🎧 MICRO</button>
+      <button id="ghostBoxBtn">📻 BRUIT BLANC</button>
       <button id="recBtn">⏺ REC</button>
-      <button id="evpBtn">🔮 EVP TEXT</button>
+      <button id="evpBtn">🔮 AI TEXT</button>
     </div>
   </div>
 
@@ -317,21 +317,15 @@ button.active {
   </div>
 
   <div class="controls-section">
-    <h3>RÉGLAGES IA</h3>
+    <h3>RÉGLAGES AI</h3>
     <div class="setting-group">
       <div class="setting-row">
-        <span>SENSIBILITÉ TRADUCTION</span>
-        <span id="sensitivityValue">50</span>%
-      </div>
-      <input type="range" class="slider" id="sensitivitySlider" min="1" max="100" value="50">
-    </div>
-    <div class="setting-group">
-      <div class="setting-row">
-        <span>VOLUME BRUIT (GHOST BOX)</span>
+        <span>VOLUME BRUIT (SOURCE)</span>
         <span id="volumeValue">30</span>%
       </div>
       <input type="range" class="slider" id="volumeSlider" min="0" max="100" value="30">
     </div>
+    <p style="font-size:0.6rem; color:#888;">Note: L'IA analyse le son réel. Elle peut interpréter le bruit statique comme des mots.</p>
   </div>
 
   <div class="controls-section">
@@ -350,7 +344,6 @@ button.active {
   <button class="settings-close" id="closeSettingsBtn">X</button>
   <div style="color:var(--text);">
     <h2 style="color:var(--primary);">PARAMÈTRES SYSTÈME</h2>
-    <p>Version 2.0 - Traduction Bruit vers Mots activée.</p>
     <div class="setting-group">
       <div class="setting-row">
         <span>OPACITÉ CAM</span>
@@ -378,34 +371,24 @@ function setTheme(name) {
   log(`Thème: ${name}`, 'log-suc');
 }
 
-// --- DICTIONNAIRE IA (TRADUCTION BRUIT -> MOTS) ---
-const spiritDictionary = [
-  "Esprit", "Présence", "Qui", "Ici", "Ombre", "Froid", "Silence", 
-  "Mort", "Vivant", "Aide", "Non", "Oui", "Pourquoi", "Attention", 
-  "Regarde", "Écoute", "Sauvez", "Loin", "Proche", "Porte", "Sortez", 
-  "Caché", "Peur", "Lumière", "Nom", "Âme", "Corps", "Temps", "Fin",
-  "Merci", "Douleur", "Amour", "Haine", "Enfant", "Maison", "Feu",
-  "Eau", "Terre", "Vent", "Ciel", "Nuit", "Jour", "Rêve", "Cauchemar",
-  "Voix", "Cri", "Chuchote", "Viens", "Reste", "Part", "Laisse"
-];
-
 // --- LOGIQUE PRINCIPALE ---
 const app = {
   running: false, ctx: null, analyser: null, stream: null,
-  vidStream: null, recorder: null, isRec: false, recognition: null,
+  vidStream: null, recorder: null, isRec: false, 
+  recognition: null, // API Native
   noiseNode: null, noiseGain: null, // Pour le bruit blanc
   config: {
     monitor: false, ghostBox: false, autoRec: false, evp: false,
     radar: false, cam: false, flash: false, transcribe: true,
-    sensitivity: 50, noiseVolume: 30, bgOpacity: 0
+    noiseVolume: 30, bgOpacity: 0
   },
-  dataArray: null, lastAlpha: 0
+  dataArray: null
 };
 
 const el = id => document.getElementById(id);
 const els = {
-  log: el('logZone'), mic: el('micStatus'), bat: el('batStatus'),
-  freq: el('freqStatus'), voiceBar: el('voiceBar'), iaText: el('iaText'),
+  log: el('logZone'), mic: el('micStatus'), aiStatus: el('aiStatus'),
+  voiceBar: el('voiceBar'), iaText: el('iaText'), threshBar: el('threshBar'),
   canvas: el('canvas'), camera: el('cameraFeed'),
   valMotion: el('valMotion'), boxMotion: el('boxMotion'),
   valMag: el('valMag'), boxMag: el('boxMag'),
@@ -418,88 +401,155 @@ function log(msg, t='') {
   els.log.appendChild(d); els.log.scrollTop = els.log.scrollHeight;
 }
 
-function addTranscription(text, isAI = false) {
-  const div = document.createElement('div');
-  div.className = 'transcript-item';
-  div.innerHTML = `
-    <span class="transcript-time">${new Date().toLocaleTimeString().split(' ')[0]}</span>
-    <strong>${text}</strong> ${isAI ? '<span style="font-size:0.6em; color:var(--ai-color)">[IA]</span>' : ''}
-  `;
-  els.transcriptionArea.appendChild(div);
-  els.transcriptionArea.scrollTop = els.transcriptionArea.scrollHeight;
-  els.iaText.textContent = text;
-  if(isAI) log(`IA Traduit: "${text}"`, 'log-ai');
+function addTranscription(text, confidence, isInterim) {
+  // Si c'est un résultat intérimaire (en cours de traduction), on met à jour le grand texte IA
+  // Si c'est final, on l'ajoute à l'historique
+  
+  if (isInterim) {
+    els.iaText.textContent = text;
+    els.iaText.style.color = "#aaa"; // Grisé pendant l'écoute
+  } else {
+    if(!text.trim()) return; // Ignorer les vides
+    els.iaText.textContent = text;
+    els.iaText.style.color = "#fff"; // Blanc final
+    
+    const div = document.createElement('div');
+    div.className = 'transcript-item';
+    div.innerHTML = `
+      <span class="transcript-time">${new Date().toLocaleTimeString().split(' ')[0]}</span>
+      <strong>${text}</strong> <span style="font-size:0.6em; color:var(--secondary)">[${Math.round(confidence*100)}%]</span>
+    `;
+    els.transcriptionArea.appendChild(div);
+    els.transcriptionArea.scrollTop = els.transcriptionArea.scrollHeight;
+    log(`IA Détecté: "${text}"`, 'log-ai');
+    
+    // Mise à jour barre de confiance
+    els.threshBar.style.width = (confidence * 100) + '%';
+  }
 }
 
 async function forceStart() {
   if(app.running) return;
   el('startBtn').textContent = "INITIALISATION...";
   el('startBtn').style.background = "orange";
-  log("Démarrage des capteurs et de l'IA...");
   
   try {
-    await initAudio();
+    // 1. Audio Context
+    app.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    if (app.ctx.state === 'suspended') await app.ctx.resume();
+
+    // 2. Accès Micro
+    try {
+      app.stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false }, video: false });
+      app.source = app.ctx.createMediaStreamSource(app.stream);
+      app.analyser = app.ctx.createAnalyser();
+      app.analyser.fftSize = 2048;
+      app.analyser.smoothingTimeConstant = 0.5;
+      app.dataArray = new Uint8Array(app.analyser.frequencyBinCount);
+      app.source.connect(app.analyser);
+      els.mic.textContent = "ON"; els.mic.style.color = "var(--secondary)";
+    } catch(e) { log("Micro refusé ou absent", 'log-warn'); }
+
+    // 3. Générateur de Bruit Blanc (Ghost Box Audio)
+    const bufferSize = app.ctx.sampleRate * 2; 
+    const buffer = app.ctx.createBuffer(1, bufferSize, app.ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+    
+    app.noiseNode = app.ctx.createBufferSource();
+    app.noiseNode.buffer = buffer;
+    app.noiseNode.loop = true;
+    
+    app.noiseGain = app.ctx.createGain();
+    app.noiseGain.gain.value = 0; 
+    
+    // Filtre pour que ça ressemble à une radio
+    const filter = app.ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.value = 1000;
+    filter.Q.value = 1;
+
+    app.noiseNode.connect(filter);
+    filter.connect(app.noiseGain);
+    app.noiseGain.connect(app.ctx.destination); 
+    app.noiseNode.start(0);
+
+    // 4. Initialisation de l'IA NATIVE (Web Speech API)
+    initNativeAI();
+
+    // 5. Autres capteurs
     initSensors();
+    
     app.running = true;
-    startUI("SYSTÈME ACTIF");
+    startUI("IA NATIVE ACTIVE");
+    
   } catch (err) {
-    log("Erreur: " + err.message, 'log-err');
-    app.running = true;
-    startUI("MODE SIMULATION");
+    log("Erreur critique: " + err.message, 'log-err');
   }
 }
 
-async function initAudio() {
-  app.ctx = new (window.AudioContext || window.webkitAudioContext)();
-  if (app.ctx.state === 'suspended') await app.ctx.resume();
-
-  // 1. Microphone
-  try {
-    app.stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false }, video: false });
-    app.source = app.ctx.createMediaStreamSource(app.stream);
-    app.analyser = app.ctx.createAnalyser();
-    app.analyser.fftSize = 2048;
-    app.analyser.smoothingTimeConstant = 0.5; // Plus réactif
-    app.dataArray = new Uint8Array(app.analyser.frequencyBinCount);
-    app.source.connect(app.analyser);
-    els.mic.textContent = "ON"; els.mic.style.color = "var(--secondary)";
-  } catch(e) { log("Micro inaccessible", 'log-warn'); }
-
-  // 2. Générateur de Bruit Blanc (Ghost Box Audio)
-  const bufferSize = app.ctx.sampleRate * 2; 
-  const buffer = app.ctx.createBuffer(1, bufferSize, app.ctx.sampleRate);
-  const data = buffer.getChannelData(0);
-  for (let i = 0; i < bufferSize; i++) {
-    data[i] = Math.random() * 2 - 1;
+function initNativeAI() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  
+  if (!SpeechRecognition) {
+    log("IA Native non supportée par ce navigateur", 'log-err');
+    return;
   }
-  
-  app.noiseNode = app.ctx.createBufferSource();
-  app.noiseNode.buffer = buffer;
-  app.noiseNode.loop = true;
-  
-  app.noiseGain = app.ctx.createGain();
-  app.noiseGain.gain.value = 0; // Silencieux au départ
-  
-  // Filtre passe-bas pour que ce soit moins agressif (son radio)
-  const filter = app.ctx.createBiquadFilter();
-  filter.type = 'lowpass';
-  filter.frequency.value = 1000;
 
-  app.noiseNode.connect(filter);
-  filter.connect(app.noiseGain);
-  app.noiseGain.connect(app.ctx.destination); // Vers les haut-parleurs
-  app.noiseNode.start(0);
+  app.recognition = new SpeechRecognition();
+  app.recognition.continuous = true; // Écoute en continu
+  app.recognition.interimResults = true; // Résultats en direct
+  app.recognition.lang = 'fr-FR'; // Français
 
-  // Enregistreur
-  if(app.stream) {
-    app.recorder = new MediaRecorder(app.stream);
-    app.recorder.ondataavailable = e => {
-      const blob = new Blob([e.data], {type:"audio/webm"});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url; a.download = `evp_${Date.now()}.webm`;
-      a.click(); log("Fichier audio sauvegardé", 'log-suc');
-    };
+  app.recognition.onstart = () => {
+    els.aiStatus.textContent = "LISTENING";
+    els.aiStatus.style.color = "var(--ai-color)";
+    log("IA Native: Écoute active", 'log-suc');
+  };
+
+  app.recognition.onresult = (event) => {
+    let interimTranscript = '';
+    let finalTranscript = '';
+    let confidence = 0;
+
+    for (let i = event.resultIndex; i < event.results.length; ++i) {
+      if (event.results[i].isFinal) {
+        finalTranscript += event.results[i][0].transcript;
+        confidence = event.results[i][0].confidence;
+      } else {
+        interimTranscript += event.results[i][0].transcript;
+      }
+    }
+
+    // Affichage Direct (Interim)
+    if (interimTranscript) {
+      addTranscription(interimTranscript, 0, true);
+    }
+    // Affichage Final
+    if (finalTranscript) {
+      addTranscription(finalTranscript, confidence, false);
+    }
+  };
+
+  app.recognition.onerror = (event) => {
+    if(event.error !== 'no-speech') log(`IA Err: ${event.error}`, 'log-warn');
+  };
+
+  app.recognition.onend = () => {
+    // Auto-redémarrage si le système tourne toujours (permet de garder l'IA active)
+    if (app.running && (app.config.ghostBox || app.config.evp)) {
+      try { app.recognition.start(); } catch(e) {}
+    } else {
+      els.aiStatus.textContent = "PAUSED";
+      els.aiStatus.style.color = "#888";
+    }
+  };
+
+  // Démarrage initial
+  try {
+    app.recognition.start();
+  } catch(e) {
+    log("Erreur démarrage IA (Permissions?)", 'log-warn');
   }
 }
 
@@ -513,37 +563,35 @@ function initSensors() {
     }
   });
   if (window.DeviceOrientationEvent) window.addEventListener('deviceorientation', e => {
-    if(e.alpha) { els.valMag.textContent = Math.floor(e.alpha); }
+    if(e.alpha) els.valMag.textContent = Math.floor(e.alpha);
   });
-  if ('getBattery' in navigator) navigator.getBattery().then(b => {
-    els.bat.textContent = Math.floor(b.level*100) + "%";
-  });
+  if ('getBattery' in navigator) navigator.getBattery().then(b => els.bat.textContent = Math.floor(b.level*100) + "%");
 }
 
-function triggerAlert(id, msg) {
+function triggerAlert(id) {
   const box = el(id);
-  if(!box.classList.contains('alert-sensor')) {
-    box.classList.add('alert-sensor');
-    setTimeout(()=>box.classList.remove('alert-sensor'), 500);
-  }
+  box.classList.add('alert-sensor');
+  setTimeout(()=>box.classList.remove('alert-sensor'), 500);
 }
 
 function startUI(msg) {
   el('startBtn').textContent = msg;
   el('startBtn').classList.add('active');
-  els.iaText.textContent = "ANALYSE EN COURS...";
+  els.iaText.textContent = "ÉCOUTE DU BRUIT...";
   document.querySelectorAll('#controlsArea button:not(#startBtn)').forEach(b => b.disabled = false);
   resize();
   drawLoop();
 }
 
 function stopSystem() {
+  if(app.recognition) { app.recognition.stop(); app.recognition = null; }
   if(app.ctx) app.ctx.close();
   if(app.stream) app.stream.getTracks().forEach(t=>t.stop());
   app.running = false;
   el('startBtn').classList.remove('active');
-  el('startBtn').textContent = "ACTIVER SYSTÈME";
+  el('startBtn').textContent = "ACTIVER AI RÉELLE";
   els.iaText.textContent = "INACTIF";
+  els.aiStatus.textContent = "OFF";
   document.querySelectorAll('#controlsArea button:not(#startBtn)').forEach(b => {
     b.disabled = true; b.classList.remove('active');
   });
@@ -559,8 +607,15 @@ function toggleOpt(key) {
   // GESTION DU BRUIT (GHOST BOX)
   if(key === 'ghostBox') {
     const vol = app.config[key] ? (app.config.noiseVolume / 100) : 0;
-    // Transition douce du volume
-    app.noiseGain.gain.setTargetAtTime(vol, app.ctx.currentTime, 0.5);
+    if(app.noiseGain) app.noiseGain.gain.setTargetAtTime(vol, app.ctx.currentTime, 0.5);
+  }
+
+  // GESTION IA
+  if(key === 'evp') {
+    if(app.config.evp && app.recognition) {
+      try { app.recognition.start(); } catch(e){}
+      els.aiStatus.textContent = "ACTIVE";
+    }
   }
 
   if(key === 'cam') {
@@ -579,7 +634,6 @@ function drawLoop() {
   if(!app.running) return;
   requestAnimationFrame(drawLoop);
 
-  // Analyse Audio
   let avg = 0;
   if(app.analyser) {
     app.analyser.getByteFrequencyData(app.dataArray);
@@ -587,12 +641,10 @@ function drawLoop() {
     for(let i=0; i<app.dataArray.length; i++) sum += app.dataArray[i];
     avg = sum / app.dataArray.length;
   } else {
-    // Simulation
     avg = Math.random() * 50;
     for(let i=0; i<100; i++) app.dataArray[i] = Math.random()*255;
   }
 
-  // Visualisation Canvas
   const ctx = els.canvas.getContext('2d');
   const w = els.canvas.width, h = els.canvas.height;
   ctx.fillStyle = 'rgba(0,0,0,0.2)'; ctx.fillRect(0,0,w,h);
@@ -607,27 +659,7 @@ function drawLoop() {
     x += barW + 1;
   }
 
-  // UI Updates
   els.voiceBar.style.width = Math.min(100, avg*2) + '%';
-  els.freq.textContent = Math.round(avg * 10) + " Hz";
-
-  // --- LOGIQUE IA TRADUCTION BRUIT ---
-  // Si Ghost Box ou EVP est actif, on "traduit" le bruit en mots
-  if((app.config.ghostBox || app.config.evp) && avg > 5) {
-    // Plus le bruit est fort, plus il y a de chances de "traduire"
-    // Seuil basé sur le slider de sensibilité
-    const threshold = 105 - app.config.sensitivity; // Inversé : 100 = très sensible
-    
-    if (avg > threshold && Math.random() > 0.90) {
-      const word = spiritDictionary[Math.floor(Math.random() * spiritDictionary.length)];
-      addTranscription(word, true); // true = IA Mode
-    }
-  }
-
-  if(app.config.autoRec && avg > 60 && !app.isRec && app.recorder) {
-    app.isRec = true; app.recorder.start();
-    setTimeout(()=>{ if(app.isRec) { app.recorder.stop(); app.isRec = false; } }, 3000);
-  }
 }
 
 function resize() {
@@ -637,18 +669,12 @@ function resize() {
 
 // --- EVENTS ---
 window.onload = () => {
-  log("ETERNITY LAB 2.0 - Prêt");
+  log("ETERNITY LAB 3.0 - Native AI Ready");
   document.querySelectorAll('#controlsArea button:not(#startBtn)').forEach(b => b.disabled = true);
   
-  // Sliders
-  el('sensitivitySlider').oninput = (e) => {
-    app.config.sensitivity = parseInt(e.target.value);
-    el('sensitivityValue').textContent = app.config.sensitivity;
-  };
   el('volumeSlider').oninput = (e) => {
     app.config.noiseVolume = parseInt(e.target.value);
     el('volumeValue').textContent = app.config.noiseVolume;
-    // Si Ghost Box est ON, mettre à jour le volume en temps réel
     if(app.config.ghostBox && app.noiseGain) {
       app.noiseGain.gain.setTargetAtTime(app.config.noiseVolume / 100, app.ctx.currentTime, 0.1);
     }
