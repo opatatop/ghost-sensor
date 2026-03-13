@@ -3,626 +3,510 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>EXCELLENCE - AI ULTRA</title>
+    <title>PuiSSancE MAXIMUM - ARCHITECTURE STABLE</title>
     <style>
         :root {
-            /* Thème Cyber-Or par défaut */
-            --primary: #FFD700;
-            --secondary: #00e5ff;
+            --primary: #00ffcc;
+            --secondary: #ff00ff;
             --bg: #050505;
-            --panel: #0a0a0a;
-            --text: #ffffff;
-            --danger: #ff0055;
-            --glass: rgba(20, 20, 20, 0.8);
+            --panel: #111;
+            --text: #eee;
+            --danger: #ff3333;
         }
         * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
         body {
-            margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            margin: 0; padding: 0; font-family: 'Courier New', monospace;
             background-color: var(--bg); color: var(--text);
-            display: flex; flex-direction: column; height: 100vh; overflow: hidden;
+            display: flex; flex-direction: column; height: 100vh;
         }
-
-        /* --- OVERLAY BOOT --- */
-        #bootOverlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #000; z-index: 9999; display: flex; flex-direction: column;
-            justify-content: center; align-items: center; transition: opacity 1s ease-out;
-        }
-        .boot-text { font-family: monospace; color: var(--primary); font-size: 1.2rem; margin-bottom: 20px; text-shadow: 0 0 10px var(--primary); }
-        .loader-bar { width: 200px; height: 4px; background: #333; position: relative; overflow: hidden; }
-        .loader-progress { position: absolute; top: 0; left: 0; height: 100%; background: var(--secondary); width: 0%; transition: width 0.5s; box-shadow: 0 0 10px var(--secondary); }
-
-        /* --- HEADER --- */
         header {
-            background: linear-gradient(180deg, #111, #000);
-            border-bottom: 2px solid var(--primary);
-            padding: 8px 15px; display: flex; justify-content: space-between; align-items: center;
-            box-shadow: 0 0 15px rgba(0,0,0,0.8); z-index: 100; height: 60px;
+            background: #000; border-bottom: 2px solid var(--primary);
+            padding: 10px; display: flex; justify-content: space-between; align-items: center;
         }
-        h1 { 
-            margin: 0; font-size: 1.1rem; color: var(--primary); 
-            text-shadow: 0 0 8px var(--primary); letter-spacing: 1px; text-transform: uppercase; font-weight: 900;
-        }
-        .header-controls { display: flex; gap: 8px; align-items: center; }
-        .status-pill {
-            font-size: 0.7rem; font-weight: bold; padding: 4px 10px; 
-            border: 1px solid var(--secondary); color: var(--secondary); border-radius: 20px;
-            background: rgba(0, 229, 255, 0.1); text-transform: uppercase;
-        }
-        .status-pill.active { background: var(--secondary); color: #000; box-shadow: 0 0 10px var(--secondary); }
-        
-        .icon-btn {
-            background: rgba(255,255,255,0.05); border: 1px solid var(--primary); color: var(--primary);
-            width: 36px; height: 36px; border-radius: 50%; cursor: pointer;
-            display: flex; align-items: center; justify-content: center; font-size: 1.1rem;
-            transition: 0.3s;
-        }
-        .icon-btn:active { transform: scale(0.9); background: var(--primary); color: #000; }
+        h1 { margin: 0; font-size: 1.2rem; color: var(--primary); text-shadow: 0 0 5px var(--primary); }
+        #status { font-size: 0.8rem; font-weight: bold; padding: 5px 10px; border: 1px solid var(--secondary); color: var(--secondary); }
+        #status.active { background: var(--secondary); color: #000; box-shadow: 0 0 10px var(--secondary); }
 
-        /* --- VISUALIZER --- */
-        main { flex: 1; position: relative; display: flex; flex-direction: column; background: radial-gradient(circle at center, #0f0f0f, #000); }
-        #visualizer { flex: 1; position: relative; overflow: hidden; }
+        /* ZONE PRINCIPALE */
+        main { flex: 1; position: relative; display: flex; flex-direction: column; overflow: hidden; }
+        
+        #visualizer {
+            flex: 1; background: #000; position: relative; border-bottom: 1px solid #333;
+        }
         canvas { width: 100%; height: 100%; display: block; }
         
         #displayOverlay {
-            position: absolute; bottom: 15%; left: 5%; width: 90%;
+            position: absolute; bottom: 20px; left: 0; width: 100%;
             text-align: center; pointer-events: none; z-index: 10;
         }
         #mainText {
-            font-size: 1.8rem; font-weight: 900; color: #fff;
-            background: linear-gradient(90deg, rgba(0,0,0,0.9), rgba(0,0,0,0.7)); 
-            padding: 15px; border-left: 4px solid var(--primary); border-right: 4px solid var(--primary);
-            margin-bottom: 10px; min-height: 3.5rem;
-            box-shadow: 0 0 30px rgba(0,0,0,0.8); letter-spacing: 1px;
-            text-shadow: 0 0 2px #000; backdrop-filter: blur(5px);
+            font-size: 2rem; font-weight: bold; color: #fff;
+            background: rgba(0,0,0,0.7); padding: 10px;
+            text-transform: uppercase; border: 2px solid var(--primary);
+            margin-bottom: 5px; min-height: 3rem;
         }
-        #subText { 
-            font-size: 0.75rem; color: var(--secondary); letter-spacing: 3px; 
-            text-transform: uppercase; font-weight: 700; text-shadow: 0 0 5px var(--secondary);
-        }
+        #subText { font-size: 0.8rem; color: var(--secondary); letter-spacing: 1px; }
 
-        /* --- CONTROLS --- */
+        /* CONTRÔLES */
         #controls {
-            background: var(--panel); padding: 15px; padding-bottom: 25px;
-            display: grid; gap: 12px; border-top: 1px solid #333;
+            background: var(--panel); padding: 15px;
+            display: grid; gap: 10px;
+            max-height: 40vh; overflow-y: auto;
         }
-        .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        
+        .control-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .control-row.full { grid-template-columns: 1fr; }
+
         button {
-            background: linear-gradient(180deg, #222, #111); 
-            border: 1px solid var(--primary); color: var(--primary);
-            padding: 16px; font-size: 0.85rem; font-weight: 800; cursor: pointer;
-            text-transform: uppercase; transition: 0.2s; font-family: inherit; border-radius: 6px;
-            position: relative; overflow: hidden;
+            background: #222; border: 1px solid var(--primary); color: var(--primary);
+            padding: 15px; font-size: 0.9rem; font-weight: bold; cursor: pointer;
+            text-transform: uppercase; transition: 0.2s; font-family: inherit;
         }
-        button::before {
-            content:''; position: absolute; top:0; left:-100%; width:100%; height:100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
-            transition: 0.5s;
-        }
-        button:hover::before { left: 100%; }
-        button:active { transform: scale(0.96); }
-        
-        button.primary-btn { 
-            background: var(--primary); color: #000; border: none; 
-            box-shadow: 0 0 20px var(--primary); font-size: 1rem; letter-spacing: 1px;
-        }
+        button:active { transform: scale(0.98); }
+        button.active-mode { background: var(--primary); color: #000; box-shadow: 0 0 15px var(--primary); }
         button.danger { border-color: var(--danger); color: var(--danger); }
-        button.danger:active { background: var(--danger); color: #fff; box-shadow: 0 0 15px var(--danger); }
+        button.danger:active { background: var(--danger); color: #fff; }
+        
+        .btn-ia { border-color: var(--secondary); color: var(--secondary); }
+        .btn-ia.active-mode { background: var(--secondary); color: #000; box-shadow: 0 0 15px var(--secondary); }
 
-        /* --- TERMINAL --- */
+        /* LOG */
         #terminal {
-            height: 80px; background: #000; border-top: 1px solid #333;
-            padding: 8px; font-size: 0.65rem; overflow-y: auto; 
-            color: #666; font-family: 'Courier New', monospace;
+            height: 100px; background: #000; border-top: 1px solid #333;
+            padding: 8px; font-size: 0.7rem; overflow-y: auto; color: #888; font-family: monospace;
         }
-        .log-line { margin-bottom: 2px; border-left: 2px solid #444; padding-left: 5px; opacity: 0; animation: fadeIn 0.3s forwards; }
-        .log-sys { color: #888; }
-        .log-ai { color: var(--secondary); border-color: var(--secondary); font-weight: bold; }
-        .log-cmd { color: var(--primary); border-color: var(--primary); }
-        @keyframes fadeIn { to { opacity: 1; } }
-
-        /* --- SETTINGS MODAL --- */
-        #modal {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.95); z-index: 200;
-            display: none; flex-direction: column; padding: 20px; overflow-y: auto;
-        }
-        .modal-content {
-            max-width: 500px; margin: 0 auto; width: 100%; background: #111;
-            border: 1px solid var(--primary); padding: 25px; border-radius: 10px;
-            box-shadow: 0 0 30px rgba(0,0,0,0.8);
-        }
-        .modal-title { color: var(--primary); margin-top:0; border-bottom: 1px solid #333; padding-bottom: 10px; font-weight: 300; letter-spacing: 2px; }
-        
-        .setting-group { margin-bottom: 25px; }
-        .setting-label { color: #aaa; font-size: 0.8rem; margin-bottom: 10px; display: block; text-transform: uppercase; letter-spacing: 1px; }
-        
-        .setting-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-        label { color: #fff; font-size: 0.95rem; }
-        input[type=range] { width: 50%; accent-color: var(--primary); height: 4px; background: #333; border-radius: 2px; -webkit-appearance: none; }
-        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; background: var(--primary); border-radius: 50%; cursor: pointer; }
-        
-        select {
-            background: #222; color: #fff; border: 1px solid #444; padding: 8px; width: 100%; border-radius: 4px; font-family: inherit;
-        }
-
-        .theme-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
-        .theme-btn { height: 35px; border-radius: 4px; border: 2px solid #fff; cursor: pointer; transition: 0.2s; }
-        .theme-btn:hover { transform: scale(1.1); }
-        
-        .close-btn { float: right; color: var(--danger); cursor: pointer; font-size: 1.5rem; line-height: 1; }
+        .log-line { margin-bottom: 4px; border-left: 2px solid #555; padding-left: 5px; }
+        .log-sys { color: #aaa; }
+        .log-ia { border-color: var(--secondary); color: #fff; background: #220022; }
+        .log-err { border-color: var(--danger); color: var(--danger); }
     </style>
 </head>
 <body>
 
-<!-- BOOT SEQUENCE -->
-<div id="bootOverlay">
-    <div class="boot-text">EXCELLIGENCE AI SYSTEM</div>
-    <div class="loader-bar"><div class="loader-progress" id="bootProgress"></div></div>
-</div>
-
 <header>
-    <h1>Excellence <span style="font-size:0.5em; color:var(--secondary); vertical-align: super;">ULTRA</span></h1>
-    <div class="header-controls">
-        <div id="status" class="status-pill">OFFLINE</div>
-        <button class="icon-btn" onclick="App.toggleSettings()">⚙</button>
-    </div>
+    <h1>PUISSANCE <span style="font-size:0.6em">v4.0 STABLE</span></h1>
+    <div id="status">OFFLINE</div>
 </header>
 
 <main>
     <div id="visualizer">
         <canvas id="scopeCanvas"></canvas>
         <div id="displayOverlay">
-            <div id="mainText">SYSTÈME EN VEILLE</div>
-            <div id="subText">INITIALISATION...</div>
+            <div id="mainText">SYSTÈME PRÊT</div>
+            <div id="subText">EN ATTENTE D'ORDRE</div>
         </div>
     </div>
 </main>
 
 <div id="controls">
-    <button id="mainBtn" class="primary-btn" onclick="App.toggleSystem()">⚡ DÉMARRER EXCELLENCE</button>
-    <div class="row-2">
-        <button onclick="App.say('Test audio système', true)">🔊 TEST AUDIO</button>
-        <button class="danger" onclick="App.stopSystem()">⏹ ARRÊTER TOTAL</button>
+    <div class="control-row full">
+        <button class="btn-ia" onclick="App.startVoiceOnlyMode()">🎤 MODE VOIX SEULE (IA)</button>
     </div>
-    <div style="font-size: 0.7rem; color:#444; text-align:center; margin-top:5px;">
-        CMD : "Traduis [mot] en [Anglais/Espagnol...]", "Cherche [sujet]", "Ouvre [App]"
+    <div class="control-row">
+        <button onclick="App.startFullSystem()">⚡ DÉMARRER SYSTÈME COMPLET</button>
+        <button class="danger" onclick="App.stopSystem()">⏹ ARRÊTER TOUT</button>
+    </div>
+    <div class="control-row full" style="font-size: 0.7rem; color:#666; text-align:center; border:1px solid #333; padding:5px;">
+        Système : <span id="sysMode">Aucun</span>
     </div>
 </div>
 
 <div id="terminal">
-    <div class="log-line log-sys">> Noyau Excellence Ultra chargé.</div>
-    <div class="log-line log-sys">> Modules IA : Traduction, Web, Système, Audio.</div>
-</div>
-
-<!-- MODAL SETTINGS -->
-<div id="modal">
-    <div class="modal-content">
-        <span class="close-btn" onclick="App.toggleSettings()">×</span>
-        <h2 class="modal-title">Configuration Système</h2>
-        
-        <!-- VOIX -->
-        <div class="setting-group">
-            <span class="setting-label">Synthèse Vocale</span>
-            <div class="setting-row">
-                <label>Hauteur (Pitch)</label>
-                <input type="range" id="pitch" min="0.1" max="2" step="0.1" value="0.5" oninput="Config.update('pitch', this.value)">
-            </div>
-            <div class="setting-row">
-                <label>Vitesse (Rate)</label>
-                <input type="range" id="rate" min="0.5" max="2" step="0.1" value="1.0" oninput="Config.update('rate', this.value)">
-            </div>
-            <div class="setting-row">
-                <label>Volume</label>
-                <input type="range" id="volume" min="0" max="1" step="0.1" value="1" oninput="Config.update('volume', this.value)">
-            </div>
-        </div>
-
-        <!-- TRADUCTION -->
-        <div class="setting-group">
-            <span class="setting-label">Moteur de Traduction IA</span>
-            <div class="setting-row">
-                <label>Langue par défaut</label>
-                <select id="targetLang" onchange="Config.update('targetLang', this.value)">
-                    <option value="en">Anglais (English)</option>
-                    <option value="es">Espagnol (Español)</option>
-                    <option value="de">Allemand (Deutsch)</option>
-                    <option value="it">Italien (Italiano)</option>
-                    <option value="ja">Japonais (日本語)</option>
-                    <option value="zh">Chinois (中文)</option>
-                    <option value="ru">Russe (Русский)</option>
-                </select>
-            </div>
-            <div style="font-size:0.7rem; color:#666; margin-top:5px;">
-                Dis : "Traduis bonjour en Anglais" pour utiliser ce module.
-            </div>
-        </div>
-
-        <!-- THÈME -->
-        <div class="setting-group">
-            <span class="setting-label">Interface Visuelle</span>
-            <div class="theme-grid">
-                <div class="theme-btn" style="background:#FFD700" onclick="Config.setTheme('gold')"></div>
-                <div class="theme-btn" style="background:#00e5ff" onclick="Config.setTheme('cyber')"></div>
-                <div class="theme-btn" style="background:#ff0055" onclick="Config.setTheme('red')"></div>
-                <div class="theme-btn" style="background:#00ff00" onclick="Config.setTheme('matrix')"></div>
-                <div class="theme-btn" style="background:#aa00ff" onclick="Config.setTheme('purple')"></div>
-            </div>
-        </div>
-
-        <button style="width:100%; margin-top:20px; padding:15px;" onclick="App.toggleSettings()">FERMER</button>
-    </div>
+    <div class="log-line log-sys">> Initialisation du noyau...</div>
 </div>
 
 <script>
 /**
  * =========================================================================
- * EXCELLENCE - AI ULTRA (TRADUCTION + SYSTÈME COMPLET)
+ * ARCHITECTURE EN ENTITÉS RÉELLES (Audio, Visual, Brain)
  * =========================================================================
  */
 
-// --- MODULE 1 : CONFIG & BOOT ---
-const Config = {
-    data: { 
-        pitch: 0.5, rate: 1.0, volume: 1.0, 
-        theme: 'gold', targetLang: 'en', isActive: false 
-    },
-    themes: {
-        'gold': { primary: '#FFD700', secondary: '#00e5ff' },
-        'cyber': { primary: '#00e5ff', secondary: '#ff0055' },
-        'red': { primary: '#ff0055', secondary: '#ff9900' },
-        'matrix': { primary: '#00ff00', secondary: '#008800' },
-        'purple': { primary: '#aa00ff', secondary: '#ff00ff' }
-    },
-    load() {
-        const saved = localStorage.getItem('excellence_ultra_config');
-        if (saved) this.data = { ...this.data, ...JSON.parse(saved) };
-        this.applyTheme();
-        this.updateUI();
-    },
-    save() { localStorage.setItem('excellence_ultra_config', JSON.stringify(this.data)); },
-    update(key, value) { this.data[key] = value; this.save(); },
-    setTheme(name) { this.data.theme = name; this.applyTheme(); this.save(); },
-    applyTheme() {
-        const t = this.themes[this.data.theme] || this.themes['gold'];
-        document.documentElement.style.setProperty('--primary', t.primary);
-        document.documentElement.style.setProperty('--secondary', t.secondary);
-    },
-    updateUI() {
-        document.getElementById('pitch').value = this.data.pitch;
-        document.getElementById('rate').value = this.data.rate;
-        document.getElementById('volume').value = this.data.volume;
-        document.getElementById('targetLang').value = this.data.targetLang;
-    },
-    boot() {
-        const bar = document.getElementById('bootProgress');
-        const overlay = document.getElementById('bootOverlay');
-        let w = 0;
-        const int = setInterval(() => {
-            w += 5; bar.style.width = w + '%';
-            if(w >= 100) {
-                clearInterval(int);
-                setTimeout(() => {
-                    overlay.style.opacity = '0';
-                    setTimeout(() => overlay.style.display = 'none', 1000);
-                    // Auto-start si sauvegardé
-                    if (this.data.isActive) App.start(true);
-                }, 500);
-            }
-        }, 30);
-    }
-};
-
-// --- MODULE 2 : AUDIO ENGINE (STABLE) ---
+// --- ENTITÉ 1 : MOTEUR AUDIO (Gère le micro et le contexte audio) ---
 const AudioEngine = {
-    ctx: null, stream: null, analyser: null, isInit: false,
-    
+    ctx: null,
+    stream: null,
+    analyser: null,
+    isInit: false,
+
     async init() {
-        if (this.isInit) this.destroy();
+        if (this.isInit) return true;
+        
         try {
-            const AC = window.AudioContext || window.webkitAudioContext;
-            this.ctx = new AC();
-            if (this.ctx.state === 'suspended') await this.ctx.resume();
-            this.stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            this.ctx = new AudioContext();
+            // CRUCIAL : Réveiller le contexte audio immédiatement
+            if (this.ctx.state === 'suspended') {
+                await this.ctx.resume();
+            }
+
+            this.stream = await navigator.mediaDevices.getUserMedia({ 
+                audio: { 
+                    echoCancellation: false, 
+                    noiseSuppression: false, 
+                    autoGainControl: false 
+                } 
+            });
+
             this.analyser = this.ctx.createAnalyser();
             this.analyser.fftSize = 256;
             const source = this.ctx.createMediaStreamSource(this.stream);
             source.connect(this.analyser);
+            
             this.isInit = true;
             return true;
-        } catch (e) { App.log("Erreur Audio: " + e.message, 'err'); return false; }
+        } catch (e) {
+            console.error("AudioEngine Error:", e);
+            App.log("Erreur Audio : " + e.message, 'err');
+            return false;
+        }
     },
-    
+
     getDataArray() {
         if (!this.analyser) return new Uint8Array(0);
-        const arr = new Uint8Array(this.analyser.frequencyBinCount);
-        this.analyser.getByteFrequencyData(arr);
-        return arr;
+        const array = new Uint8Array(this.analyser.frequencyBinCount);
+        this.analyser.getByteFrequencyData(array);
+        return array;
     },
-    
-    speak(text, langCode = 'fr', onEnd) {
-        window.speechSynthesis.cancel();
-        if (!text) return;
-        const u = new SpeechSynthesisUtterance(text);
-        
-        // Détection langue
-        u.lang = (langCode === 'fr') ? 'fr-FR' : langCode + '-' + langCode.toUpperCase();
-        
-        u.pitch = Config.data.pitch;
-        u.rate = Config.data.rate;
-        u.volume = Config.data.volume;
-        
-        // Sélection voix intelligente
-        const voices = window.speechSynthesis.getVoices();
-        let voice = voices.find(v => v.lang.startsWith(langCode));
-        if (!voice) voice = voices.find(v => v.lang === 'fr-FR'); // Fallback FR
-        if (!voice) voice = voices[0];
-        
-        if (voice) u.voice = voice;
-        u.onend = () => { if (onEnd) onEnd(); };
-        window.speechSynthesis.speak(u);
-    },
-    
+
     destroy() {
-        if (this.stream) this.stream.getTracks().forEach(t => t.stop());
-        if (this.ctx) this.ctx.close();
+        if (this.stream) {
+            this.stream.getTracks().forEach(track => track.stop());
+            this.stream = null;
+        }
+        if (this.ctx) {
+            this.ctx.close();
+            this.ctx = null;
+        }
+        this.analyser = null;
         this.isInit = false;
     }
 };
 
-// --- MODULE 3 : TRADUCTEUR IA (MyMemory API) ---
-const TranslatorEngine = {
-    async translate(text, targetLang) {
-        try {
-            const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=fr|${targetLang}`;
-            const res = await fetch(url);
-            const data = await res.json();
-            if (data.responseStatus === 200) {
-                return data.responseData.translatedText;
-            }
-            return null;
-        } catch (e) {
-            App.log("Erreur Traduction: " + e.message, 'err');
-            return null;
-        }
-    }
-};
-
-// --- MODULE 4 : VISUAL ---
+// --- ENTITÉ 2 : MOTEUR VISUEL (Gère le Canvas) ---
 const VisualEngine = {
-    canvas: null, ctx: null, isRunning: false, animId: null,
+    canvas: null,
+    ctx: null,
+    animationId: null,
+    isRunning: false,
+
     init() {
         this.canvas = document.getElementById('scopeCanvas');
         this.ctx = this.canvas.getContext('2d');
         this.resize();
         window.addEventListener('resize', () => this.resize());
     },
+
     resize() {
         if (this.canvas) {
             this.canvas.width = this.canvas.parentElement.clientWidth;
             this.canvas.height = this.canvas.parentElement.clientHeight;
         }
     },
-    start() { if (!this.isRunning) { this.isRunning = true; this.loop(); } },
-    stop() { this.isRunning = false; if (this.animId) cancelAnimationFrame(this.animId); },
+
+    start() {
+        if (this.isRunning) return;
+        this.isRunning = true;
+        this.loop();
+    },
+
+    stop() {
+        this.isRunning = false;
+        if (this.animationId) cancelAnimationFrame(this.animationId);
+    },
+
     loop() {
         if (!this.isRunning) return;
-        const w = this.canvas.width, h = this.canvas.height;
-        this.ctx.fillStyle = 'rgba(5, 5, 5, 0.2)';
-        this.ctx.fillRect(0,0,w,h);
-        let data = AudioEngine.isInit ? AudioEngine.getDataArray() : new Uint8Array(128).map(()=>Math.random()*10);
-        const barW = (w/data.length)*2.5;
-        let x = 0;
-        const color = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim();
-        for(let i=0; i<data.length; i++) {
-            const barH = (data[i]/255)*h;
-            this.ctx.fillStyle = color;
-            this.ctx.shadowBlur = 15; this.ctx.shadowColor = color;
-            this.ctx.fillRect(x, h-barH, barW, barH);
-            this.ctx.shadowBlur = 0;
-            x+=barW+1;
+        
+        const w = this.canvas.width;
+        const h = this.canvas.height;
+        
+        // Fond semi-transparent pour effet de traînée
+        this.ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+        this.ctx.fillRect(0, 0, w, h);
+
+        let data = new Uint8Array(0);
+        if (AudioEngine.isInit) {
+            data = AudioEngine.getDataArray();
+        } else {
+            // Simulation si pas de micro connecté (Mode Voix Seule)
+            data = new Uint8Array(128).map(() => Math.random() * 50);
         }
-        this.animId = requestAnimationFrame(()=>this.loop());
+
+        const barWidth = (w / data.length) * 2.5;
+        let x = 0;
+
+        for (let i = 0; i < data.length; i++) {
+            const barHeight = (data[i] / 255) * h;
+            
+            // Couleur dynamique
+            const r = 0;
+            const g = data[i] + 50;
+            const b = 255;
+
+            this.ctx.fillStyle = `rgb(${r},${g},${b})`;
+            this.ctx.fillRect(x, h - barHeight, barWidth, barHeight);
+            
+            x += barWidth + 1;
+        }
+
+        this.animationId = requestAnimationFrame(() => this.loop());
     }
 };
 
-// --- MODULE 5 : CERVEAU (LOGIQUE) ---
+// --- ENTITÉ 3 : CERVEAU IA (Reconnaissance et Synthèse) ---
 const BrainEngine = {
-    recognition: null, isListening: false,
+    recognition: null,
+    synthesis: window.speechSynthesis,
+    voice: null,
+    isListening: false,
 
     init() {
-        const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (!SR) return false;
-        this.recognition = new SR();
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) return false;
+
+        // Configuration de la reconnaissance
+        this.recognition = new SpeechRecognition();
         this.recognition.continuous = true;
         this.recognition.interimResults = false;
         this.recognition.lang = 'fr-FR';
 
-        this.recognition.onresult = (e) => {
-            const text = e.results[e.results.length-1][0].transcript.trim();
-            this.process(text);
+        // Gestion des résultats
+        this.recognition.onresult = (event) => {
+            const last = event.results.length - 1;
+            const text = event.results[last][0].transcript.trim();
+            this.processInput(text);
         };
+
+        // Gestion de la fin (redémarrage automatique si actif)
         this.recognition.onend = () => {
-            if (this.isListening && Config.data.isActive) {
-                setTimeout(() => { if(this.isListening) try{this.recognition.start()}catch(e){} }, 1000);
+            if (this.isListening && App.isRunning) {
+                // Petit délai pour éviter boucle infinie trop rapide
+                setTimeout(() => {
+                    if (this.isListening) try { this.recognition.start(); } catch(e){}
+                }, 500);
             }
         };
+        
+        // Gestion erreurs
+        this.recognition.onerror = (e) => {
+            if (e.error === 'not-allowed') {
+                App.log("Microphone refusé !", 'err');
+                App.stopSystem();
+            }
+        };
+
+        // Chargement voix
+        this.loadVoice();
+        window.speechSynthesis.onvoiceschanged = () => this.loadVoice();
+        
         return true;
     },
 
-    start() {
-        if (!this.recognition) return;
-        this.isListening = true;
-        try { this.recognition.start(); App.updateSub("IA ÉCOUTE"); } catch(e){}
-    },
-    stop() {
-        this.isListening = false;
-        if (this.recognition) try { this.recognition.stop(); } catch(e){}
-        App.updateSub("VEILLE");
+    loadVoice() {
+        const voices = this.synthesis.getVoices();
+        this.voice = voices.find(v => v.lang === 'fr-FR') || voices.find(v => v.lang.startsWith('fr'));
     },
 
-    async process(text) {
-        App.updateMain(text.toUpperCase());
+    startListening() {
+        if (!this.recognition) return;
+        this.isListening = true;
+        try { this.recognition.start(); } catch(e){}
+        App.updateSubText("ÉCOUTE ACTIVE...");
+    },
+
+    stopListening() {
+        this.isListening = false;
+        if (this.recognition) try { this.recognition.stop(); } catch(e){}
+        App.updateSubText("ÉCOUTE ARRÊTÉE");
+    },
+
+    speak(text) {
+        this.synthesis.cancel();
+        if (!text) return;
+        
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'fr-FR';
+        utterance.pitch = 0.6;
+        utterance.rate = 1.1;
+        if (this.voice) utterance.voice = this.voice;
+
+        utterance.onstart = () => {
+            App.updateMainText("PARLE...");
+            App.log("IA: " + text, 'ia');
+        };
+        utterance.onend = () => {
+            if (this.isListening) App.updateMainText("ÉCOUTE...");
+        };
+
+        this.synthesis.speak(utterance);
+    },
+
+    // LOGIQUE INTELLIGENTE
+    processInput(text) {
+        App.updateMainText(text.toUpperCase());
         const lower = text.toLowerCase();
 
         // 1. COMMANDE STOP
-        if (lower === 'stop' || lower === 'arrête') { this.stop(); AudioEngine.speak("Pause.", 'fr'); return; }
-        if (lower.includes('écoute')) { if(!this.isListening){ this.start(); AudioEngine.speak("À vous.", 'fr'); } return; }
+        if (lower === 'stop' || lower === 'arrête') {
+            this.isListening = false; // Flag logique
+            this.recognition.stop(); // Arrêt physique
+            this.speak("Mode pause activé.");
+            return;
+        }
 
-        // 2. TRADUCTION (NOUVEAU)
-        if (lower.includes('traduis') || lower.includes('translate')) {
-            // Extrait le texte et la langue
-            // Format: "Traduis [texte] en [langue]"
-            let parts = text.split(/ en | in |to /i);
-            let content = parts[0].replace(/traduis |translate |dis moi comment on dit /gi, '').trim();
-            let langStr = parts[1] ? parts[1].trim() : Config.data.targetLang;
-            
-            // Mapping simple des langues
-            let langCode = Config.data.targetLang;
-            if (langStr.includes('anglais')) langCode = 'en';
-            else if (langStr.includes('espagnol')) langCode = 'es';
-            else if (langStr.includes('allemand')) langCode = 'de';
-            else if (langStr.includes('italien')) langCode = 'it';
-            else if (langStr.includes('japon')) langCode = 'ja';
-
-            if (content.length > 0) {
-                this.stop(); // Pause écoute pour traduire
-                App.log(`Traduction "${content}" vers ${langCode}`, 'ai');
-                const trans = await TranslatorEngine.translate(content, langCode);
-                if (trans) {
-                    AudioEngine.speak("En " + langStr + ", cela se dit : " + trans, langCode, () => this.start());
-                } else {
-                    AudioEngine.speak("Traduction impossible.", 'fr', () => this.start());
-                }
+        // 2. COMMANDE RE ÉCOUTE
+        if (lower.includes('réécoute') || lower.includes('re écoute') || lower.includes('écoute encore')) {
+            if (!this.isListening) {
+                this.isListening = true;
+                try { this.recognition.start(); } catch(e){}
             }
+            this.speak("J'écoute à nouveau.");
             return;
         }
 
-        // 3. CONTRÔLE SYSTÈME (Intent)
-        let intent = null, intentMsg = "";
-        if (lower.includes('réglage') || lower.includes('paramètre')) { intent = "intent://#Intent;action=android.settings.SETTINGS;end"; intentMsg = "Ouverture paramètres."; }
-        else if (lower.includes('mise à jour')) { intent = "intent://#Intent;action=android.settings.DEVICE_INFO_SETTINGS;end"; intentMsg = "Ouverture mises à jour."; }
-        else if (lower.includes('youtube')) { window.open("https://www.youtube.com", '_blank'); AudioEngine.speak("YouTube ouvert.", 'fr'); return; }
+        // 3. QUESTIONS IA
+        let response = null;
 
-        if (intent) {
-            this.stop();
-            AudioEngine.speak(intentMsg, 'fr', () => {
-                Config.data.isActive = true; Config.save();
-                window.location.href = intent;
-            });
-            return;
+        if (lower.includes('qui es-tu') || lower.includes('ton nom')) {
+            response = "Je suis PuiSSancE, entité artificielle de détection spectrale.";
+        } 
+        else if (lower.includes('où') && (lower.includes('bruit') || lower.includes('esprit'))) {
+            const dirs = ["Nord", "Sud", "Est", "Ouest", "Derrière toi", "À gauche"];
+            response = "Le signal vient du " + dirs[Math.floor(Math.random() * dirs.length)] + ".";
+        }
+        else if (lower.includes('aide') || lower.includes('comment puis-je t\'aider')) {
+            response = "Tu peux me demander où est l'esprit, qui je suis, ou dire Stop pour m'arrêter.";
         }
 
-        // 4. RECHERCHE WEB
-        if (lower.includes('cherche') || lower.includes('c\'est quoi')) {
-            let q = text.replace(/cherche|c'est quoi|qui est/gi, '').trim();
-            if (q.length > 2) { this.searchWeb(q); return; }
+        // 4. RÉPONSE
+        if (response) {
+            this.speak(response);
+        } else if (this.isListening) {
+            // Par défaut : Répète si pas de commande spéciale
+            this.speak(text);
         }
-
-        // 5. DIVERS
-        let rep = null;
-        if (lower.includes('qui es-tu')) rep = "Je suis Excellence, l'intelligence artificielle ultime.";
-        else if (lower.includes('heure')) rep = `Il est ${new Date().getHours()} heures ${new Date().getMinutes()}.`;
-        else if (lower.includes('merci')) rep = "Au plaisir.";
-
-        if (rep) { AudioEngine.speak(rep, 'fr', () => this.start()); } 
-        else if (this.isListening) { AudioEngine.speak(text, 'fr', () => this.start()); }
-    },
-
-    async searchWeb(query) {
-        this.stop();
-        AudioEngine.speak("Recherche en cours.", 'fr', async () => {
-            try {
-                const url = `https://fr.wikipedia.org/w/api.php?origin=*&action=query&format=json&prop=extracts&exintro&explaintext&redirects=1&titles=${encodeURIComponent(query)}`;
-                const res = await fetch(url);
-                const data = await res.json();
-                const pageId = Object.keys(data.query.pages)[0];
-                if (pageId !== "-1") {
-                    let txt = data.query.pages[pageId].extract;
-                    let s = txt.split('.').filter(s => s.trim().length > 20);
-                    let sum = s.slice(0, 2).join('. ') + ".";
-                    AudioEngine.speak("J'ai trouvé : " + sum, 'fr', () => this.start());
-                } else throw new Error();
-            } catch (e) { AudioEngine.speak("Non trouvé.", 'fr', () => this.start()); }
-        });
     }
 };
 
-// --- APP CONTROLLER ---
+// --- ENTITÉ 4 : CONTRÔLEUR PRINCIPAL (Application) ---
 const App = {
+    isRunning: false,
+    mode: null, // 'FULL' ou 'VOICE_ONLY'
+
     init() {
-        Config.load();
         VisualEngine.init();
         BrainEngine.init();
-        Config.boot(); // Lance l'animation
+        this.log("Système initialisé. Prêt.", 'sys');
     },
 
-    toggleSettings() {
-        const m = document.getElementById('modal');
-        m.style.display = m.style.display === 'flex' ? 'none' : 'flex';
+    log(msg, type = 'sys') {
+        const term = document.getElementById('terminal');
+        const div = document.createElement('div');
+        div.className = 'log-line log-' + type;
+        div.innerText = `[${new Date().toLocaleTimeString('fr-FR')}] ${msg}`;
+        term.appendChild(div);
+        term.scrollTop = term.scrollHeight;
     },
 
-    toggleSystem() {
-        if (Config.data.isActive) this.stopSystem();
-        else this.start();
+    updateMainText(text) {
+        document.getElementById('mainText').innerText = text;
     },
 
-    start(silent = false) {
-        BrainEngine.stop();
-        AudioEngine.destroy();
-        App.updateMain("INITIALISATION...");
+    updateSubText(text) {
+        document.getElementById('subText').innerText = text;
+    },
+
+    updateStatus(active, modeName) {
+        const badge = document.getElementById('status');
+        const modeSpan = document.getElementById('sysMode');
         
-        AudioEngine.init().then(ok => {
-            if(!ok) return;
-            VisualEngine.start();
-            setTimeout(() => { // Délai sécurité Realme
-                BrainEngine.start();
-                Config.data.isActive = true;
-                Config.save();
-                this.updateStatus(true);
-                if (!silent) AudioEngine.speak("Excellence est en ligne.", 'fr');
-                else AudioEngine.speak("De retour.", 'fr', () => BrainEngine.start());
-            }, 800);
-        });
+        if (active) {
+            badge.classList.add('active');
+            badge.innerText = "ONLINE";
+            modeSpan.innerText = modeName;
+            modeSpan.style.color = 'var(--primary)';
+        } else {
+            badge.classList.remove('active');
+            badge.innerText = "OFFLINE";
+            modeSpan.innerText = "Aucun";
+            modeSpan.style.color = '#666';
+        }
+    },
+
+    // --- MODE 1 : SYSTÈME COMPLET (Audio + Visuel + IA) ---
+    async startFullSystem() {
+        this.stopSystem(); // Reset propre avant de démarrer
+        
+        this.log("Démarrage Système Complet...", 'sys');
+        
+        // 1. Init Audio (Micro + Analyser)
+        const audioOk = await AudioEngine.init();
+        if (!audioOk) {
+            alert("Impossible d'accéder au micro.");
+            return;
+        }
+
+        // 2. Démarrer Visuel
+        VisualEngine.start();
+
+        // 3. Démarrer Cerveau
+        BrainEngine.startListening();
+
+        // 4. État
+        this.isRunning = true;
+        this.mode = 'FULL';
+        this.updateStatus(true, "SYSTÈME COMPLET (VISUEL + IA)");
+        this.speak("Système complet activé.");
+    },
+
+    // --- MODE 2 : VOIX SEULE (IA Uniquement) ---
+    startVoiceOnlyMode() {
+        this.stopSystem(); // Reset propre
+
+        this.log("Activation Mode Voix Seule...", 'sys');
+        
+        // NOTE: Pas d'AudioEngine.init() ici pour éviter les conflits de micro si non utilisé
+        // Le navigateur gère le micro interne pour SpeechRecognition
+        
+        VisualEngine.start(); // On garde le visuel en mode simulation (cool factor)
+
+        BrainEngine.startListening();
+
+        this.isRunning = true;
+        this.mode = 'VOICE_ONLY';
+        this.updateStatus(true, "MODE VOIX SEULE (IA UNIQUEMENT)");
+        this.speak("Mode voix seule activé.");
     },
 
     stopSystem() {
-        Config.data.isActive = false; Config.save();
+        this.log("Arrêt en cours...", 'sys');
+        this.isRunning = false;
+        this.mode = null;
+
+        // Arrêt de tout
         AudioEngine.destroy();
         VisualEngine.stop();
-        BrainEngine.stop();
-        window.speechSynthesis.cancel();
-        this.updateStatus(false);
-        this.updateMain("SYSTÈME OFF");
-        this.updateSub("");
-    },
-    
-    say(txt) { AudioEngine.speak(txt, 'fr'); },
+        BrainEngine.stopListening();
+        BrainEngine.synthesis.cancel();
 
-    updateMain(t) { document.getElementById('mainText').innerText = t; },
-    updateSub(t) { document.getElementById('subText').innerText = t; },
-    updateStatus(active) {
-        const s = document.getElementById('status');
-        const btn = document.getElementById('mainBtn');
-        if (active) {
-            s.classList.add('active'); s.innerText="EN LIGNE";
-            btn.innerText="⚡ EXCELLENCE ACTIF";
-        } else {
-            s.classList.remove('active'); s.innerText="OFFLINE";
-            btn.innerText="⚡ DÉMARRER EXCELLENCE";
-        }
+        this.updateStatus(false, "");
+        this.updateMainText("SYSTÈME ARRÊTÉ");
+        this.updateSubText("EN ATTENTE");
+        
+        // Nettoyage visuel
+        const canvas = document.getElementById('scopeCanvas');
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
     },
-    log(msg, type='sys') {
-        const t = document.getElementById('terminal');
-        const d = document.createElement('div');
-        d.className = 'log-line log-'+type;
-        d.innerText = `[${new Date().toLocaleTimeString('fr-FR')}] ${msg}`;
-        t.appendChild(d); t.scrollTop = t.scrollHeight;
+
+    speak(text) {
+        BrainEngine.speak(text);
     }
 };
 
+// Lancement au chargement
 window.onload = () => App.init();
+
 </script>
 </body>
 </html>
