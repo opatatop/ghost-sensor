@@ -3,1403 +3,704 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ZEUS TOUT PUISSANT</title>
+    <title>PUISSANCE MAXIMUM - GHOSTBOX AI</title>
     <style>
+        /* 
+         * ==========================================
+         * CSS - THÈME TONNERRE DE ZEUS
+         * ==========================================
+         */
         :root {
-            --primary-color: #00ccff;
-            --secondary-color: #ffd700;
-            --background-color: #050510;
-            --panel-color: #0a0a20;
-            --text-color: #e0e0ff;
-            --grid-color: #1a2a3a;
-            --alert-color: #ff3333;
-            --lcd-bg: #000810;
+            --primary-color: #00ccff;      /* Bleu Néon */
+            --secondary-color: #ffd700;    /* Or Divin */
+            --alert-color: #ff3333;        /* Rouge Alerte */
+            --bg-color: #050510;           /* Noir Profond */
+            --panel-bg: #0a0a20;           /* Gris Sombre */
+            --grid-color: rgba(0, 204, 255, 0.1);
         }
 
-        * {
-            box-sizing: border-box;
-            user-select: none;
-            -webkit-tap-highlight-color: transparent;
-        }
+        * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
 
         body {
-            margin: 0;
-            padding: 0;
+            margin: 0; padding: 0;
             font-family: 'Courier New', Courier, monospace;
-            background-color: var(--background-color);
-            color: var(--text-color);
-            min-height: 100vh;
+            background-color: var(--bg-color);
+            color: #e0e0ff;
+            height: 100vh;
             display: flex;
             flex-direction: column;
-            overflow-y: auto;
-        }
-
-        header {
-            background-color: #000000;
-            border-bottom: 2px solid var(--secondary-color);
-            padding: 8px 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            backdrop-filter: blur(5px);
-            box-shadow: 0 2px 10px rgba(0,0,0,0.5);
-        }
-
-        h1 {
-            margin: 0;
-            font-size: 1.2rem;
-            color: var(--primary-color);
-            text-shadow: 0 0 10px var(--primary-color);
-        }
-
-        .status-badge {
-            padding: 4px 8px;
-            border: 1px solid var(--secondary-color);
-            border-radius: 4px;
-            color: var(--secondary-color);
-            font-weight: bold;
-            transition: all 0.3s ease;
-        }
-
-        .status-badge.active {
-            background-color: var(--secondary-color);
-            color: #000000;
-            box-shadow: 0 0 10px var(--secondary-color);
-            animation: pulse 1s infinite;
-        }
-
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.5; }
-            100% { opacity: 1; }
-        }
-
-        #sensorGrid {
-            display: grid;
-            grid-template-columns: repeat(6, 1fr);
-            gap: 2px;
-            background-color: #000000;
-            border-bottom: 1px solid var(--primary-color);
-            padding: 5px;
-            font-size: 0.65rem;
-        }
-
-        .sensor-cell {
-            background-color: var(--panel-color);
-            text-align: center;
-            padding: 6px 0;
-            border: 1px solid #222;
-        }
-
-        .sensor-label {
-            color: #666666;
-            font-size: 0.55rem;
-            display: block;
-            margin-bottom: 2px;
-        }
-
-        .sensor-value {
-            color: var(--primary-color);
-            font-weight: bold;
-            font-size: 0.9rem;
-        }
-
-        .sensor-alert {
-            background-color: #330000;
-            border-color: var(--alert-color);
-            animation: blinkRed 0.2s infinite;
-        }
-
-        @keyframes blinkRed {
-            50% { opacity: 0.5; background-color: #550000; }
-        }
-
-        #mainScope {
-            position: relative;
-            flex: 1;
-            min-height: 350px;
-            max-height: 45vh;
-            background-color: #000000;
-            border-bottom: 2px solid var(--primary-color);
             overflow: hidden;
         }
 
-        canvas {
-            width: 100%;
-            height: 100%;
-            display: block;
-        }
-
-        .grid-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image:
-                linear-gradient(var(--grid-color) 1px, transparent 1px),
-                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
-            background-size: 30px 30px;
-            pointer-events: none;
-            opacity: 0.3;
-        }
-
-        #flashOverlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: #ffffff;
-            opacity: 0;
-            pointer-events: none;
-            z-index: 5;
-        }
-
-        .flash-active {
-            animation: flashScreen 0.3s ease-out;
-        }
-
-        @keyframes flashScreen {
-            0% { opacity: 0.8; }
-            100% { opacity: 0; }
-        }
-
-        #aiOverlay {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 90%;
-            text-align: center;
-            pointer-events: none;
+        /* --- HEADER --- */
+        header {
+            background: rgba(0,0,0,0.9);
+            border-bottom: 2px solid var(--secondary-color);
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             z-index: 10;
         }
 
-        #aiText {
-            font-size: 2.2rem;
-            font-weight: 900;
-            color: #ffffff;
-            background-color: rgba(0, 0, 0, 0.8);
-            border: 2px solid var(--secondary-color);
-            padding: 12px;
-            text-transform: uppercase;
-            box-shadow: 0 0 15px var(--secondary-color);
-            min-height: 2.5rem;
-            margin-bottom: 5px;
-        }
+        h1 { margin: 0; font-size: 1rem; color: var(--primary-color); text-shadow: 0 0 8px var(--primary-color); }
+        .status { font-size: 0.7rem; color: var(--secondary-color); border: 1px solid var(--secondary-color); padding: 2px 6px; border-radius: 4px; }
 
-        #aiSub {
-            font-size: 0.75rem;
-            color: var(--primary-color);
-            letter-spacing: 2px;
-        }
-
-        #controlsArea {
-            background-color: var(--panel-color);
-            padding: 15px;
-            padding-bottom: 80px;
-        }
-
-        .control-group {
-            margin-bottom: 25px;
-            border: 1px solid #333;
-            background-color: rgba(0,0,0,0.2);
-            padding: 12px;
-            border-radius: 4px;
-        }
-
-        .group-title {
-            color: var(--secondary-color);
-            font-size: 0.75rem;
-            text-transform: uppercase;
+        /* --- ZONE CAPTEURS --- */
+        #sensorGrid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1px;
+            background: #000;
             border-bottom: 1px solid #333;
-            margin-bottom: 12px;
-            padding-bottom: 6px;
-            display: flex;
-            justify-content: space-between;
+        }
+        .sensor {
+            background: var(--panel-bg);
+            padding: 5px;
+            text-align: center;
+            font-size: 0.7rem;
+        }
+        .sensor span { display: block; color: #666; font-size: 0.6rem; }
+        .sensor div { color: var(--primary-color); font-weight: bold; }
+        .sensor.active { background: rgba(255, 51, 51, 0.2); animation: blink 0.2s infinite; }
+
+        /* --- ZONE VISUELLE (SCOPE + WEBGL) --- */
+        #visualContainer {
+            position: relative;
+            flex: 1;
+            background: #000;
+            overflow: hidden;
+            border-bottom: 2px solid var(--primary-color);
         }
 
-        .btn-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 8px;
+        canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+        
+        /* Oscilloscope (2D) au dessus */
+        #scopeCanvas { z-index: 2; pointer-events: none; opacity: 0.8; }
+        /* Spectrogramme 3D (WebGL) en fond */
+        #webglCanvas { z-index: 1; }
+
+        /* Overlay AI */
+        #aiOverlay {
+            position: absolute;
+            bottom: 20px;
+            left: 0; width: 100%;
+            text-align: center;
+            z-index: 5;
+            pointer-events: none;
+        }
+        #aiText {
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: #fff;
+            text-transform: uppercase;
+            text-shadow: 0 0 10px var(--secondary-color), 0 0 20px var(--primary-color);
+            background: rgba(0,0,0,0.6);
+            display: inline-block;
+            padding: 5px 15px;
+            border: 1px solid var(--secondary-color);
+        }
+        #aiSub { font-size: 0.8rem; color: var(--primary-color); margin-top: 5px; letter-spacing: 2px; }
+
+        /* --- CONTROLES --- */
+        #controls {
+            background: var(--panel-bg);
+            padding: 10px;
+            height: 35vh;
+            overflow-y: auto;
+            border-top: 1px solid #333;
         }
 
-        .btn-grid-2 {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-        }
+        .control-group { margin-bottom: 15px; border: 1px solid #333; padding: 8px; border-radius: 4px; }
+        .group-title { color: var(--secondary-color); font-size: 0.7rem; text-transform: uppercase; margin-bottom: 8px; border-bottom: 1px solid #333; padding-bottom: 2px;}
+
+        .btn-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+        .btn-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
 
         button {
-            background-color: #111;
-            border: 1px solid var(--primary-color);
-            color: var(--primary-color);
-            padding: 12px 5px;
-            font-family: inherit;
-            font-size: 0.7rem;
-            font-weight: bold;
-            cursor: pointer;
-            text-transform: uppercase;
-            transition: all 0.2s;
-            border-radius: 3px;
-        }
-
-        button:active {
-            transform: scale(0.98);
-        }
-
-        button.active {
-            background-color: var(--primary-color);
-            color: #000000;
-            box-shadow: 0 0 10px var(--primary-color);
-            border-color: #ffffff;
-        }
-
-        #startBtn {
-            background-color: #ffffff;
-            color: #000000;
-            font-size: 1rem;
-            padding: 16px;
-            border: 2px solid var(--secondary-color);
-        }
-
-        #stopBtn {
-            border-color: var(--alert-color);
-            color: var(--alert-color);
-            background-color: #220000;
-        }
-
-        #stopBtn.active {
-            background-color: var(--alert-color);
-            color: #ffffff;
-        }
-
-        .theme-btn {
-            width: 100%;
-            aspect-ratio: 1;
-            border-radius: 50%;
-            border: 2px solid #fff;
-            cursor: pointer;
-            box-shadow: 0 0 5px currentColor;
-        }
-
-        .slider-row {
-            display: flex;
-            align-items: center;
-            margin-bottom: 10px;
-            font-size: 0.75rem;
-        }
-
-        .slider-row label {
-            flex: 1;
-            color: #aaaaaa;
-        }
-
-        input[type="range"] {
-            flex: 2;
-            height: 4px;
-            background-color: #333;
-            -webkit-appearance: none;
+            background: #111; border: 1px solid var(--primary-color);
+            color: var(--primary-color); padding: 10px;
+            font-family: inherit; font-size: 0.7rem; font-weight: bold;
+            cursor: pointer; text-transform: uppercase;
             border-radius: 2px;
         }
+        button:active { background: var(--primary-color); color: #000; }
+        button.active { background: var(--primary-color); color: #000; box-shadow: 0 0 8px var(--primary-color); }
+        
+        #btnStart { background: var(--secondary-color); color: #000; border: none; font-size: 1rem; width: 100%; }
+        #btnStart:active { background: #fff; }
 
-        input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 16px;
-            height: 16px;
-            background-color: var(--primary-color);
-            border-radius: 50%;
-            cursor: pointer;
-            border: 1px solid #fff;
-        }
+        /* Sliders */
+        .slider-row { display: flex; align-items: center; margin-bottom: 8px; font-size: 0.7rem; }
+        .slider-row label { flex: 1; color: #aaa; }
+        input[type="range"] { flex: 2; accent-color: var(--secondary-color); }
+        .val { width: 30px; text-align: right; color: var(--secondary-color); }
 
-        .val-display {
-            width: 35px;
-            text-align: right;
-            color: var(--secondary-color);
-            font-weight: bold;
-        }
-
-        #sysTerminal {
-            height: 100px;
-            background-color: #000000;
-            border-top: 1px solid var(--primary-color);
-            padding: 8px;
-            font-size: 0.65rem;
-            overflow-y: auto;
-            color: #888888;
-            margin-top: 20px;
+        /* Terminal */
+        #terminal {
+            height: 80px; background: #000; color: #888; font-size: 0.6rem;
+            padding: 5px; overflow-y: auto; border: 1px solid #333; margin-top: 10px;
             font-family: monospace;
-            border-radius: 4px;
         }
+        .log-sys { color: #aaa; }
+        .log-ai { color: var(--secondary-color); }
+        .log-emp { color: var(--alert-color); font-weight: bold; }
 
-        .log-entry {
-            margin-bottom: 4px;
-            border-left: 2px solid transparent;
-            padding-left: 6px;
-        }
-
-        .log-sys { border-color: #666666; color: #aaaaaa; }
-        .log-ai { border-color: var(--primary-color); color: #ffffff; background-color: #002220; }
-        .log-warn { border-color: var(--alert-color); color: var(--alert-color); }
-
-        #configModal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,5,10,0.95);
-            z-index: 200;
-            display: none;
-            flex-direction: column;
-            padding: 20px;
-            overflow-y: auto;
-        }
-
-        .modal-content {
-            max-width: 600px;
-            margin: 0 auto;
-            background-color: #050a10;
-            border: 2px solid var(--secondary-color);
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.8);
-        }
-
-        .close-modal-btn {
-            float: right;
-            color: var(--alert-color);
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 1.5rem;
-            line-height: 1;
-        }
+        @keyframes blink { 50% { opacity: 0.3; } }
     </style>
 </head>
 <body>
 
     <header>
-        <h1>TOUT PUISSANT <span style="font-size:0.6em; color:var(--secondary-color)">MAXIMUM</span></h1>
-        <div>
-            <span id="sysStatus" class="status-badge">OFFLINE</span>
-        </div>
+        <h1>PUISSANCE <span style="color:var(--secondary-color)">MAXIMUM</span></h1>
+        <div id="sysStatus" class="status">OFFLINE</div>
     </header>
 
     <div id="sensorGrid">
-        <div class="sensor-cell"><span class="sensor-label">ACC X</span><span class="sensor-value" id="valAccX">0.0</span></div>
-        <div class="sensor-cell"><span class="sensor-label">ACC Y</span><span class="sensor-value" id="valAccY">0.0</span></div>
-        <div class="sensor-cell"><span class="sensor-label">ACC Z</span><span class="sensor-value" id="valAccZ">0.0</span></div>
-        <div class="sensor-cell"><span class="sensor-label">MAG X</span><span class="sensor-value" id="valMagX">0</span></div>
-        <div class="sensor-cell"><span class="sensor-label">MAG Y</span><span class="sensor-value" id="valMagY">0</span></div>
-        <div class="sensor-cell"><span class="sensor-label">MAG Z</span><span class="sensor-value" id="valMagZ">0</span></div>
+        <div class="sensor" id="sAcc"><span>ACC (G)</span><div id="valAcc">0.00</div></div>
+        <div class="sensor" id="sMag"><span>MAG (µT)</span><div id="valMag">0</div></div>
+        <div class="sensor" id="sEmp"><span>EMP DETECT</span><div id="valEmp">NON</div></div>
     </div>
 
-    <div id="mainScope">
-        <div class="grid-overlay"></div>
-        <div id="flashOverlay"></div>
+    <div id="visualContainer">
+        <!-- Canvas WebGL pour le Spectrogramme 3D -->
+        <canvas id="webglCanvas"></canvas>
+        <!-- Canvas 2D pour l'Oscilloscope -->
         <canvas id="scopeCanvas"></canvas>
+        
         <div id="aiOverlay">
             <div id="aiText">INITIALISATION...</div>
-            <div id="aiSub">SYSTEM STANDBY</div>
+            <div id="aiSub">SYSTÈME EN ATTENTE</div>
         </div>
     </div>
 
-    <div id="controlsArea">
-
+    <div id="controls">
+        <!-- Group: Alimentation -->
         <div class="control-group">
-            <div class="group-title">Thèmes Visuels & Ambiances</div>
-            <div style="display:grid; grid-template-columns: repeat(5,1fr); gap:8px;">
-                <button class="theme-btn" style="background:#00ccff; color:#00ccff" onclick="setAppTheme('zeus')">ZEUS</button>
-                <button class="theme-btn" style="background:#aa00ff; color:#aa00ff" onclick="setAppTheme('hades')">HADES</button>
-                <button class="theme-btn" style="background:#ff3300; color:#ff3300" onclick="setAppTheme('ares')">ARES</button>
-                <button class="theme-btn" style="background:#00ff00; color:#00ff00" onclick="setAppTheme('poseidon')">POSEIDON</button>
-                <button class="theme-btn" style="background:#ffffff; color:#ffffff" onclick="setAppTheme('apollo')">APOLLO</button>
+            <button id="btnStart" onclick="toggleSystem()">⚡ DÉMARRER SYSTÈME AUDIO</button>
+        </div>
+
+        <!-- Group: Modules Actifs -->
+        <div class="control-group" id="moduleControls" style="opacity:0.5; pointer-events:none;">
+            <div class="group-title">Modules Actifs</div>
+            <div class="btn-grid-4">
+                <button id="btnMic" class="active" onclick="setMod('mic')">MIC</button>
+                <button id="btnLoop" class="active" onclick="setMod('loop')">LOOP IA</button>
+                <button id="btnFilter" onclick="setMod('filter')">FILTRE</button>
+                <button id="btnGhost" class="active" onclick="setMod('ghost')">GHOST</button>
             </div>
         </div>
 
-        <div class="control-group">
-            <div class="group-title">Système d'Alimentation Principal</div>
-            <div class="btn-grid-2">
-                <button id="btnStart" onclick="startPowerSystem()">⚡ DÉMARRER PUISSANCE</button>
-                <button id="btnStop" onclick="stopPowerSystem()">⏹ ARRÊTER SYSTÈME</button>
-            </div>
-        </div>
-
-        <div class="control-group">
-            <div class="group-title">Chaîne Audio Complète (Loop)</div>
-            <div class="btn-grid">
-                <button id="btnMic" class="active" onclick="toggleAudioModule('microphone')">🎧 MICRO</button>
-                <button id="btnNoise" class="active" onclick="toggleAudioModule('noiseGenerator')">⚡ BRUIT BLANC</button>
-                <button id="btnTTS" class="active" onclick="toggleAudioModule('ttsEngine')">🔊 VOIX (LOOP)</button>
-                <button id="btnRec" class="active" onclick="toggleAudioModule('recorder')">⏺ ENREGISTREUR</button>
-            </div>
-            <p style="font-size:0.6rem; color:#666; margin-top:5px; text-align:center;">* Activez "VOIX (LOOP)" pour que le système redise ce qu'il entend.</p>
-        </div>
-
-        <div class="control-group">
-            <div class="group-title">Paramètres Rapides</div>
-
+        <!-- Group: Paramètres -->
+        <div class="control-group" id="paramControls" style="opacity:0.5; pointer-events:none;">
+            <div class="group-title">Traitement Signal & Synthèse</div>
+            
             <div class="slider-row">
-                <label>Volume Voix (Sortie)</label>
-                <input type="range" id="sliderVoiceVol" min="0" max="1" step="0.1" value="1.0" oninput="updateLiveConfig('voiceVolume', this.value)">
-                <span class="val-display" id="dispVoiceVol">1.0</span>
+                <label>Seuil Energie</label>
+                <input type="range" id="threshSlider" min="0" max="100" value="15" oninput="updateParam('threshold', this.value)">
+                <span class="val" id="dispThresh">15</span>
+            </div>
+            
+            <div class="slider-row">
+                <label>Sensibilité Ghost</label>
+                <input type="range" id="ghostSlider" min="0" max="100" value="50" oninput="updateParam('ghostSens', this.value)">
+                <span class="val" id="dispGhost">50</span>
             </div>
 
             <div class="slider-row">
-                <label>Hauteur (Grave/Aigu)</label>
-                <input type="range" id="sliderPitch" min="0.1" max="2" step="0.1" value="0.6" oninput="updateLiveConfig('voicePitch', this.value)">
-                <span class="val-display" id="dispPitch">0.6</span>
-            </div>
-
-            <div class="slider-row">
-                <label>Volume Bruit (Bruit Blanc)</label>
-                <input type="range" id="sliderNoiseVol" min="0" max="100" step="1" value="50" oninput="updateLiveConfig('noiseVolume', this.value)">
-                <span class="val-display" id="dispNoiseVol">50</span>
+                <label>Volume Voix (TTS)</label>
+                <input type="range" id="volSlider" min="0" max="100" value="80" oninput="updateParam('volume', this.value)">
+                <span class="val" id="dispVol">80</span>
             </div>
         </div>
 
-        <div class="control-group">
-            <div class="group-title">Détection et Analyse</div>
-            <div class="btn-grid">
-                <button id="btnFreq" class="active" onclick="toggleAudioModule('frequencyAnalysis')">📊 40 BANDES</button>
-                <button id="btnEMF" class="active" onclick="toggleAudioModule('emfDetection')">🔋 DÉTECTION ÉNERGIE</button>
-                <button id="btnPattern" class="active" onclick="toggleAudioModule('patternDetection')">🔍 PATTERNS</button>
-                <button id="btnParanormal" class="active" onclick="toggleAudioModule('paranormalFilter')">👻 FILTRE PARANORMAL</button>
-            </div>
-        </div>
-
-        <div class="control-group">
-            <div class="group-title">Traduction des Bruits</div>
-            <div class="btn-grid">
-                <button id="btnMagnetic" class="active" onclick="toggleAudioModule('magneticDetection')">🧲 MAGNÉTIQUE</button>
-                <button id="btnEnergy" class="active" onclick="toggleAudioModule('energyDetection')">⚡ ÉNERGIE</button>
-                <button id="btnDeaf" class="active" onclick="toggleAudioModule('deafDetection')">🔇 SOURD</button>
-                <button id="btnAll" class="active" onclick="toggleAudioModule('allDetection')">🔊 TOUS</button>
-            </div>
-        </div>
-
-        <div class="control-group">
-            <button id="btnSettings" style="width:100%" onclick="openConfigModal()">⚙ PARAMÈTRES AVANCÉS & STOCKAGE</button>
-        </div>
-
-        <div id="sysTerminal">
-            <div class="log-entry log-sys">> Système initialisé. En attente de commande.</div>
+        <div id="terminal">
+            <div class="log-sys">> Prêt. Appuyez sur DÉMARRER.</div>
         </div>
     </div>
 
-    <div id="configModal">
-        <div class="modal-content">
-            <span class="close-modal-btn" onclick="closeConfigModal()">×</span>
-            <h2 style="color:var(--primary-color); margin-top:0; border-bottom:1px solid #333; padding-bottom:10px;">Configuration Système Complète</h2>
-
-            <div style="margin-bottom:20px;">
-                <h4 style="color:#fff; margin:10px 0; border-bottom:1px solid #222;">Traitement du Signal Audio</h4>
-                <div class="slider-row">
-                    <label>Taille FFT (Précision)</label>
-                    <select id="cfgFFT" style="flex:2; background:#000; color:#fff; border:1px solid #444;" onchange="updateLiveConfig('fftSize', this.value)">
-                        <option value="512">512 (Ultra Rapide)</option>
-                        <option value="1024">1024 (Rapide)</option>
-                        <option value="2048">2048 (Standard)</option>
-                        <option value="4096" selected>4096 (Haute Précision)</option>
-                        <option value="8192">8192 (Ultra)</option>
-                    </select>
-                </div>
-                <div class="slider-row">
-                    <label>Lissage (Smoothing)</label>
-                    <input type="range" id="cfgSmooth" min="0.1" max="0.95" step="0.05" value="0.8" oninput="updateLiveConfig('smoothing', this.value)">
-                    <span class="val-display" id="dispSmooth">0.8</span>
-                </div>
-            </div>
-
-            <div style="margin-bottom:20px;">
-                <h4 style="color:#fff; margin:10px 0; border-bottom:1px solid #222;">Moteur d'Intelligence Artificielle (IA)</h4>
-                <div class="slider-row">
-                    <label>Vitesse de Parole</label>
-                    <input type="range" id="cfgRate" min="0.5" max="2" step="0.1" value="1.1" oninput="updateLiveConfig('speechRate', this.value)">
-                    <span class="val-display" id="dispRate">1.1</span>
-                </div>
-                <div class="slider-row">
-                    <label>Seuil de Confiance</label>
-                    <input type="range" id="cfgConf" min="0" max="1" step="0.1" value="0.3" oninput="updateLiveConfig('confidenceThreshold', this.value)">
-                    <span class="val-display" id="dispConf">0.3</span>
-                </div>
-                <p style="font-size:0.65rem; color:#888; line-height:1.4;">
-                    * Si le seuil est à 0.0, l'IA traduit et redit ABSOLUMENT TOUT, y compris les bruits parasites et le magnétisme interprété.
-                </p>
-            </div>
-
-            <button id="btnSaveConfig" style="width:100%; padding:18px; background:var(--secondary-color); color:#000; font-weight:bold; border:none; font-size:1.1rem; border-radius:4px;" onclick="saveSystemConfiguration()">
-                💾 SAUVEGARDER DÉFINITIVEMENT LA CONFIGURATION
-            </button>
-        </div>
-    </div>
-
+    <!-- SCRIPT PRINCIPAL -->
     <script>
-        /**
-         * =========================================================================
-         * TOUT PUISSANT - MOTEUR JAVASCRIPT COMPLET
-         * =========================================================================
-         */
-
-        // --- 1. DÉFINITION DES THÈMES ---
-        const AVAILABLE_THEMES = {
-            'zeus': { primary: '#00ccff', secondary: '#ffd700' },
-            'hades': { primary: '#aa00ff', secondary: '#ff0000' },
-            'ares': { primary: '#ff3300', secondary: '#ffff00' },
-            'poseidon': { primary: '#00ff00', secondary: '#00aaff' },
-            'apollo': { primary: '#ffffff', secondary: '#ffaa00' }
-        };
-
-        // --- 2. CONFIGURATION PAR DÉFAUT ---
-        const DEFAULT_SYSTEM_CONFIG = {
-            // États des modules (tous activés par défaut)
-            microphone: true,
-            noiseGenerator: true,
-            ttsEngine: true,
-            recorder: true,
-            frequencyAnalysis: true,
-            emfDetection: true,
-            patternDetection: true,
-            paranormalFilter: true,
-            magneticDetection: true,
-            energyDetection: true,
-            deafDetection: true,
-            allDetection: true,
-
-            // Paramètres Audio
-            voiceVolume: 1.0,
-            voicePitch: 0.6,
-            speechRate: 1.1,
-            noiseVolume: 50,
-
-            // Paramètres Analyse
+        // --- 1. CONFIGURATION & ÉTAT ---
+        const CONFIG = {
             fftSize: 4096,
             smoothing: 0.8,
-            confidenceThreshold: 0.3,
-
-            // Visuel
-            currentTheme: 'zeus'
+            bandsCount: 40, // Bandes de fréquences analysées
+            ghostWords: [
+                "énergie", "magnétique", "présence", "esprit", "qui est là", "obscurité", 
+                "aidez-moi", "sortez", "sueur froide", "vision", "passage", "onde",
+                "fréquence", "porte", "entre deux mondes", "silence", "écoute", "thêta",
+                "alpha", "impulsion", "écho", "tempête", " Zeus", "foudre"
+            ]
         };
 
-        // --- 3. OBJET PRINCIPAL DE L'APPLICATION ---
-        const POWER_SYSTEM = {
+        const STATE = {
             isRunning: false,
-
-            // Contexte Audio Web
-            audioContext: null,
-            microphoneSource: null,
-            analyserNode: null,
+            modules: { mic: true, loop: true, filter: false, ghost: true },
+            params: { threshold: 15, ghostSens: 50, volume: 0.8 },
+            audioCtx: null,
+            micSource: null,
+            analyser: null,
             gainNode: null,
-
-            // Générateurs de bruit
-            noiseSource: null,
-            noiseGainNode: null,
-
-            // Flux & Enregistrement
-            mediaStream: null,
-            mediaRecorder: null,
-            isRecording: false,
-
-            // Reconnaissance Vocale (STT) et Synthèse (TTS)
-            speechRecognition: null,
-            speechSynthesis: window.speechSynthesis,
-
-            // Données Visuelles
-            frequencyData: null,
-            timeDomainData: null,
-            peakDataArray: [],
-
-            // Configuration Courante
-            config: { ...DEFAULT_SYSTEM_CONFIG },
-
-            // Dictionnaire de traduction des bruits
-            soundDictionary: {
-                "low_rumble": { text: "Bruit sourd détecté", threshold: 0.2, lastTriggered: 0 },
-                "magnetic": { text: "Champ magnétique", threshold: 0.5, lastTriggered: 0 },
-                "energy": { text: "Énergie détectée", threshold: 0.3, lastTriggered: 0 },
-                "patterns": {
-                    "oui": { frequencies: [100, 200, 300], threshold: 0.7, lastTriggered: 0 },
-                    "non": { frequencies: [400, 500, 600], threshold: 0.7, lastTriggered: 0 },
-                    "danger": { frequencies: [700, 800, 900], threshold: 0.7, lastTriggered: 0 }
-                },
-
-            // Données des capteurs
-            sensorData: {
-                accX: 0,
-                accY: 0,
-                accZ: 0,
-                magX: 0,
-                magY: 0,
-                magZ: 0,
-                lastEMFEvent: 0
-            },
-
-            // Effets audio
-            effects: {
-                reverb: null,
-                delay: null,
-                distortion: null
-            }
+            recognition: null,
+            synthesis: window.speechSynthesis,
+            lastSpeechTime: 0,
+            micLevel: 0
         };
 
-        // --- 4. FONCTIONS UTILITAIRES ---
+        // --- 2. WEBGL ENGINE (Spectrogramme 3D) ---
+        // Un moteur WebGL simple pour dessiner des barres de fréquence en 3D
+        const GL = {
+            canvas: document.getElementById('webglCanvas'),
+            gl: null,
+            program: null,
+            positionLocation: null,
+            colorLocation: null,
+            matrixLocation: null,
+            count: 0
+        };
 
-        function getEl(id) {
-            return document.getElementById(id);
+        function initWebGL() {
+            const gl = GL.canvas.getContext('webgl');
+            if (!gl) { log("WebGL non supporté", "sys"); return; }
+            GL.gl = gl;
+
+            // Shaders simples
+            const vs = `
+                attribute vec4 a_position;
+                attribute vec4 a_color;
+                uniform mat4 u_matrix;
+                varying vec4 v_color;
+                void main() { gl_Position = u_matrix * a_position; v_color = a_color; gl_PointSize = 4.0; }
+            `;
+            const fs = `
+                precision mediump float;
+                varying vec4 v_color;
+                void main() { gl_FragColor = v_color; }
+            `;
+
+            const program = createProgram(gl, vs, fs);
+            GL.program = program;
+            GL.positionLocation = gl.getAttribLocation(program, "a_position");
+            GL.colorLocation = gl.getAttribLocation(program, "a_color");
+            GL.matrixLocation = gl.getUniformLocation(program, "u_matrix");
         }
 
-        function logMessage(message, type = 'sys') {
-            const terminal = getEl('sysTerminal');
-            const logEntry = document.createElement('div');
-            logEntry.className = 'log-entry log-' + type;
-
-            const timestamp = new Date().toLocaleTimeString('fr-FR', { hour12: false });
-            logEntry.innerText = `[${timestamp}] > ${message}`;
-
-            terminal.appendChild(logEntry);
-            terminal.scrollTop = terminal.scrollHeight;
+        function createProgram(gl, vs, fs) {
+            const p = gl.createProgram();
+            const v = gl.createShader(gl.VERTEX_SHADER);
+            const f = gl.createShader(gl.FRAGMENT_SHADER);
+            gl.shaderSource(v, vs); gl.compileShader(v);
+            gl.shaderSource(f, fs); gl.compileShader(f);
+            gl.attachShader(p, v); gl.attachShader(p, f);
+            gl.linkProgram(p);
+            return p;
         }
 
-        function setAppTheme(themeName) {
-            const theme = AVAILABLE_THEMES[themeName];
-            if (!theme) return;
-
-            const root = document.documentElement;
-            root.style.setProperty('--primary-color', theme.primary);
-            root.style.setProperty('--secondary-color', theme.secondary);
-
-            POWER_SYSTEM.config.currentTheme = themeName;
-            logMessage(`Thème visuel changé : ${themeName.toUpperCase()}`, 'sys');
-            saveSystemConfiguration();
+        // Matrice de projection simple (Perspective)
+        function makeProjection(w, h) {
+            const fov = 60 * Math.PI / 180;
+            const aspect = w / h;
+            const near = 1;
+            const far = 2000;
+            const f = Math.tan(Math.PI * 0.5 - 0.5 * fov);
+            const rangeInv = 1.0 / (near - far);
+            return [
+                f / aspect, 0, 0, 0,
+                0, f, 0, 0,
+                0, 0, (near + far) * rangeInv, -1,
+                0, 0, near * far * rangeInv * 2, 0
+            ];
         }
 
-        function loadSystemConfiguration() {
-            const savedData = localStorage.getItem('TOUT_PUISSANT_Config');
-            if (savedData) {
-                try {
-                    const parsedConfig = JSON.parse(savedData);
-                    POWER_SYSTEM.config = { ...DEFAULT_SYSTEM_CONFIG, ...parsedConfig };
-                    logMessage("Configuration chargée depuis la mémoire persistante.", 'sys');
-                } catch (error) {
-                    logMessage("Erreur lors du chargement de la config.", 'warn');
-                }
-            }
-            updateAllUIElements();
-            setAppTheme(POWER_SYSTEM.config.currentTheme);
-        }
+        // --- 3. SYSTÈME AUDIO & IA ---
 
-        function saveSystemConfiguration() {
-            try {
-                localStorage.setItem('TOUT_PUISSANT_Config', JSON.stringify(POWER_SYSTEM.config));
-                logMessage("Configuration sauvegardée avec succès.", 'sys');
-            } catch (error) {
-                logMessage("Erreur de sauvegarde : " + error.message, 'warn');
-            }
-        }
-
-        function updateAllUIElements() {
-            updateSliderUI('sliderVoiceVol', 'dispVoiceVol', POWER_SYSTEM.config.voiceVolume);
-            updateSliderUI('sliderPitch', 'dispPitch', POWER_SYSTEM.config.voicePitch);
-            updateSliderUI('sliderNoiseVol', 'dispNoiseVol', POWER_SYSTEM.config.noiseVolume);
-            updateSliderUI('cfgSmooth', 'dispSmooth', POWER_SYSTEM.config.smoothing);
-            updateSliderUI('cfgRate', 'dispRate', POWER_SYSTEM.config.speechRate);
-            updateSliderUI('cfgConf', 'dispConf', POWER_SYSTEM.config.confidenceThreshold);
-
-            getEl('cfgFFT').value = POWER_SYSTEM.config.fftSize;
-
-            // Mise à jour de tous les boutons
-            Object.keys(POWER_SYSTEM.config).forEach(key => {
-                if (key.endsWith('Detection') || key.endsWith('Filter') || key === 'microphone' || key === 'noiseGenerator' || key === 'ttsEngine' || key === 'recorder') {
-                    toggleButtonVisual('btn' + key.charAt(0).toUpperCase() + key.slice(1), POWER_SYSTEM.config[key]);
-                }
-            });
-        }
-
-        function updateSliderUI(inputId, displayId, value) {
-            const input = getEl(inputId);
-            const display = getEl(displayId);
-            if (input) input.value = value;
-            if (display) display.innerText = value;
-        }
-
-        function toggleButtonVisual(btnId, isActive) {
-            const btn = getEl(btnId);
-            if (isActive) {
-                btn.classList.add('active');
+        async function toggleSystem() {
+            if (STATE.isRunning) {
+                stopSystem();
             } else {
-                btn.classList.remove('active');
+                await startSystem();
             }
         }
 
-        function updateLiveConfig(key, value) {
-            const numValue = parseFloat(value);
-            POWER_SYSTEM.config[key] = numValue;
-
-            if (key === 'noiseVolume') applyNoiseVolume();
-            else if (key === 'smoothing' && POWER_SYSTEM.analyserNode) POWER_SYSTEM.analyserNode.smoothingTimeConstant = numValue;
-
-            const map = {
-                'voiceVolume': 'dispVoiceVol',
-                'voicePitch': 'dispPitch',
-                'noiseVolume': 'dispNoiseVol',
-                'smoothing': 'dispSmooth',
-                'speechRate': 'dispRate',
-                'confidenceThreshold': 'dispConf'
-            };
-            if (map[key]) getEl(map[key]).innerText = numValue;
-        }
-
-        function toggleAudioModule(moduleName) {
-            POWER_SYSTEM.config[moduleName] = !POWER_SYSTEM.config[moduleName];
-            const stateText = POWER_SYSTEM.config[moduleName] ? "ACTIVÉ" : "DÉSACTIVÉ";
-            logMessage(`Module ${moduleName.toUpperCase()} : ${stateText}`, 'sys');
-
-            toggleButtonVisual('btn' + moduleName.charAt(0).toUpperCase() + moduleName.slice(1), POWER_SYSTEM.config[moduleName]);
-
-            if (moduleName === 'noiseGenerator') applyNoiseVolume();
-            else if (moduleName === 'recorder') handleRecordingState();
-            else if (moduleName === 'paranormalFilter') applyParanormalFilter();
-        }
-
-        function applyNoiseVolume() {
-            if (!POWER_SYSTEM.noiseGainNode) return;
-            const targetVolume = POWER_SYSTEM.config.noiseGenerator ? (POWER_SYSTEM.config.noiseVolume / 100) : 0;
-            POWER_SYSTEM.noiseGainNode.gain.setTargetAtTime(targetVolume, POWER_SYSTEM.audioContext.currentTime, 0.1);
-        }
-
-        function applyParanormalFilter() {
-            if (!POWER_SYSTEM.audioContext || !POWER_SYSTEM.microphoneSource || !POWER_SYSTEM.analyserNode) return;
-
-            // Création d'un filtre passe-bande pour l'effet paranormal
-            if (POWER_SYSTEM.config.paranormalFilter) {
-                if (!POWER_SYSTEM.effects.paranormalFilter) {
-                    POWER_SYSTEM.effects.paranormalFilter = POWER_SYSTEM.audioContext.createBiquadFilter();
-                    POWER_SYSTEM.effects.paranormalFilter.type = "bandpass";
-                    POWER_SYSTEM.effects.paranormalFilter.frequency.value = 1000;
-                    POWER_SYSTEM.effects.paranormalFilter.Q.value = 2;
-
-                    // Connexion du filtre
-                    POWER_SYSTEM.microphoneSource.disconnect();
-                    POWER_SYSTEM.microphoneSource.connect(POWER_SYSTEM.effects.paranormalFilter);
-                    POWER_SYSTEM.effects.paranormalFilter.connect(POWER_SYSTEM.analyserNode);
-                }
-            } else {
-                if (POWER_SYSTEM.effects.paranormalFilter) {
-                    POWER_SYSTEM.microphoneSource.disconnect();
-                    POWER_SYSTEM.microphoneSource.connect(POWER_SYSTEM.analyserNode);
-                    POWER_SYSTEM.effects.paranormalFilter = null;
-                }
-            }
-        }
-
-        function handleRecordingState() {
-            if (!POWER_SYSTEM.mediaRecorder) return;
-
-            if (POWER_SYSTEM.config.recorder && !POWER_SYSTEM.isRecording) {
-                try {
-                    POWER_SYSTEM.mediaRecorder.start();
-                    POWER_SYSTEM.isRecording = true;
-                    logMessage("Enregistrement démarré.", 'sys');
-                } catch (e) {
-                    logMessage("Erreur démarrage enregistrement: " + e.message, 'warn');
-                }
-            } else if (!POWER_SYSTEM.config.recorder && POWER_SYSTEM.isRecording) {
-                POWER_SYSTEM.mediaRecorder.stop();
-                POWER_SYSTEM.isRecording = false;
-                logMessage("Enregistrement arrêté.", 'sys');
-            }
-        }
-
-        // --- 5. MOTEUR AUDIO PRINCIPAL (START/STOP) ---
-
-        async function startPowerSystem() {
-            if (POWER_SYSTEM.isRunning) {
-                logMessage("Le système est déjà en cours d'exécution.", 'warn');
-                return;
-            }
-
-            const startBtn = getEl('btnStart');
-            startBtn.innerText = "INITIALISATION...";
-            startBtn.disabled = true;
-            logMessage("Initialisation des sous-systèmes...", 'sys');
-
+        async function startSystem() {
+            const btn = document.getElementById('btnStart');
+            btn.innerText = "INITIALISATION...";
+            
             try {
-                // 1. Création du Contexte Audio
-                const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-                POWER_SYSTEM.audioContext = new AudioContextClass();
+                // Contexte Audio
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                STATE.audioCtx = new AudioContext();
+                
+                // Microphone
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } 
+                });
+                STATE.micSource = STATE.audioCtx.createMediaStreamSource(stream);
 
-                // Vérification de l'état du contexte audio
-                if (POWER_SYSTEM.audioContext.state === 'suspended') {
-                    await POWER_SYSTEM.audioContext.resume();
-                    logMessage("Contexte audio repris avec succès.", 'sys');
-                }
+                // Analyseur
+                STATE.analyser = STATE.audioCtx.createAnalyser();
+                STATE.analyser.fftSize = CONFIG.fftSize;
+                STATE.analyser.smoothingTimeConstant = CONFIG.smoothing;
+                STATE.micSource.connect(STATE.analyser);
 
-                // 2. Configuration du Microphone
-                try {
-                    logMessage("Demande d'accès au microphone...", 'sys');
-                    POWER_SYSTEM.mediaStream = await navigator.mediaDevices.getUserMedia({
-                        audio: {
-                            echoCancellation: false,
-                            noiseSuppression: false,
-                            autoGainControl: false
-                        },
-                        video: false
-                    });
+                // Gain (Volume In)
+                STATE.gainNode = STATE.audioCtx.createGain();
+                STATE.micSource.connect(STATE.gainNode);
 
-                    POWER_SYSTEM.microphoneSource = POWER_SYSTEM.audioContext.createMediaStreamSource(POWER_SYSTEM.mediaStream);
-                    POWER_SYSTEM.gainNode = POWER_SYSTEM.audioContext.createGain();
-                    POWER_SYSTEM.gainNode.gain.value = 1.0;
+                // Initialisation IA (Speech Recognition)
+                initAI();
 
-                    POWER_SYSTEM.analyserNode = POWER_SYSTEM.audioContext.createAnalyser();
-                    POWER_SYSTEM.analyserNode.fftSize = POWER_SYSTEM.config.fftSize;
-                    POWER_SYSTEM.analyserNode.smoothingTimeConstant = POWER_SYSTEM.config.smoothing;
+                // UI Updates
+                STATE.isRunning = true;
+                document.getElementById('sysStatus').innerText = "ONLINE";
+                document.getElementById('sysStatus').style.background = "var(--secondary-color)";
+                document.getElementById('sysStatus').style.color = "#000";
+                document.getElementById('moduleControls').style.opacity = "1";
+                document.getElementById('moduleControls').style.pointerEvents = "auto";
+                document.getElementById('paramControls').style.opacity = "1";
+                document.getElementById('paramControls').style.pointerEvents = "auto";
+                btn.innerText = "⏹ ARRÊTER SYSTÈME";
+                btn.style.background = "var(--alert-color)";
+                btn.style.color = "#fff";
 
-                    // Connexion initiale
-                    POWER_SYSTEM.microphoneSource.connect(POWER_SYSTEM.gainNode);
-                    POWER_SYSTEM.gainNode.connect(POWER_SYSTEM.analyserNode);
+                log("Système Démarré. FFT 4096 actif.", "sys");
 
-                    const bufferLength = POWER_SYSTEM.analyserNode.frequencyBinCount;
-                    POWER_SYSTEM.frequencyData = new Uint8Array(bufferLength);
-                    POWER_SYSTEM.timeDomainData = new Uint8Array(bufferLength);
-                    POWER_SYSTEM.peakDataArray = new Uint8Array(bufferLength).fill(0);
+                // Démarrage Boucles Visuelles
+                initWebGL();
+                resizeCanvas();
+                requestAnimationFrame(renderLoop);
+                startSensors();
 
-                    logMessage("Microphone connecté et analysé.", 'sys');
-                } catch (micError) {
-                    logMessage("ERREUR CRITIQUE: Accès micro refusé. " + micError.message, 'warn');
-                    throw micError; // Rejeter la promesse pour arrêter le démarrage
-                }
-
-                // 3. Générateur de Bruit Blanc
-                logMessage("Initialisation du générateur de bruit...", 'sys');
-                const bufferSize = POWER_SYSTEM.audioContext.sampleRate * 2;
-                const noiseBuffer = POWER_SYSTEM.audioContext.createBuffer(1, bufferSize, POWER_SYSTEM.audioContext.sampleRate);
-                const outputData = noiseBuffer.getChannelData(0);
-
-                for (let i = 0; i < bufferSize; i++) {
-                    outputData[i] = Math.random() * 2 - 1;
-                }
-
-                POWER_SYSTEM.noiseSource = POWER_SYSTEM.audioContext.createBufferSource();
-                POWER_SYSTEM.noiseSource.buffer = noiseBuffer;
-                POWER_SYSTEM.noiseSource.loop = true;
-
-                POWER_SYSTEM.noiseGainNode = POWER_SYSTEM.audioContext.createGain();
-                POWER_SYSTEM.noiseGainNode.gain.value = POWER_SYSTEM.config.noiseVolume / 100;
-
-                const noiseFilter = POWER_SYSTEM.audioContext.createBiquadFilter();
-                noiseFilter.type = 'bandpass';
-                noiseFilter.frequency.value = 1000;
-                noiseFilter.Q.value = 1.0;
-
-                POWER_SYSTEM.noiseSource.connect(noiseFilter);
-                noiseFilter.connect(POWER_SYSTEM.noiseGainNode);
-                POWER_SYSTEM.noiseGainNode.connect(POWER_SYSTEM.audioContext.destination);
-
-                POWER_SYSTEM.noiseSource.start(0);
-                logMessage("Générateur de bruit prêt.", 'sys');
-
-                // 4. Enregistreur
-                if (POWER_SYSTEM.mediaStream) {
-                    try {
-                        POWER_SYSTEM.mediaRecorder = new MediaRecorder(POWER_SYSTEM.mediaStream);
-
-                        POWER_SYSTEM.mediaRecorder.ondataavailable = function(event) {
-                            const audioBlob = new Blob([event.data], { type: 'audio/webm' });
-                            const audioUrl = URL.createObjectURL(audioBlob);
-
-                            const downloadLink = document.createElement('a');
-                            downloadLink.href = audioUrl;
-                            downloadLink.download = `TOUT_PUISSANT_Rec_${Date.now()}.webm`;
-                            document.body.appendChild(downloadLink);
-                            downloadLink.click();
-                            document.body.removeChild(downloadLink);
-
-                            logMessage("Fichier audio sauvegardé.", 'sys');
-                        };
-
-                        POWER_SYSTEM.mediaRecorder.onstop = function() {
-                            POWER_SYSTEM.isRecording = false;
-                        };
-
-                        logMessage("Enregistreur initialisé.", 'sys');
-                    } catch (recError) {
-                        logMessage("Enregistreur non disponible: " + recError.message, 'warn');
-                    }
-                }
-
-                // 5. Initialisation de l'IA
-                initSpeechToTextEngine();
-
-                // 6. Démarrage des boucles
-                startVisualLoop();
-                startSensorsMonitoring();
-
-                // 7. État Final
-                POWER_SYSTEM.isRunning = true;
-                startBtn.classList.add('active');
-                startBtn.innerText = "SYSTÈME ACTIF";
-                startBtn.disabled = false;
-
-                getEl('sysStatus').classList.add('active');
-                getEl('sysStatus').innerText = "ONLINE";
-                getEl('aiText').innerText = "ÉCOUTE ACTIVE...";
-
-                // Appliquer les configurations initiales
-                applyNoiseVolume();
-                applyParanormalFilter();
-
-                if (POWER_SYSTEM.config.recorder) handleRecordingState();
-
-                logMessage("Système démarré avec succès.", 'sys');
-
-            } catch (criticalError) {
-                logMessage("ERREUR CRITIQUE AU DÉMARRAGE: " + criticalError.message, 'warn');
-                startBtn.innerText = "⚡ DÉMARRER PUISSANCE";
-                startBtn.disabled = false;
-                stopPowerSystem(); // Nettoyer en cas d'erreur
-            }
-        }
-
-        function stopPowerSystem() {
-            if (!POWER_SYSTEM.isRunning) return;
-
-            logMessage("Arrêt du système en cours...", 'sys');
-
-            // Arrêt Audio
-            if (POWER_SYSTEM.audioContext) {
-                POWER_SYSTEM.audioContext.close();
-            }
-            if (POWER_SYSTEM.mediaStream) {
-                POWER_SYSTEM.mediaStream.getTracks().forEach(track => track.stop());
-            }
-            if (POWER_SYSTEM.noiseSource) {
-                POWER_SYSTEM.noiseSource.stop();
-            }
-            if (POWER_SYSTEM.mediaRecorder && POWER_SYSTEM.isRecording) {
-                POWER_SYSTEM.mediaRecorder.stop();
-            }
-
-            // Arrêt IA
-            if (POWER_SYSTEM.speechRecognition) {
-                POWER_SYSTEM.speechRecognition.stop();
-            }
-            if (POWER_SYSTEM.speechSynthesis) {
-                POWER_SYSTEM.speechSynthesis.cancel();
-            }
-
-            // Reset UI
-            POWER_SYSTEM.isRunning = false;
-            getEl('btnStart').classList.remove('active');
-            getEl('btnStart').innerText = "⚡ DÉMARRER PUISSANCE";
-            getEl('sysStatus').classList.remove('active');
-            getEl('sysStatus').innerText = "OFFLINE";
-            getEl('aiText').innerText = "INACTIF";
-
-            // Réinitialiser les objets audio
-            POWER_SYSTEM.audioContext = null;
-            POWER_SYSTEM.microphoneSource = null;
-            POWER_SYSTEM.analyserNode = null;
-            POWER_SYSTEM.gainNode = null;
-            POWER_SYSTEM.noiseSource = null;
-            POWER_SYSTEM.noiseGainNode = null;
-            POWER_SYSTEM.mediaStream = null;
-            POWER_SYSTEM.mediaRecorder = null;
-            POWER_SYSTEM.frequencyData = null;
-            POWER_SYSTEM.timeDomainData = null;
-            POWER_SYSTEM.peakDataArray = [];
-            POWER_SYSTEM.effects = { reverb: null, delay: null, distortion: null };
-
-            logMessage("Système arrêté.", 'sys');
-        }
-
-        // --- 6. MOTEUR INTELLIGENCE ARTIFICIELLE ---
-
-        function initSpeechToTextEngine() {
-            const SpeechRecognitionClass = window.SpeechRecognition || window.webkitSpeechRecognition;
-
-            if (!SpeechRecognitionClass) {
-                logMessage("ERREUR: API Reconnaissance Vocale non supportée par ce navigateur.", 'warn');
-                return;
-            }
-
-            POWER_SYSTEM.speechRecognition = new SpeechRecognitionClass();
-            POWER_SYSTEM.speechRecognition.continuous = true;
-            POWER_SYSTEM.speechRecognition.interimResults = true;
-            POWER_SYSTEM.speechRecognition.lang = 'fr-FR';
-
-            POWER_SYSTEM.speechRecognition.onresult = function(event) {
-                let finalTranscript = '';
-                let confidenceScore = 0;
-
-                for (let i = event.resultIndex; i < event.results.length; ++i) {
-                    if (event.results[i].isFinal) {
-                        finalTranscript += event.results[i][0].transcript;
-                        confidenceScore = event.results[i][0].confidence;
-                    }
-                }
-
-                const aiTextElement = getEl('aiText');
-                if (finalTranscript) {
-                    aiTextElement.innerText = finalTranscript;
-
-                    if (POWER_SYSTEM.config.ttsEngine) {
-                        speakText(finalTranscript);
-                        logMessage(`LOOP AUDIO: "${finalTranscript}" (Conf: ${Math.round(confidenceScore*100)}%)`, 'ai');
-                    }
-                }
-            };
-
-            POWER_SYSTEM.speechRecognition.onerror = function(event) {
-                if (event.error !== 'no-speech') {
-                    logMessage(`Erreur IA: ${event.error}`, 'warn');
-                }
-            };
-
-            POWER_SYSTEM.speechRecognition.onend = function() {
-                if (POWER_SYSTEM.isRunning) {
-                    try {
-                        POWER_SYSTEM.speechRecognition.start();
-                    } catch (e) {
-                        logMessage("Erreur de redémarrage de la reconnaissance vocale: " + e.message, 'warn');
-                    }
-                }
-            };
-
-            try {
-                POWER_SYSTEM.speechRecognition.start();
-                logMessage("Moteur de reconnaissance vocale (IA) ACTIF.", 'sys');
             } catch (e) {
-                logMessage("Erreur démarrage IA: " + e.message, 'warn');
+                log("Erreur: " + e.message, "sys");
+                btn.innerText = "ERREUR";
             }
         }
 
-        function speakText(textToSpeak) {
-            if (!textToSpeak || !POWER_SYSTEM.isRunning || !POWER_SYSTEM.audioContext) return;
-
-            POWER_SYSTEM.speechSynthesis.cancel();
-
-            const utterance = new SpeechSynthesisUtterance(textToSpeak);
-            utterance.lang = 'fr-FR';
-            utterance.volume = POWER_SYSTEM.config.voiceVolume;
-            utterance.pitch = POWER_SYSTEM.config.voicePitch;
-            utterance.rate = POWER_SYSTEM.config.speechRate;
-
-            const aiSubElement = getEl('aiSub');
-            utterance.onstart = function() {
-                aiSubElement.innerText = "TRANSMISSION AUDIO...";
-                aiSubElement.style.color = "var(--secondary-color)";
-            };
-
-            utterance.onend = function() {
-                aiSubElement.innerText = "ÉCOUTE...";
-                aiSubElement.style.color = "var(--primary-color)";
-            };
-
-            // Ajout d'effets audio pour la voix synthétique
-            if (POWER_SYSTEM.config.paranormalFilter) {
-                utterance.pitch = 0.8;
-                utterance.rate = 0.9;
-            }
-
-            POWER_SYSTEM.speechSynthesis.speak(utterance);
+        function stopSystem() {
+            if (STATE.audioCtx) STATE.audioCtx.close();
+            if (STATE.recognition) STATE.recognition.stop();
+            STATE.synthesis.cancel();
+            STATE.isRunning = false;
+            location.reload(); // Simple reload pour reset propre
         }
 
-        function translateNoiseToSpeech(frequencyData) {
-            if (!POWER_SYSTEM.isRunning) return;
+        function initAI() {
+            // Speech to Text (Boucle d'écoute)
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (SpeechRecognition) {
+                STATE.recognition = new SpeechRecognition();
+                STATE.recognition.continuous = true;
+                STATE.recognition.interimResults = true;
+                STATE.recognition.lang = 'fr-FR';
 
-            const now = Date.now();
+                STATE.recognition.onresult = (event) => {
+                    if (!STATE.modules.loop) return;
 
-            // Calcul des énergies par bandes de fréquence
-            const energyBands = [];
-            for (let i = 0; i < 40; i++) {
-                const start = Math.floor(i * frequencyData.length / 40);
-                const end = Math.floor((i + 1) * frequencyData.length / 40);
-                const bandEnergy = frequencyData.slice(start, end).reduce((a, b) => a + b, 0) / (end - start);
-                energyBands.push(bandEnergy);
-            }
-
-            // Détection des patterns
-            if (POWER_SYSTEM.config.patternDetection) {
-                detectKnownPatterns(energyBands);
-            }
-
-            // Détection des bruits spécifiques
-            if (POWER_SYSTEM.config.deafDetection && energyBands[0] > 100 && now - POWER_SYSTEM.soundDictionary.low_rumble.lastTriggered > 2000) {
-                speakText(POWER_SYSTEM.soundDictionary.low_rumble.text);
-                POWER_SYSTEM.soundDictionary.low_rumble.lastTriggered = now;
-                logMessage("Détection: " + POWER_SYSTEM.soundDictionary.low_rumble.text, 'ai');
-            }
-
-            if (POWER_SYSTEM.config.magneticDetection && energyBands[5] > 150 && now - POWER_SYSTEM.soundDictionary.magnetic.lastTriggered > 2000) {
-                speakText(POWER_SYSTEM.soundDictionary.magnetic.text);
-                POWER_SYSTEM.soundDictionary.magnetic.lastTriggered = now;
-                logMessage("Détection: " + POWER_SYSTEM.soundDictionary.magnetic.text, 'ai');
-            }
-
-            if (POWER_SYSTEM.config.energyDetection && energyBands[10] > 180 && now - POWER_SYSTEM.soundDictionary.energy.lastTriggered > 2000) {
-                speakText(POWER_SYSTEM.soundDictionary.energy.text);
-                POWER_SYSTEM.soundDictionary.energy.lastTriggered = now;
-                logMessage("Détection: " + POWER_SYSTEM.soundDictionary.energy.text, 'ai');
-            }
-        }
-
-        function detectKnownPatterns(energyBands) {
-            const now = Date.now();
-
-            // Détection simplifiée de patterns
-            if (energyBands[1] > 120 && energyBands[2] > 120 && energyBands[3] > 120 &&
-                now - POWER_SYSTEM.soundDictionary.patterns.oui.lastTriggered > 3000) {
-                speakText("Oui");
-                POWER_SYSTEM.soundDictionary.patterns.oui.lastTriggered = now;
-                logMessage("Pattern détecté: Oui", 'ai');
-            }
-
-            if (energyBands[8] > 130 && energyBands[9] > 130 && energyBands[10] > 130 &&
-                now - POWER_SYSTEM.soundDictionary.patterns.non.lastTriggered > 3000) {
-                speakText("Non");
-                POWER_SYSTEM.soundDictionary.patterns.non.lastTriggered = now;
-                logMessage("Pattern détecté: Non", 'ai');
-            }
-
-            if (energyBands[15] > 140 && energyBands[16] > 140 && energyBands[17] > 140 &&
-                now - POWER_SYSTEM.soundDictionary.patterns.danger.lastTriggered > 3000) {
-                speakText("Danger");
-                POWER_SYSTEM.soundDictionary.patterns.danger.lastTriggered = now;
-                logMessage("Pattern détecté: Danger", 'ai');
-            }
-        }
-
-        // --- 7. BOUCLE VISUELLE (CANVAS) ---
-
-        function startVisualLoop() {
-            const canvas = getEl('scopeCanvas');
-            const canvasCtx = canvas.getContext('2d');
-
-            function drawFrame() {
-                if (!POWER_SYSTEM.isRunning || !POWER_SYSTEM.analyserNode) return;
-                requestAnimationFrame(drawFrame);
-
-                if (canvas.width !== canvas.clientWidth || canvas.height !== canvas.clientHeight) {
-                    canvas.width = canvas.clientWidth;
-                    canvas.height = canvas.clientHeight;
-                }
-
-                const width = canvas.width;
-                const height = canvas.height;
-
-                canvasCtx.fillStyle = 'rgba(0, 0, 0, 0.2)';
-                canvasCtx.fillRect(0, 0, width, height);
-
-                try {
-                    POWER_SYSTEM.analyserNode.getByteFrequencyData(POWER_SYSTEM.frequencyData);
-                    POWER_SYSTEM.analyserNode.getByteTimeDomainData(POWER_SYSTEM.timeDomainData);
-                } catch (e) {
-                    logMessage("Erreur dans l'analyse audio: " + e.message, 'warn');
-                    return;
-                }
-
-                // Dessiner l'oscilloscope
-                canvasCtx.lineWidth = 2;
-                canvasCtx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--primary-color');
-                canvasCtx.beginPath();
-
-                const sliceWidth = width * 1.0 / POWER_SYSTEM.timeDomainData.length;
-                let x = 0;
-
-                for (let i = 0; i < POWER_SYSTEM.timeDomainData.length; i++) {
-                    const v = POWER_SYSTEM.timeDomainData[i] / 128.0;
-                    const y = v * height / 2;
-
-                    if (i === 0) canvasCtx.moveTo(x, y);
-                    else canvasCtx.lineTo(x, y);
-
-                    x += sliceWidth;
-                }
-
-                canvasCtx.stroke();
-
-                // Analyser les fréquences pour la traduction des bruits
-                if (POWER_SYSTEM.config.ttsEngine) {
-                    translateNoiseToSpeech(POWER_SYSTEM.frequencyData);
-                }
-
-                // Dessiner l'analyser spectral
-                const barWidth = (width / POWER_SYSTEM.frequencyData.length) * 2.5;
-                let barX = 0;
-                let maxEnergy = 0;
-
-                for (let i = 0; i < POWER_SYSTEM.frequencyData.length; i++) {
-                    const barHeight = (POWER_SYSTEM.frequencyData[i] / 255) * (height / 3);
-
-                    // Couleur basée sur l'énergie
-                    const intensity = POWER_SYSTEM.frequencyData[i];
-                    canvasCtx.fillStyle = `rgb(0, ${Math.min(intensity * 2, 255)}, ${Math.min(intensity * 2, 255)})`;
-                    canvasCtx.fillRect(barX, height - barHeight, barWidth, barHeight);
-
-                    if (POWER_SYSTEM.frequencyData[i] > POWER_SYSTEM.peakDataArray[i]) {
-                        POWER_SYSTEM.peakDataArray[i] = POWER_SYSTEM.frequencyData[i];
-                    } else {
-                        POWER_SYSTEM.peakDataArray[i] = Math.max(0, POWER_SYSTEM.peakDataArray[i] - 1);
+                    let final = "";
+                    for (let i = event.resultIndex; i < event.results.length; ++i) {
+                        if (event.results[i].isFinal) {
+                            final += event.results[i][0].transcript;
+                        }
                     }
 
-                    canvasCtx.fillStyle = '#ffffff';
-                    canvasCtx.fillRect(barX, height - (POWER_SYSTEM.peakDataArray[i] / 255) * (height / 3) - 2, barWidth, 2);
-
-                    barX += barWidth + 1;
-
-                    if (POWER_SYSTEM.frequencyData[i] > maxEnergy) maxEnergy = POWER_SYSTEM.frequencyData[i];
-                }
-
-                // Effets spéciaux
-                if (maxEnergy > 200 && Math.random() > 0.95) {
-                    triggerLightningEffect();
-                }
-            }
-
-            drawFrame();
-        }
-
-        function triggerLightningEffect() {
-            const flashElement = getEl('flashOverlay');
-            flashElement.classList.remove('flash-active');
-            void flashElement.offsetWidth;
-            flashElement.classList.add('flash-active');
-
-            if (POWER_SYSTEM.audioContext) {
-                try {
-                    const osc = POWER_SYSTEM.audioContext.createOscillator();
-                    const gain = POWER_SYSTEM.audioContext.createGain();
-
-                    osc.type = 'sawtooth';
-                    osc.frequency.setValueAtTime(50, POWER_SYSTEM.audioContext.currentTime);
-                    gain.gain.setValueAtTime(0.5, POWER_SYSTEM.audioContext.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.01, POWER_SYSTEM.audioContext.currentTime + 0.5);
-
-                    osc.connect(gain);
-                    gain.connect(POWER_SYSTEM.audioContext.destination);
-
-                    osc.start();
-                    osc.stop(POWER_SYSTEM.audioContext.currentTime + 0.5);
-                } catch (e) {
-                    logMessage("Erreur effet lightning: " + e.message, 'warn');
-                }
-            }
-        }
-
-        // --- 8. CAPTEURS PHYSIQUES (ACCELEROMÈTRE / MAGNÈTE) ---
-
-        function startSensorsMonitoring() {
-            if (window.DeviceMotionEvent) {
-                window.addEventListener('devicemotion', function(event) {
-                    const acc = event.accelerationIncludingGravity;
-                    if (acc) {
-                        POWER_SYSTEM.sensorData.accX = (acc.x || 0).toFixed(2);
-                        POWER_SYSTEM.sensorData.accY = (acc.y || 0).toFixed(2);
-                        POWER_SYSTEM.sensorData.accZ = (acc.z || 0).toFixed(2);
-
-                        getEl('valAccX').innerText = POWER_SYSTEM.sensorData.accX;
-                        getEl('valAccY').innerText = POWER_SYSTEM.sensorData.accY;
-                        getEl('valAccZ').innerText = POWER_SYSTEM.sensorData.accZ;
-
-                        detectEMFEvent();
-                    }
-                });
-            } else {
-                logMessage("Capteur de mouvement non disponible.", 'warn');
-            }
-
-            if (window.DeviceOrientationEvent) {
-                window.addEventListener('deviceorientation', function(event) {
-                    if (event.alpha !== null) {
-                        POWER_SYSTEM.sensorData.magX = Math.floor(event.alpha);
-                        POWER_SYSTEM.sensorData.magY = Math.floor(event.beta);
-                        POWER_SYSTEM.sensorData.magZ = Math.floor(event.gamma);
-
-                        getEl('valMagX').innerText = POWER_SYSTEM.sensorData.magX;
-                        getEl('valMagY').innerText = POWER_SYSTEM.sensorData.magY;
-                        getEl('valMagZ').innerText = POWER_SYSTEM.sensorData.magZ;
-
-                        detectEMFEvent();
-                    }
-                });
-            } else {
-                logMessage("Capteur d'orientation non disponible.", 'warn');
-            }
-        }
-
-        function detectEMFEvent() {
-            const now = Date.now();
-            if (now - POWER_SYSTEM.sensorData.lastEMFEvent < 3000) return;
-
-            // Calcul de la magnitude de l'accélération
-            const accMagnitude = Math.sqrt(
-                Math.pow(parseFloat(POWER_SYSTEM.sensorData.accX), 2) +
-                Math.pow(parseFloat(POWER_SYSTEM.sensorData.accY), 2) +
-                Math.pow(parseFloat(POWER_SYSTEM.sensorData.accZ), 2)
-            );
-
-            // Seuil pour la détection d'un événement EMF
-            if (accMagnitude > 15 && POWER_SYSTEM.config.emfDetection) {
-                POWER_SYSTEM.sensorData.lastEMFEvent = now;
-                logMessage("Détection d'impulsion électromagnétique !", 'warn');
-
-                // Actions pour la détection EMF
-                speakText("Champ énergétique détecté !");
-                triggerLightningEffect();
-
-                // Enregistrement automatique
-                if (POWER_SYSTEM.mediaRecorder && !POWER_SYSTEM.isRecording) {
-                    handleRecordingState();
-                }
-
-                // Visual feedback
-                const sensorCells = document.querySelectorAll('.sensor-cell');
-                sensorCells.forEach(cell => {
-                    cell.classList.add('sensor-alert');
-                    setTimeout(() => cell.classList.remove('sensor-alert'), 500);
-                });
-            }
-        }
-
-        // --- 9. GESTION DE LA MODALE ---
-
-        function openConfigModal() {
-            getEl('configModal').style.display = 'flex';
-        }
-
-        function closeConfigModal() {
-            getEl('configModal').style.display = 'none';
-        }
-
-        // --- 10. INITIALISATION AU CHARGEMENT ---
-
-        window.addEventListener('load', function() {
-            logMessage("TOUT PUISSANT - Système chargé.", 'sys');
-            loadSystemConfiguration();
-
-            // Ajouter un gestionnaire d'erreur global pour le contexte audio
-            if (window.AudioContext || window.webkitAudioContext) {
-                const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-                const testContext = new AudioContextClass();
-                testContext.onstatechange = function() {
-                    if (testContext.state === 'suspended') {
-                        logMessage("Contexte audio suspendu. Cliquez pour activer.", 'warn');
+                    if (final) {
+                        // Traduction et Répétition
+                        handleVoiceInput(final);
                     }
                 };
-            }
-        });
 
-        // Assignation explicite des événements pour les boutons principaux
-        getEl('btnStop').onclick = stopPowerSystem;
+                STATE.recognition.onend = () => {
+                    if (STATE.isRunning) STATE.recognition.start(); // Auto-restart
+                };
+
+                STATE.recognition.start();
+                log("Moteur IA (STT) Actif", "sys");
+            } else {
+                log("Reconnaissance vocale non supportée", "sys");
+            }
+        }
+
+        function handleVoiceInput(text) {
+            log("Detecté: " + text, "ai");
+            document.getElementById('aiText').innerText = text;
+            
+            // Effet visuel sur l'interface
+            document.getElementById('visualContainer').style.boxShadow = "inset 0 0 50px rgba(255, 215, 0, 0.2)";
+            setTimeout(() => document.getElementById('visualContainer').style.boxShadow = "none", 200);
+
+            // Répétition vocale (TTS)
+            speak(text);
+        }
+
+        function speak(text) {
+            STATE.synthesis.cancel();
+            const u = new SpeechSynthesisUtterance(text);
+            u.lang = 'fr-FR';
+            u.volume = STATE.params.volume;
+            u.rate = 1.2; // Un peu plus rapide pour effet GhostBox
+            u.pitch = 0.8; // Voix plus grave
+            STATE.synthesis.speak(u);
+        }
+
+        // --- 4. LOGIQUE PARANORMALE (Traduction Bruit/Emp) ---
+        
+        function checkPhoneticTranslation(energy, freqBands) {
+            if (!STATE.modules.ghost || !STATE.isRunning) return;
+
+            const now = Date.now();
+            // Si l'énergie dépasse le seuil et qu'on n'a pas parlé depuis 2 secondes
+            if (energy > STATE.params.threshold && (now - STATE.lastSpeechTime > 2000)) {
+                
+                // Chance aléatoire basée sur la sensibilité
+                const chance = Math.random() * 100;
+                if (chance < STATE.params.ghostSens) {
+                    
+                    // Choisir un mot aléatoire
+                    const word = CONFIG.ghostWords[Math.floor(Math.random() * CONFIG.ghostWords.length)];
+                    
+                    document.getElementById('aiText').innerText = word;
+                    document.getElementById('aiSub').innerText = "TRADUCTION ÉNERGÉTIQUE";
+                    
+                    log("Traduction Signal: " + word, "ai");
+                    speak(word);
+                    STATE.lastSpeechTime = now;
+                }
+            }
+        }
+
+        // --- 5. CAPTEURS (EMP/MAG) ---
+        function startSensors() {
+            if (window.DeviceMotionEvent) {
+                window.addEventListener('devicemotion', (e) => {
+                    const acc = e.accelerationIncludingGravity;
+                    if (!acc) return;
+
+                    const totalAcc = Math.abs(acc.x || 0) + Math.abs(acc.y || 0) + Math.abs(acc.z || 0);
+                    document.getElementById('valAcc').innerText = totalAcc.toFixed(2);
+
+                    // Simulation Magnétomètre via Orientation (plus dispo)
+                    if (window.DeviceOrientationEvent) {
+                        window.addEventListener('deviceorientation', (evt) => {
+                             if(evt.alpha) document.getElementById('valMag').innerText = Math.floor(evt.alpha);
+                        });
+                    }
+
+                    // Détection EMP (Choc soudain)
+                    if (totalAcc > 25) { // Seuil arbitraire haut
+                        triggerEMP();
+                    }
+                });
+            }
+        }
+
+        function triggerEMP() {
+            const el = document.getElementById('sEmp');
+            el.classList.add('active');
+            document.getElementById('valEmp').innerText = "DETECTÉ";
+            document.getElementById('valEmp').style.color = "red";
+            log("IMPULSION ÉLECTROMAGNÉTIQUE DÉTECTÉE", "emp");
+            
+            // Jouer un son ou parler
+            if (STATE.modules.ghost) {
+                speak("Impulsion");
+                document.getElementById('aiText').innerText = "EMP";
+            }
+
+            setTimeout(() => {
+                el.classList.remove('active');
+                document.getElementById('valEmp').innerText = "NON";
+                document.getElementById('valEmp').style.color = "var(--primary-color)";
+            }, 1000);
+        }
+
+        // --- 6. BOUCLE DE RENDU (CORE) ---
+
+        function renderLoop() {
+            if (!STATE.isRunning) return;
+
+            // 1. Get Audio Data
+            const bufferLength = STATE.analyser.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+            STATE.analyser.getByteFrequencyData(dataArray);
+
+            // 2. Calcul 40 Bandes (Logarithmique) & Niveau Moyen
+            const bands = new Array(CONFIG.bandsCount).fill(0);
+            let sum = 0;
+            const step = Math.floor(bufferLength / CONFIG.bandsCount);
+
+            for (let i = 0; i < CONFIG.bandsCount; i++) {
+                // Moyenne de la bande
+                let bandSum = 0;
+                for (let j = 0; j < step; j++) {
+                    bandSum += dataArray[i * step + j];
+                }
+                bands[i] = bandSum / step;
+                sum += bands[i];
+            }
+            const avgLevel = sum / CONFIG.bandsCount; // 0-255
+
+            // 3. Logique IA (Trigger)
+            checkPhoneticTranslation(avgLevel, bands);
+
+            // 4. Rendu Canvas 2D (Oscilloscope)
+            drawOscilloscope();
+
+            // 5. Rendu WebGL (Spectrogramme 3D)
+            drawWebGLSpectrum(bands);
+
+            requestAnimationFrame(renderLoop);
+        }
+
+        function drawOscilloscope() {
+            const canvas = document.getElementById('scopeCanvas');
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width;
+            const h = canvas.height;
+            const bufferLength = STATE.analyser.frequencyBinCount;
+            const timeData = new Uint8Array(bufferLength);
+            STATE.analyser.getByteTimeDomainData(timeData);
+
+            ctx.clearRect(0, 0, w, h);
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = "rgba(0, 204, 255, 0.5)";
+            ctx.beginPath();
+
+            const sliceWidth = w * 1.0 / bufferLength;
+            let x = 0;
+
+            for (let i = 0; i < bufferLength; i++) {
+                const v = timeData[i] / 128.0;
+                const y = v * h / 2;
+
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+
+                x += sliceWidth;
+            }
+            ctx.stroke();
+        }
+
+        function drawWebGLSpectrum(bands) {
+            const gl = GL.gl;
+            if (!gl) return;
+
+            gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+            gl.clearColor(0, 0, 0, 0); // Transparent pour voir le scope au dessus
+            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+            gl.useProgram(GL.program);
+
+            // Préparer les données vertex (Barres 3D)
+            // On dessine des points ou lignes qui montent en fonction de l'amplitude
+            const positions = [];
+            const colors = [];
+            const numBars = bands.length;
+            
+            // Caméra simple
+            const aspect = gl.canvas.width / gl.canvas.height;
+            const projection = makeProjection(gl.canvas.width, gl.canvas.height);
+            // Rotation légère automatique
+            const time = Date.now() * 0.001;
+            const matrix = m4RotateY(projection, time);
+            matrix[14] = -6.0; // Zoom arrière
+
+            gl.uniformMatrix4fv(GL.matrixLocation, false, matrix);
+
+            // Générer géométrie pour les 40 bandes
+            for (let i = 0; i < numBars; i++) {
+                const val = bands[i]; // 0-255
+                const height = (val / 255) * 4.0; // Hauteur max 4.0 en 3D
+                
+                // Position X centrée
+                const x = (i - numBars / 2) * 0.3;
+                
+                // Couleur basée sur l'intensité (Bleu -> Or -> Rouge)
+                let r = 0, g = 0.8, b = 1;
+                if (val > 150) { r = 1; g = 0.8; b = 0; } // Or
+                if (val > 220) { r = 1; g = 0.2; b = 0.2; } // Rouge Alerte
+
+                // Créer une ligne verticale (bas -> haut)
+                positions.push(x, -2, 0);
+                positions.push(x, -2 + height, 0);
+                
+                colors.push(r, g, b, 1);
+                colors.push(r, g, b, 0.5);
+            }
+
+            // Buffer Position
+            const pBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, pBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.DYNAMIC_DRAW);
+            gl.enableVertexAttribArray(GL.positionLocation);
+            gl.vertexAttribPointer(GL.positionLocation, 3, gl.FLOAT, false, 0, 0);
+
+            // Buffer Couleur
+            const cBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.DYNAMIC_DRAW);
+            gl.enableVertexAttribArray(GL.colorLocation);
+            gl.vertexAttribPointer(GL.colorLocation, 4, gl.FLOAT, false, 0, 0);
+
+            gl.drawArrays(gl.LINES, 0, positions.length / 3);
+        }
+
+        // --- UTILITAIRES MATHS (Matrice simple pour WebGL) ---
+        function m4RotateY(m, angleInRadians) {
+            const c = Math.cos(angleInRadians);
+            const s = Math.sin(angleInRadians);
+            // Copie simple de la matrice de projection
+            const dst = new Float32Array(m);
+            
+            // Rotation sur l'axe Y (modifie les indices 0,2,8,10)
+            const m00 = m[0], m01 = m[1], m02 = m[2], m03 = m[3];
+            const m20 = m[8], m21 = m[9], m22 = m[10], m23 = m[11];
+
+            dst[0] = c * m00 - s * m20;
+            dst[2] = c * m02 - s * m22;
+            dst[8] = c * m20 + s * m00;
+            dst[10] = c * m22 + s * m02;
+            return dst;
+        }
+
+        // --- GESTION UI ---
+        function setMod(mod) {
+            STATE.modules[mod] = !STATE.modules[mod];
+            const btn = document.getElementById('btn' + mod.charAt(0).toUpperCase() + mod.slice(1));
+            if (STATE.modules[mod]) btn.classList.add('active');
+            else btn.classList.remove('active');
+            log("Module " + mod.toUpperCase() + ": " + STATE.modules[mod], "sys");
+        }
+
+        function updateParam(key, val) {
+            if (key === 'volume') STATE.params[key] = val / 100;
+            else STATE.params[key] = parseInt(val);
+            
+            document.getElementById('disp' + key.charAt(0).toUpperCase() + key.slice(1)).innerText = val;
+        }
+
+        function log(msg, type) {
+            const t = document.getElementById('terminal');
+            const d = document.createElement('div');
+            d.className = "log-" + type;
+            d.innerText = "> " + msg;
+            t.appendChild(d);
+            t.scrollTop = t.scrollHeight;
+        }
+
+        function resizeCanvas() {
+            const c1 = document.getElementById('scopeCanvas');
+            const c2 = document.getElementById('webglCanvas');
+            const p = document.getElementById('visualContainer');
+            
+            c1.width = p.clientWidth;
+            c1.height = p.clientHeight;
+            c2.width = p.clientWidth;
+            c2.height = p.clientHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+
     </script>
 </body>
 </html>
