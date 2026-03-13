@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>ETERNITY LAB OMNI-SENSOR</title>
+<title>ETERNITY LAB OMNI-SENSOR PRO</title>
 <style>
 :root {
   --primary: #ff0000;
@@ -13,6 +13,7 @@
   --btn-bg: #330000;
   --btn-active: #ff0000;
   --text: #ffcccc;
+  --ai-color: #00aaff;
 }
 
 body {
@@ -74,7 +75,7 @@ body {
   z-index: 10; text-align: center; width: 90%;
   pointer-events: none;
 }
-#iaLabel { color: var(--secondary); font-size: 0.7rem; letter-spacing: 3px; margin-bottom: 5px; }
+#iaLabel { color: var(--ai-color); font-size: 0.7rem; letter-spacing: 3px; margin-bottom: 5px; }
 #iaText {
   font-size: 2.5rem; font-weight: 900; color: #fff;
   background: rgba(0,0,0,0.9); padding: 10px;
@@ -125,6 +126,26 @@ button.active {
 }
 .log-warn { color: yellow !important; }
 .log-err { color: red !important; }
+.log-ai { color: var(--ai-color) !important; }
+
+#transcriptionArea {
+  position: absolute; bottom: 10px; left: 10px; right: 10px;
+  background: rgba(0,0,0,0.7); padding: 10px;
+  border: 1px solid var(--ai-color);
+  max-height: 150px; overflow-y: auto;
+  font-size: 0.8rem; z-index: 20;
+}
+.transcript-item {
+  margin-bottom: 5px;
+  padding: 3px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+.transcript-time { font-size: 0.7rem; color: #aaa; margin-right: 5px; }
+.transcript-confidence {
+  font-size: 0.7rem;
+  color: var(--ai-color);
+  margin-left: 5px;
+}
 </style>
 </head>
 <body>
@@ -146,9 +167,10 @@ button.active {
   <video id="cameraFeed" autoplay playsinline muted></video>
   <canvas id="canvas"></canvas>
   <div id="iaBox">
-    <div id="iaLabel">DÉTECTION VOCALE RÉELLE</div>
+    <div id="iaLabel">DÉTECTION AVANCÉE</div>
     <div id="iaText">... INITIALISATION ...</div>
   </div>
+  <div id="transcriptionArea"></div>
 </div>
 
 <div id="controlsArea">
@@ -167,11 +189,15 @@ button.active {
     <button id="radarBtn">📡 RADAR HF</button>
     <button id="camBtn">📷 CAM</button>
     <button id="flashBtn">🔦 TORCHE</button>
+    <button id="transcribeBtn" class="active">🎤 TRANSCRIPTION</button>
     <button id="stopBtn" style="border-color:red; color:red">⏹ STOP</button>
   </div>
 </div>
 
 <div id="logZone"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.11.0/dist/tf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/speech-commands@0.5.4/dist/speech-commands.min.js"></script>
 
 <script>
 // Configuration initiale
@@ -194,6 +220,10 @@ const app = {
   recorder: null,
   isRec: false,
   recognition: null,
+  speechModel: null,
+  wordLabels: null,
+  transcriptionActive: true,
+  confidenceThreshold: 0.7,
   config: {
     monitor: false,
     ghostBox: false,
@@ -207,7 +237,8 @@ const app = {
   lastAlpha: 0,
   motionThreshold: 1.5,
   lightBaseline: 0,
-  pulseInterval: null
+  pulseInterval: null,
+  transcriptionHistory: []
 };
 
 // Éléments DOM
@@ -226,7 +257,8 @@ const els = {
   valMag: el('valMag'),
   boxMag: el('boxMag'),
   valLight: el('valLight'),
-  boxLight: el('boxLight')
+  boxLight: el('boxLight'),
+  transcriptionArea: el('transcriptionArea')
 };
 
 // Journalisation
@@ -237,6 +269,24 @@ function log(msg, type='') {
   els.log.appendChild(d);
   els.log.scrollTop = els.log.scrollHeight;
   console.log(msg);
+}
+
+// Journal des transcriptions
+function addTranscription(text, confidence, time) {
+  const div = document.createElement('div');
+  div.className = 'transcript-item';
+  div.innerHTML = `
+    <span class="transcript-time">${time}</span>
+    ${text}
+    <span class="transcript-confidence">${Math.round(confidence * 100)}%</span>
+  `;
+  els.transcriptionArea.appendChild(div);
+  els.transcriptionArea.scrollTop = els.transcriptionArea.scrollHeight;
+
+  // Limiter à 20 entrées
+  if (els.transcriptionArea.children.length > 20) {
+    els.transcriptionArea.removeChild(els.transcriptionArea.firstChild);
+  }
 }
 
 // Initialisation complète
@@ -258,7 +308,10 @@ async function forceStart() {
     initSensors();
 
     // 4. Initialiser l'IA
-    await initVoice();
+    await initAI();
+
+    // 5. Initialiser la reconnaissance vocale
+    await initSpeechRecognition();
 
     app.running = true;
     startUI("CAPTEURS ACTIFS");
@@ -351,6 +404,115 @@ async function initAudio() {
     log(`Erreur audio: ${error.message}`, 'error');
     throw error;
   }
+}
+
+// Initialisation de l'IA
+async function initAI() {
+  log("Chargement de l'IA...");
+
+  try {
+    // Charger le modèle de reconnaissance vocale
+    app.speechModel = await speechCommands.load();
+    app.wordLabels = app.speechModel.wordLabels();
+    log("Modèle IA chargé avec succès", 'success');
+    els.iaText.textContent = "IA PRÊTE";
+
+  } catch (error) {
+    log(`Erreur chargement IA: ${error.message}`, 'error');
+    els.iaText.textContent = "IA INDISPONIBLE";
+  }
+}
+
+// Initialisation de la reconnaissance vocale
+async function initSpeechRecognition() {
+  log("Initialisation reconnaissance vocale...");
+
+  try {
+    // Utiliser l'API Web Speech si disponible
+    const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRec) {
+      app.recognition = new SpeechRec();
+      app.recognition.continuous = true;
+      app.recognition.interimResults = true;
+      app.recognition.lang = 'fr-FR';
+
+      app.recognition.onresult = (e) => {
+        let txt = '';
+        for (let i = e.resultIndex; i < e.results.length; i++) {
+          txt += e.results[i][0].transcript;
+        }
+        if (txt) {
+          els.iaText.textContent = txt;
+          if (e.results[e.results.length-1].isFinal) {
+            addTranscription(txt, 0.9, new Date().toLocaleTimeString());
+            log(`VOIX: "${txt}"`, 'log-ai');
+          }
+        }
+      };
+
+      app.recognition.onerror = (e) => {
+        log(`Erreur reconnaissance: ${e.error}`, 'error');
+      };
+
+      app.recognition.onend = () => {
+        if (app.running && app.transcriptionActive) {
+          try {
+            app.recognition.start();
+          } catch (e) {
+            log(`Erreur redémarrage: ${e.message}`, 'error');
+          }
+        }
+      };
+
+      app.recognition.start();
+      log("Reconnaissance vocale active", 'success');
+    } else {
+      // Utiliser le modèle TensorFlow si l'API n'est pas disponible
+      if (app.speechModel) {
+        log("Utilisation du modèle IA pour la reconnaissance");
+        startModelRecognition();
+      } else {
+        log("Reconnaissance vocale non supportée", 'log-warn');
+      }
+    }
+
+  } catch (error) {
+    log(`Erreur reconnaissance: ${error.message}`, 'error');
+  }
+}
+
+// Reconnaissance avec le modèle TensorFlow
+function startModelRecognition() {
+  if (!app.speechModel) return;
+
+  // Créer un processeur audio pour le modèle
+  const audioProcessor = app.ctx.createScriptProcessor(2048, 1, 1);
+  app.source.connect(audioProcessor);
+  audioProcessor.connect(app.ctx.destination);
+
+  audioProcessor.onaudioprocess = async (e) => {
+    if (!app.transcriptionActive) return;
+
+    const input = e.inputBuffer.getChannelData(0);
+    const inputTensor = tf.tensor1d(input);
+
+    try {
+      const predictions = await app.speechModel.predict(inputTensor);
+      const topPrediction = predictions.argMax(-1).dataSync()[0];
+      const confidence = predictions.max().dataSync()[0];
+
+      if (confidence > app.confidenceThreshold) {
+        const word = app.wordLabels[topPrediction + 1]; // +1 car index 0 est le silence
+        els.iaText.textContent = word;
+        addTranscription(word, confidence, new Date().toLocaleTimeString());
+        log(`IA: "${word}" (${Math.round(confidence*100)}%)`, 'log-ai');
+      }
+    } catch (error) {
+      log(`Erreur IA: ${error.message}`, 'error');
+    } finally {
+      tf.dispose([inputTensor, predictions]);
+    }
+  };
 }
 
 // Initialisation des capteurs
@@ -447,76 +609,12 @@ function handleOrientation(event) {
   app.lastAlpha = alpha;
 }
 
-// Initialisation de l'IA vocale
-async function initVoice() {
-  const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRec) {
-    els.iaText.textContent = "INDISPONIBLE";
-    log("Reconnaissance vocale: Non supportée", 'log-warn');
-    return;
-  }
-
-  try {
-    app.recognition = new SpeechRec();
-    app.recognition.continuous = true;
-    app.recognition.interimResults = true;
-    app.recognition.lang = 'fr-FR';
-
-    app.recognition.onresult = (e) => {
-      let txt = '';
-      for (let i = e.resultIndex; i < e.results.length; i++) {
-        txt += e.results[i][0].transcript;
-      }
-      if (txt) {
-        els.iaText.textContent = txt;
-        if (e.results[e.results.length-1].isFinal) {
-          log(`VOIX DÉTECTÉE: "${txt}"`, 'log-suc');
-        }
-      }
-    };
-
-    app.recognition.onerror = (e) => {
-      log(`Erreur reconnaissance vocale: ${e.error}`, 'error');
-    };
-
-    app.recognition.onend = () => {
-      if (app.running) {
-        try {
-          app.recognition.start();
-        } catch (e) {
-          log(`Erreur redémarrage reconnaissance: ${e.message}`, 'error');
-        }
-      }
-    };
-
-    app.recognition.start();
-    log("Reconnaissance vocale: OK");
-
-  } catch (error) {
-    log(`Erreur reconnaissance vocale: ${error.message}`, 'error');
-  }
-}
-
-// Gestion des données d'enregistrement
-function handleRecordingData(event) {
-  const blob = new Blob([event.data], { type: "audio/webm" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `recording_${Date.now()}.webm`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  log("Enregistrement sauvegardé", 'log-suc');
-}
-
 // Détection d'alerte de capteur
 function triggerSensorAlert(boxId, msg) {
   const box = el(boxId);
   if (!box.classList.contains('alert-sensor')) {
     box.classList.add('alert-sensor');
     log(msg, 'log-err');
-    if (navigator.vibrate) navigator.vibrate(200);
     setTimeout(() => box.classList.remove('alert-sensor'), 2000);
   }
 }
@@ -586,6 +684,7 @@ function stopSystem() {
   el('startBtn').classList.remove('running');
   el('startBtn').style.background = "#fff";
   els.mic.textContent = "OFF";
+  els.iaText.textContent = "INACTIF";
   document.querySelectorAll('#controlsArea button:not(#startBtn)').forEach(btn => {
     btn.disabled = true;
     btn.classList.remove('active');
@@ -640,7 +739,32 @@ function toggleOpt(key) {
     case 'flash':
       toggleFlash();
       break;
+
+    case 'transcribe':
+      app.transcriptionActive = !app.transcriptionActive;
+      els.transcriptionArea.style.display = app.transcriptionActive ? 'block' : 'none';
+      if (app.recognition) {
+        if (app.transcriptionActive) {
+          try { app.recognition.start(); } catch (e) {}
+        } else {
+          app.recognition.stop();
+        }
+      }
+      break;
   }
+}
+
+// Gestion de l'enregistrement
+function handleRecordingData(event) {
+  const blob = new Blob([event.data], { type: "audio/webm" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `recording_${Date.now()}.webm`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  log("Enregistrement sauvegardé", 'log-suc');
 }
 
 // Gestion de la caméra
@@ -758,7 +882,8 @@ function drawLoop() {
     ctx.arc(cx, cy, r, 0, Math.PI * 2);
     ctx.stroke();
 
-    if (highFreqSum / ((app.dataArray.length - 2000 / binSize) / binSize) > 60) {
+    const avgHigh = highFreqSum / ((app.dataArray.length - 2000 / binSize) / binSize);
+    if (avgHigh > 60) {
       ctx.fillStyle = '#fff';
       ctx.beginPath();
       ctx.arc(cx, cy, r, 0, Math.PI * 2);
@@ -829,6 +954,7 @@ document.getElementById('evpBtn').onclick = () => toggleOpt('evp');
 document.getElementById('radarBtn').onclick = () => toggleOpt('radar');
 document.getElementById('camBtn').onclick = () => toggleOpt('cam');
 document.getElementById('flashBtn').onclick = () => toggleOpt('flash');
+document.getElementById('transcribeBtn').onclick = () => toggleOpt('transcribe');
 document.getElementById('stopBtn').onclick = stopSystem;
 
 // Initialisation
