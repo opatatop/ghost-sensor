@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TONNERRE DE ZEUS - TOUT PUISSANT</title>
+    <title>ZEUS TOUT PUISSANT</title>
     <style>
         :root {
             --primary-color: #00ccff;
@@ -777,7 +777,7 @@
         }
 
         function applyParanormalFilter() {
-            if (!POWER_SYSTEM.audioContext) return;
+            if (!POWER_SYSTEM.audioContext || !POWER_SYSTEM.microphoneSource || !POWER_SYSTEM.analyserNode) return;
 
             // Création d'un filtre passe-bande pour l'effet paranormal
             if (POWER_SYSTEM.config.paranormalFilter) {
@@ -837,8 +837,10 @@
                 const AudioContextClass = window.AudioContext || window.webkitAudioContext;
                 POWER_SYSTEM.audioContext = new AudioContextClass();
 
+                // Vérification de l'état du contexte audio
                 if (POWER_SYSTEM.audioContext.state === 'suspended') {
                     await POWER_SYSTEM.audioContext.resume();
+                    logMessage("Contexte audio repris avec succès.", 'sys');
                 }
 
                 // 2. Configuration du Microphone
@@ -873,6 +875,7 @@
                     logMessage("Microphone connecté et analysé.", 'sys');
                 } catch (micError) {
                     logMessage("ERREUR CRITIQUE: Accès micro refusé. " + micError.message, 'warn');
+                    throw micError; // Rejeter la promesse pour arrêter le démarrage
                 }
 
                 // 3. Générateur de Bruit Blanc
@@ -929,7 +932,7 @@
 
                         logMessage("Enregistreur initialisé.", 'sys');
                     } catch (recError) {
-                        logMessage("Enregistreur non disponible.", 'warn');
+                        logMessage("Enregistreur non disponible: " + recError.message, 'warn');
                     }
                 }
 
@@ -956,10 +959,13 @@
 
                 if (POWER_SYSTEM.config.recorder) handleRecordingState();
 
+                logMessage("Système démarré avec succès.", 'sys');
+
             } catch (criticalError) {
                 logMessage("ERREUR CRITIQUE AU DÉMARRAGE: " + criticalError.message, 'warn');
-                startBtn.innerText = "ERREUR";
+                startBtn.innerText = "⚡ DÉMARRER PUISSANCE";
                 startBtn.disabled = false;
+                stopPowerSystem(); // Nettoyer en cas d'erreur
             }
         }
 
@@ -997,6 +1003,20 @@
             getEl('sysStatus').classList.remove('active');
             getEl('sysStatus').innerText = "OFFLINE";
             getEl('aiText').innerText = "INACTIF";
+
+            // Réinitialiser les objets audio
+            POWER_SYSTEM.audioContext = null;
+            POWER_SYSTEM.microphoneSource = null;
+            POWER_SYSTEM.analyserNode = null;
+            POWER_SYSTEM.gainNode = null;
+            POWER_SYSTEM.noiseSource = null;
+            POWER_SYSTEM.noiseGainNode = null;
+            POWER_SYSTEM.mediaStream = null;
+            POWER_SYSTEM.mediaRecorder = null;
+            POWER_SYSTEM.frequencyData = null;
+            POWER_SYSTEM.timeDomainData = null;
+            POWER_SYSTEM.peakDataArray = [];
+            POWER_SYSTEM.effects = { reverb: null, delay: null, distortion: null };
 
             logMessage("Système arrêté.", 'sys');
         }
@@ -1048,7 +1068,9 @@
                 if (POWER_SYSTEM.isRunning) {
                     try {
                         POWER_SYSTEM.speechRecognition.start();
-                    } catch (e) {}
+                    } catch (e) {
+                        logMessage("Erreur de redémarrage de la reconnaissance vocale: " + e.message, 'warn');
+                    }
                 }
             };
 
@@ -1061,7 +1083,7 @@
         }
 
         function speakText(textToSpeak) {
-            if (!textToSpeak || !POWER_SYSTEM.isRunning) return;
+            if (!textToSpeak || !POWER_SYSTEM.isRunning || !POWER_SYSTEM.audioContext) return;
 
             POWER_SYSTEM.speechSynthesis.cancel();
 
@@ -1092,6 +1114,8 @@
         }
 
         function translateNoiseToSpeech(frequencyData) {
+            if (!POWER_SYSTEM.isRunning) return;
+
             const now = Date.now();
 
             // Calcul des énergies par bandes de fréquence
@@ -1161,7 +1185,7 @@
             const canvasCtx = canvas.getContext('2d');
 
             function drawFrame() {
-                if (!POWER_SYSTEM.isRunning) return;
+                if (!POWER_SYSTEM.isRunning || !POWER_SYSTEM.analyserNode) return;
                 requestAnimationFrame(drawFrame);
 
                 if (canvas.width !== canvas.clientWidth || canvas.height !== canvas.clientHeight) {
@@ -1175,10 +1199,13 @@
                 canvasCtx.fillStyle = 'rgba(0, 0, 0, 0.2)';
                 canvasCtx.fillRect(0, 0, width, height);
 
-                if (!POWER_SYSTEM.analyserNode) return;
-
-                POWER_SYSTEM.analyserNode.getByteFrequencyData(POWER_SYSTEM.frequencyData);
-                POWER_SYSTEM.analyserNode.getByteTimeDomainData(POWER_SYSTEM.timeDomainData);
+                try {
+                    POWER_SYSTEM.analyserNode.getByteFrequencyData(POWER_SYSTEM.frequencyData);
+                    POWER_SYSTEM.analyserNode.getByteTimeDomainData(POWER_SYSTEM.timeDomainData);
+                } catch (e) {
+                    logMessage("Erreur dans l'analyse audio: " + e.message, 'warn');
+                    return;
+                }
 
                 // Dessiner l'oscilloscope
                 canvasCtx.lineWidth = 2;
@@ -1248,19 +1275,23 @@
             flashElement.classList.add('flash-active');
 
             if (POWER_SYSTEM.audioContext) {
-                const osc = POWER_SYSTEM.audioContext.createOscillator();
-                const gain = POWER_SYSTEM.audioContext.createGain();
+                try {
+                    const osc = POWER_SYSTEM.audioContext.createOscillator();
+                    const gain = POWER_SYSTEM.audioContext.createGain();
 
-                osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(50, POWER_SYSTEM.audioContext.currentTime);
-                gain.gain.setValueAtTime(0.5, POWER_SYSTEM.audioContext.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, POWER_SYSTEM.audioContext.currentTime + 0.5);
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(50, POWER_SYSTEM.audioContext.currentTime);
+                    gain.gain.setValueAtTime(0.5, POWER_SYSTEM.audioContext.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, POWER_SYSTEM.audioContext.currentTime + 0.5);
 
-                osc.connect(gain);
-                gain.connect(POWER_SYSTEM.audioContext.destination);
+                    osc.connect(gain);
+                    gain.connect(POWER_SYSTEM.audioContext.destination);
 
-                osc.start();
-                osc.stop(POWER_SYSTEM.audioContext.currentTime + 0.5);
+                    osc.start();
+                    osc.stop(POWER_SYSTEM.audioContext.currentTime + 0.5);
+                } catch (e) {
+                    logMessage("Erreur effet lightning: " + e.message, 'warn');
+                }
             }
         }
 
@@ -1311,9 +1342,9 @@
 
             // Calcul de la magnitude de l'accélération
             const accMagnitude = Math.sqrt(
-                Math.pow(POWER_SYSTEM.sensorData.accX, 2) +
-                Math.pow(POWER_SYSTEM.sensorData.accY, 2) +
-                Math.pow(POWER_SYSTEM.sensorData.accZ, 2)
+                Math.pow(parseFloat(POWER_SYSTEM.sensorData.accX), 2) +
+                Math.pow(parseFloat(POWER_SYSTEM.sensorData.accY), 2) +
+                Math.pow(parseFloat(POWER_SYSTEM.sensorData.accZ), 2)
             );
 
             // Seuil pour la détection d'un événement EMF
@@ -1354,6 +1385,17 @@
         window.addEventListener('load', function() {
             logMessage("TOUT PUISSANT - Système chargé.", 'sys');
             loadSystemConfiguration();
+
+            // Ajouter un gestionnaire d'erreur global pour le contexte audio
+            if (window.AudioContext || window.webkitAudioContext) {
+                const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                const testContext = new AudioContextClass();
+                testContext.onstatechange = function() {
+                    if (testContext.state === 'suspended') {
+                        logMessage("Contexte audio suspendu. Cliquez pour activer.", 'warn');
+                    }
+                };
+            }
         });
 
         // Assignation explicite des événements pour les boutons principaux
