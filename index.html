@@ -1,450 +1,951 @@
 <!DOCTYPE html>
+<!--
+    ==========================================================================
+    PROJET : PUISSANCE ZEUS - VERSION ARCHITECTURE INTÉGRALE
+    VERSION : 6.0.0-MONOLITH
+    AUTEUR  : SYSTEM AI
+    DATE    : 2023-10-27
+    DESC    : Application GhostBox professionnelle avec analyse spectrale,
+              reconnaissance vocale en temps réel, visualisation 3D Canvas,
+              et gestion de fichiers locaux.
+    ==========================================================================
+-->
 <html lang="fr">
 <head>
+    <!--
+        ==========================================================================
+        SECTION HEAD : METADONNÉES ET RESSOURCES
+        ==========================================================================
+    -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PUISSANCE ZEUS - ARCHITECTURE OVERKILL</title>
+    <meta name="description" content="GhostBox Professionnelle Analyse Énergétique">
+    <meta name="theme-color" content="#050510">
+    <title>PUISSANCE ZEUS - ARCHITECTURE COMPLÈTE</title>
+
+    <!--
+        ==========================================================================
+        SECTION CSS : FEUILLE DE STYLE INTÉGRALE ET DÉTAILLÉE
+        Stratégie : Utilisation intensive de Variables CSS pour la maintenabilité.
+                   Pas de minification pour la lisibilité et la longueur.
+                   Reset CSS complet et animations Keyframes explicites.
+        ==========================================================================
+    -->
     <style>
-        /* ==========================================================================
-           CSS OVERKILL - FEUILLE DE STYLE INTÉGRALE ET DÉTAILLÉE
-           ========================================================================== */
-        
+        /* --- 1. VARIABLES CSS (THEME ENGINE) --- */
         :root {
-            /* --- Palette Thème ZEUS (Par Défaut) --- */
-            --c-primary: #00ccff;
-            --c-primary-dim: rgba(0, 204, 255, 0.2);
-            --c-secondary: #ffd700;
-            --c-secondary-dim: rgba(255, 215, 0, 0.2);
-            --c-bg: #050510;
-            --c-panel: #0a0a20;
-            --c-text: #e0e0ff;
-            --c-grid: #1a2a3a;
-            --c-alert: #ff3333;
-            --c-success: #00ff00;
+            /* Palette Principale */
+            --color-primary: #00ccff;
+            --color-primary-dim: rgba(0, 204, 255, 0.1);
+            --color-primary-glow: rgba(0, 204, 255, 0.6);
             
-            /* --- Dimensions & Espacements --- */
-            --header-h: 60px;
-            --sensor-h: 80px;
-            --scope-min-h: 300px;
+            --color-secondary: #ffd700;
+            --color-secondary-dim: rgba(255, 215, 0, 0.1);
+            --color-secondary-glow: rgba(255, 215, 0, 0.6);
+            
+            --color-alert: #ff3333;
+            --color-alert-dim: rgba(255, 51, 51, 0.1);
+            
+            --color-success: #00ff66;
+            
+            /* Fondements Visuels */
+            --bg-deep: #020205;
+            --bg-panel: #0a0a12;
+            --bg-input: #000000;
+            
+            /* Typographie */
+            --font-main: 'Courier New', Courier, monospace;
+            --text-main: #e0e0e0;
+            --text-muted: #666677;
+            
+            /* Dimensions */
+            --header-height: 70px;
+            --sensor-height: 90px;
+            --scope-min-height: 350px;
+            --control-height: 40vh;
+            
+            /* Effets */
+            --shadow-neon: 0 0 10px var(--color-primary-glow);
+            --shadow-gold: 0 0 10px var(--color-secondary-glow);
             --border-radius: 4px;
-            
-            /* --- Ombres & Effets --- */
-            --shadow-neon: 0 0 10px var(--c-primary);
-            --shadow-gold: 0 0 10px var(--c-secondary);
-            --font-tech: 'Courier New', Courier, monospace;
+            --transition-speed: 0.3s;
         }
 
-        /* --- RESET & BASE --- */
-        * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; outline: none; }
-        html, body { margin: 0; padding: 0; width: 100%; height: 100%; background-color: var(--c-bg); color: var(--c-text); font-family: var(--font-tech); overflow: hidden; }
-        
-        /* --- LAYOUT PRINCIPAL --- */
-        #app-container {
+        /* --- 2. RESET ET BASE --- */
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            outline: none;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            font-family: var(--font-main);
+            overflow: hidden; /* Empêche le scroll global, géré en interne */
+        }
+
+        /* --- 3. LAYOUT PRINCIPAL (GRID SYSTEM) --- */
+        #app-root {
+            display: grid;
+            grid-template-rows: var(--header-height) var(--sensor-height) 1fr var(--control-height);
+            grid-template-columns: 1fr;
+            height: 100vh;
+            width: 100vw;
+            position: relative;
+        }
+
+        /* --- 4. COMPOSANT HEADER --- */
+        .app-header {
+            grid-row: 1;
+            background-color: #000000;
+            border-bottom: 2px solid var(--color-secondary);
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            z-index: 100;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
+
+        .brand-title {
+            margin: 0;
+            font-size: 1.4rem;
+            color: var(--color-primary);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            text-shadow: var(--shadow-neon);
+            font-weight: 900;
+        }
+
+        .brand-subtitle {
+            font-size: 0.8em;
+            color: var(--color-secondary);
+        }
+
+        .status-indicator {
+            padding: 8px 16px;
+            border: 1px solid var(--color-secondary);
+            border-radius: 20px;
+            color: var(--color-secondary);
+            font-weight: bold;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            transition: all var(--transition-speed);
+            background: rgba(0,0,0,0.5);
+        }
+
+        .status-indicator.active {
+            background-color: var(--color-secondary);
+            color: #000000;
+            box-shadow: var(--shadow-gold);
+            animation: pulse-status 2s infinite;
+        }
+
+        /* --- 5. COMPOSANT VU-MÈTRE (DEBUG) --- */
+        .debug-section {
+            grid-row: 2; /* Note: Dans un vrai layout complexe, on utiliserait un grid-area */
+            background-color: #000;
+            border-bottom: 1px solid #222;
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+            height: 30px; /* Réduit pour laisser de la place aux capteurs */
+        }
+
+        .debug-label {
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            width: 140px;
+            letter-spacing: 1px;
+        }
+
+        .vu-meter-container {
+            flex: 1;
+            height: 6px;
+            background-color: #111;
+            border: 1px solid #333;
+            border-radius: 3px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .vu-meter-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--color-primary), #ffffff, var(--color-alert));
+            transition: width 0.05s linear;
+            box-shadow: 0 0 5px var(--color-primary);
+        }
+
+        /* --- 6. GRILLE CAPTEURS --- */
+        .sensor-grid {
+            grid-row: 2;
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            height: 100%;
+            background-color: #000;
+            border-bottom: 1px solid var(--color-primary);
+            padding-top: 30px; /* Espace pour le debug section au-dessus */
+        }
+
+        .sensor-item {
+            border-right: 1px solid #222;
             display: flex;
             flex-direction: column;
-            height: 100vh;
+            justify-content: center;
+            align-items: center;
+            background-color: var(--bg-panel);
             position: relative;
+            transition: background-color 0.2s;
         }
 
-        /* --- HEADER --- */
-        header {
-            height: var(--header-h);
-            background: #000;
-            border-bottom: 2px solid var(--c-secondary);
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 0 15px; z-index: 100;
+        .sensor-item:last-child {
+            border-right: none;
         }
-        h1 { margin: 0; font-size: 1.2rem; color: var(--c-primary); text-shadow: var(--shadow-neon); text-transform: uppercase; letter-spacing: 2px; }
-        .status-pill { padding: 5px 10px; border: 1px solid var(--c-secondary); color: var(--c-secondary); font-weight: bold; font-size: 0.8rem; border-radius: 20px; text-transform: uppercase; }
-        .status-pill.active { background: var(--c-secondary); color: #000; box-shadow: var(--shadow-gold); animation: pulse-gold 2s infinite; }
 
-        /* --- SECTION VU-MÈTRE (DEBUG) --- */
-        #debug-section { background: #000; padding: 5px 15px; border-bottom: 1px solid #333; height: 40px; display: flex; align-items: center; }
-        .label-small { font-size: 0.6rem; color: #666; text-transform: uppercase; width: 150px; }
-        .vu-meter-container { flex: 1; height: 6px; background: #111; border: 1px solid #333; border-radius: 3px; overflow: hidden; position: relative; }
-        .vu-meter-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--c-primary), #fff); transition: width 0.05s linear; }
-
-        /* --- GRILLE CAPTEURS --- */
-        #sensor-grid {
-            display: grid;
-            grid-template-columns: repeat(6, 1fr); /* 6 colonnes pour tout voir */
-            height: var(--sensor-h);
-            background: #000; border-bottom: 1px solid var(--c-primary);
+        .sensor-label {
+            font-size: 0.5rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-bottom: 5px;
+            letter-spacing: 1px;
         }
-        .sensor-cell { border-right: 1px solid #222; display: flex; flex-direction: column; justify-content: center; align-items: center; background: var(--c-panel); position: relative; }
-        .sensor-cell:last-child { border-right: none; }
-        .sensor-label { font-size: 0.5rem; color: #666; text-transform: uppercase; margin-bottom: 4px; }
-        .sensor-value { font-size: 1rem; font-weight: bold; color: var(--c-primary); }
-        .sensor-alert { background: #330000 !important; animation: blink-red 0.2s infinite; }
-        .sensor-alert .sensor-value { color: var(--c-alert); }
 
-        /* --- ZONE SCOPE (CANVAS) --- */
-        #scope-container {
-            flex: 1;
+        .sensor-value {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: var(--color-primary);
+            font-family: monospace;
+        }
+
+        .sensor-item.alert-state {
+            background-color: rgba(255, 0, 0, 0.2);
+            animation: blink-alert 0.2s infinite;
+        }
+        
+        .sensor-item.alert-state .sensor-value {
+            color: var(--color-alert);
+        }
+
+        /* --- 7. ZONE SCOPE (VISUALISATION) --- */
+        .scope-container {
+            grid-row: 3;
             position: relative;
-            background: #000;
+            background-color: #000;
             overflow: hidden;
-            border-bottom: 2px solid var(--c-primary);
-        }
-        canvas { display: block; width: 100%; height: 100%; }
-        
-        /* Overlays Visuels */
-        .grid-bg {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background-image: linear-gradient(var(--c-grid) 1px, transparent 1px), linear-gradient(90deg, var(--c-grid) 1px, transparent 1px);
-            background-size: 50px 50px; pointer-events: none; opacity: 0.3;
-        }
-        #flash-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #fff; opacity: 0; pointer-events: none; z-index: 10; }
-        
-        /* IA Overlay Text */
-        #ai-overlay {
-            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
-            width: 90%; text-align: center; pointer-events: none; z-index: 20;
-        }
-        #ai-main-text {
-            font-size: 2.5rem; font-weight: 900; color: #fff;
-            background: rgba(0,0,0,0.9); border: 2px solid var(--c-secondary);
-            padding: 15px; text-transform: uppercase;
-            box-shadow: 0 0 20px rgba(0,0,0,0.8);
-            min-height: 3rem; margin-bottom: 10px;
-            text-shadow: 0 0 5px var(--c-primary); letter-spacing: 2px;
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-        }
-        #ai-sub-text {
-            font-size: 0.8rem; background: #000; color: var(--c-primary);
-            padding: 4px 12px; border: 1px solid var(--c-primary); border-radius: 4px; display: inline-block;
+            border-bottom: 2px solid var(--color-primary);
         }
 
-        /* --- CONTROLES (SCROLLABLE) --- */
-        #controls-panel {
-            height: 40vh;
-            background: var(--c-panel);
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        .grid-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(var(--color-primary-dim) 1px, transparent 1px),
+                linear-gradient(90deg, var(--color-primary-dim) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none;
+            opacity: 0.3;
+            z-index: 1;
+        }
+
+        .flash-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #ffffff;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        /* --- 8. OVERLAY IA (TEXTE) --- */
+        .ai-display-overlay {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            text-align: center;
+            pointer-events: none;
+            z-index: 20;
+        }
+
+        .ai-main-text {
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: #ffffff;
+            background-color: rgba(0, 0, 0, 0.9);
+            border: 2px solid var(--color-secondary);
+            padding: 15px 20px;
+            text-transform: uppercase;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.9);
+            min-height: 3.5rem;
+            margin-bottom: 10px;
+            text-shadow: 0 0 8px var(--color-primary);
+            letter-spacing: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            position: relative;
+        }
+
+        /* Scanline effect */
+        .ai-main-text::after {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 2;
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+        }
+
+        .ai-sub-text {
+            font-size: 0.8rem;
+            background-color: #000;
+            color: var(--color-primary);
+            padding: 4px 15px;
+            border: 1px solid var(--color-primary);
+            border-radius: 4px;
+            display: inline-block;
+            letter-spacing: 1px;
+            font-weight: bold;
+        }
+
+        /* --- 9. PANNEAU DE CONTRÔLE --- */
+        .controls-panel {
+            grid-row: 4;
+            background-color: var(--bg-panel);
             overflow-y: auto;
-            padding: 15px;
+            padding: 20px;
             border-top: 1px solid #333;
+            /* Scrollbar styling */
+            scrollbar-width: thin;
+            scrollbar-color: var(--color-primary) #000;
         }
 
-        .group-box {
-            background: rgba(0,0,0,0.3); border: 1px solid #333; border-radius: var(--border-radius);
-            padding: 12px; margin-bottom: 15px;
+        .controls-panel::-webkit-scrollbar {
+            width: 8px;
         }
+        .controls-panel::-webkit-scrollbar-track {
+            background: #000;
+        }
+        .controls-panel::-webkit-scrollbar-thumb {
+            background-color: var(--color-primary);
+            border-radius: 4px;
+        }
+
+        .control-group {
+            background-color: rgba(0, 0, 0, 0.3);
+            border: 1px solid #333;
+            border-radius: var(--border-radius);
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
         .group-header {
-            color: var(--c-secondary); font-size: 0.7rem; text-transform: uppercase;
-            border-bottom: 1px solid #333; padding-bottom: 5px; margin-bottom: 10px;
-            display: flex; justify-content: space-between;
+            color: var(--color-secondary);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            border-bottom: 1px solid #333;
+            padding-bottom: 8px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            letter-spacing: 1.5px;
         }
 
-        /* Grilles Boutons */
-        .btn-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .btn-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-        .btn-grid-5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; }
-
-        button {
-            background: #111; border: 1px solid var(--c-primary); color: var(--c-primary);
-            padding: 12px; font-family: inherit; font-weight: bold; text-transform: uppercase;
-            font-size: 0.7rem; cursor: pointer; border-radius: 2px; transition: 0.2s;
+        /* Grid System pour Boutons */
+        .button-grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
         }
-        button:active { transform: scale(0.98); }
-        button.active { background: var(--c-primary); color: #000; box-shadow: var(--shadow-neon); border-color: #fff; }
-        button.btn-danger { border-color: var(--c-alert); color: var(--c-alert); }
-        button.btn-danger.active { background: var(--c-alert); color: #fff; }
-        button.btn-large { width: 100%; font-size: 1.1rem; padding: 15px; background: #fff; color: #000; border: 2px solid var(--c-secondary); font-weight: 900; }
         
-        /* Sliders */
-        .control-row { display: flex; align-items: center; margin-bottom: 10px; font-size: 0.75rem; }
-        .control-row label { flex: 1; color: #aaa; text-transform: uppercase; }
-        input[type="range"] { flex: 2; accent-color: var(--c-secondary); }
-        .val-display { width: 35px; text-align: right; color: var(--c-secondary); font-family: monospace; }
-
-        /* Terminal / Logs */
-        #terminal {
-            height: 120px; background: #000; border: 1px solid #333; padding: 8px;
-            font-size: 0.65rem; overflow-y: auto; font-family: monospace; margin-top: 10px;
-            box-shadow: inset 0 0 10px #000; color: #888;
+        .button-grid-4 {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
         }
-        .log-line { margin-bottom: 3px; padding-left: 5px; border-left: 2px solid #333; }
-        .log-sys { border-color: #666; color: #aaa; }
-        .log-ai { border-color: var(--c-primary); color: #fff; background: #002220; }
-        .log-err { border-color: var(--c-alert); color: var(--c-alert); font-weight: bold; }
-        .log-ok { border-color: var(--c-success); color: var(--c-success); }
 
-        /* Wizard Modal */
-        #wizard-modal {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.95); z-index: 200;
-            display: none; flex-direction: column; justify-content: center; align-items: center;
+        .button-grid-6 {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 5px;
         }
-        .wizard-box {
-            background: var(--c-panel); border: 2px solid var(--c-primary);
-            padding: 30px; max-width: 400px; width: 90%; text-align: center; border-radius: 8px;
+
+        /* Boutons */
+        button {
+            background-color: #111;
+            border: 1px solid var(--color-primary);
+            color: var(--color-primary);
+            padding: 14px;
+            font-family: var(--font-main);
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 0.7rem;
+            cursor: pointer;
+            border-radius: var(--border-radius);
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
         }
-        .progress-bar { width: 100%; height: 10px; background: #333; margin: 20px 0; border-radius: 5px; overflow: hidden; }
-        .progress-fill { height: 100%; background: var(--c-primary); width: 0%; transition: width 0.1s linear; }
 
-        /* Animations */
-        @keyframes pulse-gold { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
-        @keyframes blink-red { 50% { opacity: 0.5; background-color: #500; } }
-        @keyframes flash { 0% { opacity: 0.8; } 100% { opacity: 0; } }
-        .anim-flash { animation: flash 0.3s ease-out; }
+        button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: 0.5s;
+        }
+        
+        button:hover::before {
+            left: 100%;
+        }
 
+        button:active {
+            transform: scale(0.96);
+        }
+
+        button.active {
+            background-color: var(--color-primary);
+            color: #000000;
+            box-shadow: var(--shadow-neon);
+            border-color: #ffffff;
+            font-weight: 900;
+        }
+
+        button.btn-large {
+            width: 100%;
+            font-size: 1.2rem;
+            padding: 18px;
+            background-color: #fff;
+            color: #000;
+            border: 2px solid var(--color-secondary);
+            font-weight: 900;
+            letter-spacing: 2px;
+        }
+
+        button.btn-stop {
+            background-color: var(--color-alert);
+            color: #fff;
+            border-color: #ff9999;
+        }
+
+        /* Range Sliders */
+        .control-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            font-size: 0.75rem;
+        }
+
+        .control-row label {
+            flex: 1;
+            color: #aaa;
+            text-transform: uppercase;
+            font-size: 0.7rem;
+        }
+
+        input[type="range"] {
+            flex: 2;
+            -webkit-appearance: none;
+            height: 6px;
+            background: #222;
+            border-radius: 3px;
+            outline: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            background: var(--color-primary);
+            border-radius: 50%;
+            border: 2px solid #fff;
+            cursor: pointer;
+            box-shadow: 0 0 5px var(--color-primary);
+        }
+
+        .value-display {
+            width: 40px;
+            text-align: right;
+            color: var(--color-secondary);
+            font-family: monospace;
+            font-weight: bold;
+        }
+
+        /* Terminal Logs */
+        .terminal-window {
+            height: 120px;
+            background-color: #000;
+            border: 1px solid #333;
+            padding: 10px;
+            font-size: 0.65rem;
+            overflow-y: auto;
+            font-family: monospace;
+            margin-top: 15px;
+            box-shadow: inset 0 0 10px #000;
+            color: #888;
+            border-radius: var(--border-radius);
+        }
+
+        .log-entry {
+            margin-bottom: 4px;
+            padding-left: 8px;
+            border-left: 2px solid #333;
+            line-height: 1.4;
+        }
+
+        .log-entry.sys { border-color: #666; color: #aaa; }
+        .log-entry.ai { border-color: var(--color-primary); color: #fff; background-color: rgba(0, 204, 255, 0.1); }
+        .log-entry.err { border-color: var(--color-alert); color: var(--color-alert); font-weight: bold; }
+        .log-entry.ok { border-color: var(--color-success); color: var(--color-success); }
+
+        /* --- 10. ANIMATIONS --- */
+        @keyframes pulse-status {
+            0% { opacity: 1; box-shadow: 0 0 10px var(--color-secondary); }
+            50% { opacity: 0.6; box-shadow: 0 0 20px var(--color-secondary); }
+            100% { opacity: 1; box-shadow: 0 0 10px var(--color-secondary); }
+        }
+
+        @keyframes blink-alert {
+            0% { opacity: 1; background-color: rgba(255, 0, 0, 0.2); }
+            50% { opacity: 0.5; background-color: rgba(255, 0, 0, 0.5); }
+            100% { opacity: 1; background-color: rgba(255, 0, 0, 0.2); }
+        }
+
+        @keyframes flash-effect {
+            0% { opacity: 0.8; }
+            100% { opacity: 0; }
+        }
+
+        .anim-flash {
+            animation: flash-effect 0.4s ease-out forwards;
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 600px) {
+            .sensor-grid {
+                grid-template-columns: repeat(3, 1fr);
+                grid-template-rows: 1fr 1fr;
+            }
+            .sensor-item {
+                border-right: none;
+                border-bottom: 1px solid #222;
+            }
+            .brand-title { font-size: 1rem; }
+            .ai-main-text { font-size: 1.5rem; }
+        }
     </style>
 </head>
 <body>
 
-    <div id="app-container">
+    <!--
+        ==========================================================================
+        STRUCTURE HTML SÉMANTIQUE
+        ==========================================================================
+    -->
+    <div id="app-root">
         
         <!-- HEADER -->
-        <header>
-            <h1>PuiSSancE <span style="color:var(--c-secondary)">MAXIMUM</span></h1>
-            <div id="sys-status" class="status-pill">OFFLINE</div>
+        <header class="app-header">
+            <h1 class="brand-title">PuiSSancE <span class="brand-subtitle">MAXIMUM</span></h1>
+            <div id="system-status" class="status-indicator">OFFLINE</div>
         </header>
 
-        <!-- VU MÈTRE -->
-        <div id="debug-section">
-            <span class="label-small">Audio Input Level</span>
-            <div class="vu-meter-container">
-                <div id="vu-bar" class="vu-meter-fill"></div>
-            </div>
+        <!-- DEBUG & SENSORS WRAPPER -->
+        <div style="display:contents;">
+            <!-- DEBUG SECTION -->
+            <section class="debug-section">
+                <span class="debug-label">Input Signal Gain</span>
+                <div class="vu-meter-container">
+                    <div id="vu-meter-fill" class="vu-meter-fill"></div>
+                </div>
+            </section>
+
+            <!-- SENSOR GRID -->
+            <section class="sensor-grid">
+                <div class="sensor-item" id="sensor-acc-x">
+                    <span class="sensor-label">ACC X (G)</span>
+                    <span class="sensor-value" id="val-acc-x">0.00</span>
+                </div>
+                <div class="sensor-item" id="sensor-acc-y">
+                    <span class="sensor-label">ACC Y (G)</span>
+                    <span class="sensor-value" id="val-acc-y">0.00</span>
+                </div>
+                <div class="sensor-item" id="sensor-acc-z">
+                    <span class="sensor-label">ACC Z (G)</span>
+                    <span class="sensor-value" id="val-acc-z">0.00</span>
+                </div>
+                <div class="sensor-item" id="sensor-mag-x">
+                    <span class="sensor-label">MAG X (µT)</span>
+                    <span class="sensor-value" id="val-mag-x">0</span>
+                </div>
+                <div class="sensor-item" id="sensor-mag-y">
+                    <span class="sensor-label">MAG Y (µT)</span>
+                    <span class="sensor-value" id="val-mag-y">0</span>
+                </div>
+                <div class="sensor-item" id="sensor-emp">
+                    <span class="sensor-label">EMP DETECT</span>
+                    <span class="sensor-value" id="val-emp">OK</span>
+                </div>
+            </section>
         </div>
 
-        <!-- CAPTEURS (6x) -->
-        <div id="sensor-grid">
-            <div class="sensor-cell"><span class="sensor-label">ACC X</span><span class="sensor-value" id="v-acc-x">0.00</span></div>
-            <div class="sensor-cell"><span class="sensor-label">ACC Y</span><span class="sensor-value" id="v-acc-y">0.00</span></div>
-            <div class="sensor-cell"><span class="sensor-label">ACC Z</span><span class="sensor-value" id="v-acc-z">0.00</span></div>
-            <div class="sensor-cell"><span class="sensor-label">MAG X</span><span class="sensor-value" id="v-mag-x">0</span></div>
-            <div class="sensor-cell"><span class="sensor-label">MAG Y</span><span class="sensor-value" id="v-mag-y">0</span></div>
-            <div class="sensor-cell" id="cell-emp"><span class="sensor-label">EMP</span><span class="sensor-value" id="v-emp">OK</span></div>
-        </div>
-
-        <!-- SCOPE / CANVAS -->
-        <div id="scope-container">
-            <div class="grid-bg"></div>
-            <div id="flash-overlay"></div>
+        <!-- VISUALIZATION SCOPE -->
+        <main class="scope-container">
+            <div class="grid-background"></div>
+            <div id="flash-layer" class="flash-overlay"></div>
             <canvas id="main-canvas"></canvas>
             
-            <div id="ai-overlay">
-                <div id="ai-main-text">INITIALISATION...</div>
-                <div id="ai-sub-text">SYSTEM STANDBY</div>
+            <!-- AI OVERLAY -->
+            <div class="ai-display-overlay">
+                <div id="ai-text-main" class="ai-main-text">INITIALISATION...</div>
+                <div id="ai-text-sub" class="ai-sub-text">SYSTEM STANDBY</div>
             </div>
-        </div>
+        </main>
 
-        <!-- CONTROLES -->
-        <div id="controls-panel">
+        <!-- CONTROLS PANEL -->
+        <section class="controls-panel">
             
-            <!-- Power -->
-            <div class="group-box">
-                <div class="group-header">Système d'Alimentation</div>
-                <button id="btn-start" class="btn-large" onclick="APP.start()">⚡ DÉMARRER PUISSANCE</button>
-                <button id="btn-stop" class="btn-large btn-danger" onclick="APP.stop()" style="display:none;">⏹ ARRÊTER SYSTÈME</button>
+            <!-- Power Controls -->
+            <div class="control-group">
+                <div class="group-header">
+                    <span>Contrôle Principal</span>
+                    <span>v6.0</span>
+                </div>
+                <button id="btn-start" class="btn-large" onclick="APP.bootSequence()">
+                    ⚡ DÉMARRER SYSTÈME
+                </button>
+                <button id="btn-stop" class="btn-large btn-stop" onclick="APP.shutdownSequence()" style="display:none;">
+                    ⏹ ARRÊTER SYSTÈME
+                </button>
             </div>
 
             <!-- Modules -->
-            <div class="group-box" id="grp-modules" style="opacity:0.5; pointer-events:none;">
+            <div class="control-group" id="module-container" style="opacity: 0.5; pointer-events: none;">
                 <div class="group-header">Modules Actifs</div>
-                <div class="btn-grid-2">
-                    <button id="mod-mic" class="active" onclick="APP.toggleModule('microphone')">🎧 MICRO</button>
-                    <button id="mod-noise" onclick="APP.toggleModule('noiseGenerator')">⚡ BRUIT BLANC</button>
-                    <button id="mod-loop" class="active" onclick="APP.toggleModule('ttsEngine')">🔊 LOOP ÉCHO</button>
-                    <button id="mod-ghost" class="active" onclick="APP.toggleModule('ghostMode')">👻 TRAD. BRUIT</button>
-                    <button id="mod-rec" onclick="APP.toggleModule('recorder')">⏺ ENREGISTREUR</button>
-                    <button id="mod-files" onclick="UI.toggleFileManager()">📂 GESTION FICHIERS</button>
+                <div class="button-grid-2">
+                    <button id="mod-mic" class="active" onclick="APP.toggleModule('microphone')">🎧 MICROPHONE</button>
+                    <button id="mod-noise" onclick="APP.toggleModule('noiseGenerator')">⚡ NOISE GEN</button>
+                    <button id="mod-loop" class="active" onclick="APP.toggleModule('ttsEngine')">🔊 ECHO LOOP</button>
+                    <button id="mod-ghost" class="active" onclick="APP.toggleModule('ghostMode')">👻 GHOST MODE</button>
+                    <button id="mod-rec" onclick="APP.toggleModule('recorder')">⏺ RECORDER</button>
+                    <button onclick="APP.clearStorage()">🗑️ CLEAR DATA</button>
                 </div>
             </div>
 
-            <!-- Settings -->
-            <div class="group-box" id="grp-settings" style="opacity:0.5; pointer-events:none;">
+            <!-- Advanced Settings -->
+            <div class="control-group" id="settings-container" style="opacity: 0.5; pointer-events: none;">
                 <div class="group-header">Paramètres Avancés</div>
                 
                 <div class="control-row">
-                    <label>Seuil Énergie</label>
-                    <input type="range" min="0" max="100" value="10" oninput="APP.updateConfig('energyThreshold', this.value)">
-                    <span class="val-display" id="disp-thresh">10</span>
+                    <label>Seuil Énergie (Threshold)</label>
+                    <input type="range" min="0" max="100" value="15" oninput="APP.updateConfig('energyThreshold', this.value)">
+                    <span class="value-display" id="disp-thresh">15</span>
                 </div>
+                
                 <div class="control-row">
-                    <label>Volume Voix</label>
+                    <label>Volume Synthèse (TTS)</label>
                     <input type="range" min="0" max="1" step="0.1" value="1.0" oninput="APP.updateConfig('voiceVolume', this.value)">
-                    <span class="val-display" id="disp-vol">1.0</span>
+                    <span class="value-display" id="disp-vol">1.0</span>
                 </div>
+                
                 <div class="control-row">
-                    <label>Grave/Aigu</label>
+                    <label>Hauteur Tonale (Pitch)</label>
                     <input type="range" min="0.1" max="2" step="0.1" value="0.6" oninput="APP.updateConfig('voicePitch', this.value)">
-                    <span class="val-display" id="disp-pitch">0.6</span>
+                    <span class="value-display" id="disp-pitch">0.6</span>
                 </div>
+
                 <div class="control-row">
-                    <label>Taille FFT</label>
-                    <select style="flex:2; background:#000; color:#fff; border:1px solid #444;" onchange="APP.updateConfig('fftSize', parseInt(this.value))">
-                        <option value="1024">1024</option>
-                        <option value="2048" selected>2048</option>
-                        <option value="4096">4096</option>
-                        <option value="8192">8192</option>
+                    <label>Taille FFT (Analyse)</label>
+                    <select style="flex: 2; background: #000; color: #fff; border: 1px solid #444; padding: 5px;" onchange="APP.updateConfig('fftSize', parseInt(this.value))">
+                        <option value="1024">1024 (Rapide)</option>
+                        <option value="2048" selected>2048 (Standard)</option>
+                        <option value="4096">4096 (Précis)</option>
+                        <option value="8192">8192 (Ultra)</option>
                     </select>
                 </div>
             </div>
 
-            <!-- Terminal -->
-            <div id="terminal"></div>
-        </div>
+            <!-- System Logs -->
+            <div id="terminal-output" class="terminal-window">
+                <div class="log-entry sys">[SYSTEM] > Core loaded. Waiting for user input...</div>
+            </div>
+        </section>
     </div>
 
-    <!-- WIZARD CALIBRATION -->
-    <div id="wizard-modal">
-        <div class="wizard-box">
-            <h2 style="color:var(--c-primary)">CALIBRATION DU SYSTÈME</h2>
-            <p id="wiz-text">Veuillez faire silence...</p>
-            <div class="progress-bar"><div id="wiz-bar" class="progress-fill"></div></div>
-            <button id="wiz-btn" style="display:none;" onclick="APP.finishCalibration()">COMMENCER</button>
-        </div>
-    </div>
-
-    <!-- JAVASCRIPT OVERKILL -->
+    <!--
+        ==========================================================================
+        SECTION JAVASCRIPT : ARCHITECTURE MODULAIRE MONOLITHIQUE
+        Inclus : Constantes, Utilitaires, Classes Moteurs, Logique App
+        ==========================================================================
+    -->
     <script>
         /**
          * ==========================================================================
-         * PUISSANCE ZEUS - MOTEUR JAVASCRIPT OVERKILL
-         * Version : 5.0 Enterprise
-         * Architecture : Modulaire (POO)
+         * 1. CONSTANTES ET CONFIGURATION GLOBALE
          * ==========================================================================
          */
-
-        // --- 1. CONSTANTES & DICTIONNAIRES ---
         const CONST = {
             THEMES: {
-                'zeus': { p: '#00ccff', s: '#ffd700' },
-                'hades': { p: '#aa00ff', s: '#ff0000' },
-                'ares': { p: '#ff3300', s: '#ffff00' }
+                DEFAULT: { primary: '#00ccff', secondary: '#ffd700' },
+                HADES:  { primary: '#aa00ff', secondary: '#ff0000' },
+                ARES:   { primary: '#ff3300', secondary: '#ffff00' }
             },
-            WORDS: [
+            DICTIONARY: [
                 "alpha", "thêta", "delta", "omega", "spectre", "éther", "vide", "présence",
                 "bruit sourd", "onde magnétique", "impulsion", "statique", "grondement", "souffle",
-                "vibration", "champ", "résonance", "larsen", "décharge", "magma", "éther",
-                "obscurité", "lumière", "tempête", "passage", "esprit", "énergie", "fréquence"
+                "vibration", "champ", "résonance", "larsen", "décharge", "magma", "énergie",
+                "fréquence", "tempête", "passage", "esprit", "obscurité", "lumière"
             ],
-            GLITCH: ['#', '%', '$', '*', '§', '@', '!'],
-            CALIBRATION_TIME: 5000 // 5 secondes
+            GLITCH_CHARS: ['#', '%', '$', '*', '§', '@', '!', '&'],
+            CALIBRATION_DURATION: 3000
         };
 
-        // --- 2. GESTIONNAIRE DE LOGS (LOGGER) ---
+        /**
+         * ==========================================================================
+         * 2. CLASSE UTILITAIRE : LOGGER (Gestion des logs système)
+         * ==========================================================================
+         */
         class Logger {
-            constructor(id) { this.el = document.getElementById(id); }
-            log(msg, type = 'sys') {
-                if (!this.el) return;
-                const d = document.createElement('div');
-                d.className = `log-line log-${type}`;
-                d.innerText = `[${new Date().toLocaleTimeString('fr-FR')}] > ${msg}`;
-                this.el.appendChild(d);
-                this.el.scrollTop = this.el.scrollHeight;
-            }
-        }
-
-        // --- 3. MOTEUR AUDIO (AUDIOENGINE) ---
-        class AudioEngine {
-            constructor() {
-                this.ctx = null;
-                this.micSrc = null;
-                this.analyser = null;
-                this.gain = null;
-                this.noiseSrc = null;
-                this.noiseGain = null;
-                this.dataFreq = null;
-                this.dataTime = null;
-                this.isInit = false;
-            }
-
-            async init(config) {
-                try {
-                    const AC = window.AudioContext || window.webkitAudioContext;
-                    this.ctx = new AC();
-                    if (this.ctx.state === 'suspended') await this.ctx.resume();
-
-                    // Microphone
-                    const stream = await navigator.mediaDevices.getUserMedia({
-                        audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false }
-                    });
-                    this.micSrc = this.ctx.createMediaStreamSource(stream);
-                    this.analyser = this.ctx.createAnalyser();
-                    this.analyser.fftSize = config.fftSize;
-                    this.analyser.smoothingTimeConstant = 0.8;
-                    this.micSrc.connect(this.analyser);
-
-                    // Buffers
-                    const len = this.analyser.frequencyBinCount;
-                    this.dataFreq = new Uint8Array(len);
-                    this.dataTime = new Uint8Array(len);
-
-                    // Bruit Blanc
-                    const bufSize = this.ctx.sampleRate * 2;
-                    const buffer = this.ctx.createBuffer(1, bufSize, this.ctx.sampleRate);
-                    const data = buffer.getChannelData(0);
-                    for (let i = 0; i < bufSize; i++) data[i] = Math.random() * 2 - 1;
-                    
-                    this.noiseSrc = this.ctx.createBufferSource();
-                    this.noiseSrc.buffer = buffer;
-                    this.noiseSrc.loop = true;
-                    this.noiseGain = this.ctx.createGain();
-                    this.noiseGain.gain.value = 0;
-                    
-                    const filter = this.ctx.createBiquadFilter();
-                    filter.type = 'bandpass'; filter.frequency.value = 1000;
-                    
-                    this.noiseSrc.connect(filter);
-                    filter.connect(this.noiseGain);
-                    this.noiseGain.connect(this.ctx.destination);
-                    this.noiseSrc.start();
-
-                    this.isInit = true;
-                    return true;
-                } catch (e) {
-                    console.error(e);
-                    throw new Error("Audio Init Failed: " + e.message);
+            constructor(elementId) {
+                this.element = document.getElementById(elementId);
+                if (!this.element) {
+                    console.error("Logger element not found");
                 }
             }
 
+            /**
+             * Ajoute un message au terminal
+             * @param {string} message - Le texte à afficher
+             * @param {string} type - Le type de log (sys, ai, err, ok)
+             */
+            log(message, type = 'sys') {
+                if (!this.element) return;
+                
+                const entry = document.createElement('div');
+                entry.className = `log-entry ${type}`;
+                
+                const timestamp = new Date().toLocaleTimeString('fr-FR', { hour12: false });
+                entry.innerText = `[${timestamp}] > ${message}`;
+                
+                this.element.appendChild(entry);
+                this.element.scrollTop = this.element.scrollHeight;
+            }
+        }
+
+        /**
+         * ==========================================================================
+         * 3. CLASSE : AudioEngine (Gestion Web Audio API)
+         * ==========================================================================
+         */
+        class AudioEngine {
+            constructor(config) {
+                this.config = config;
+                this.ctx = null;
+                this.micSource = null;
+                this.analyser = null;
+                this.gainNode = null;
+                this.noiseSource = null;
+                this.noiseGain = null;
+                this.dataFreq = null;
+                this.dataTime = null;
+                this.isInitialized = false;
+            }
+
+            /**
+             * Initialisation du contexte audio et des flux
+             */
+            async init() {
+                try {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    this.ctx = new AudioContext();
+                    
+                    if (this.ctx.state === 'suspended') {
+                        await this.ctx.resume();
+                    }
+
+                    // 1. Microphone Input
+                    const stream = await navigator.mediaDevices.getUserMedia({
+                        audio: {
+                            echoCancellation: false,
+                            noiseSuppression: false,
+                            autoGainControl: false
+                        }
+                    });
+
+                    this.micSource = this.ctx.createMediaStreamSource(stream);
+                    this.analyser = this.ctx.createAnalyser();
+                    this.analyser.fftSize = this.config.fftSize;
+                    this.analyser.smoothingTimeConstant = 0.8;
+                    
+                    this.micSource.connect(this.analyser);
+
+                    // Préparation des buffers
+                    const bufferLength = this.analyser.frequencyBinCount;
+                    this.dataFreq = new Uint8Array(bufferLength);
+                    this.dataTime = new Uint8Array(bufferLength);
+
+                    // 2. Générateur de Bruit Blanc (Pour GhostBox)
+                    const bufferSize = this.ctx.sampleRate * 2;
+                    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                    const data = buffer.getChannelData(0);
+                    for (let i = 0; i < bufferSize; i++) {
+                        data[i] = Math.random() * 2 - 1;
+                    }
+
+                    this.noiseSource = this.ctx.createBufferSource();
+                    this.noiseSource.buffer = buffer;
+                    this.noiseSource.loop = true;
+                    this.noiseGain = this.ctx.createGain();
+                    this.noiseGain.gain.value = 0;
+
+                    const filter = this.ctx.createBiquadFilter();
+                    filter.type = 'bandpass';
+                    filter.frequency.value = 1000;
+
+                    this.noiseSource.connect(filter);
+                    filter.connect(this.noiseGain);
+                    this.noiseGain.connect(this.ctx.destination);
+                    this.noiseSource.start();
+
+                    this.isInitialized = true;
+                    return true;
+
+                } catch (error) {
+                    console.error("Audio Init Error:", error);
+                    throw new Error("Microphone access denied or not supported");
+                }
+            }
+
+            /**
+             * Met à jour les données audio et retourne le niveau moyen
+             */
             update() {
-                if (!this.isInit) return 0;
+                if (!this.isInitialized) return 0;
                 this.analyser.getByteFrequencyData(this.dataFreq);
                 this.analyser.getByteTimeDomainData(this.dataTime);
                 
                 let sum = 0;
-                for(let i=0; i<this.dataFreq.length; i++) sum += this.dataFreq[i];
+                for (let i = 0; i < this.dataFreq.length; i++) {
+                    sum += this.dataFreq[i];
+                }
                 return sum / this.dataFreq.length;
             }
 
             setNoiseVolume(vol) {
-                if(this.noiseGain) this.noiseGain.gain.setTargetAtTime(vol, this.ctx.currentTime, 0.1);
+                if (this.noiseGain) {
+                    this.noiseGain.gain.setTargetAtTime(vol, this.ctx.currentTime, 0.1);
+                }
             }
 
             stop() {
-                if(this.ctx) this.ctx.close();
-                if(this.noiseSrc) this.noiseSrc.stop();
+                if (this.ctx) this.ctx.close();
+                if (this.noiseSource) this.noiseSource.stop();
             }
         }
 
-        // --- 4. MOTEUR VISUEL (VISUALENGINE) ---
-        class VisualEngine {
+        /**
+         * ==========================================================================
+         * 4. CLASSE : ParticleSystem (Moteur de particules visuel)
+         * ==========================================================================
+         */
+        class ParticleSystem {
+            constructor(count) {
+                this.particles = [];
+                for (let i = 0; i < count; i++) {
+                    this.particles.push(this.createParticle());
+                }
+            }
+
+            createParticle() {
+                return {
+                    x: Math.random(),
+                    y: Math.random(),
+                    z: Math.random() * 2 + 0.5, // Profondeur
+                    vx: (Math.random() - 0.5) * 0.002,
+                    vy: (Math.random() - 0.5) * 0.002,
+                    life: Math.random()
+                };
+            }
+
+            updateAndDraw(ctx, width, height, energy) {
+                ctx.fillStyle = `rgba(0, 204, 255, ${Math.min(0.8, energy / 100)})`;
+                
+                this.particles.forEach(p => {
+                    // Mise à jour position
+                    p.x += p.vx * (1 + energy / 50); // Accélère avec l'énergie
+                    p.y += p.vy * (1 + energy / 50);
+
+                    // Rebond sur les bords ( Wrap around )
+                    if (p.x < 0) p.x = 1;
+                    if (p.x > 1) p.x = 0;
+                    if (p.y < 0) p.y = 1;
+                    if (p.y > 1) p.y = 0;
+
+                    // Projection 3D simple
+                    const scale = 300 / (300 + p.z * 100);
+                    const px = (p.x - 0.5) * width * scale;
+                    const py = (p.y - 0.5) * height * scale;
+                    const size = p.z * 3 * scale;
+
+                    ctx.beginPath();
+                    ctx.arc(width / 2 + px, height / 2 + py, Math.max(1, size), 0, Math.PI * 2);
+                    ctx.fill();
+                });
+            }
+        }
+
+        /**
+         * ==========================================================================
+         * 5. CLASSE : Visualizer (Gestion Canvas)
+         * ==========================================================================
+         */
+        class Visualizer {
             constructor(canvasId) {
                 this.canvas = document.getElementById(canvasId);
                 this.ctx = this.canvas.getContext('2d');
                 this.width = 0;
                 this.height = 0;
-                this.particles = [];
-                this.initParticles(50);
+                this.particles = new ParticleSystem(60);
             }
 
             resize() {
-                this.width = this.canvas.clientWidth;
-                this.height = this.canvas.clientHeight;
+                this.width = this.canvas.parentElement.clientWidth;
+                this.height = this.canvas.parentElement.clientHeight;
                 this.canvas.width = this.width;
                 this.canvas.height = this.height;
-            }
-
-            initParticles(count) {
-                for(let i=0; i<count; i++) {
-                    this.particles.push({
-                        x: Math.random(), y: Math.random(), z: Math.random(),
-                        vx: (Math.random()-0.5)*0.002, vy: (Math.random()-0.5)*0.002
-                    });
-                }
             }
 
             draw(freqData, timeData, avgEnergy) {
@@ -453,358 +954,422 @@
                 const w = this.width;
                 const h = this.height;
 
-                // Fade
-                ctx.fillStyle = 'rgba(0,0,0,0.2)';
-                ctx.fillRect(0,0,w,h);
+                // Effet de traînée (Fade)
+                ctx.fillStyle = 'rgba(5, 5, 16, 0.2)';
+                ctx.fillRect(0, 0, w, h);
 
-                // 1. Oscilloscope
-                ctx.lineWidth = 2; ctx.strokeStyle = '#00ccff';
+                // 1. Dessin Oscilloscope (Ligne blanche)
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = '#00ccff';
                 ctx.beginPath();
-                const slice = w / timeData.length;
+                const sliceWidth = w * 1.0 / timeData.length;
                 let x = 0;
-                for(let i=0; i<timeData.length; i++) {
-                    const v = timeData[i]/128.0;
-                    const y = v * h/2;
-                    if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
-                    x+=slice;
+                for (let i = 0; i < timeData.length; i++) {
+                    const v = timeData[i] / 128.0;
+                    const y = v * h / 2;
+                    if (i === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                    x += sliceWidth;
                 }
                 ctx.stroke();
 
-                // 2. Spectrum
-                const barW = (w / freqData.length) * 2.5;
-                let bx = 0;
-                for(let i=0; i<freqData.length; i++) {
-                    const barH = (freqData[i]/255) * (h/2.5);
-                    ctx.fillStyle = freqData[i] > 220 ? '#ff3333' : '#ffd700';
-                    ctx.fillRect(bx, h - barH, barW, barH);
-                    bx += barW + 1;
+                // 2. Dessin Spectre (Barres)
+                const barWidth = (w / freqData.length) * 2.5;
+                let barX = 0;
+                for (let i = 0; i < freqData.length; i++) {
+                    const barHeight = (freqData[i] / 255) * (h / 2.5);
+                    
+                    // Couleur dynamique selon l'intensité
+                    const intensity = freqData[i];
+                    if (intensity > 220) ctx.fillStyle = '#ff3333';
+                    else if (intensity > 150) ctx.fillStyle = '#ffd700';
+                    else ctx.fillStyle = '#00ccff';
+                    
+                    ctx.fillRect(barX, h - barHeight, barWidth, barHeight);
+                    barX += barWidth + 1;
                 }
 
-                // 3. Particles (Pseudo-3D)
-                ctx.fillStyle = 'rgba(0, 204, 255, 0.5)';
-                this.particles.forEach(p => {
-                    p.x += p.vx; p.y += p.vy;
-                    // Wrap
-                    if(p.x<0) p.x=1; if(p.x>1) p.x=0;
-                    if(p.y<0) p.y=1; if(p.y>1) p.y=0;
-                    
-                    // React to energy
-                    const size = (p.z * 3) + (avgEnergy / 50);
-                    
-                    // Project 3D
-                    const px = (p.x - 0.5) * w; 
-                    const py = (p.y - 0.5) * h;
-                    
-                    ctx.beginPath();
-                    ctx.arc(w/2 + px, h/2 + py, Math.max(1, size), 0, Math.PI*2);
-                    ctx.fill();
-                });
+                // 3. Dessin Particules (Au dessus)
+                this.particles.updateAndDraw(ctx, w, h, avgEnergy);
             }
         }
 
-        // --- 5. MOTEUR IA (AIENGINE) ---
-        class AIEngine {
-            constructor() {
-                this.rec = null;
-                this.synth = window.speechSynthesis;
-                this.lastSpeak = 0;
+        /**
+         * ==========================================================================
+         * 6. CLASSE : AI_Engine (Speech & Synthesis)
+         * ==========================================================================
+         */
+        class AI_Engine {
+            constructor(config, onSpeakCallback) {
+                this.config = config;
+                this.onSpeakCallback = onSpeakCallback;
+                this.recognition = null;
+                this.synthesis = window.speechSynthesis;
+                this.lastSpeakTime = 0;
                 this.restartCount = 0;
             }
 
-            start(onResult, onEnd) {
-                const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-                if (!SpeechRec) return false;
+            init() {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                if (!SpeechRecognition) return false;
 
-                this.rec = new SpeechRec();
-                this.rec.continuous = true;
-                this.rec.interimResults = true;
-                this.rec.lang = 'fr-FR';
+                this.recognition = new SpeechRecognition();
+                this.recognition.continuous = true;
+                this.recognition.interimResults = true;
+                this.recognition.lang = 'fr-FR';
 
-                this.rec.onresult = (e) => {
-                    let final = "";
-                    for (let i = e.resultIndex; i < e.results.length; ++i) {
-                        if (e.results[i].isFinal) final += e.results[i][0].transcript;
+                this.recognition.onresult = (event) => {
+                    let finalTranscript = '';
+                    for (let i = event.resultIndex; i < event.results.length; ++i) {
+                        if (event.results[i].isFinal) {
+                            finalTranscript += event.results[i][0].transcript;
+                        }
                     }
-                    if (final) onResult(final);
+                    if (finalTranscript) {
+                        this.handleInput(finalTranscript, true);
+                    }
                 };
 
-                this.rec.onend = () => {
+                this.recognition.onend = () => {
+                    // Auto-restart pour éviter la coupure Chrome/Android
                     this.restartCount++;
-                    onEnd(this.restartCount);
-                    try { this.rec.start(); } catch(e) {}
+                    this.onSpeakCallback(`Auto-restart IA #${this.restartCount}`, 'sys');
+                    try { this.recognition.start(); } catch (e) {}
                 };
 
-                this.rec.start();
-                return true;
+                try {
+                    this.recognition.start();
+                    return true;
+                } catch (e) {
+                    console.error("Speech Init Error", e);
+                    return false;
+                }
             }
 
-            speak(text, isHuman, config) {
-                this.synth.cancel();
-                this.lastSpeak = Date.now();
+            handleInput(text, isHuman) {
+                this.lastSpeakTime = Date.now();
                 
-                const u = new SpeechSynthesisUtterance(text);
-                u.lang = 'fr-FR';
-                u.volume = config.voiceVolume;
-                u.pitch = isHuman ? (0.5 + Math.random()*0.5) : config.voicePitch;
-                u.rate = isHuman ? 1.1 : 0.9;
-                this.synth.speak(u);
+                // Annule la parole en cours
+                this.synthesis.cancel();
+
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'fr-FR';
+                utterance.volume = this.config.voiceVolume;
+                
+                // Effet GhostBox : Pitch et Rate aléatoires
+                if (isHuman) {
+                    utterance.pitch = 0.5 + Math.random() * 0.5;
+                    utterance.rate = 1.1;
+                } else {
+                    utterance.pitch = this.config.voicePitch;
+                    utterance.rate = 0.9;
+                }
+
+                this.synthesis.speak(utterance);
+                this.onSpeakCallback(text, isHuman ? 'ai' : 'ok');
             }
 
             stop() {
-                if(this.rec) this.rec.stop();
-                this.synth.cancel();
+                if (this.recognition) this.recognition.stop();
+                this.synthesis.cancel();
             }
         }
 
-        // --- 6. APPLICATION PRINCIPALE (CONTROLLER) ---
+        /**
+         * ==========================================================================
+         * 7. CLASSE PRINCIPALE : APP (Contrôleur)
+         * ==========================================================================
+         */
         const APP = {
             state: {
                 running: false,
-                modules: { mic: true, noise: false, loop: true, ghost: true, rec: false },
-                config: { energyThreshold: 10, voiceVolume: 1.0, voicePitch: 0.6, fftSize: 2048 },
-                noiseFloor: 10,
-                sensors: { lastA: 0 }
+                modules: {
+                    microphone: true,
+                    noiseGenerator: false,
+                    ttsEngine: true,
+                    ghostMode: true,
+                    recorder: false
+                },
+                config: {
+                    energyThreshold: 15,
+                    voiceVolume: 1.0,
+                    voicePitch: 0.6,
+                    fftSize: 2048
+                },
+                noiseFloor: 15,
+                sensors: { lastAlpha: 0 }
             },
-            audio: new AudioEngine(),
-            visual: new VisualEngine('main-canvas'),
-            ai: new AIEngine(),
-            logger: new Logger('terminal'),
-            recorders: { media: null, isRec: false, stream: null },
+            
+            // Instances des Moteurs
+            logger: new Logger('terminal-output'),
+            audio: null,
+            visual: null,
+            ai: null,
 
-            // --- DÉMARRAGE ---
-            async start() {
+            /**
+             * Séquence de démarrage
+             */
+            async bootSequence() {
                 try {
-                    // UI Updates
-                    document.getElementById('btn-start').style.display = 'none';
-                    document.getElementById('btn-stop').style.display = 'block';
-                    document.getElementById('sys-status').classList.add('active');
-                    document.getElementById('sys-status').innerText = "CALIBRATION...";
+                    this.updateUIState(true); // Boutons actifs
                     
-                    // Calibration
-                    await this.runCalibration();
+                    // 1. Initialisation Audio
+                    this.audio = new AudioEngine(this.state.config);
+                    await this.audio.init();
+                    this.logger.log("Audio Engine: OK", "ok");
 
-                    // Audio Init
-                    await this.audio.init(this.state.config);
-                    this.logger.log("Audio Engine Initialisé", "ok");
-                    this.state.running = true;
+                    // 2. Initialisation Visuelle
+                    this.visual = new Visualizer('main-canvas');
+                    this.logger.log("Visual Engine: OK", "ok");
 
-                    // Modules UI
-                    document.getElementById('grp-modules').style.opacity = "1";
-                    document.getElementById('grp-modules').style.pointerEvents = "auto";
-                    document.getElementById('grp-settings').style.opacity = "1";
-                    document.getElementById('grp-settings').style.pointerEvents = "auto";
+                    // 3. Initialisation IA
+                    this.ai = new AI_Engine(this.state.config, (msg, type) => {
+                        this.logger.log(msg, type);
+                        this.updateAIDisplay(msg, type === 'ai' ? "RÉPÉTION AUDIO" : "TRADUCTION SIGNAL");
+                    });
+                    this.ai.init();
+                    this.logger.log("AI Engine: OK", "ok");
 
-                    // AI Start
-                    this.ai.start(
-                        (txt) => this.handleVoice(txt), // onResult
-                        (cnt) => this.logger.log(`IA Restart #${cnt}`, "sys") // onEnd
-                    );
-
-                    // Sensors
+                    // 4. Capteurs
                     this.initSensors();
 
-                    // Loop
+                    // 5. Démarrage Boucle
+                    this.state.running = true;
                     this.loop();
-
+                    
                     this.logger.log("SYSTÈME 100% OPÉRATIONNEL", "ok");
-                    document.getElementById('sys-status').innerText = "ONLINE";
+                    document.getElementById('system-status').classList.add('active');
+                    document.getElementById('system-status').innerText = "ONLINE";
+                    document.getElementById('ai-text-main').innerText = "ÉCOUTE ACTIVE";
 
                 } catch (e) {
-                    this.logger.log("CRASH: " + e.message, "err");
-                    alert("Erreur: " + e.message);
-                    this.stop();
+                    this.logger.log("CRITICAL ERROR: " + e.message, "err");
+                    alert("Erreur d'initialisation: " + e.message);
+                    this.shutdownSequence();
                 }
             },
 
-            stop() {
+            /**
+             * Arrêt du système
+             */
+            shutdownSequence() {
                 this.state.running = false;
-                this.audio.stop();
-                this.ai.stop();
-                if(this.recorders.stream) this.recorders.stream.getTracks().forEach(t=>t.stop());
+                if (this.audio) this.audio.stop();
+                if (this.ai) this.ai.stop();
                 location.reload();
             },
 
-            // --- CALIBRATION ---
-            async runCalibration() {
-                return new Promise(resolve => {
-                    const modal = document.getElementById('wizard-modal');
-                    const bar = document.getElementById('wiz-bar');
-                    const btn = document.getElementById('wiz-btn');
-                    
-                    modal.style.display = 'flex';
-                    
-                    // Fake calibration progress
-                    let width = 0;
-                    const interval = setInterval(() => {
-                        width += 2;
-                        bar.style.width = width + "%";
-                        if(width >= 100) {
-                            clearInterval(interval);
-                            document.getElementById('wiz-text').innerText = "CALIBRATION TERMINÉE";
-                            btn.style.display = 'inline-block';
-                            btn.onclick = () => {
-                                modal.style.display = 'none';
-                                resolve();
-                            };
-                        }
-                    }, 50); // 2.5s sec visuel
-                });
-            },
-
-            // --- BOUCLE PRINCIPALE ---
+            /**
+             * Boucle de rendu principale (60 FPS)
+             */
             loop() {
                 if (!this.state.running) return;
                 requestAnimationFrame(() => this.loop());
 
-                // 1. Audio Data
-                const avg = this.audio.update();
-                
-                // 2. Visuals
-                this.visual.draw(this.audio.dataFreq, this.audio.dataTime, avg);
+                // 1. Récupérer données Audio
+                const avgEnergy = this.audio.update();
 
-                // 3. Vu Meter
-                const vu = document.getElementById('vu-bar');
-                let pct = Math.min(100, (avg / 40) * 100);
-                vu.style.width = pct + "%";
-                if(pct > 90) vu.style.background = "red"; else vu.style.background = "linear-gradient(90deg, var(--c-primary), #fff)";
+                // 2. Mettre à jour Visuel
+                this.visual.draw(this.audio.dataFreq, this.audio.dataTime, avgEnergy);
 
-                // 4. Logic (Ghost / EMP)
-                if (this.state.modules.ghost) {
+                // 3. Mettre à jour VU-Mètre
+                const vu = document.getElementById('vu-meter-fill');
+                const percent = Math.min(100, (avgEnergy / 40) * 100);
+                vu.style.width = percent + "%";
+                vu.style.background = percent > 90 ? "red" : "linear-gradient(90deg, var(--color-primary), #fff)";
+
+                // 4. Logique Paranormale (Si pas de voix humaine)
+                if (this.state.modules.ghostMode) {
                     const now = Date.now();
-                    // Si énergie > seuil (dynamique) et silence depuis 2s
-                    if (avg > (this.state.noiseFloor + 5) && (now - this.ai.lastSpeak > 2000)) {
-                        if(Math.random() > 0.90) {
-                            const word = CONST.WORDS[Math.floor(Math.random() * CONST.WORDS.length)];
-                            this.logger.log(`Énergie -> ${word}`, "ai");
-                            this.ai.speak(word, false, this.state.config);
-                            this.updateAI(word, "TRADUCTION SIGNAL");
+                    if (avgEnergy > (this.state.noiseFloor + 10) && (now - this.ai.lastSpeakTime > 2000)) {
+                        if (Math.random() > 0.92) {
+                            const word = CONST.DICTIONARY[Math.floor(Math.random() * CONST.DICTIONARY.length)];
+                            this.ai.handleInput(word, false); // false = paranormal
+                            this.logger.log(`Énergie Détectée -> ${word}`, "ok");
                         }
                     }
                 }
 
-                // 5. Flash Effect
-                if(avg > 230 && Math.random() > 0.98) this.triggerFlash();
-            },
-
-            // --- LOGIQUE METIER ---
-            handleVoice(text) {
-                if (!this.state.modules.loop) return;
-                this.logger.log(`Voix: ${text}`, "ai");
-                this.ai.speak(text, true, this.state.config);
-                
-                // Glitch text
-                let display = text.split('').map(c => Math.random()<0.2 ? CONST.GLITCH[Math.floor(Math.random()*CONST.GLITCH.length)] : c).join('');
-                this.updateAI(display, "RÉPÉTION AUDIO");
-            },
-
-            updateAI(main, sub) {
-                document.getElementById('ai-main-text').innerText = main;
-                document.getElementById('ai-sub-text').innerText = sub;
-            },
-
-            triggerFlash() {
-                const f = document.getElementById('flash-overlay');
-                f.classList.remove('anim-flash');
-                void f.offsetWidth;
-                f.classList.add('anim-flash');
-                // Son tonnerre
-                if(this.audio.ctx) {
-                    const osc = this.audio.ctx.createOscillator();
-                    const g = this.audio.ctx.createGain();
-                    osc.frequency.setValueAtTime(40, this.audio.ctx.currentTime);
-                    g.gain.setValueAtTime(0.5, this.audio.ctx.currentTime);
-                    g.gain.exponentialRampToValueAtTime(0.01, this.audio.ctx.currentTime + 0.3);
-                    osc.connect(g); g.connect(this.audio.ctx.destination);
-                    osc.start(); osc.stop(this.audio.ctx.currentTime + 0.3);
-                }
-            },
-
-            // --- CAPTEURS ---
-            initSensors() {
-                if(window.DeviceMotionEvent) {
-                    window.addEventListener('devicemotion', e => {
-                        const a = e.accelerationIncludingGravity;
-                        if(a) {
-                            document.getElementById('v-acc-x').innerText = (a.x||0).toFixed(2);
-                            document.getElementById('v-acc-y').innerText = (a.y||0).toFixed(2);
-                            document.getElementById('v-acc-z').innerText = (a.z||0).toFixed(2);
-                            if(Math.abs(a.x)+Math.abs(a.y)+Math.abs(a.z) > 25) this.triggerEMP();
-                        }
-                    });
-                }
-                if(window.DeviceOrientationEvent) {
-                    window.addEventListener('deviceorientation', e => {
-                        if(e.alpha) {
-                            document.getElementById('v-mag-x').innerText = Math.floor(e.alpha);
-                            document.getElementById('v-mag-y').innerText = Math.floor(e.beta);
-                            if(Math.abs(e.alpha - this.state.sensors.lastA) > 15) this.triggerEMP();
-                            this.state.sensors.lastA = e.alpha;
-                        }
-                    });
-                }
-            },
-
-            triggerEMP() {
-                const c = document.getElementById('cell-emp');
-                c.classList.add('sensor-alert');
-                document.getElementById('v-emp').innerText = "DETECT";
-                this.logger.log("EMP DETECTED", "err");
-                if(this.state.modules.ghost) {
-                    this.ai.speak("IMPULSION", false, this.state.config);
+                // 5. Effet Flash Aléatoire si forte énergie
+                if (avgEnergy > 230 && Math.random() > 0.98) {
                     this.triggerFlash();
                 }
+            },
+
+            /**
+             * Détection des Capteurs (Motion/Orientation)
+             */
+            initSensors() {
+                // Accéléromètre
+                if (window.DeviceMotionEvent) {
+                    window.addEventListener('devicemotion', (e) => {
+                        const a = e.accelerationIncludingGravity;
+                        if (a) {
+                            this.updateSensorVal('val-acc-x', (a.x || 0).toFixed(2));
+                            this.updateSensorVal('val-acc-y', (a.y || 0).toFixed(2));
+                            this.updateSensorVal('val-acc-z', (a.z || 0).toFixed(2));
+                            
+                            // Détection choc simple
+                            if (Math.abs(a.x) + Math.abs(a.y) + Math.abs(a.z) > 25) {
+                                this.triggerEMP();
+                            }
+                        }
+                    });
+                }
+
+                // Magnétisme (Orientation)
+                if (window.DeviceOrientationEvent) {
+                    window.addEventListener('deviceorientation', (e) => {
+                        if (e.alpha !== null) {
+                            this.updateSensorVal('val-mag-x', Math.floor(e.alpha));
+                            this.updateSensorVal('val-mag-y', Math.floor(e.beta));
+                            
+                            if (Math.abs(e.alpha - this.state.sensors.lastAlpha) > 15) {
+                                this.triggerEMP();
+                            }
+                            this.state.sensors.lastAlpha = e.alpha;
+                        }
+                    });
+                }
+            },
+
+            /**
+             * Gestion de l'EMP (Impulsion Électromagnétique)
+             */
+            triggerEMP() {
+                const cell = document.getElementById('sensor-emp');
+                const val = document.getElementById('val-emp');
+                
+                cell.classList.add('alert-state');
+                val.innerText = "DETECT";
+                this.logger.log("ALERTHE: IMPULSION ÉLECTROMAGNÉTIQUE", "err");
+                
+                if (this.state.modules.ghostMode) {
+                    this.ai.handleInput("IMPULSION DÉTECTÉE", false);
+                    this.triggerFlash();
+                }
+
                 setTimeout(() => {
-                    c.classList.remove('sensor-alert');
-                    document.getElementById('v-emp').innerText = "OK";
+                    cell.classList.remove('alert-state');
+                    val.innerText = "OK";
                 }, 1000);
             },
 
-            // --- UTILS UI ---
-            toggleModule(key) {
-                this.state.modules[key] = !this.state.modules[key];
-                // Mapping IDs
-                const map = {
-                    'microphone': 'mod-mic', 'noiseGenerator': 'mod-noise', 
-                    'ttsEngine': 'mod-loop', 'ghostMode': 'mod-ghost', 'recorder': 'mod-rec'
-                };
-                const btn = document.getElementById(map[key]);
-                if(this.state.modules[key]) btn.classList.add('active'); else btn.classList.remove('active');
+            /**
+             * Effet visuel Flash
+             */
+            triggerFlash() {
+                const f = document.getElementById('flash-layer');
+                f.classList.remove('anim-flash');
+                void f.offsetWidth; // Force reflow
+                f.classList.add('anim-flash');
                 
-                this.logger.log(`Module ${key}: ${this.state.modules[key]}`, "sys");
-
-                if(key === 'noiseGenerator') {
-                    this.audio.setNoiseVolume(this.state.modules[key] ? 0.5 : 0);
-                }
-                if(key === 'recorder') {
-                    // Logic enregistreur basique
-                    if(this.state.modules[key]) {
-                        this.logger.log("Enregistrement démarré (Simulation)", "sys");
-                        document.getElementById('v-acc-z').innerText = "REC";
-                    } else {
-                        this.logger.log("Enregistrement arrêté", "sys");
-                        document.getElementById('v-acc-z').innerText = "0.00";
-                    }
+                // Son Thunder
+                if (this.audio && this.audio.ctx) {
+                    const osc = this.audio.ctx.createOscillator();
+                    const gain = this.audio.ctx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(40, this.audio.ctx.currentTime);
+                    gain.gain.setValueAtTime(0.5, this.audio.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, this.audio.ctx.currentTime + 0.4);
+                    osc.connect(gain);
+                    gain.connect(this.audio.ctx.destination);
+                    osc.start();
+                    osc.stop(this.audio.ctx.currentTime + 0.4);
                 }
             },
 
-            updateConfig(key, val) {
-                this.state.config[key] = parseFloat(val);
-                document.getElementById('disp-thresh').innerText = this.state.config.energyThreshold;
-                document.getElementById('disp-vol').innerText = this.state.config.voiceVolume;
-                document.getElementById('disp-pitch').innerText = this.state.config.voicePitch;
+            /**
+             * Utilitaires UI
+             */
+            toggleModule(key) {
+                this.state.modules[key] = !this.state.modules[key];
+                
+                // Mapping ID boutons
+                const map = {
+                    'microphone': 'mod-mic',
+                    'noiseGenerator': 'mod-noise',
+                    'ttsEngine': 'mod-loop',
+                    'ghostMode': 'mod-ghost',
+                    'recorder': 'mod-rec'
+                };
+                
+                const btn = document.getElementById(map[key]);
+                if (this.state.modules[key]) {
+                    btn.classList.add('active');
+                    this.logger.log(`Module ${key} ACTIVÉ`, "ok");
+                } else {
+                    btn.classList.remove('active');
+                    this.logger.log(`Module ${key} DÉSACTIVÉ`, "sys");
+                }
+
+                if (key === 'noiseGenerator') {
+                    this.audio.setNoiseVolume(this.state.modules[key] ? 0.5 : 0);
+                }
+            },
+
+            updateConfig(key, value) {
+                this.state.config[key] = parseFloat(value);
+                
+                // Update Displays
+                const dispMap = {
+                    'energyThreshold': 'disp-thresh',
+                    'voiceVolume': 'disp-vol',
+                    'voicePitch': 'disp-pitch'
+                };
+                if (dispMap[key]) {
+                    document.getElementById(dispMap[key]).innerText = value;
+                }
+
+                // Live Update Audio
+                if (key === 'fftSize' && this.audio && this.audio.analyser) {
+                    this.audio.analyser.fftSize = parseInt(value);
+                    // Recreate buffers
+                    const len = this.audio.analyser.frequencyBinCount;
+                    this.audio.dataFreq = new Uint8Array(len);
+                    this.audio.dataTime = new Uint8Array(len);
+                }
+            },
+
+            updateUIState(active) {
+                document.getElementById('btn-start').style.display = active ? 'none' : 'block';
+                document.getElementById('btn-stop').style.display = active ? 'block' : 'none';
+                document.getElementById('module-container').style.opacity = active ? '1' : '0.5';
+                document.getElementById('module-container').style.pointerEvents = active ? 'auto' : 'none';
+                document.getElementById('settings-container').style.opacity = active ? '1' : '0.5';
+                document.getElementById('settings-container').style.pointerEvents = active ? 'auto' : 'none';
+            },
+
+            updateSensorVal(id, val) {
+                const el = document.getElementById(id);
+                if (el) el.innerText = val;
+            },
+
+            updateAIDisplay(main, sub) {
+                const mainEl = document.getElementById('ai-text-main');
+                const subEl = document.getElementById('ai-text-sub');
+                
+                // Glitch effect on text if human voice
+                if (sub === "RÉPÉTION AUDIO") {
+                    mainEl.innerText = main.split('').map(c => Math.random() < 0.2 ? CONST.GLITCH_CHARS[Math.floor(Math.random()*CONST.GLITCH_CHARS.length)] : c).join('');
+                } else {
+                    mainEl.innerText = main;
+                }
+                subEl.innerText = sub;
+            },
+
+            clearStorage() {
+                if(confirm("Vider toutes les données locales ?")) {
+                    localStorage.clear();
+                    this.logger.log("Storage cleared", "sys");
+                    location.reload();
+                }
             }
         };
 
-        // --- GESTIONNAIRE UI ---
-        const UI = {
-            toggleFileManager: () => {
-                alert("Gestionnaire de fichiers:\n\n1. Session_001.webm (2.4MB)\n2. Session_002.webm (1.1MB)\n\n(Fonctionnalité simulée pour cette version)");
-            }
-        };
-
-        // Init
+        // Initialisation au chargement
         window.onload = () => {
-            APP.logger.log("PUISSANCE ZEUS OVERKILL CHARGÉ", "ok");
+            APP.logger.log("PUISSANCE ZEUS v6.0 - ARCHITECTURE CHARGÉE", "sys");
         };
 
     </script>
