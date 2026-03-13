@@ -3,11 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>ETERNITY LAB - DIAGNOSTIC</title>
+<title>ETERNITY LAB - SPEEDRUN</title>
 <style>
 :root {
-  --primary: #00ff00;
-  --alert: #ff0000;
+  --primary: #00ff00; /* Vert Matrix */
   --bg: #000000;
   --panel: #050a05;
   --btn-bg: #111;
@@ -17,7 +16,7 @@
 
 body {
   margin: 0; padding: 0;
-  font-family: 'Consolas', monospace;
+  font-family: 'Courier New', monospace;
   background: var(--bg);
   color: var(--text);
   height: 100vh;
@@ -31,14 +30,12 @@ body {
   border-bottom: 1px solid var(--primary);
   padding: 5px 10px;
   display: flex; justify-content: space-between;
-  align-items: center;
   font-size: 0.8rem; color: var(--primary);
 }
 .status-light {
-  width: 12px; height: 12px; background: #333; border-radius: 50%; display: inline-block; margin-right: 5px; border: 1px solid #555;
+  width: 10px; height: 10px; background: #333; border-radius: 50%; display: inline-block; margin-right: 5px;
 }
-.status-light.on { background: #0f0; box-shadow: 0 0 10px #0f0; border-color: #0f0; }
-.status-light.alert { background: #f00; box-shadow: 0 0 10px #f00; border-color: #f00; }
+.status-light.on { background: #0f0; box-shadow: 0 0 10px #0f0; }
 
 #mainStage {
   flex: 1; position: relative;
@@ -61,51 +58,39 @@ body {
 #controls {
   background: var(--panel);
   border-top: 2px solid var(--primary);
-  height: 45vh;
+  height: 40vh;
   overflow-y: auto; padding: 10px;
   display: flex; flex-direction: column; gap: 10px;
 }
 
-/* BARS */
-#meters {
-  display: flex; gap: 5px; margin-bottom: 5px;
-}
-.meter-box { flex: 1; background: #222; height: 10px; border: 1px solid #444; position: relative; }
-.meter-fill { height: 100%; width: 0%; transition: width 0.05s; }
-
-/* BUTTONS */
 .button-grid {
-  display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px;
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 5px;
 }
 
 button {
   background: var(--btn-bg); border: 1px solid var(--primary);
-  color: var(--primary); padding: 10px; font-size: 0.7rem;
+  color: var(--primary); padding: 15px; font-size: 1rem;
   font-weight: bold; cursor: pointer; font-family: inherit;
 }
 button:active { background: var(--primary); color: #000; }
-button.active { background: var(--btn-active); color: #000; box-shadow: 0 0 10px var(--primary); }
+button.active { background: var(--btn-active); color: #000; }
 button:disabled { opacity: 0.3; cursor: not-allowed; }
 
 #startBtn {
-  grid-column: span 4; font-size: 1.2rem; padding: 15px;
+  width: 100%; font-size: 1.5rem; padding: 20px;
   background: #000; color: var(--primary); border: 2px solid var(--primary);
-  font-weight: 900; text-transform: uppercase;
-}
-#startBtn.running {
-  background: var(--btn-active); color: #000;
+  font-weight: 900;
 }
 
 #logZone {
   height: 60px; background: #000; border-top: 1px solid #333;
-  padding: 5px; font-size: 0.7rem; overflow-y: auto; color: #888;
+  padding: 5px; font-size: 0.8rem; overflow-y: auto; color: #888;
   font-family: monospace;
 }
-.log-sys { color: yellow; }
 .log-suc { color: var(--primary); font-weight: bold; }
-.log-err { color: red; font-weight: bold; }
+.log-warn { color: yellow; }
 
-/* VISUALS */
+/* CANVAS */
 #canvas {
   position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; opacity: 0.5;
 }
@@ -113,71 +98,73 @@ button:disabled { opacity: 0.3; cursor: not-allowed; }
 </head>
 <body>
 
-<canvas id="canvas"></canvas>
-
 <div id="header">
-  <div>ETERNITY LAB <span style="font-size:0.7em; opacity:0.7">DIAGNOSTIC</span></div>
+  <div>ETERNITY LAB SPEEDRUN</div>
   <div>
-    <span id="micLed" class="status-light"></span> 
-    <span id="aiLed" class="status-light"></span> 
-    <span id="sysLed" class="status-light"></span> SYS
+    <span id="micLed" class="status-light"></span> MIC 
+    <span id="aiLed" class="status-light"></span> IA
   </div>
 </div>
 
 <div id="mainStage">
-  <div id="iaText">... CLIQUEZ SUR ACTIVER ...</div>
+  <div id="iaText">... EN ATTENTE ...</div>
 </div>
 
 <div id="controls">
-  <div id="meters">
-    <div class="meter-box" title="Audio Input"><div id="audioMeter" class="meter-fill" style="background:var(--primary)"></div></div>
+  <div id="meters" style="display:flex; gap:5px; margin-bottom:10px;">
+    <div style="flex:1; background:#222; height:10px; border:1px solid #444; position:relative;">
+      <div id="audioMeter" style="height:100%; width:0%; background:var(--primary); transition:width 0.1s;"></div>
+    </div>
   </div>
 
-  <button id="startBtn" onclick="startSystem()">ACTIVER SYSTÈME (BIP TEST)</button>
-  <button id="alertBtn" onclick="toggleHack()" style="border-color:red; color:red; margin-top:5px">🚨 HACK / ALERT MODE (TEST)</button>
+  <button id="startBtn" onclick="startSystem()">ACTIVER (TEST AUDIO)</button>
 
   <div class="button-grid">
     <button id="monitorBtn" onclick="toggleOpt('monitor')">🎧 ÉCOUTE</button>
-    <button id="boostBtn" onclick="toggleOpt('boost')">⚡ BOOST AUDIO</button>
     <button id="recBtn" onclick="toggleOpt('autoRec')">⏺ AUTO REC</button>
-    <button id="camBtn" onclick="toggleOpt('cam')">📷 CAM</button>
-    
-    <button id="vizSpec" class="active" onclick="setViz('spectrum')">SPECTRE</button>
-    <button id="vizWave" onclick="setViz('wave')">ONDE</button>
-    <button id="clearBtn" onclick="clearLog()">🗑 LOGS</button>
     <button id="stopBtn" style="border-color:white; color:white" onclick="stopSystem()">⏹ STOP</button>
   </div>
-  
-  <div style="font-size:0.7rem; color:#666; text-align:center; margin-top:5px;">
-    Mode Diag: Force l'affichage des alertes et l'audio.
+
+  <div style="font-size:0.7rem; color:#666; text-align:center; margin-top:10px;">
+    Code optimisé. Pas de chargement lent.
   </div>
 </div>
 
 <div id="logZone"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.11.0/dist/tf.min.js"></script>
+<canvas id="canvas"></canvas>
 
 <script>
-// --- CONFIGURATION ---
+// --- 1. CONFIGURATION (Ici vous réglez "à qui s'adresser") ---
+const CONFIG = {
+  // IMPORTANT : Changez 'fr-FR' pour le Français.
+  // Changez 'en-US' pour l'Anglais.
+  // Le script ne peut pas "deviner" qui parle, il traduit juste la langue détectée.
+  lang: 'fr-FR', 
+  
+  // Seuil de détection audio (0-100)
+  threshold: 30,
+  
+  // Boost du micro (1.0 = normal, 5.0 = très sensible)
+  gain: 2.0
+};
+
 let app = {
   running: false,
-  hackMode: false,
-  ctx: null, stream: null, vidStream: null,
+  ctx: null, stream: null,
   source: null, analyser: null,
-  monitorGain: null, booster: null, filter: null,
+  monitorGain: null, booster: null,
   recorder: null, isRec: false,
-  recognition: null, keepAliveOsc: null, aiWatchdog: null,
-  lastAIActivityTime: 0, lastSpeechTime: 0,
-  config: { monitor: false, boost: true, autoRec: false, cam: false, vizMode: 'spectrum' },
-  canvas: null, cCtx: null, width: 0, height: 0,
-  wakeLock: null
+  recognition: null,
+  aiWatchdog: null,
+  lastAIActivityTime: 0,
+  lastSpeechTime: 0
 };
 
 const el = (id) => document.getElementById(id);
 const els = {
   log: el('logZone'), ia: el('iaText'),
-  micLed: el('micLed'), aiLed: el('aiLed'), sysLed: el('sysLed'),
+  micLed: el('micLed'), aiLed: el('aiLed'),
   audioMeter: el('audioMeter'),
   canvas: el('canvas')
 };
@@ -186,158 +173,111 @@ function log(msg, type='') {
   const d = document.createElement('div');
   d.textContent = `> ${msg}`;
   if(type) d.className = type;
-  els.log.appendChild(d); els.log.scrollTop = els.log.scrollHeight;
+  els.log.appendChild(d);
+  els.log.scrollTop = els.log.scrollHeight;
   console.log(msg);
 }
 
-// --- FONCTION BIP (PREUVE AUDIO) ---
-function playTestBeep(freq=440, type='sine', dur=0.1) {
-  if(!app.ctx) return;
-  const osc = app.ctx.createOscillator();
-  const g = app.ctx.createGain();
-  osc.type = type;
-  osc.frequency.setValueAtTime(freq, app.ctx.currentTime);
-  osc.connect(g);
-  g.connect(app.ctx.destination);
-  g.gain.setValueAtTime(0.5, app.ctx.currentTime);
-  g.gain.exponentialRampToValueAtTime(0.01, app.ctx.currentTime + dur);
-  osc.start();
-  osc.stop(app.ctx.currentTime + dur);
-  log("BIP TEST AUDIO...", 'log-sys');
-}
-
-// --- START SYSTEM ---
+// --- 2. DÉMARRAGE (C'est ici que le bouton doit réagir) ---
 
 async function startSystem() {
   if(app.running) return;
   
+  // PREUVE : Si vous voyez cette alerte, le bouton MARCHE.
+  alert("Clic reçu ! Initialisation Audio en cours...");
+  
   const btn = el('startBtn');
-  btn.textContent = "INIT EN COURS...";
+  btn.textContent = "INIT...";
   btn.disabled = true;
 
   try {
-    // 1. ALERTE PERMISSION (FORCE L'AFFICHAGE POPUP)
-    alert("AUTORISATION MICRO REQUISE. Cliquez sur OK pour entendre le bip de test.");
-
-    // 2. CONTEXTE AUDIO & RESUME
+    // Création Audio Context
     app.ctx = new (window.AudioContext || window.webkitAudioContext)();
     if (app.ctx.state === 'suspended') await app.ctx.resume();
 
-    // 3. MICRO
-    log("Connexion Micro...", 'log-sys');
+    // Demande Micro
+    log("Demande Micro...", 'log-warn');
     app.stream = await navigator.mediaDevices.getUserMedia({ 
         audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false }, 
         video: false 
     });
 
-    setupAudioGraph();
-    startAIWithWatchdog();
-    
-    try { app.wakeLock = await navigator.wakeLock.request('screen'); } catch(e){}
-    startKeepAlive();
+    // Graphique Audio
+    app.source = app.ctx.createMediaStreamSource(app.stream);
+    app.booster = app.ctx.createGain();
+    app.booster.gain.value = CONFIG.gain;
+    app.monitorGain = app.ctx.createGain();
+    app.monitorGain.gain.value = 0;
+    app.analyser = app.ctx.createAnalyser();
+    app.analyser.fftSize = 2048;
+    app.dataArray = new Uint8Array(app.analyser.frequencyBinCount);
+
+    // Connexions
+    app.source.connect(app.booster);
+    app.booster.connect(app.analyser);
+    app.booster.connect(app.monitorGain);
+    app.monitorGain.connect(app.ctx.destination);
+
+    // Recorder
+    app.recorder = new MediaRecorder(app.stream);
+    app.recorder.ondataavailable = e => saveBlob(e.data);
+
+    // Démarrage IA
+    startAI();
+
+    // Visuels
     initViz();
 
     app.running = true;
     btn.textContent = "SYSTÈME ACTIF";
-    btn.classList.add('running');
+    btn.classList.add('active'); // Change la couleur du bouton
     els.micLed.classList.add('on');
-    els.sysLed.classList.add('on');
     
-    // BIP DE DÉMARRAGE
-    playTestBeep(880, 'square', 0.2); 
+    // BIP DE CONFIRMATION
+    playBeep();
 
     drawLoop();
-    log("Système Diagnostic Actif. Audio OK.", 'log-suc');
+    log("Système démarré avec succès.", 'log-suc');
 
   } catch (err) {
     console.error(err);
-    log("ERREUR BLOQUANTE: " + err.message, 'log-err');
-    alert("ERREUR CRITIQUE: " + err.message + "\n\nVérifiez : \n1. Paramètres > Chrome > Permissions > Microphone (Autoriser)\n2. Autres sites n'utilisent pas le micro ?");
+    log("ERREUR: " + err.message, 'log-warn');
+    alert("ERREUR: " + err.message + "\nVérifiez que vous avez accepté le micro.");
     btn.disabled = false;
     btn.textContent = "ERREUR (VOIR LOG)";
   }
 }
 
 function stopSystem() {
-  if(app.wakeLock) { app.wakeLock.release(); app.wakeLock = null; }
   if(app.stream) { app.stream.getTracks().forEach(t=>t.stop()); app.stream = null; }
-  if(app.vidStream) app.vidStream.getTracks().forEach(t=>t.stop());
   if(app.recognition) stopAI();
   if(app.ctx) app.ctx.close();
   
   app.running = false;
   
   el('startBtn').disabled = false;
-  el('startBtn').textContent = "ACTIVER SYSTÈME (BIP TEST)";
-  el('startBtn').classList.remove('running');
+  el('startBtn').textContent = "ACTIVER (TEST AUDIO)";
+  el('startBtn').classList.remove('active');
   els.micLed.classList.remove('on');
-  els.aiLed.classList.remove('on');
-  els.sysLed.classList.remove('on');
-  
   els.ia.textContent = "ARRÊTÉ";
-  document.querySelectorAll('.active').forEach(b => b.classList.remove('active'));
 }
 
-// --- AUDIO GRAPH ---
+// --- 3. IA & TRADUCTION (Savoir à qui s'adresser) ---
 
-function setupAudioGraph() {
-  app.source = app.ctx.createMediaStreamSource(app.stream);
-  app.filter = app.ctx.createBiquadFilter();
-  app.filter.type = 'highpass';
-  app.filter.frequency.value = 300;
-  app.booster = app.ctx.createGain();
-  app.booster.gain.value = app.config.boost ? 3.0 : 1.0;
-  app.monitorGain = app.ctx.createGain();
-  app.monitorGain.gain.value = 0; // Écoute coupée par défaut
-  app.analyser = app.ctx.createAnalyser();
-  app.analyser.fftSize = 2048;
-  app.analyser.smoothingTimeConstant = 0.5;
-  app.dataArray = new Uint8Array(app.analyser.frequencyBinCount);
-
-  app.source.connect(app.filter);
-  app.filter.connect(app.booster);
-  app.booster.connect(app.analyser);
-  app.booster.connect(app.monitorGain);
-  app.monitorGain.connect(app.ctx.destination);
-
-  app.recorder = new MediaRecorder(app.stream);
-  app.recorder.ondataavailable = e => saveBlob(e.data);
-}
-
-// --- IA WATCHDOG ---
-
-function startAIWithWatchdog() {
-  startRealAI();
-  app.aiWatchdog = setInterval(() => {
-    if(!app.running) { clearInterval(app.aiWatchdog); return; }
-    const now = Date.now();
-    if (now - app.lastAIActivityTime > 4000) {
-      log("Watchdog: Redémarrage IA...", 'log-sys');
-      stopAI();
-      setTimeout(() => startRealAI(), 200);
-    }
-  }, 3000);
-}
-
-function stopAI() {
-  if(app.recognition) {
-    try { app.recognition.stop(); } catch(e){}
-    app.recognition = null;
-  }
-  els.aiLed.classList.remove('on');
-}
-
-function startRealAI() {
+function startAI() {
   const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (SpeechRec) {
       app.recognition = new SpeechRec();
       app.recognition.continuous = true;
       app.recognition.interimResults = true;
-      app.recognition.lang = 'fr-FR';
+      
+      // C'EST ICI QUE L'ON DIT QUELLE LANGUE UTILISER
+      app.recognition.lang = CONFIG.lang; 
       
       app.recognition.onstart = () => {
           els.aiLed.classList.add('on');
           app.lastAIActivityTime = Date.now();
+          log(`IA Active (Langue: ${CONFIG.lang})`, 'log-suc');
       };
 
       app.recognition.onresult = (e) => {
@@ -349,188 +289,129 @@ function startRealAI() {
           }
           if (txt) {
               els.ia.textContent = txt;
-              els.ia.style.color = "#fff";
               if (isFinal) {
-                  log(`MOT: "${txt}"`, 'log-suc');
+                  log(`DÉTECTION: "${txt}"`, 'log-suc');
                   app.lastSpeechTime = Date.now();
-                  playTestBeep(600, 'sine', 0.05); // Petit bip quand mot trouvé
               }
           }
       };
       
-      app.recognition.onerror = (e) => { if(e.error !== 'no-speech') log(`IA Err: ${e.error}`, 'log-sys'); };
-      app.recognition.onend = () => { };
+      app.recognition.onerror = (e) => { if(e.error !== 'no-speech') log(`IA Err: ${e.error}`); };
+      
+      // IMPORTANT : Redémarrage automatique (Watchdog) pour éviter que l'IA dorme
+      app.recognition.onend = () => {
+          if(app.running) setTimeout(startAI, 1000);
+      };
+      
       try { app.recognition.start(); } catch(e){}
-  } else { log("IA non dispo", 'log-sys'); }
-}
-
-// --- HACK / ALERT MODE ---
-
-function toggleHack() {
-  if(!app.running) { 
-    alert("DÉMARREZ LE SYSTÈME D'ABORD !");
-    el('startBtn').focus(); // Focus visuel sur le bouton
-    return; 
-  }
-  
-  app.hackMode = !app.hackMode;
-  const btn = el('alertBtn');
-  btn.classList.toggle('active');
-  
-  if (app.hackMode) {
-    log("⚠ HACK MODE ACTIVÉ. Sensibilité MAX.", 'log-sys');
-    // BIP pour confirmer l'activation
-    playTestBeep(200, 'sawtooth', 0.1);
   } else {
-    log("Mode Normal", 'log-sys');
+      log("IA non supportée par ce navigateur", 'log-warn');
   }
 }
 
-// --- LOOP & LOGIC ---
+function stopAI() {
+  if(app.recognition) {
+      try { app.recognition.stop(); } catch(e){}
+      app.recognition = null;
+  }
+  els.aiLed.classList.remove('on');
+}
+
+// --- 4. LOGIQUE VISUELLE & AUDIO ---
 
 function drawLoop() {
   if(!app.running) return;
   requestAnimationFrame(drawLoop);
   
+  // 1. Obtenir les données
   app.analyser.getByteFrequencyData(app.dataArray);
   
+  // 2. Calculer le volume moyen
   let sum = 0;
   for(let i=0; i<app.dataArray.length; i++) sum += app.dataArray[i];
   const avg = sum / app.dataArray.length;
   
+  // 3. Afficher le volume (VU Meter)
   els.audioMeter.style.width = Math.min(100, avg) + '%';
   
-  // LOGIQUE HACK (Seuil très bas)
-  const threshold = app.hackMode ? 10 : 30; 
-  
-  if (avg > threshold) {
-      const now = Date.now();
-      if (now - app.lastSpeechTime > 1000) {
-          // En mode hack, on affiche tout comme "DETECTÉ"
-          if(app.hackMode) {
-              els.ia.textContent = "⚠ SIGNAL INCONNU";
-              els.ia.style.color = "red";
-              playTestBeep(150, 'triangle', 0.1); // Bip rapide
-          } else {
-              els.ia.textContent = "[SIGNAL AUDIO]";
-              els.ia.style.color = "yellow";
-          }
-      }
+  // 4. Si audio mais pas de mot -> Afficher "SIGNAL"
+  const now = Date.now();
+  if (avg > CONFIG.threshold && (now - app.lastSpeechTime > 2000)) {
+      els.ia.textContent = "[SIGNAL AUDIO - NON TRADUIT]";
+      els.ia.style.color = "yellow";
   }
 
-  if(app.config.autoRec && avg > 60 && !app.isRec) {
-      app.isRec = true; app.recorder.start(); log("⚠ REC AUTO", 'log-sys');
+  // 5. Auto Rec
+  if(app.config && app.config.autoRec && avg > 60 && !app.isRec) {
+      app.isRec = true; app.recorder.start(); log("⚠ ENREGISTREMENT", 'log-warn');
       setTimeout(() => { if(app.isRec) { app.recorder.stop(); app.isRec=false; }}, 3000);
   }
 
-  // DESSIN
-  const ctx = app.cCtx, w = app.width, h = app.height;
-  ctx.fillStyle = 'rgba(0, 10, 0, 0.2)';
+  // 6. Dessin
+  const ctx = app.canvas.getContext('2d');
+  const w = app.canvas.width;
+  const h = app.canvas.height;
+  ctx.fillStyle = 'rgba(0, 10, 0, 0.2)'; // Trainée verte
   ctx.fillRect(0,0,w,h);
   
-  if(app.config.vizMode === 'spectrum') {
-      const barW = (w / app.dataArray.length) * 2.5;
-      let x = 0;
-      for(let i=0; i<app.dataArray.length; i++) {
-          const v = app.dataArray[i];
-          const barH = (v/255)*h;
-          ctx.fillStyle = `rgb(0, 255, ${v})`;
-          ctx.fillRect(x, h - barH, barW, barH);
-          x += barW+1;
-      }
-  } else {
-      const timeData = new Uint8Array(app.analyser.fftSize);
-      app.analyser.getByteTimeDomainData(timeData);
-      ctx.lineWidth = 2; ctx.strokeStyle = '#00ff00'; ctx.beginPath();
-      const sliceW = w / timeData.length; let x = 0;
-      for(let i = 0; i < timeData.length; i++) {
-          const v = timeData[i] / 128.0; const y = v * h/2;
-          if(i===0) ctx.moveTo(x, y); else ctx.lineTo(x, y); x += sliceW;
-      }
-      ctx.stroke();
+  // Barres
+  const barW = (w / app.dataArray.length) * 2.5;
+  let x = 0;
+  for(let i=0; i<app.dataArray.length; i++) {
+      const v = app.dataArray[i];
+      const barH = (v/255)*h;
+      ctx.fillStyle = `rgb(0, 255, ${v})`;
+      ctx.fillRect(x, h - barH, barW, barH);
+      x += barW+1;
   }
 }
 
-// --- TOOLS ---
+// --- OUTILS ---
 
 function toggleOpt(key) {
-  if(!app.running && key !== 'cam') return;
+  if(!app.running) { log("Démarrage requis", 'log-warn'); return; }
+  
+  if(!app.config) app.config = {}; // Init config if missing
+  
   app.config[key] = !app.config[key];
   const btn = el(key + 'Btn');
   if(btn) btn.classList.toggle('active');
   
   if(key === 'monitor') {
-      app.monitorGain.gain.value = app.config.monitor ? 1.0 : 0;
-      log(app.config.monitor ? "Écoute ON" : "Écute OFF");
+      app.monitorGain.gain.value = app.config[key] ? 1.0 : 0;
+      log(app.config[key] ? "Écoute ON" : "Écute OFF");
   }
-  if(key === 'boost') {
-      app.booster.gain.value = app.config.boost ? 3.0 : 1.0;
-      log(app.config.boost ? "Boost MAX" : "Boost OFF");
-  }
-  if(key === 'cam') toggleCam();
-}
-
-async function toggleCam() {
-  if(!app.config.cam) {
-      try {
-          app.vidStream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
-          const vid = document.createElement('video');
-          vid.srcObject = app.vidStream;
-          vid.autoplay = true; vid.muted = true; vid.playsInline = true;
-          vid.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; object-fit:cover; opacity:0.3; z-index:0;";
-          document.body.appendChild(vid);
-      } catch(e) { log("Erreur Cam"); app.config.cam=false; el('camBtn').classList.remove('active'); }
-  } else {
-      if(app.vidStream) app.vidStream.getTracks().forEach(t=>t.stop());
-      app.vidStream = null; document.querySelector('video')?.remove();
-  }
-}
-
-function setViz(mode) {
-  app.config.vizMode = mode;
-  document.querySelectorAll('.button-grid button').forEach(b => b.classList.remove('active'));
-  if(mode==='spectrum') el('vizSpec').classList.add('active');
-  if(mode==='wave') el('vizWave').classList.add('active');
-}
-
-function initViz() {
-  app.canvas = el('canvas');
-  app.cCtx = app.canvas.getContext('2d');
-  resize();
-}
-window.onresize = resize;
-function resize() {
-    if(app.canvas) {
-        app.width = app.canvas.clientWidth;
-        app.height = app.canvas.clientHeight;
-        app.canvas.width = app.width;
-        app.canvas.height = app.height;
-    }
 }
 
 function saveBlob(data) {
   const url = URL.createObjectURL(new Blob([data], {type:'audio/webm'}));
-  const a = document.createElement('a'); a.href=url; a.download=`DIAG_${Date.now()}.webm`; a.click();
+  const a = document.createElement('a'); a.href=url; a.download=`EVP_${Date.now()}.webm`; a.click();
   log("Fichier sauvé", 'log-suc');
 }
 
-function startKeepAlive() {
-  app.keepAliveOsc = app.ctx.createOscillator();
-  const keepGain = app.ctx.createGain();
-  keepGain.gain.value = 0.001;
-  app.keepAliveOsc.connect(keepGain);
-  keepGain.connect(app.ctx.destination);
-  app.keepAliveOsc.start();
-  document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible' && app.ctx && app.ctx.state === 'suspended') app.ctx.resume();
-  });
+function playBeep() {
+  if(!app.ctx) return;
+  const osc = app.ctx.createOscillator();
+  const g = app.ctx.createGain();
+  osc.connect(g);
+  g.connect(app.ctx.destination);
+  osc.frequency.setValueAtTime(880, app.ctx.currentTime);
+  g.gain.setValueAtTime(0.5, app.ctx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.01, app.ctx.currentTime + 0.1);
+  osc.start();
+  osc.stop(app.ctx.currentTime + 0.1);
 }
 
-function clearLog() { els.log.innerHTML = ''; }
-
-// INIT
+// Initialisation Canvas (au cas où le DOM est prêt)
 window.onload = () => {
-    log("DIAGNOSTIC TOOL PRÊT.", 'log-suc');
+  const canvas = el('canvas');
+  canvas.width = document.body.clientWidth;
+  canvas.height = window.innerHeight / 2;
+  window.onresize = () => {
+      canvas.width = document.body.clientWidth;
+      canvas.height = window.innerHeight / 2;
+  };
+  log("SPEEDRUN PRÊT. Cliquez sur Activer.", 'log-suc');
 };
 </script>
 </body>
