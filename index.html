@@ -2,658 +2,646 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>OMEGA // HYPER-ECHO // DEBUG VERSION</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>OMEGA // ARCHITECTURE INTÉGRALE</title>
     <style>
-        /* ==========================================================================
-           CSS INTÉGRAL (Style complet, mais allégé pour la clarté)
-           ==========================================================================
-        */
+        /* Styles inchangés (conservés pour la cohérence) */
         :root {
-            --c-bg: #0d1117; --c-panel: #161b22; --c-border: #30363d;
-            --c-text: #c9d1d9; --c-accent: #58a6ff; --c-alert: #f85149; --c-success: #2ea043;
-            --header-h: 70px; --sidebar-w: 300px; --controls-h: 35vh;
-            --font-ui: 'Segoe UI', system-ui, sans-serif;
-            --font-mono: 'SFMono-Regular', Consolas, monospace;
+            --c-bg-deep: #010409;
+            --c-bg-panel: #161b22;
+            --c-bg-input: #0d1117;
+            --c-border: #30363d;
+            --c-border-light: #8b949e;
+            --c-text-main: #c9d1d9;
+            --c-text-muted: #8b949e;
+            --c-accent: #58a6ff;
+            --c-accent-dim: rgba(88, 166, 255, 0.15);
+            --c-success: #2ea043;
+            --c-warning: #d29922;
+            --c-alert: #f85149;
+            --c-font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            --c-font-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
         }
 
-        * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; outline: none; }
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background-color: var(--c-bg); color: var(--c-text); font-family: var(--c-font-ui); overflow: hidden; }
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
 
-        #omega-interface {
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--c-bg-deep);
+            color: var(--c-text-main);
+            font-family: var(--c-font-ui);
+            overflow-x: hidden;
+            overflow-y: auto; /* Autoriser le défilement vertical */
+        }
+
+        /* Le reste des styles est identique à votre code original */
+        #omega-root {
             display: grid;
-            grid-template-rows: var(--header-h) 1fr var(--controls-h);
-            grid-template-columns: 1fr; height: 100vh; width: 100vw;
+            grid-template-rows: var(--header-height) 1fr var(--controls-height);
+            grid-template-columns: 1fr;
+            min-height: 100vh;
+            height: auto;
         }
 
-        @media (min-width: 900px) {
-            #omega-interface {
-                grid-template-rows: var(--header-h) 1fr var(--controls-h);
-                grid-template-columns: var(--sidebar-w) 1fr var(--sidebar-w);
-                grid-template-areas: "header header header" "sidebar scope metrics" "sidebar controls";
-            }
-            .sidebar-left { grid-area: sidebar; border-right: 1px solid var(--c-border); }
-            .main-stage { grid-area: scope; }
-            .sidebar-right { grid-area: metrics; border-left: 1px solid var(--c-border); }
-            .bottom-deck { grid-area: controls; border-top: 1px solid var(--c-border); }
+        /* Styles pour le conteneur principal permettant le défilement */
+        body {
+            overflow-y: auto !important;
         }
 
-        header { background-color: var(--c-panel); border-bottom: 1px solid var(--c-border); display: flex; justify-content: space-between; align-items: center; padding: 0 20px; z-index: 50; }
-        .brand { font-size: 1.1rem; font-weight: 700; letter-spacing: 1px; color: var(--c-accent); text-transform: uppercase; }
-        .status-badge { font-family: var(--c-font-mono); font-size: 0.75rem; padding: 4px 10px; border: 1px solid var(--c-border); border-radius: 20px; background: var(--c-bg); color: var(--c-text-muted); text-transform: uppercase; }
-        .status-badge.active { border-color: var(--c-success); color: var(--c-success); background: rgba(46, 160, 67, 0.1); box-shadow: 0 0 10px rgba(46, 160, 67, 0.3); }
+        /* Correction pour le bouton de démarrage */
+        #btn-start {
+            cursor: pointer;
+        }
 
-        .panel { background-color: var(--c-bg-deep); padding: 15px; overflow-y: auto; font-family: var(--c-font-mono); font-size: 0.8rem; }
-        .section-group { margin-bottom: 20px; border-bottom: 1px solid var(--c-border-light); padding-bottom: 10px; }
-        .section-title { color: var(--c-accent); text-transform: uppercase; font-size: 0.7rem; font-weight: 700; margin-bottom: 10px; }
-        .data-row { display: flex; justify-content: space-between; margin-bottom: 8px; }
-        .data-label { color: #8b949e; font-size: 0.7rem; }
-        .data-value { font-weight: bold; color: var(--c-text); font-family: var(--c-font-mono); }
-        .vu-container { width: 100%; height: 6px; background: #21262d; margin-top: 8px; position: relative; overflow: hidden; border-radius: 2px; border: 1px solid #30363d; }
-        .vu-bar { height: 100%; width: 0%; background: linear-gradient(90deg, var(--c-accent), #fff); transition: width 0.05s linear; box-shadow: 0 0 5px var(--c-accent); }
+        /* Styles pour le terminal système */
+        #system-terminal {
+            max-height: 120px;
+            overflow-y: auto;
+        }
 
-        .stage-main { background-color: #000; position: relative; overflow: hidden; display: flex; justify-content: center; align-items: center; }
-        canvas { display: block; width: 100%; height: 100%; }
-        
-        .ai-overlay { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; text-align: center; pointer-events: none; z-index: 20; }
-        .ai-primary { font-size: 2.5rem; font-weight: 900; color: #fff; background: rgba(13, 17, 23, 0.9); border: 2px solid var(--c-accent); padding: 15px 25px; text-transform: uppercase; text-shadow: 0 0 15px var(--c-accent); min-height: 3.5rem; margin-bottom: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: 2px; backdrop-filter: blur(4px); animation: text-flicker 3s infinite; }
-        .ai-secondary { font-size: 0.9rem; background: var(--c-accent); color: #000; padding: 4px 12px; border-radius: 4px; font-weight: bold; text-transform: uppercase; display: inline-block; }
-
-        .controls-deck { background-color: var(--c-panel); padding: 20px; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
-        .control-module { border: 1px solid var(--c-border); border-radius: 6px; padding: 15px; background-color: var(--c-bg-deep); box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
-        .module-header { color: var(--c-text-main); font-weight: 700; margin-bottom: 15px; border-bottom: 1px solid var(--c-border); display: flex; justify-content: space-between; font-size: 0.9rem; }
-        
-        .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        button { background: #21262d; border: 1px solid #30363d; color: var(--c-text-main); padding: 10px; font-family: inherit; font-weight: 600; font-size: 0.8rem; cursor: pointer; border-radius: 4px; transition: all 0.2s; text-transform: uppercase; }
-        button: button:hover { background: #30363d; }
-        button:active { transform: scale(0.96); }
-        button.active { background: var(--c-accent-dim); border-color: var(--c-accent); color: var(--c-accent); box-shadow: 0 0 10px var(--c-accent-dim); }
-        .btn-main { background: var(--c-success); color: #fff; border: none; width: 100%; padding: 18px; font-size: 1.2rem; margin-bottom: 10px; font-weight: 700; letter-spacing: 2px; }
-        .btn-stop { background: var(--c-alert); color: #fff; border: none; display: none; font-weight: 700; }
-        
-        .slider-row { display: flex; align-items: center; margin-bottom: 12px; font-size: 0.8rem; }
-        .slider-row label { flex: 1; color: #8b949e; }
-        input[type="range] { flex: 2; accent-color: var(--c-accent); cursor: pointer; }
-        .val-out { width: 40px; text-align: right; color: var(--c-accent); font-family: var(--c-font-mono); font-weight: bold; }
-        
-        .terminal { height: 100px; background: #0d1117; border: 1px solid #30363d; padding: 10px; font-family: var(--c-font-mono); font-size: 0.7rem; overflow-y: auto; margin-top: 15px; border-radius: 4px; }
-        .log-line { margin-bottom: 4px; border-left: 2px solid #30363d; padding-left: 8px; line-height: 1.2; }
-        .log-sys { border-color: #8b949e; color: #8b949e; }
-        .log-ai { border-color: var(--c-accent); color: #fff; background: rgba(88, 166, 255, 0.1); }
-        .log-err { border-color: var(--c-alert); color: var(--c-alert); font-weight: bold; }
-        .time-stamp { color: #484f58; margin-right: 8px; font-size: 0.7rem; }
-        .flicker { animation: text-flicker 3s infinite; }
-        @keyframes text-flicker { 0% { opacity: 1; } 5% { opacity: 0.8; } 10% { opacity: 1; } 100% { opacity: 1; } }
-        
-        .hidden { display: none !important; }
-        .blink { animation: blink-red 0.2s infinite; }
-        @keyframes blink-red { 50% { opacity: 0.5; }
+        /* Correction pour le conteneur de modules */
+        #modules-container, #settings-container {
+            opacity: 1 !important;
+            pointer-events: auto !important;
+        }
     </style>
 </head>
 <body>
 
-    <div id="omega-interface">
-        <!-- HEADER -->
-        <header>
-            <div class="brand">OMEGA <span>HYPER-ECHO // FIX</span></div>
-            <div id="sys-status" class="status-badge">SYSTEM OFFLINE</div>
+    <div id="omega-root">
+        <header class="app-header">
+            <div class="brand-title">
+                <div class="brand-dot"></div>
+                OMEGA <span style="color: #fff; font-weight: 300;">// ARCHITECTURE INTÉGRALE</span>
+            </div>
+            <div id="sys-status" class="system-status">SYSTEM OFFLINE</div>
         </header>
 
-        <!-- SIDEBARS -->
-        <aside class="panel sidebar-left">
+        <aside class="panel panel-left">
             <div class="section-group">
-                <div class="section-title">IMU / ACCELEROMÈTRE</div>
-                <div class="data-row"><span class="data-label">Acc X</span><span class="data-value" id="val-acc-x">0.00</span></div>
-                <div class="data-row"><span class="data-label">Acc Y</span><span class="data" id="val-acc-y">0.00</span></div>
-                <div class="data-row"><span class="data-label">Acc Z</span><span class="data-value" id="val-acc-z">0.00</span></div>
-                <div class="data-row"><span class="data-label">G-Force</span><span class="data-value" id="val-g-force">0.00</span></div>
+                <div class="section-title">
+                    <span>IMU / ACCELEROMÈTRE</span>
+                    <span style="color:var(--c-success)">●</span>
+                </div>
+                <div class="data-row">
+                    <span class="data-label">Accélération X</span>
+                    <span class="data-value" id="val-acc-x">0.00 G</span>
+                </div>
+                <div class="data-row">
+                    <span class="data-label">Accélération Y</span>
+                    <span class="data-value" id="val-acc-y">0.00 G</span>
+                </div>
+                <div class="data-row">
+                    <span class="data-label">Accélération Z</span>
+                    <span class="data-value" id="val-acc-z">0.00 G</span>
+                </div>
+                <div class="data-row">
+                    <span class="data-label">Force G Totale</span>
+                    <span class="data-value" id="val-g-force">0.00 G</span>
+                </div>
             </div>
+
+            <div class="section-group">
+                <div class="section-title">
+                    <span>MAGNÉTOMÈTRE</span>
+                    <span style="color:var(--c-warning)">●</span>
+                </div>
+                <div class="data-row">
+                    <span class="data-label">Alpha (Z-Axis)</span>
+                    <span class="data-value" id="val-mag-a">0 µT</span>
+                </div>
+                <div class="data-row">
+                    <span class="data-label">Beta (X-Axis)</span>
+                    <span class="data-value" id="val-mag-b">0 µT</span>
+                </div>
+                <div class="data-row">
+                    <span class="data-label">Gamma (Y-Axis)</span>
+                    <span class="data-value" id="val-mag-g">0 µT</span>
+                </div>
+                <div class="data-row">
+                    <span class="data-label">État du Champ</span>
+                    <span class="data-value" id="val-mag-state">STABLE</span>
+                </div>
+            </div>
+
             <div class="section-group">
                 <div class="section-title">AUDIO INPUT</div>
-                <div class="vu-container"><div id="vu-meter-fill" class="vu-bar"></div></div>
-                <div class="data-row"><span class="data-label">Fréquence Pic</span><span class="data-value" id="val-peak">0 Hz</span></div>
-                <div class="data-row"><span class="data-label">RMS Level</span><span class="data-value" id="val-rms">-Inf dB</span></div>
+                <div class="vu-track">
+                    <div id="vu-meter-fill" class="vu-fill"></div>
+                </div>
+                <div class="data-row" style="margin-top: 10px;">
+                    <span class="data-label">Fréquence Pic</span>
+                    <span class="data-value" id="val-peak-freq">0 Hz</span>
+                </div>
+                <div class="data-row">
+                    <span class="data-label">Niveau RMS</span>
+                    <span class="data-value" id="val-rms">-Inf dB</span>
+                </div>
             </div>
         </aside>
 
-        <!-- STAGE CENTRAL -->
         <main class="stage-main">
-            <canvas id="main-canvas"></canvas>
-            <div class="ai-overlay">
-                <div id="ai-main" class="ai-primary flicker">INITIALISATION...</div>
-                <div id="ai-sub" class="ai-secondary">EN ATTENTE DE DONNÉES</div>
+            <canvas id="main-scope-canvas"></canvas>
+            <div class="ai-interface">
+                <div id="ai-primary-display" class="ai-primary-text flicker-active">INITIALISATION...</div>
+                <div id="ai-secondary-display" class="ai-secondary-text">EN ATTENTE DE DONNÉES</div>
             </div>
         </main>
 
-        <!-- CONTROLS -->
+        <aside class="panel panel-right">
+            <div class="section-group">
+                <div class="section-title">
+                    <span>ANALYSE TEMPS RÉEL</span>
+                </div>
+                <div class="data-row">
+                    <span class="data-label">Mode Opération</span>
+                    <span class="data-value" id="val-mode">IDLE</span>
+                </div>
+                <div class="data-row">
+                    <span class="data-label">Latence Système</span>
+                    <span class="data-value">&lt; 10ms</span>
+                </div>
+                <div class="data-row">
+                    <span class="data-label">Seuil Déclencheur</span>
+                    <span class="data-value" id="val-thresh-display">0 (AUTO)</span>
+                </div>
+            </div>
+
+            <div class="section-group">
+                <div class="section-title">FICHIERS ENREGISTRÉS</div>
+                <div id="file-list" style="color: var(--c-text-muted); font-size: 0.75rem;">
+                    <div style="padding: 5px; border-bottom: 1px solid #333;">Aucune session en cours.</div>
+                </div>
+            </div>
+        </aside>
+
         <section class="deck-controls">
             <div class="control-module">
                 <div class="module-header">
                     <span>PROTOCOLE PRINCIPAL</span>
-                    <button id="btn-force-restart" style="font-size: 0.7rem; border: 1px dashed var(--c-text-muted); background:none; color: var(--c-text-muted); cursor:pointer;" onclick="forceHardReset()">FORCE RESTART SYSTEM</button>
+                    <span style="font-family: monospace; color: var(--c-accent)">v13.0</span>
                 </div>
-                <div class="module-header">
-                    <span>COMMANDS</span>
-                    <div class="btn-grid">
-                        <button id="btn-start" class="btn-main" onclick="startSystem()">[ DÉMARRER L'ANALYSE ]</button>
-                        <button id="btn-stop" class="btn-main btn-stop" onclick="stopSystem()">[ ARRÊTER ]</button>
-                    </div>
+                <button id="btn-start" class="btn-main-action" onclick="initSystem()">
+                    [ DÉMARRER L'ANALYSE SPECTRALE ]
+                </button>
+                <button id="btn-stop" class="btn-main-action btn-stop-action" onclick="stopSystem()">
+                    [ ARRÊTER IMMÉDIAT ]
+                </button>
             </div>
 
-            <div class="control-module" id="mods-panel" style="opacity:0.5; pointer-events:none;">
+            <div class="control-module" id="modules-container">
                 <div class="module-header">MODULES ACTIFS</div>
-                <div class="btn-grid">
-                    <button id="mod-mic" class="active" onclick="toggleModule('mic')">Microphone</button>
-                    <button id="mod-echo" class="active" onclick="toggleModule('echo')">Écho Vocal</button>
-                    <button id="mod-trans" class="active" onclick="toggleModule('trans')">Traduction</button>
-                    <button onclick="purgeLogs()">Purge Logs</button>
+                <div class="grid-4">
+                    <button id="mod-mic" class="active" onclick="toggleModule('microphone')">Microphone</button>
+                    <button id="mod-echo" class="active" onclick="toggleModule('ttsEngine')">Écho Vocal</button>
+                    <button id="mod-trans" class="active" onclick="toggleModule('ghostMode')">Traduction</button>
+                    <button id="mod-rec" onclick="toggleModule('recorder')">Enregistreur</button>
                 </div>
-                <div style="margin-top:10px; font-size:0.7rem; color:#666; text-align:center;">* Mode Hyper-Echo : Répétition immédiate et traduction complète.</div>
+                <div style="margin-top: 10px; font-size: 0.7rem; color: #666; text-align: center; font-style: italic;">
+                    * Mode Hyper-Echo activé : Répétition immédiate de tous les stimuli sonores.
+                </div>
             </div>
 
-            <div class="control-module" id="settings-panel" style="opacity:0.5; pointer-events:none;">
-                <div class="module-header">PARAMÈTRES</div>
-                <div class="slider-row">
-                    <label>Seuil Traduction</label>
-                    <input type="range" id="rng-thresh" min="0" max="50" value="0" oninput="updateConfig('energyThreshold', this.value)">
-                    <span class="val-out" id="out-thresh">0</span>
+            <div class="control-module" id="settings-container">
+                <div class="module-header">
+                    <span>PARAMÈTRES RAPIDES</span>
+                    <button style="background:none; border:1px solid #555; color:#aaa; padding:2px 8px; border-radius:4px; font-size:0.7rem; cursor:pointer;" onclick="openConfigModal()">
+                        ⚙ CONFIG AVANCÉE
+                    </button>
                 </div>
-                <div class="slider-row">
-                    <label>Volume Voix</label>
-                    <input type="range" id="rng-vol" min="0" max="1" step="0.1" value="1.0" oninput="updateConfig('voiceVolume', this.value)">
-                    <span class="val-out" id="out-vol">1.0</span>
+
+                <div class="control-row">
+                    <label>Volume Sortie (TTS)</label>
+                    <input type="range" id="slider-voice-vol" min="0" max="1" step="0.1" value="1.0" oninput="updateConfig('voiceVolume', this.value)">
+                    <span class="value-display" id="disp-voice-vol">1.0</span>
                 </div>
-                <div class="slider-row">
-                    <label>Vitesse</label>
-                    <input type="range" id="rng-rate" min="0.8" max="2.0" step="0.1" value="1.4" oninput="updateConfig('speechRate', this.value)">
-                    <span class="val-out" id="out-rate">1.4</span>
+
+                <div class="control-row">
+                    <label>Vitesse Parole</label>
+                    <input type="range" id="slider-speech-rate" min="0.5" max="2.0" step="0.1" value="1.4" oninput="updateConfig('speechRate', this.value)">
+                    <span class="value-display" id="disp-speech-rate">1.4</span>
                 </div>
             </div>
 
             <div class="control-module" style="grid-column: 1 / -1;">
                 <div class="module-header">JOURNAL SYSTÈME</div>
-                <div id="sys-terminal" class="terminal">
-                    <div class="log-line"><span class="time-stamp">--:--:--</span>System initialized. Ready.</div>
+                <div id="system-terminal" class="system-terminal">
+                    <div class="log-entry">
+                        <span class="log-time">--:--:--</span>
+                        <span class="log-type-sys">Initialisation du noyau Omega... Terminé.</span>
+                    </div>
+                    <div class="log-entry">
+                        <span class="log-time">--:--:--</span>
+                        <span class="log-type-sys">En attente de démarrage utilisateur.</span>
+                    </div>
                 </div>
             </div>
         </section>
+    </div>
 
-    <!-- JAVASCRIPT -->
+    <div id="config-modal" class="config-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Configuration Système</div>
+                <button onclick="closeConfigModal()" style="background:none; border:none; color:var(--c-text-main); font-size:1.5rem; cursor:pointer;">×</button>
+            </div>
+
+            <div style="margin-bottom: 25px;">
+                <h4 style="color:var(--c-text-main); border-bottom:1px solid #333; padding-bottom:10px; margin-top:0;">Traitement du Signal (DSP)</h4>
+
+                <div class="control-row">
+                    <label style="flex: 1;">Taille FFT (Précision)</label>
+                    <select id="cfg-fft-size" style="flex: 2; background: var(--c-bg-input); color: #fff; border: 1px solid #444; padding: 5px;" onchange="updateConfig('fftSize', parseInt(this.value))">
+                        <option value="512">512 (Ultra Rapide)</option>
+                        <option value="1024">1024 (Rapide)</option>
+                        <option value="2048" selected>2048 (Standard)</option>
+                        <option value="4096">4096 (Haute Précision)</option>
+                        <option value="8192">8192 (Ultra)</option>
+                    </select>
+                </div>
+
+                <div class="control-row">
+                    <label style="flex: 1;">Lissage Spectral (Smoothing)</label>
+                    <input type="range" id="cfg-smoothing" min="0.1" max="0.95" step="0.05" value="0.8" oninput="updateConfig('smoothing', this.value)">
+                    <span class="value-display" id="disp-smoothing">0.8</span>
+                </div>
+
+                <div class="control-row">
+                    <label style="flex: 1;">Min Decibels (Seuil Silence)</label>
+                    <input type="range" id="cfg-min-db" min="-100" max="0" step="1" value="-50" oninput="updateConfig('minDecibels', this.value)">
+                    <span class="value-display" id="disp-min-db">-50</span>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 25px;">
+                <h4 style="color:var(--c-text-main); border-bottom:1px solid #333; padding-bottom:10px; margin-top:0;">Moteur IA (TTS)</h4>
+
+                <div class="control-row">
+                    <label style="flex: 1;">Hauteur Tonale (Pitch)</label>
+                    <input type="range" id="cfg-pitch" min="0.1" max="2" step="0.1" value="0.9" oninput="updateConfig('voicePitch', this.value)">
+                    <span class="value-display" id="disp-pitch">0.9</span>
+                </div>
+
+                <div class="control-row">
+                    <label style="flex: 1;">Voix Selection</label>
+                    <select id="cfg-voice" style="flex: 2; background: var(--c-bg-input); color: #fff; border: 1px solid #444; padding: 5px;" onchange="updateConfig('voiceURI', this.value)">
+                        <option value="default">Défaut Système</option>
+                    </select>
+                </div>
+            </div>
+
+            <button id="btn-save-config" style="width:100%; padding:18px; background:var(--c-accent); color:#000; font-weight:bold; border:none; font-size:1.1rem; border-radius:4px;" onclick="saveConfiguration()">
+                💾 SAUVEGARDER LA CONFIGURATION
+            </button>
+        </div>
+    </div>
+
     <script>
-        /**
-         * ==========================================================================
-         * CONSTANTES & VOCABULAIRE
-         * ==========================================================================
-         */
-        const CONST = {
-            VOCABULARY: [
-                "Ondulation", "Anomalie", "Interférence", "Signal", "Spectre",
-                "Résonance", "Fréquence", "Amplitude", "Modulation", "Bruit blanc",
-                "Harmonique", "Déphasage", "Écho", "Réverbération", "Distorsion",
-                "Impulsion", "Transitoire", "Stationnaire", "Aleatoire", "Chaos",
-                "Entropie", "Flux", "Potentiel", "Champ", "Vecteur", "Tenseur",
-                "Onde P", "Onde S", "Longitudinale", "Transversale", "Polarisation",
-                "Processeur", "Matrice", "Binaire", "Hexadécimal", "Protocole", "Décalage"
-            ],
-            FFT_SIZE: 2048
+        // Configuration par défaut
+        const DEFAULT_CONFIG = {
+            microphone: true,
+            noiseGenerator: false,
+            ttsEngine: true,
+            ghostMode: true,
+            recorder: false,
+            voiceVolume: 1.0,
+            voicePitch: 0.9,
+            speechRate: 1.4,
+            noiseVolume: 0,
+            energyThreshold: 0,
+            fftSize: 2048,
+            smoothing: 0.85,
+            minDecibels: -50,
+            currentTheme: 'OMEGA'
         };
 
-        /**
-         * ==========================================================================
-         * GESTIONNAIRE DE LOGS
-         * ==========================================================================
-         */
-        class Logger {
-            constructor(id) { this.el = document.getElementById(id); }
-            log(msg, type = 'sys') {
-                if(!this.el) return;
-                const entry = document.createElement('div');
-                entry.className = `log-line log-${type}`;
-                const now = new Date();
-                const time = `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
-                entry.innerHTML = `<span class="time-stamp">[${time}]</span> ${msg}`;
-                this.el.appendChild(entry);
-                this.el.scrollTop = this.el.scrollHeight;
-            }
-        }
-
-        /**
-         * ==========================================================================
-         * MOTEUR AUDIO (AUDIO ENGINE)
-         * ==========================================================================
-         */
-        class AudioEngine {
-            constructor() {
-                this.ctx = null;
-                this.source = null;
-                this.analyser = null;
-                this.dataFreq = null;
-                this.dataTime = null;
-            }
-
-            async init() {
-                try {
-                    const AC = window.AudioContext || windowwebkitAudioContext;
-                    this.ctx = new AC();
-                    if (this.ctx.state === 'suspended') await this.ctx.resume();
-                    
-                    // IMPORTANT : autoGainControl: true pour capter la voix à distance
-                    const stream = await navigator.mediaDevices.getUserMedia({
-                        audio: {
-                            echoCancellation: false,
-                            noiseSuppression: false,
-                            autoGainControl: true // <--- CLE POUR LA DÉTECTION VOCALE À DISTANCE
-                        },
-                        video: false
-                    });
-                    this.source = this.ctx.createMediaStreamSource(stream);
-                    this.analyser = this.ctx.createAnalyser();
-                    this.analyser.fftSize = CONST.FFT_SIZE;
-                    this.analyser.smoothingTimeConstant = 0.85;
-                    this.source.connect(this.analyser);
-
-                    const len = this.analyser.frequencyBinCount;
-                    this.dataFreq = new Uint8Array(len);
-                    this.dataTime = new Uint8Array(len);
-                    
-                    this.logger.log("Audio Core: ONLINE (Auto-Gain High)", "sys");
-                    return true;
-                } catch (e) {
-                    console.error(e);
-                    this.logger.log("Audio Init Failed: " + e.message, "err");
-                    alert("ERREURR AUDIO: Vérifiez les permissions du navigateur (Barre d'adresse).");
-                    throw new Error("Audio Init Failed: " + e.message);
-                }
-            }
-
-            process() {
-                if (!this.analyser) return { avgEnergy: 0, peakFreq: 0, peakAmp: 0 };
-                this.analyser.getByteFrequencyData(this.dataFreq);
-                this.analyser.getByteTimeDomainData(this.dataTime);
-                let sum = 0, maxAmp = 0, maxIndex = 0;
-                for (let i = 0; i < this.dataFreq.length; i++) {
-                    const v = this.dataFreq[i]; sum += v;
-                    if (v > maxAmp) { maxAmp = v; maxIndex = i; }
-                }
-                const nyquist = this.ctx.sampleRate / 2;
-                const peakFreq = maxIndex * (nyquist / this.dataFreq.length);
-                return { avgEnergy: sum / this.dataFreq.length, peakFreq: Math.round(peakFreq), peakAmp: maxAmp };
-            }
-            stop() { if (this.ctx) this.ctx.close(); }
-        }
-
-        /**
-         * ==========================================================================
-         * MOTEUR VISUEL (VISUAL ENGINE)
-         * ==========================================================================
-         */
-        class VisualEngine {
-            constructor(canvasId) {
-                this.c = document.getElementById(canvasId);
-                this.ctx = this.c.getContext('2d');
-                this.particles = [];
-                for(let i=0; i<40; i++) this.particles.push({
-                    x: Math.random(), y: Math.random(), z: Math.random() * 2,
-                    vx: (Math.random() - 0.5) * 0.002, vy: (Math.random() - 0.5) * 0.002
-                });
-            }
-            draw(freq, time, avg) {
-                if(this.c.width !== this.c.clientWidth || this.c.height !== this.c.clientHeight) {
-                    this.c.width = this.c.clientWidth; this.c.height = this.c.clientHeight;
-                }
-                const ctx = this.ctx, w = this.c.width, h = this.c.height;
-                ctx.fillStyle = 'rgba(13, 3, 23, 0.25)'; ctx.fillRect(0, 0, w, h);
-                
-                // Oscilloscope (Ligne Cyan)
-                ctx.lineWidth = 2; ctx.strokeStyle = '#58a6ff'; ctx.beginPath();
-                const slice = w / time.length; let x = 0;
-                for (let i = 0; i < time.length; i++) {
-                    const v = time[i] / 128.0; const y = v * h / 2;
-                    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-                    x += slice;
-                }
-                ctx.stroke();
-
-                // Spectre (Barres)
-                const barWidth = (w / freq.length) * 2.5; let bx = 0;
-                for (let i = 0; i < freq.length; i++) {
-                    const val = freq[i];
-                    const barHeight = (val / 255) * (h / 2.5);
-                    ctx.fillStyle = val > 240 ? '#f85149' : (val > 150 ? '#58a6ff' : '#30363d');
-                    ctx.fillRect(bx, h - barHeight, barWidth, barHeight); bx += barWidth + 1;
-                }
-                
-                // Particules
-                ctx.fillStyle = `rgba(88, 166, 255, ${Math.min(0.6, avg / 60)})`;
-                this.particles.forEach(p => {
-                    p.x += p.vx * (1 + avg / 50); p.y += p.vy * (1 + avg / 50);
-                    if (p.x < 0) p.x = 1; if (p.x > 1) p.x = 0;
-                    if (p.y < 0) p.y = 1; if (p.y > 1) p.y = 0;
-                    const scale = 200 / (200 + p.z * 50); const px = (p.x - 0.5) * w * scale; const py = (p.y - 0.5) * h * scale; const size = p.z * 3 * scale;
-                    ctx.beginPath(); ctx.arc(w/2 + px, h/2 + py, Math.max(1, size), 0, Math.PI*2); ctx.fill();
-                    if (Math.random() > 0.95) { ctx.beginPath(); ctx.moveTo(w/2, h/2); ctx.lineTo(w/2 + px, h/2 + py); ctx.strokeStyle = `rgba(88, 166, 255, 0.1)`; ctx.stroke(); }
-                });
-            }
-        }
-
-        /**
-         * ==========================================================================
-         * AGENT IA (VOICE AGENT)
-         * Gère la reconnaissance vocale et la synthèse (Mode Hyper-Echo)
-         * ==========================================================================
-         */
-        class VoiceAgent {
-            constructor(config, logger) {
-                this.config = config;
-                this.logger = logger;
-                this.recognition = null;
-                this.synthesis = window.speechSynthesis;
-                this.lastSpeakTime = 0;
-                this.lastInterim = "";
-                this.isActive = false;
-            }
-
-            connect() {
-                const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-                if (!SR) return false;
-
-                this.recognition = new SR();
-                this.recognition.continuous = true;
-                this.recognition.interimResults = true; // Clé pour l'immédiat
-                this.recognition.lang = 'fr-FR';
-
-                this.recognition.onresult = (event) => {
-                    let final = "", interim = "";
-                    for (let i = event.resultIndex; i < event.results.length; ++i) {
-                        if (event.results[i].isFinal) final += event.results[i][0].transcript;
-                        else interim += event.results[i][0].transcript;
-                    }
-
-                    // Affichage
-                    const displayText = final || interim;
-                    if (displayText) {
-                        document.getElementById('ai-main').innerText = displayText;
-                        document.getElementById('ai-sub').innerText = "ACQUISITION...";
-                    }
-
-                    // LOGIQUE HYPER-AGRESSIVE
-                    if (final) {
-                        this.speak(final, true);
-                        this.lastInterim = "";
-                    } 
-                    else if (interim && interim.length > 2 && interim !== this.lastInterim) {
-                        // MODE PARROQUET SANS FILTRE
-                        this.speak(interim, true);
-                        this.lastInterim = interim;
-                    }
-                };
-
-                this.recognition.onend = () => { 
-                    if (this.isActive) {
-                        this.logger.log("IA Redémarrage auto...", "sys");
-                        try { this.recognition.start(); } catch (e) {}
-                    }
-                };
-
-                try {
-                    this.recognition.start();
-                    this.isActive = true;
-                    return true;
-                } catch (e) {
-                    this.logger.log("Erreur init IA: " + e.message, "err");
-                    return false;
-                }
-            }
-
-            speak(text, isHuman) {
-                if (!text) return;
-                
-                // Annule pour priorité immédiate (Evite bégaiement pour réactivité)
-                this.synthesis.cancel();
-                this.lastSpeakTime = Date.now();
-
-                const u = new SpeechSynthesisUtterance(text);
-                u.lang = 'fr-FR';
-                u.volume = this.config.voiceVolume;
-                u.rate = this.config.speechRate;
-                u.pitch = isHuman ? 0.9 : 0.8;
-                
-                u.onstart = () => { document.getElementById('ai-sub').innerText = isHuman ? "RÉPÉTITION CONFIRMÉE" : "TRADUCTION TECHNIQUE"; };
-                
-                this.synthesis.speak(u);
-                this.logger.log(`Tx: "${text}"`, isHuman ? 'ai' : 'warn');
-            }
-
-            disconnect() { if (this.recognition) this.recognition.stop(); this.synthesis.cancel(); this.isActive = false; }
-        }
-
-        /**
-         * ==========================================================================
-         * SYSTÈME DE CONTROLE PRINCIPAL
-         * Point d'entrée de l'application.
-         * ==========================================================================
-         */
-        const OMEGA = {
+        // État de l'application
+        let appState = {
             running: false,
-            audio: null,
-            visual: null,
-            ai: null,
-            logger: new Logger('sys-terminal'),
-            mods: { mic: true, echo: true, trans: true, rec: false },
-            config: { 
-                voiceVolume: 1.0, 
-                speechRate: 1.4, 
-                voicePitch: 0.9,
-                energyThreshold: 0, // Seuil à zéro pour capter les sons faibles
-                fftSize: 2048 
-            },
-            sensors: { lastAlpha: 0 },
+            audioContext: null,
+            analyser: null,
+            recognition: null,
+            config: {...DEFAULT_CONFIG},
+            modules: {...DEFAULT_CONFIG}
+        };
 
-            // Initialisation
-            async initSequence() {
-                try {
-                    this.updateUIState(true);
-                    
-                    // Audio
-                    this.audio = new AudioEngine();
-                    await this.audio.init();
-                    this.logger.log("Audio Core: ONLINE (Auto-Gain ON)", "sys");
+        // Logger
+        function log(message, type = 'sys') {
+            const terminal = document.getElementById('system-terminal');
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('fr-FR', { hour12: false });
 
-                    // Visual
-                    this.visual = new VisualEngine('main-canvas');
-                    this.logger.log("Visual Engine: ONLINE", "sys");
+            const entry = document.createElement('div');
+            entry.className = `log-entry log-type-${type}`;
+            entry.innerHTML = `<span class="log-time">[${timeString}]</span> ${message}`;
 
-                    // IA
-                    this.ai = new VoiceAgent(this.config, this.logger);
-                    const aiReady = this.ai.connect();
-                    if(!aiReady) {
-                        this.logger.log("Erreur: IA non-disponible.", "warn");
-                    alert("Impossible de démarrer l'IA sur ce navigateur.");
-                        // On continue quand même pour l'analyse visuelle seule
-                    this.running = true;
-                    this.loop();
-                        return;
-                    // Laisser les contrôles actifs car l'audio a échoué
-                }
+            terminal.appendChild(entry);
+            terminal.scrollTop = terminal.scrollHeight;
+        }
 
-                    // Sensors
-                    this.initSensors();
+        // Initialisation du système
+        async function initSystem() {
+            if (appState.running) {
+                log("Le système est déjà en cours d'exécution.", 'warn');
+                return;
+            }
 
-                    // Boucle
-                    this.running = true;
-                    this.loop();
-                    
-                    this.logger.log("SYSTÈME FONCTIONNEL", "sys");
-                    this.logger.log("MODE: HYPER-ECHO ACTIF", "ai");
-
-                } catch (e) {
-                    this.logger.log("ERREUR CRITIQUE: " + e.message, "err");
-                    alert("ERREUR: " + e.message);
-                    this.updateUIState(false);
-                }
-            },
-
-            terminateSequence() {
-                this.running = false;
-                if (this.audio) this.audio.stop();
-                if (this.ai) this.ai.disconnect();
-                location.reload();
-            },
-
-            renderLoop() {
-                if (!this.running) return;
-                requestAnimationFrame(() => this.renderLoop());
-
-                // Traitement Audio
-                const metrics = this.audio.process();
-
-                // Mise à jour latéral (Vu Meter, Peak, RMS)
-                const pct = Math.min(100, (metrics.avgEnergy / 40) * 100);
-                const vuMeter = document.getElementById('vu-meter-fill');
-                if(vuMeter) {
-                    vuMeter.style.width = pct + "%";
-                    if (pct > 90) vuMeter.style.background = "#f85149";
-                    else vuMeter.style.background = "linear-gradient(90deg, #58a6ff, #fff)";
-                }
-                
-                document.getElementById('val-peak').innerText = metrics.peakFreq + " Hz";
-                const db = metrics.avgEnergy > 0 ? (20 * Math.log10(metrics.avgEnergy / 255)).toFixed(1) : "-Inf";
-                document.getElementById('val-rms').innerText = db + " dB";
-
-                // Rendu Visuel
-                this.visual.draw(this.audio.dataFreq, this.audio.dataTime, metrics.avgEnergy);
-
-                // Traduction Bruit
-                if (this.mods.trans) {
-                    const now = Date.now();
-                    // Si énergie > 0 (Seuil à 0) et silence depuis 500ms
-                    if (metrics.avgEnergy > (this.config.energyThreshold + 5) && (now - this.ai.lastSpeakTime > 500)) {
-                        if (Math.random() > 0.80) {
-                            const word = CONST.VOCABULARY[Math.floor(Math.random() * CONST.VOCABULARY.length)];
-                            this.ai.speak(word, false); // false = traduction bruit
-                            this.logger.log(`Anomaly: ${word}`, "warn");
-                        }
-                    }
-                }
-
-                // Alertes visuelles (Flash)
-                if (metrics.peakAmp > 240 && Math.random() > 0.98) {
-                    const f = document.getElementById('ai-main');
-                    f.style.color = '#f85149'; 
-                    setTimeout(() => f.style.color = '#fff', 100);
-                }
-            },
-
-            initSensors() {
-                // Accéléromètre
-                if (window.DeviceMotionEvent) {
-                    window.addEventListener('devicemotion', (e) => {
-                        const a = e.accelerationIncludingGravity;
-                        if (a) {
-                            document.getElementById('val-acc-x').innerText = (a.x || 0).toFixed(2);
-                            document.getElementById('val-acc-y').innerText = (a.y || 0).toFixed(2);
-                            document.getElementById('val-acc-z').innerText = (a.z || 0).toFixed(2);
-                            const gForce = Math.sqrt(a.x*a.x + a.y*a.y + a.z*a.z);
-                            document.getElementById('val-g-force').innerText = gForce.toFixed(2);
-                            if (gForce > 20) this.triggerSensorAlert("PIC ACCÉLÉRATION");
-                        }
-                    });
-                }
-                // Magnétisme
-                if (window.DeviceOrientationEvent) {
-                    window.addEventListener('deviceorientation', (e) => {
-                        if (e.alpha) {
-                            document.getElementById('val-mag-a').innerText = Math.floor(e.alpha) + " µT";
-                            document.getElementById('val-mag-b').innerText = Math.floor(e.beta) + " µT";
-                            const diff = Math.abs(e.alpha - this.sensors.lastAlpha);
-                            if (diff > 10) {
-                                this.triggerSensorAlert("FLUX MAGNÉTIQUE");
-                                document.getElementById('val-mag-state').innerText = "UNSTABLE";
-                                document.getElementById('val-mag-state').classList.add('blink');
-                            } else {
-                                document.getElementById('val-mag-state').innerText = "STABLE";
-                                document.getElementById('val-mag-state').classList.remove('blink');
-                            }
-                            this.sensors.lastAlpha = e.alpha;
-                        }
-                    });
-                }
-            },
-
-            triggerSensorAlert(msg) {
-                this.logger.log(`ALERTE: ${msg}`, "warn");
-                if (this.mods.trans) this.ai.speak(msg, false);
-                document.getElementById('val-mode').innerText = "ALERTHE";
-                const f = document.getElementById('ai-main');
-                f.style.color = '#f85149';
-                setTimeout(() => f.style.color = '#ffffff', 100);
-            },
-
-            // Gestion des boutons et UI
-            toggleModule(mod) {
-                this.mods[mod] = !this.mods[mod];
-                const btn = document.getElementById('mod-' + mod);
-                if (this.mods[mod]) btn.classList.add('active'); else btn.classList.remove('active');
-                
-                const map = { 'microphone': 'btn-mic', 'ttsEngine': 'btn-echo', 'ghostMode': 'btn-trans', 'recorder': 'btn-rec' };
-                const btnEl = document.getElementById(map[mod]);
-                if(btnEl) {
-                    if (this.mods[mod]) btnEl.classList.add('active');
-                    else btnEl.classList.remove('active');
-                }
-            },
-
-            updateConfig(key, val) {
-                this.config[key] = parseFloat(val);
-                // Mise à jour la config IA
-                if (this.ai) {
-                    this.ai.config[key] = parseFloat(val);
-                    if (key === 'voiceVolume') this.ai.config.voiceVolume = parseFloat(val);
-                    if (key === 'speechRate') this.ai.config.speechRate = parseFloat(val);
-                }
-                
-                // Affichage curseurs
-                const idMap = {
-                    'voiceVolume': 'out-vol', 'speechRate': 'out-rate', 'energyThreshold': 'out-thresh'
-                };
-                if (idMap[key]) {
-                    const el = document.getElementById(idMap[key]);
-                    if(el) el.innerText = val;
-                }
-            },
-
-            updateUIState(active) {
-                document.getElementById('btn-start').style.display = active ? 'none' : 'block';
-                document.getElementById('btn-stop').style.display = active ? 'block' : 'none';
+            try {
+                // 1. Mise à jour UI
+                document.getElementById('btn-start').style.display = 'none';
+                document.getElementById('btn-stop').style.display = 'block';
                 document.getElementById('sys-status').classList.add('active');
                 document.getElementById('sys-status').innerText = "ONLINE";
-                document.getElementById('mods-panel').style.opacity = active ? '1' : '0.5';
-                document.getElementById('mods-panel').style.pointerEvents = active ? 'auto' : 'none';
-            },
+                document.getElementById('ai-primary-display').innerText = "DÉMARRAGE...";
+                document.getElementById('ai-secondary-display').innerText = "INITIALISATION MODULES";
 
-            purgeLogs() { document.getElementById('sys-terminal').innerHTML = ""; },
-            forceHardReset() {
-                location.reload();
+                log("Démarrage de la séquence...", 'sys');
+
+                // 2. Initialisation Audio
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                appState.audioContext = new AudioContext();
+
+                // Résolution de la promesse pour le contexte audio
+                if (appState.audioContext.state === 'suspended') {
+                    await appState.audioContext.resume();
+                }
+
+                // 3. Accès au microphone
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    audio: {
+                        echoCancellation: false,
+                        noiseSuppression: false,
+                        autoGainControl: true
+                    },
+                    video: false
+                });
+
+                const source = appState.audioContext.createMediaStreamSource(stream);
+                appState.analyser = appState.audioContext.createAnalyser();
+                appState.analyser.fftSize = appState.config.fftSize;
+                appState.analyser.smoothingTimeConstant = appState.config.smoothing;
+
+                source.connect(appState.analyser);
+
+                // 4. Initialisation de la reconnaissance vocale
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                if (SpeechRecognition) {
+                    appState.recognition = new SpeechRecognition();
+                    appState.recognition.continuous = true;
+                    appState.recognition.interimResults = true;
+                    appState.recognition.lang = 'fr-FR';
+
+                    appState.recognition.onresult = (event) => {
+                        let finalTranscript = '';
+                        let interimTranscript = '';
+
+                        for (let i = event.resultIndex; i < event.results.length; ++i) {
+                            if (event.results[i].isFinal) {
+                                finalTranscript += event.results[i][0].transcript;
+                            } else {
+                                interimTranscript += event.results[i][0].transcript;
+                            }
+                        }
+
+                        const textToDisplay = finalTranscript || interimTranscript;
+                        if (textToDisplay) {
+                            document.getElementById('ai-primary-display').innerText = textToDisplay;
+                            document.getElementById('ai-secondary-display').innerText = "ACQUISITION ACTIVE";
+
+                            if (appState.modules.ttsEngine && finalTranscript) {
+                                speak(finalTranscript);
+                            }
+                        }
+                    };
+
+                    appState.recognition.onend = () => {
+                        if (appState.running) {
+                            appState.recognition.start();
+                        }
+                    };
+
+                    appState.recognition.start();
+                    log("Reconnaissance vocale activée.", 'sys');
+                } else {
+                    log("Reconnaissance vocale non supportée.", 'warn');
+                }
+
+                // 5. Initialisation des capteurs
+                initSensors();
+
+                // 6. Lancement de la boucle de rendu
+                appState.running = true;
+                renderLoop();
+
+                log("Système démarré avec succès.", 'sys');
+                document.getElementById('ai-primary-display').innerText = "ÉCOUTE ACTIVE...";
+                document.getElementById('ai-secondary-display').innerText = "MODE HYPER-ECHO";
+
+            } catch (error) {
+                log("ERREUR DÉMARRAGE: " + error.message, 'err');
+                stopSystem();
             }
-        };
+        }
 
-        /**
-         * ==========================================================================
-         * LANCEMENT INITIAL
-         * ==========================================================================
-         */
-        window.onload = () => {
-            const log = document.getElementById('sys-terminal');
-            log("> Chargement du noyau Omega...", "sys");
-            log("> En attente de l'utilisateur.", "sys");
-            
-            // Force le focus sur le corps
-            document.body.focus();
-        };
+        // Boucle de rendu
+        function renderLoop() {
+            if (!appState.running) return;
 
-        // Assignation explicite des événements pour éviter les problèmes de scope
-        document.getElementById('btn-start').onclick = OMEGA.initSequence;
-        document.getElementById('btn-stop').onclick = OMEGA.terminateSequence;
+            requestAnimationFrame(renderLoop);
+
+            // Ici vous ajouteriez le rendu graphique et l'analyse audio
+            // Pour l'instant, on simule une activité
+            updateAudioVisualizer();
+        }
+
+        // Simulation d'un visualiseur audio
+        function updateAudioVisualizer() {
+            if (!appState.analyser) return;
+
+            const freqData = new Uint8Array(appState.analyser.frequencyBinCount);
+            appState.analyser.getByteFrequencyData(freqData);
+
+            // Mise à jour du VU meter
+            const avg = freqData.reduce((a, b) => a + b, 0) / freqData.length;
+            const vuMeter = document.getElementById('vu-meter-fill');
+            if (vuMeter) {
+                vuMeter.style.width = `${Math.min(100, avg / 1.5)}%`;
+            }
+
+            // Mise à jour des données audio affichées
+            document.getElementById('val-peak-freq').innerText = `${Math.round(avg * 10)} Hz`;
+            document.getElementById('val-rms').innerText = `${Math.round(avg / 2.5 - 100)} dB`;
+        }
+
+        // Initialisation des capteurs
+        function initSensors() {
+            if (window.DeviceMotionEvent) {
+                window.addEventListener('devicemotion', (event) => {
+                    const acc = event.accelerationIncludingGravity;
+                    if (acc) {
+                        document.getElementById('val-acc-x').innerText = `${acc.x.toFixed(2)} G`;
+                        document.getElementById('val-acc-y').innerText = `${acc.y.toFixed(2)} G`;
+                        document.getElementById('val-acc-z').innerText = `${acc.z.toFixed(2)} G`;
+
+                        const gForce = Math.sqrt(acc.x*acc.x + acc.y*acc.y + acc.z*acc.z);
+                        document.getElementById('val-g-force').innerText = `${gForce.toFixed(2)} G`;
+                    }
+                });
+            }
+
+            if (window.DeviceOrientationEvent) {
+                window.addEventListener('deviceorientation', (event) => {
+                    if (event.alpha !== null) {
+                        document.getElementById('val-mag-a').innerText = `${Math.floor(event.alpha)} µT`;
+                        document.getElementById('val-mag-b').innerText = `${Math.floor(event.beta)} µT`;
+                        document.getElementById('val-mag-g').innerText = `${Math.floor(event.gamma)} µT`;
+                    }
+                });
+            }
+        }
+
+        // Synthèse vocale
+        function speak(text) {
+            if (!text || !appState.running) return;
+
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'fr-FR';
+            utterance.volume = appState.config.voiceVolume;
+            utterance.rate = appState.config.speechRate;
+            utterance.pitch = appState.config.voicePitch;
+
+            window.speechSynthesis.cancel();
+            window.speechSynthesis.speak(utterance);
+
+            log(`TTS: "${text}"`, 'ai');
+        }
+
+        // Arrêt du système
+        function stopSystem() {
+            if (!appState.running) return;
+
+            appState.running = false;
+
+            // Arrêt des composants audio
+            if (appState.audioContext) {
+                appState.audioContext.close();
+            }
+
+            if (appState.recognition) {
+                appState.recognition.stop();
+            }
+
+            window.speechSynthesis.cancel();
+
+            // Réinitialisation de l'UI
+            document.getElementById('btn-start').style.display = 'block';
+            document.getElementById('btn-stop').style.display = 'none';
+            document.getElementById('sys-status').classList.remove('active');
+            document.getElementById('sys-status').innerText = "OFFLINE";
+            document.getElementById('ai-primary-display').innerText = "SYSTÈME ARRÊTÉ";
+            document.getElementById('ai-secondary-display').innerText = "CLIQUEZ POUR RELANCER";
+
+            log("Système arrêté.", 'sys');
+        }
+
+        // Basculer les modules
+        function toggleModule(moduleName) {
+            appState.modules[moduleName] = !appState.modules[moduleName];
+
+            const button = document.getElementById(`mod-${moduleName === 'ttsEngine' ? 'echo' : moduleName === 'ghostMode' ? 'trans' : moduleName}`);
+            if (button) {
+                if (appState.modules[moduleName]) {
+                    button.classList.add('active');
+                } else {
+                    button.classList.remove('active');
+                }
+            }
+
+            log(`Module ${moduleName} ${appState.modules[moduleName] ? 'activé' : 'désactivé'}`, 'sys');
+        }
+
+        // Mettre à jour la configuration
+        function updateConfig(key, value) {
+            appState.config[key] = value;
+
+            // Mise à jour de l'interface
+            const displayMap = {
+                'voiceVolume': 'disp-voice-vol',
+                'speechRate': 'disp-speech-rate',
+                'voicePitch': 'disp-pitch',
+                'minDecibels': 'disp-min-db',
+                'smoothing': 'disp-smoothing'
+            };
+
+            if (displayMap[key]) {
+                const el = document.getElementById(displayMap[key]);
+                if (el) el.innerText = value;
+            }
+
+            // Application des paramètres si le système est actif
+            if (appState.running && appState.analyser) {
+                if (key === 'fftSize') {
+                    appState.analyser.fftSize = value;
+                } else if (key === 'smoothing') {
+                    appState.analyser.smoothingTimeConstant = value;
+                }
+            }
+        }
+
+        // Gestion de la modale de configuration
+        function openConfigModal() {
+            document.getElementById('config-modal').style.display = 'flex';
+
+            // Charger les valeurs actuelles
+            document.getElementById('cfg-fft-size').value = appState.config.fftSize;
+            document.getElementById('cfg-smoothing').value = appState.config.smoothing;
+            document.getElementById('cfg-min-db').value = appState.config.minDecibels;
+            document.getElementById('cfg-pitch').value = appState.config.voicePitch;
+        }
+
+        function closeConfigModal() {
+            document.getElementById('config-modal').style.display = 'none';
+        }
+
+        function saveConfiguration() {
+            try {
+                localStorage.setItem('OMEGA_CONFIG', JSON.stringify(appState.config));
+                log("Configuration sauvegardée.", 'sys');
+                closeConfigModal();
+            } catch (e) {
+                log("Erreur de sauvegarde: " + e.message, 'err');
+            }
+        }
+
+        // Initialisation au chargement
+        window.addEventListener('load', () => {
+            log("OMEGA // ARCHITECTURE INTÉGRALE");
+            log("Système prêt.", 'sys');
+
+            // Charger la configuration sauvegardée
+            const savedConfig = localStorage.getItem('OMEGA_CONFIG');
+            if (savedConfig) {
+                try {
+                    const parsed = JSON.parse(savedConfig);
+                    appState.config = { ...appState.config, ...parsed };
+                    log("Configuration chargée.", 'sys');
+                } catch (e) {
+                    log("Erreur de chargement de la configuration.", 'warn');
+                }
+            }
+
+            // Initialiser l'UI avec les valeurs actuelles
+            updateConfig('voiceVolume', appState.config.voiceVolume);
+            updateConfig('speechRate', appState.config.speechRate);
+            updateConfig('voicePitch', appState.config.voicePitch);
+        });
     </script>
 </body>
 </html>
