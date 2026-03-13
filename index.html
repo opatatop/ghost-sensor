@@ -3,881 +3,1038 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>OMEGA // ARCHITECTURE INTÉGRALE</title>
+    <title>OMEGA // HYPER-ECHO</title>
     <style>
+        /* --- CSS SIMPLIFIÉ POUR OPTIMISATION PERFORMANCE ---
         :root {
-            --primary-color: #00ccff;
-            --secondary-color: #ffd700;
-            --background-color: #050510;
-            --panel-color: #0a0a20;
-            --text-color: #e0e0ff;
-            --grid-color: #1a2a3a;
-            --alert-color: #ff3333;
-            --lcd-bg: #000810;
+            --c-bg: #0d1117;
+            --c-panel: #161b22;
+            --c-text: #c9d1d9;
+            --c-accent: #58a6ff;
+            --c-alert: #f85149;
+            --c-success: #2ea043;
+            --font-ui: 'Segoe UI', system-ui, sans-serif;
+            --font-mono: 'Consolas', monospace;
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            font-family: 'Courier New', monospace;
-            background-color: var(--background-color);
-            color: var(--text-color);
-            min-height: 100vh;
-            overflow-y: auto;
-        }
-
-        .app-container {
+        * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; outline: none; }
+        html, body { margin: 0; padding: 0; width: 100%; height: 100%; background-color: var(--c-bg); color: var(--c-text); font-family: var(--c-font-ui); overflow: hidden; }
+        
+        body { display: flex; flex-direction: column; }
+        
+        /* --- LAYOUT --- */
+        #app-root {
             display: grid;
-            grid-template-rows: auto 1fr auto;
-            height: 100vh;
+            grid-template-rows: 60px 1fr 40vh; /* Espace pour Header + Scope */
+            grid-template-columns: 1fr; /* Mobile First */
+            height: 100vh; width: 100vw;
         }
 
+        /* --- HEADER --- */
         header {
-            background-color: #000000;
-            padding: 10px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 2px solid var(--primary-color);
+            background: #000;
+            border-bottom: 2px solid var(--c-accent);
+            padding: 15px 20px;
+            display: flex; justify-content: justify-content space-between; align-items: center;
+            position: sticky; top: 0; width: 100%; z-index: 100;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
         }
 
-        .app-title {
-            font-size: 1.2rem;
-            color: var(--primary-color);
-            text-shadow: 0 0 10px var(--primary-color);
+        .brand {
+            font-size: 1.1rem; font-weight: 800;
+            letter-spacing: 2px;
+            color: var(--c-accent);
+            text-shadow: 0 0 10px var(--c-accent);
         }
 
-        .status-badge {
-            padding: 5px 10px;
-            border: 1px solid var(--secondary-color);
-            border-radius: 4px;
-            color: var(--secondary-color);
-            font-weight: bold;
-        }
-
-        .status-badge.active {
-            background-color: var(--secondary-color);
-            color: #000;
-            box-shadow: 0 0 10px var(--secondary-color);
-        }
-
-        .main-content {
-            display: grid;
-            grid-template-columns: 1fr 3fr 1fr;
-            height: 100%;
-        }
-
-        .sidebar {
-            background-color: #111;
-            padding: 20px;
+        /* --- CONTENEUR SCROLLABLE --- */
+        .scroll-container {
+            flex: 1;
             overflow-y: auto;
+            background-color: var(--c-bg-deep);
         }
 
-        .center-stage {
-            background-color: #000;
+        /* --- SCOPE (C'est là que vous voulez que ça fasse) --- */
+        .scope-wrapper {
             position: relative;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
+            background: #000;
+            border-top: 2px solid var(--c-primary);
+            border-bottom: 2px var(--c-primary);
+            flex: 1; /* Prend la place au header */
+            min-height: 300px; 
+            height: 400px; /* Force une hauteur minimale pour voir le scope */
         }
 
-        #scope-canvas {
-            width: 100%;
-            height: 100%;
-            display: block;
-        }
-
-        .ai-overlay {
+        /* --- OVERLAY AI --- */
+        .ai-layer {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
+            width: 90%;
             text-align: center;
-            pointer-events: none;
+            pointer-events: none; /* Laisse passer les clics pour le canvas */
             z-index: 10;
+            /* Décalage pour éviter les clics sur le texte */
+            pointer-events: none; 
+            /* Assure que le texte est au dessus du canvas */
+            z-index: 20;
         }
 
-        .ai-text {
-            font-size: 2rem;
-            font-weight: bold;
-            background-color: rgba(0, 0, 0, 0.7);
-            padding: 15px 25px;
-            border: 2px solid var(--secondary-color);
-            color: white;
+        /* Textes AI */
+        .ai-title {
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: #fff;
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid var(--c-accent);
+            padding: 20px 30px;
             text-transform: uppercase;
+            text-shadow: 0 0 10px var(--c-accent);
+            min-height: 3.5rem;
+            margin-bottom: 5px;
+            /* Force le texte à tenir sur une seule ligne */
+            white-space: nowrap; overflow: hidden;
+            text-overflow: ellipsis; 
+            /* Animation de scintillement (Effet Science-Fiction) */
+            animation: glitch 1.5s infinite;
+        }
+        
+        @keyframes glitch {
+            0% { opacity: 1; }
+            10% { opacity: 0.8; color: #88ccff; }
+            20% { opacity: 1; color: #fff; }
+            30% { opacity: 0.8; color: #004400; }
+            40% { opacity: 1; }
+            50% { opacity: 0; }
+            60% { opacity: 0.8; color: #fff; }
+            70% { opacity: 1; color: #fff; }
+            80% { opacity: 0; }
+            100% { opacity: 1; }
         }
 
-        .controls {
-            background-color: var(--panel-color);
-            padding: 20px;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-        }
-
-        .control-panel {
-            border: 1px solid var(--grid-color);
-            padding: 15px;
-            border-radius: 5px;
-        }
-
-        .panel-title {
-            color: var(--secondary-color);
-            margin-bottom: 15px;
-            font-weight: bold;
-            text-transform: uppercase;
-            border-bottom: 1px solid var(--grid-color);
-            padding-bottom: 5px;
-        }
-
-        button {
-            background-color: #222;
-            border: 1px solid var(--primary-color);
-            color: var(--primary-color);
-            padding: 10px 15px;
-            margin: 5px;
-            cursor: pointer;
+        .ai-subtitle {
+            font-size: 0.9rem;
+            color: var(--c-accent);
+            background: var(--c-accent);
+            color: #000;
+            padding: 4px 12px;
             border-radius: 4px;
             font-weight: bold;
             text-transform: uppercase;
+            letter-spacing: 2px;
+            display: inline-block;
+            box-shadow: 0 4px 10px rgba(0, 204, 255, 0.5);
         }
 
-        button.active {
-            background-color: var(--primary-color);
-            color: black;
-            box-shadow: 0 0 10px var(--primary-color);
-        }
-
-        .btn-start {
-            background-color: var(--secondary-color);
-            color: black;
-            border: none;
+        /* --- CONTROLS --- */
+        .controls {
+            background-color: var(--c-panel);
             padding: 15px;
-            font-size: 1.1rem;
-            width: 100%;
+            border-top: 1px solid var(--c-border);
+            padding-bottom: 10px;
         }
 
-        .slider-container {
+        .module-title {
+            color: var(--c-text);
+            font-size: 1rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+            text-transform: 0;
+            border-bottom: 2px solid var(--c-primary);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .btn-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr); /* Deux colonnes pour mobile */
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        /* Boutons principaux */
+        .btn-main {
+            background: #2ea043;
+            color: #fff;
+            border: 2px solid #2ea043;
+            font-family: inherit;
+            font-size: 1.2rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+            border-radius: 4px;
+            box-shadow: 0 4px 15px rgba(46, 160, 67, 0.3);
+            transition: transform: scale(0.98);
+        }
+        .btn-main:active { background: #0a3a10; color: #fff; border-color: #2ea043; border: none; }
+        .btn-main:active:hover { box-shadow: 0 0 20px rgba(46, 160, 67, 0.5); transform: scale(1.05); }
+
+        /* Boutons secondaires */
+        .btn {
+            background: #0d1117;
+            border: 1px solid #30363d;
+            color: var(--c-text);
+            padding: 12px;
+            font-family: inherit;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-transform: uppercase;
+            border-radius: 4px;
+            transition: background: #0d1117;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn::after {
+            content: '>';
+            position: absolute;
+            top: 50%; left: 0;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), rgba(255, 0, 0, 0.1), transparent);
+            transition: 0.5s ease;
+        }
+        
+        .btn:hover::after { left: 100%; }
+        
+        .btn:active, .btn:hover { background: #21262c5; color: #fff; border-color: #2ea043; }
+        .btn:active:hover { background: #0a0f2a; color: #fff; border-color: var(--c-accent); }
+        .btn.active::after { background: var(--c-accent); border-color: #fff; }
+
+        /* Sliders */
+        .slider-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            font-size: 0.8rem;
+            color: var(--c-text);
+        }
+
+        .slider-row {
             display: flex;
             align-items: center;
-            margin: 10px 0;
         }
 
-        .slider-container label {
+        .slider-label {
             flex: 1;
-            margin-right: 10px;
+            color: #666;
         }
 
         input[type="range"] {
             flex: 2;
+            height: 6px;
+            background: #21262c5;
+            border-radius: 3px;
+            -webkit-appearance: none;
+            cursor: pointer;
         }
 
-        .system-log {
-            height: 100px;
-            background-color: #000;
-            border: 1px solid var(--grid-color);
+        /* Terminal */
+        #terminal {
+            background: #000;
+            border: 1px solid #333;
             padding: 10px;
+            height: 100px;
             overflow-y: auto;
             font-family: monospace;
-            font-size: 0.8rem;
-            color: #aaa;
+            font-size: 0.65rem;
+            color: #bbb;
         }
 
         .log-entry {
-            margin-bottom: 5px;
-            padding-left: 10px;
-            border-left: 2px solid var(--grid-color);
+            margin-bottom: 4px;
+            padding-left: 8px;
+            border-left: 2px solid #333;
+            padding-bottom: 2px;
+            font-family: monospace;
         }
+        .log-sys { color: #666; }
+        .log-ai { border-color: var(--c-accent); color: #fff; font-weight: bold; }
+        .log-warn { border-color: var(--c-alert); color: var(--c-alert); font-weight: bold; }
+        .time { color: #58a6ff; opacity: 0.7; font-size: 0.7rem; margin-right: 8px; font-family: monospace; }
 
-        .modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.9);
-            display: none;
+        /* Modal pour "Paramètres Avancés" (Caché pour éviter d'encombrer les contrôles dans la vue déroulante)
+        #config-modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(5, 5, 10, 0.9);
+            z-index: 1000;
+            display: flex;
             justify-content: center;
             align-items: center;
-            z-index: 100;
+        }
+        .modal-content {
+            background: var(--c-panel);
+            border: 2px solid var(--c-accent);
+            padding: 30px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 0 30px rgba(0,0,0,0.8);
+        }
+        .modal-title { font-size: 1.5rem; color: var(--c-accent); margin-bottom: 10px; border-bottom: 2px solid #333; padding-bottom: 10px; display: flex; justify-content: space-between; }
+        .close-btn { cursor: pointer; font-size: 1.5rem; color: var(--c-alert); font-family: monospace; cursor: pointer; }
+        
+        .modal-body { text-align: left; font-family: var(--c-font-mono); color: #ccc; line-height: 1.4; }
+        .modal-body h3 { margin: 0; font-size: 1rem; color: var(--c-accent); border-bottom: 1px solid #333; padding-bottom: 5px; margin-bottom: 20px; }
+        .modal-controls { margin-top: 20px; border-top: 1px solid #222; padding: 10px; padding-bottom: 20px; border-bottom: 1px solid #222; }
+        
+        /* Styles spécifiques Modale et Inputs */
+        .config-input {
+            background: #0d1117;
+            color: #0d1117;
+            border: 1px solid #30363d;
+            color: var(--c-text);
+            padding: 8px;
+            width: 100%;
+            box-sizing: border-radius: 4px;
+            font-size: 0.9rem;
+            font-family: var(--c-font-ui);
         }
 
-        .modal-content {
-            background-color: #111;
-            padding: 20px;
-            border-radius: 5px;
-            max-width: 600px;
-            width: 90%;
+        .config-row { display: flex; align-items: center; margin-bottom: 15px; }
+        .config-row label { flex: 1; text-align: left; color: #8b949e; }
+        .config-row input { flex: 2; }
+        
+        .modal-btn {
+            background: var(--c-success);
+            color: #fff;
+            border: 1px solid #1a7a; border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            padding: 10px;
         }
+
     </style>
 </head>
 <body>
-    <div class="app-container">
-        <header>
-            <div class="app-title">OMEGA // ARCHITECTURE INTÉGRALE</div>
-            <div id="status-badge" class="status-badge">OFFLINE</div>
-        </header>
 
-        <div class="main-content">
-            <aside class="sidebar">
-                <h3>Données Capteurs</h3>
-                <div class="sensor-data">
-                    <div><span>ACC X:</span> <span id="acc-x">0.0</span></div>
-                    <div><span>ACC Y:</span> <span id="acc-y">0.0</span></div>
-                    <div><span>ACC Z:</span> <span id="acc-z">0.0</span></div>
-                    <div><span>MAG X:</span> <span id="mag-x">0</span></div>
-                    <div><span>MAG Y:</span> <span id="mag-y">0</span></div>
-                    <div><span>MAG Z:</span> <span id="mag-z">0</span></div>
-                </div>
-            </aside>
+    <!-- STRUCTURE HTML -->
+    <div id="app-root">
+        
+        <!-- HEADER -->
+    <header>
+        <div class="header">
+            <div class="brand">OMEGA // ARCHITECTURE INTÉGRALE</div>
+            <div style="display:flex; align-items:center; gap:10px;">
+                <span style="font-size:0.8rem; color:#888;">STATUT:</span>
+                <div id="sys-led" class="status-led"></div>
+                <div id="sys-text">OFFLINE</div>
+            </div>
+    </header>
 
-            <main class="center-stage">
-                <canvas id="scope-canvas"></canvas>
-                <div class="ai-overlay">
-                    <div id="ai-text" class="ai-text">INITIALISATION...</div>
+    <!-- ZONE CONTENU DÉROULE (SCROLLABLE) -->
+    <div class="scroll-container">
+        
+        <!-- DONNÉES SENSORIELS -->
+        <section class="data-section">
+            <div class="section">
+                <div class="section-title">
+                    <span>CAPTEURS PHYSIQUES</span>
+                    <span style="color:var(--c-success)">●</span>
                 </div>
-            </main>
+                <div class="data-grid">
+                    <div class="data-cell"><span class="sensor-label">ACC X</span><span class="sensor-val" id="val-acc-x">0.00</span></div>
+                    <div class="data-cell"><span class="sensor-label">ACC Y</span><span class="sensor-val" id="val-acc-y">0.00</span></div>
+                    <div class="data-cell"><span class="sensor-label">ACC Z</span><span class="sensor-val" id="val-acc-z">0.00</span></div>
+                    <div class="data-cell" id="cell-acc-total">
+                        <span class="sensor-label">G-FORCE</span>
+                        <span class="sensor-val" id="val-g-force">0.00</span>
+                    </div>
+                </div>
 
-            <aside class="sidebar">
-                <h3>Analyse</h3>
-                <div class="analysis-data">
-                    <div><span>Fréquence Pic:</span> <span id="peak-freq">0 Hz</span></div>
-                    <div><span>Niveau RMS:</span> <span id="rms-level">-∞ dB</span></div>
-                    <div><span>État:</span> <span id="system-state">INACTIF</span></div>
+                <div class="section">
+                    <div class="section-title">
+                        <span>AUDIO INPUT</span>
+                        <div class="vu-track">
+                            <div id="vu-meter-fill" class="vu-fill"></div>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">Fréquence Pic</span>
+                            <span class="sensor-val" id="val-peak">0 Hz</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">Seuil Traduction</span>
+                            <span class="sensor-val" id="val-thresh-disp">0 (AUTO)</span>
+                        </div>
                 </div>
-            </aside>
+            </section>
         </div>
 
+        <!-- ZONE SCOPE -->
+        <div class="scope-wrapper">
+            <div class="ai-layer">
+                <div id="display-text" class="ai-title glitch">INITIALISATION...</div>
+                <div class="ai-subtitle">SYSTÈME EN ATTENTE</div>
+            </div>
+            <canvas id="main-canvas"></canvas>
+        </div>
+
+        <!-- CONTROLS -->
         <div class="controls">
-            <div class="control-panel">
-                <div class="panel-title">Contrôle Principal</div>
-                <button id="start-btn" class="btn-start" onclick="startSystem()">DÉMARRER L'ANALYSE</button>
-                <button id="stop-btn" class="btn-start" onclick="stopSystem()" style="display: none; background-color: var(--alert-color);">ARRÊTER SYSTÈME</button>
+            
+            <!-- Boutons Principaux -->
+        <div class="section">
+            <div class="module-title">PROTOCOLE PRINCIPAL</div>
+            <div class="btn-container">
+                <button id="btn-start" class="btn-main" onclick="startAnalysis()">⚡ DÉMARRER L'ANALYSE SPECTRALE</button>
+                <button id="btn-stop" class="btn-main btn-stop" onclick="stopAnalysis()" style="display:none;">⏹ ARRÊTER SYSTÈME</button>
+            </div>
 
-                <div class="panel-title" style="margin-top: 20px;">Modules</div>
-                <div class="grid-4">
-                    <button id="mic-btn" class="active" onclick="toggleModule('mic')">Microphone</button>
-                    <button id="tts-btn" class="active" onclick="toggleModule('tts')">Synthèse Vocale</button>
-                    <button id="ghost-btn" class="active" onclick="toggleModule('ghost')">Mode Fantôme</button>
-                    <button id="rec-btn" onclick="toggleModule('rec')">Enregistreur</button>
-                    <button id="emf-btn" class="active" onclick="toggleModule('emf')">Détection EMF</button>
-                    <button id="pattern-btn" class="active" onclick="toggleModule('pattern')">Patterns</button>
-                    <button id="noise-btn" onclick="toggleModule('noise')">Bruit Blanc</button>
-                    <button id="paranormal-btn" class="active" onclick="toggleModule('paranormal')">Filtre Paranormal</button>
+            <!-- Modules Actifs -->
+        <div class="section">
+            <div class="module-title">MODULES ACTIFS</div>
+            <div class="btn-grid">
+                <button id="btn-mic" class="active" onclick="toggleModule('microphone')">🎤 MICRO</button>
+                <button id="btn-echo" class="active" onclick="toggleModule('ttsEngine')">🔊 LOOP IA</button>
+                <button id="btn-trans" class="active" onclick="toggleModule('ghostMode')">👻 TRADUCTION</button>
+            </div>
+            <div style="margin-top:10px; font-size:0.7rem; color:#666; text-align:center;">* Mode Hyper-Echo : Répétition immédiate tout ce qui est dit.</div>
+
+            <div class="section">
+                <div class="module-title">PARAMÈTRES RAPIDES</div>
+                <div class="slider-group">
+                    <div class="slider-row">
+                        <label>Volume Voix (Sortie)</label>
+                        <input type="range" id="rng-vol" min="0" max="1" step="0.1" value="1.0" oninput="updateConfig('voiceVolume', this.value)">
+                        <span class="val-display">1.0</span>
+                    </div>
+                    <div class="slider-row">
+                        <label>Vitesse Parole</label>
+                        <input type="range" id="rng-rate" min="0.5" max="2.0" step="0.1" value="1.4" oninput="updateConfig('speechRate', this.value)">
+                        <span class="val-display" id="disp-rate">1.4</span>
+                    </div>
                 </div>
             </div>
 
-            <div class="control-panel">
-                <div class="panel-title">Paramètres Audio</div>
-                <div class="slider-container">
-                    <label for="volume-slider">Volume:</label>
-                    <input type="range" id="volume-slider" min="0" max="1" step="0.1" value="1" oninput="updateConfig('volume', this.value)">
-                    <span id="volume-value">1.0</span>
-                </div>
-                <div class="slider-container">
-                    <label for="pitch-slider">Hauteur:</label>
-                    <input type="range" id="pitch-slider" min="0.5" max="2" step="0.1" value="1" oninput="updateConfig('pitch', this.value)">
-                    <span id="pitch-value">1.0</span>
-                </div>
-                <div class="slider-container">
-                    <label for="rate-slider">Vitesse:</label>
-                    <input type="range" id="rate-slider" min="0.5" max="2" step="0.1" value="1" oninput="updateConfig('rate', this.value)">
-                    <span id="rate-value">1.0</span>
-                </div>
-            </div>
-
-            <div class="control-panel">
-                <div class="panel-title">Paramètres Analyse</div>
-                <div class="slider-container">
-                    <label for="fft-slider">Taille FFT:</label>
-                    <select id="fft-slider" onchange="updateConfig('fftSize', this.value)">
-                        <option value="512">512</option>
-                        <option value="1024">1024</option>
-                        <option value="2048" selected>2048</option>
-                        <option value="4096">4096</option>
-                        <option value="8192">8192</option>
-                    </select>
-                </div>
-                <div class="slider-container">
-                    <label for="smooth-slider">Lissage:</label>
-                    <input type="range" id="smooth-slider" min="0.1" max="0.9" step="0.1" value="0.8" oninput="updateConfig('smoothing', this.value)">
-                    <span id="smooth-value">0.8</span>
-                </div>
-            </div>
-
-            <div class="control-panel" style="grid-column: 1 / -1;">
-                <div class="panel-title">Journal Système</div>
-                <div id="system-log" class="system-log">
-                    <div class="log-entry">Système initialisé</div>
-                </div>
+            <!-- Terminal -->
+            <div class="terminal">
+                <div id="system-log" class="terminal"></div>
             </div>
         </div>
-    </div>
 
-    <div id="config-modal" class="modal">
+    <!-- MODALE CONFIG -->
+    <div id="config-modal">
         <div class="modal-content">
-            <h2>Configuration Avancée</h2>
-            <div class="slider-container">
-                <label for="min-db">Seuil dB:</label>
-                <input type="range" id="min-db" min="-100" max="0" step="1" value="-40" oninput="updateConfig('minDecibels', this.value)">
-                <span id="min-db-value">-40</span>
+            <div class="modal-title">
+                <span class="close-btn" onclick="closeConfig()">×</span>
             </div>
-            <button onclick="closeConfigModal()">Fermer</button>
+            
+            <h2 style="configuration-title">Configuration Système Complet</h2>
+            
+            <div class="modal-controls">
+                <h3 style="initial-scale:0.85rem; border-bottom:1px solid #333; padding:10px 0; margin-bottom:10px; color:#888;">
+                    <div class="slider-row">
+                        <label>Seuil Traduction (Bruit)</label>
+                        <input type="range" id="cfg-thresh" min="0" max="100" value="0" oninput="updateConfig('energyThreshold', this.value)">
+                        <span class="val-disp">0 (TOUT DETECTÉ)</span>
+                    </div>
+                    <div class="slider-row">
+                        <label>Volume Voix</label>
+                        <input type="range" id="cfg-vol" min="0" max="1" step="0.1" value="1.0" oninput="updateConfig('voiceVolume', this.value)">
+                        <span class="val-disp">1.0</span>
+                    </div>
+            </div>
+            <div class="modal-controls">
+                <button id="save-config" style="width:100%; padding:15px; background: var(--c-success); color:#000; border:1px solid #1a7a0; font-weight:bold; font-size:1.1rem; border-radius: 4px; cursor:pointer;">
+                    💾 SAUVEGARDE
+                </button>
+            </div>
         </div>
-    </div>
 
+    <!-- SCRIPT PRINCIPAL -->
     <script>
-        // État complet de l'application
-        const appState = {
-            running: false,
-            audioContext: null,
-            analyser: null,
-            microphone: null,
-            recognition: null,
-            mediaRecorder: null,
-            config: {
-                volume: 1.0,
-                pitch: 1.0,
-                rate: 1.0,
-                fftSize: 2048,
-                smoothing: 0.8,
-                minDecibels: -40
+        /**
+         * ==========================================================================
+         * PUISSANCE MAXIMUM - MOTEUR AUDIO/IA VISUEL
+         * ==========================================================================
+         */
+        
+        const LOG = new Logger('system-log');
+
+        // --- 1. CONFIGURATION ---
+        const CONFIG = {
+            // États des modules
+            microphone: true,
+            noiseGenerator: false,
+            ttsEngine: true,
+            ghostMode: true,
+            recorder: false,
+            
+            // Audio
+            voiceVolume: 1.0,
+            speechRate: 1.4,
+            voicePitch: 0.9,
+            noiseVolume: 0,
+            
+            // Analyse
+            fftSize: 1024, // Optimisé pour fluidité
+            smoothing: 0.85,
+            energyThreshold: 0, // 0 pour capter même les sons faibles
+            minDecibels: -50,
+            
+            // Visuel
+            particleCount: 40,
+            gridColor: '#00ccff',
+            
+            // Thèmes
+            themes: {
+                'zeus': { p: '#00ccff', s: '#ffd700' },
+                'hades': { p: '#aa00ff', s: '#ff0000' },
+                'ares':  { p: '#ff3300', s: '#ffff00' },
+                'poseidon': { p: '#00ff00', s: '#00aaff' },
+                'apollo': { p: '#fff', s: '#ffaa00' }
             },
-            modules: {
-                mic: true,
-                tts: true,
-                ghost: true,
-                rec: false,
-                emf: true,
-                pattern: true,
-                noise: false,
-                paranormal: true
-            },
-            sensorData: {
-                accX: 0,
-                accY: 0,
-                accZ: 0,
-                magX: 0,
-                magY: 0,
-                magZ: 0
+            currentTheme: 'zeus'
+        };
+
+        // --- 2. AUDIO ENGINE ---
+        class AudioEngine {
+            constructor() {
+                this.ctx = null;
+                this.source = null;
+                this.analyser = null;
+                this.dataFreq = null;
+                this.dataTime = null;
             }
-        };
 
-        // Constantes
-        const CONSTANTS = {
-            WORDS: [
-                "SPECTRE", "FREQUENCE", "AMPLITUDE", "MODULATION", "HARMONIQUE",
-                "BRUIT", "SIGNAL", "ANALYSE", "FOURIER", "ECHO",
-                "REVERB", "DEPHASAGE", "INTERFERENCE", "RESONANCE", "TRANSFORMATION"
-            ],
-            PATTERNS: [
-                "oui", "non", "danger", "aide", "stop", "attention", "urgence"
-            ]
-        };
+            async init() {
+                const AC = window.AudioContext || window.webkitAudioContext;
+                this.ctx = new AC();
+                
+                // Force la reprise
+                if (this.ctx.state === 'suspended') await this.ctx.resume();
 
-        // Journal système
-        function log(message, type = 'sys') {
-            const logElement = document.getElementById('system-log');
-            const entry = document.createElement('div');
-            entry.className = 'log-entry';
-            entry.innerText = message;
-            logElement.appendChild(entry);
-            logElement.scrollTop = logElement.scrollHeight;
-        }
-
-        // Initialisation complète du système
-        async function startSystem() {
-            if (appState.running) return;
-
-            try {
-                // Mise à jour interface
-                document.getElementById('start-btn').style.display = 'none';
-                document.getElementById('stop-btn').style.display = 'block';
-                document.getElementById('status-badge').classList.add('active');
-                document.getElementById('status-badge').innerText = 'ONLINE';
-                document.getElementById('ai-text').innerText = 'DÉMARRAGE...';
-                document.getElementById('system-state').innerText = 'INITIALISATION';
-
-                log('Initialisation du système...');
-
-                // Création du contexte audio
-                const AudioContext = window.AudioContext || window.webkitAudioContext;
-                appState.audioContext = new AudioContext();
-
-                // Résolution de la promesse pour le contexte audio
-                if (appState.audioContext.state === 'suspended') {
-                    await appState.audioContext.resume();
-                }
-
-                // Accès au microphone
-                const stream = await navigator.mediaDevices.getUserMedia({
+                // Configuration Aggressive (Pas de filtre d'annulation) pour capter les sons faibles
+                const s = await navigator.mediaDevices.getUserMedia({
                     audio: {
                         echoCancellation: false,
                         noiseSuppression: false,
-                        autoGainControl: true
+                        autoGainControl: true, // <--- IMPORTANT POUR LA DÉTECTION À DISTANCE ---
+                        autoGainControl: true,
+                        video: false
                     },
                     video: false
                 });
 
-                appState.microphone = appState.audioContext.createMediaStreamSource(stream);
-                appState.analyser = appState.audioContext.createAnalyser();
-                appState.analyser.fftSize = appState.config.fftSize;
-                appState.analyser.smoothingTimeConstant = appState.config.smoothing;
+                this.source = this.ctx.createMediaStreamSource(s);
+                this.analyser = this.ctx.createAnalyser();
+                this.analyser.fftSize = CONFIG.fftSize;
+                this.analyser.smoothingTimeConstant = 0.85;
 
-                // Connexion de base
-                appState.microphone.connect(appState.analyser);
+                // Connexion
+                this.source.connect(this.analyser);
 
-                // Initialisation de la reconnaissance vocale
-                initSpeechRecognition();
+                // Buffers
+                const len = this.analyser.frequencyBinCount;
+                this.dataFreq = new Uint8Array(len);
+                this.dataTime = new Uint8Array(len);
+                
+                LOG.log("Audio Core: ONLINE (Auto-Gain High)", "sys");
+                return true;
+            }
 
-                // Initialisation de l'enregistreur si activé
-                if (appState.modules.rec) {
-                    initRecorder(stream);
+            process() {
+                if(!this.analyser) return { avgEnergy: 0, peakFreq: 0, peakAmp: 0 };
+                
+                // Récupération données
+                this.analyser.getByteFrequencyData(this.dataFreq);
+                this.analyser.getByteTimeDomainData(this.dataTime);
+                
+                // Calculs
+                let sum = 0, maxAmp = 0, maxIdx = 0;
+                for (let i = 0; i < this.dataFreq.length; i++) {
+                    const v = this.dataFreq[i];
+                    sum += v;
+                    if (v > maxAmp) { maxAmp = v; maxIdx = i; }
                 }
+                const nyquist = this.ctx.sampleRate / 2;
+                const peakFreq = maxIdx * (nyquist / this.dataFreq.length);
+                return { avgEnergy: sum / this.dataFreq.length, peakFreq: Math.round(peakFreq), peakAmp: maxAmp };
+            }
 
-                // Initialisation des capteurs
-                initSensors();
-
-                // Initialisation du générateur de bruit blanc si activé
-                if (appState.modules.noise) {
-                    initNoiseGenerator();
-                }
-
-                // Initialisation du filtre paranormal si activé
-                if (appState.modules.paranormal) {
-                    initParanormalFilter();
-                }
-
-                // Démarrage de la boucle de rendu
-                appState.running = true;
-                renderLoop();
-
-                log('Système démarré avec succès');
-                document.getElementById('ai-text').innerText = 'ÉCOUTE ACTIVE...';
-                document.getElementById('system-state').innerText = 'OPÉRATIONNEL';
-
-            } catch (error) {
-                log('ERREUR DÉMARRAGE: ' + error.message, 'err');
-                stopSystem();
+            stop() {
+                if(this.ctx) this.ctx.close();
             }
         }
 
-        // Initialisation de la reconnaissance vocale
-        function initSpeechRecognition() {
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (!SpeechRecognition) {
-                log('API Reconnaissance Vocale non supportée', 'warn');
-                return;
+        // --- 3. VISUAL ENGINE ---
+        class Visualizer {
+            constructor(id) {
+                this.c = document.getElementById(id);
+                this.ctx = this.c.getContext('2d');
+                this.width = 0;
+                this.height = 0;
+                this.particles = [];
+                
+                // Création des particules de fond
+                for(let i=0; i<40; i++) this.particles.push({
+                    x: Math.random(), y: Math.random(), z: Math.random() * 2,
+                    vx: (Math.random()-0.5)*0.002, vy: (Math.random()-0.5)*0.002
+                });
             }
 
-            appState.recognition = new SpeechRecognition();
-            appState.recognition.continuous = true;
-            appState.recognition.interimResults = true;
-            appState.recognition.lang = 'fr-FR';
+            draw(freq, time, avg) {
+                // Gestion Responsive
+                if(this.c.width !== this.c.clientWidth || this.c.height !== this.c.clientHeight) {
+                    this.c.width = this.c.clientWidth;
+                    this.c.height = this.c.height;
+                }
 
-            appState.recognition.onresult = (event) => {
-                let finalTranscript = '';
-                let interimTranscript = '';
+                const ctx = this.ctx;
+                const w = this.c.width;
+                const h = this.c.height;
 
-                for (let i = event.resultIndex; i < event.results.length; i++) {
-                    if (event.results[i].isFinal) {
-                        finalTranscript += event.results[i][0].transcript;
-                    } else {
-                        interimTranscript += event.results[i][0].transcript;
+                // Fond semi-transparent pour l'effet de traînée
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+                ctx.fillRect(0, 0, w, h);
+
+                // Oscilloscope (Ligne Cyan)
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = '#00ccff';
+                ctx.beginPath();
+                const slice = w / time.length;
+                let x = 0;
+                for (let i = 0; i < time.length; i++) {
+                    const v = time[i] / 128.0;
+                    const y = v * h / 2;
+                    if(i === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                    x += slice;
+                }
+                ctx.stroke();
+
+                // Spectre (Barres simplifié pour la fluidité
+                const barWidth = (w / freq.length) * 3.0; 
+                let bx = 0;
+                for(let i=0; i<freq.length; i+=2) { // On saute pour perf
+                    const val = freq[i];
+                    const h = (val / 255) * (h / 2.5);
+                    const col = val > 200 ? '#f85149' : '#00ccff'; // Rouge si saturation
+                    
+                    ctx.fillStyle = col;
+                    ctx.fillRect(bx, h - h, barWidth, barWidth, barHeight);
+                    bx += barWidth + 1;
+                }
+
+                // Particules
+                ctx.fillStyle = `rgba(0, 204, 255, ${Math.min(0.6, avg / 50)})`;
+                this.particles.forEach(p => {
+                    p.x += p.vx * (1 + avg / 40);
+                    p.y += p.vy * (1 + avg / 40);
+                    // Rebond
+                    if(p.x < 0) p.x = 1; if (p.x > 1) p.x = 0; if (p.y < 0) p.y = 1; if (p.y > 1) p.y = 0;
+                    
+                    // Profondeur 3D
+                    const scale = 200 / (200 + p.z * 100);
+                    const px = (p.x - 0.5) * w * scale;
+                    const py = (p.y - 0.5) * h * scale;
+                    const size = p.z * 3 * scale;
+                    ctx.beginPath();
+                    ctx.arc(w/2 + px, h/2 + py, Math.max(1, size), 0, Math.PI*2);
+                    ctx.fill();
+                    
+                    // Connexions neuronales
+                    if(Math.random() > 0.95) {
+                        ctx.beginPath();
+                        ctx.moveTo(w/2, h/2);
+                        ctx.lineTo(w/2 + px, h/2 + py);
+                        ctx.strokeStyle = `rgba(0, 204, 255, 0.15)`;
+                        ctx.stroke();
                     }
-                }
-
-                // Affichage du texte
-                const textToDisplay = finalTranscript || interimTranscript;
-                if (textToDisplay) {
-                    document.getElementById('ai-text').innerText = textToDisplay;
-                }
-
-                // Répétition vocale si activé
-                if (appState.modules.tts && finalTranscript) {
-                    speak(finalTranscript);
-                }
-            };
-
-            appState.recognition.onend = () => {
-                if (appState.running) {
-                    appState.recognition.start();
-                }
-            };
-
-            appState.recognition.start();
-            log('Reconnaissance vocale activée');
-        }
-
-        // Initialisation de l'enregistreur
-        function initRecorder(stream) {
-            try {
-                appState.mediaRecorder = new MediaRecorder(stream);
-
-                appState.mediaRecorder.ondataavailable = (event) => {
-                    const audioBlob = new Blob([event.data], { type: 'audio/webm' });
-                    const audioUrl = URL.createObjectURL(audioBlob);
-
-                    const downloadLink = document.createElement('a');
-                    downloadLink.href = audioUrl;
-                    downloadLink.download = `omega_rec_${Date.now()}.webm`;
-                    document.body.appendChild(downloadLink);
-                    downloadLink.click();
-                    document.body.removeChild(downloadLink);
-
-                    log('Enregistrement sauvegardé');
-                };
-
-                appState.mediaRecorder.start(1000);
-                log('Enregistreur activé');
-            } catch (e) {
-                log('Erreur enregistreur: ' + e.message, 'warn');
+                });
             }
         }
 
-        // Initialisation des capteurs
-        function initSensors() {
-            // Accéléromètre
-            if (window.DeviceMotionEvent) {
-                window.addEventListener('devicemotion', (event) => {
-                    const acc = event.accelerationIncludingGravity;
-                    if (acc) {
-                        appState.sensorData.accX = acc.x || 0;
-                        appState.sensorData.accY = acc.y || 0;
-                        appState.sensorData.accZ = acc.z || 0;
+        // --- 4. MOTEUR IA AGENT ---
+        class AgentIA {
+            constructor(cfg, logger) {
+                this.cfg = cfg;
+                this.logger = logger;
+                this.rec = null;
+                this.synth = window.speechSynthesis;
+                this.lastSpeakTime = 0;
+                this.lastInterim = "";
+                this.active = false;
+            }
 
-                        document.getElementById('acc-x').innerText = acc.x.toFixed(2);
-                        document.getElementById('acc-y').innerText = acc.y.toFixed(2);
-                        document.getElementById('acc-z').innerText = acc.z.toFixed(2);
+            connect() {
+                const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+                if(!SR) return false;
 
-                        // Détection d'impulsions
-                        if (appState.modules.emf) {
-                            detectEMF();
+                this.rec = new SR();
+                this.rec.continuous = true;
+                this.rec.interimResults = true; // POUR LA RÉACTIVITÉ
+                this.rec.lang = 'fr-FR';
+
+                this.rec.onresult = (e) => {
+                    let f = "", i = "";
+                    for (let j = e.resultIndex; j < e.results.length; ++j) {
+                        const txt = e.results[j][0].transcript;
+                        if (e.results[j].isFinal) f += txt;
+                        else i += txt;
+                    }
+                    
+                    // Affichage
+                    const txtDisplay = f || i;
+                    if(txt) {
+                        document.getElementById('ai-text').innerText = txtDisplay;
+                        document.getElementById('ai-sub').innerText = "TRADUCTION EN COURS...";
+                        
+                        // LOGIQUE HYPER-RÉACTIF
+                        if(f) {
+                            this.speak(f, true);
+                            this.lastInterim = "";
+                            this.logger.log(`Traduit: "${f}"`, "ai");
+                        }
+                        // LOGIQUE PAROLE (SANS FILTRE) -> On répète aussi les mots en cours de façon partielle pour un effet "GhostBox"
+                        else if (i.length > 2 && i !== this.lastInterim) {
+                            if(Math.random() > 0.2) { 
+                                this.speak(i, true); 
+                                this.lastInterim = i;
+                            }
                         }
                     }
-                });
+                };
+
+                this.rec.onend = () => { 
+                    if (this.active) { 
+                        // Retry forçage plantage du navigateur
+                        setTimeout(() => { try { this.rec.start(); } catch(e) {} }, 500); 
+                    }
+                };
+
+                this.rec.onstart = () => {
+                    this.active = true;
+                    this.rec.start();
+                };
+                
+                try {
+                    this.rec.start();
+                    return true;
+                } catch(e) {
+                    this.logger.log("Erreur Init AI: " + e.message, "err");
+                    return false;
+                }
             }
 
-            // Magnétomètre
-            if (window.DeviceOrientationEvent) {
-                window.addEventListener('deviceorientation', (event) => {
-                    if (event.alpha !== null) {
-                        appState.sensorData.magX = event.alpha;
-                        appState.sensorData.magY = event.beta;
-                        appState.sensorData.magZ = event.gamma;
+            speak(text, isHuman) {
+                if(!text) return;
+                
+                // Coupe le son en cours pour immédiateté
+                this.synth.cancel();
+                this.lastSpeakTime = Date.now();
 
-                        document.getElementById('mag-x').innerText = Math.floor(event.alpha);
-                        document.getElementById('mag-y').innerText = Math.floor(event.beta);
-                        document.getElementById('mag-z').innerText = Math.floor(event.gamma);
+                const u = new SpeechSynthesisUtterance(text);
+                u.lang = 'fr-FR';
+                u.volume = this.cfg.volume;
+                u.rate = this.cfg.speechRate;
+                u.pitch = isHuman ? 0.9 + Math.random() * 0.2 : 0.8; // Un peu plus grave pour le côté "Ghost"
+                
+                u.onstart = () => { document.getElementById('ai-sub').innerText = "ÉCOUTE AUDIO...";
+                u.onend = () => { document.getElementById('ai-sub').innerText = "ÉCOUTE...";
+                u.onend = () => { document.getElementById('ai-sub').innerText = "ÉCOUTE...";
+                };
+
+                this.synth.speak(u);
+                this.logger.log(`Parole: "${text}"`, isHuman ? 'ai' : 'warn');
+            }
+
+            disconnect() { 
+                if(this.rec) this.rec.stop(); 
+                this.synth.cancel(); 
+                this.active = false;
+            }
+        }
+
+        // --- 5. GESTION DU SYSTÈME ---
+        const LOG = new Logger('system-terminal'); // Instanciation du logger
+
+        // --- 6. CONTROLEUR OMEGA ---
+        const OMEGA = {
+            running: false,
+            audio: null,
+            visual: null,
+            ai: null,
+            modules: { mic: true, echo: true, ghost: true, rec: false },
+            cfg: { volume: 1.0, rate: 1.4, pitch: 0.9, thresh: 0 },
+            sensors: { lastAlpha: 0 },
+            sensorTimeout: null
+        };
+
+        // Démarrageur
+        OMEGA.boot = async function() {
+            // Empêcher le bouton vert pour éviter les doubles clics
+            const btn = document.getElementById('btn-start');
+            if (btn) {
+                btn.innerText = "INITIALISATION...";
+                btn.disabled = true;
+            }
+
+            try {
+                // Initialisation Audio
+                OMEGA.audio = new AudioEngine();
+                await OMEGA.audio.init();
+                LOG.log("Audio Core: ONLINE (Auto-Gain High)", "sys");
+
+                // Initialisation IA
+                OMEGA.ai = new Agent(OMEGA.cfg, LOG);
+                const aiReady = OMEGA.ai.connect();
+                if(!aiReady) {
+                    LOG.log("Erreur: IA non disponible.", "warn");
+                    // On continue quand même pour l'analyse seule
+                    OMEGA.running = true;
+                    OMEGA.visual = new Visualizer('main-canvas');
+                    OMEGA.loop();
+                    OMEGA.initSensors();
+                    
+                    LOG.log("SYSTEM EN LIGNE: MICRO + IA ONLINE", "sys");
+                } else {
+                    OMEGA.visual = new Visualizer('main-canvas');
+                    OMEGA.running = true;
+                    OMEGA.loop();
+                    LOG.log("MODE VISUEL SEUL (AUDIO SEULEMENT SEULEMENT ONLY", "sys");
+                }
+
+            } catch (e) {
+                LOG.log("ERREUR: " + e.message, "err");
+                alert("ERREUR: " + e.message);
+                OMEGA.updateUI(false); // Remet l'état visuel "OFFLINE"
+                btn.innerText = "ERREURER";
+                btn.disabled = false;
+            }
+        };
+
+        OMEGA.halt = function() {
+            OMEGA.running = false;
+            if (OMEGA.audio) OMEGA.audio.stop();
+            if (OMEGA.ai) OMEGA.ai.disconnect();
+            location.reload();
+        };
+
+        // --- 7. GESTION MODULES ---
+        OMEGA.toggleMod = function(mod) {
+            OMEGA.mods[mod] = !OMEGA.mods[mod];
+            
+            // Mapping ID bouton -> Clé Module
+            const idMap = {
+                'microphone': 'btn-mic',
+                'ttsEngine': 'btn-echo', // 'ttsEngine' est le module Echo
+                'ghostMode': 'btn-trans' // 'ghostMode' est le module Traduction
+            };
+            const btn = document.getElementById(idMap[mod]);
+            
+            if (OMEGA.mods[mod]) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+            
+            // Log
+            const logMap = {
+                'microphone': 'mic', 'ttsEngine': 'echo', 'ghostMode': 'trans', 'recorder'
+            };
+            LOG.log(`Module ${mod} : ${OMEGA.mods[mod] ? 'ACTIVÉ' : 'INACTIF'}`, 'sys');
+        }
+
+        // --- 8. CONFIG LIVE UPDATERS ---
+        function updateConfig(key, val) {
+            const numVal = parseFloat(val);
+            OMEGA.cfg[key] = numVal;
+            
+            // Mise à jour curseurs
+            const map = { 'slider-vol': 'disp-vol', 'slider-pitch': 'slider-pitch', 'rate': 'rate' };
+            if (map[key]) document.getElementById(map[key]).innerText = val;
+            
+            // Updates spécifiques pour l'audio en temps réel
+            if (key === 'voiceVolume') OMEGA.cfg.voiceVolume = numVal;
+            if (key === 'voicePitch') OMEGA.cfg.voicePitch = numVal;
+            if (key === 'rate') OMEGA.cfg.speechRate = numVal;
+
+            // Configuration Analyseur
+            if (key === 'fftSize' && OMEGA.audio) {
+                OMEGA.audio.analyser.fftSize = parseInt(val);
+                OMEGA.audio.dataFreq = new Uint8Array(OMEGA.audio.analyser.frequencyBinCount);
+                OMEGA.audio.dataTime = new Uint8Array(OMEGA.analyser.frequencyBinCount);
+                LOG.log(`FFT réglé à ${val} bandes`, "sys");
+            }
+        }
+
+        // --- 9. CAPTEURS ---
+        OMEGA.initSensors = function() {
+            // Accéléromètre
+            if (window.DeviceMotionEvent) {
+                window.addEventListener('devicemotion', (e) => {
+                    const a = e.accelerationIncludingGravity;
+                    if(a) {
+                        document.getElementById('val-acc-x').innerText = (a.x||0).toFixed(1);
+                        document.getElementById('val-acc-y').innerText = (a.y||0).toFixed(1);
+                        document.getElementById('val-acc-z').innerText = (a.z||0).toFixed(1);
+                        
+                        // Calcul G-Force
+                        const gForce = Math.sqrt(Math.pow(a.x||0, 2) + Math.pow(a.y||0, 2) + Math.pow(a.z||0, 2));
+                        document.getElementById('val-g-force').innerText = gForce.toFixed(2);
+                        
+                        // Détection choc
+                        if (gForce > 25) this.triggerSensor("ACCÉLÉRATION");
+                        if(gForce > 30) LOG.log("ALERTE: CHOC ACCÉLÉRATION", "warn");
                     }
                 });
             }
-        }
 
-        // Détection d'impulsions EMF
-        function detectEMF() {
-            const magnitude = Math.sqrt(
-                Math.pow(appState.sensorData.accX, 2) +
-                Math.pow(appState.sensorData.accY, 2) +
-                Math.pow(appState.sensorData.accZ, 2)
-            );
+            // Magnétisme
+            if (window.DeviceOrientationEvent) {
+                window.addEventListener('deviceorientation', (e) {
+                    if (e.alpha !== null) {
+                        document.getElementById('val-mag-x').innerText = Math.floor(e.alpha) + " µT";
+                        document.getElementById('val-mag-y').innerText = Math.floor(e.beta) + " µT";
+                        
+                        // Détection variations
+                        const diff = Math.abs(e.alpha - OMEGA.sensors.lastAlpha);
+                        if (diff > 10) {
+                            OMEGA.triggerSensor("FLUX MAGNÉTIQUE");
+                            document.getElementById('val-mag-state').innerText = "INSTABLE";
+                            document.getElementById('val-mag-state').classList.add('blink'); // Clignotement rouge
+                            setTimeout(() => {
+                                document.getElementById('val-mag-state').innerText = "STABLE";
+                                document.getElementById('val-mag-state').classList.remove('blink');
+                            }, 1000);
+                        }
+                    }
+                    OMEGA.sensors.lastAlpha = e.alpha;
+                });
+            }
+        };
 
-            if (magnitude > 15) {
-                log('IMPULSION EMF DÉTECTÉE', 'warn');
-                speak('Champ énergétique détecté');
+        // --- 10. BOUCLE RENDU VISUEL ---
+        OMEGA.renderLoop = function() {
+            if(!OMEGA.running) return;
+            
+            // Boucle optimisée pour performance
+            const reqAnim = window.requestAnimationFrame(this.renderLoop.bind(this); // Liez la fonction à la boucle
+        };
+
+        OMEGA.renderLoop = function() {
+            // Récupère données
+            const metrics = OMEGA.audio.process();
+            
+            // Mise à jour Scope
+            OMEGA.visual.draw(OMEGA.audio.dataFreq, OMEGA.audio.dataTime, metrics.avgEnergy);
+
+            // Mise à jour UI Latérale
+            const pct = Math.min(100, (metrics.avgEnergy / 40) * 100);
+            const vu = document.getElementById('vu-meter');
+            if(vu) {
+                vu.style.width = pct + "%";
+                // Effet rouge si saturation
+                if(pct > 90) vu.style.background = "#f85149";
+                else vu.style.background = "linear-gradient(90deg, #58a6ff, #fff)";
+            }
+            
+            // Logique Traduction (Si actif)
+            if (OMEGA.mods.ghostMode) {
+                const now = Date.now();
+                if (metrics.avgEnergy > 5 && (now - OMEGA.ai.lastSpeakTime > 500)) {
+                    if(Math.random() > 0.75) {
+                        const w = CONST.WORDS[Math.floor(Math.random() * CONST.WORDS.length)];
+                        OMEGA.ai.speak(w, false); // Traduction bruit
+                        OMEGA.ai.lastSpeakTime = now;
+                        LOG.log(`ANOMALIE (TRADUCTION): ${w}`, "warn");
+                    }
+                }
+            }
+            
+            // Flash Alerte (Saturation)
+            if (metrics.peakAmp > 230 && Math.random() > 0.9) {
+                const f = document.getElementById('ai-text');
+                f.style.color = "#f85149";
+                setTimeout(() => f.style.color = "#fff", 100);
             }
         }
 
-        // Initialisation du générateur de bruit blanc
-        function initNoiseGenerator() {
+        // --- 11. GESTION DES CAPTEURS ---
+        // (Identique à l'écoute du code précédent)
+        function startAnalysis() {
+            const btn = document.getElementById('btn-start');
+            btn.innerText = "INITIALISATION...";
+            btn.disabled = true;
+            
             try {
-                const bufferSize = appState.audioContext.sampleRate * 2;
-                const noiseBuffer = appState.audioContext.createBuffer(1, bufferSize, appState.audioContext.sampleRate);
-                const outputData = noiseBuffer.getChannelData(0);
-
-                for (let i = 0; i < bufferSize; i++) {
-                    outputData[i] = Math.random() * 2 - 1;
-                }
-
-                const noiseSource = appState.audioContext.createBufferSource();
-                noiseSource.buffer = noiseBuffer;
-                noiseSource.loop = true;
-
-                const noiseGain = appState.audioContext.createGain();
-                noiseGain.gain.value = 0.1;
-
-                noiseSource.connect(noiseGain);
-                noiseGain.connect(appState.audioContext.destination);
-
-                noiseSource.start(0);
-                log('Générateur de bruit blanc activé');
-            } catch (e) {
-                log('Erreur générateur de bruit: ' + e.message, 'warn');
-            }
-        }
-
-        // Initialisation du filtre paranormal
-        function initParanormalFilter() {
-            try {
-                const filter = appState.audioContext.createBiquadFilter();
-                filter.type = 'bandpass';
-                filter.frequency.value = 1000;
-                filter.Q.value = 2;
-
-                // Déconnexion et reconnexion avec le filtre
-                appState.microphone.disconnect();
-                appState.microphone.connect(filter);
-                filter.connect(appState.analyser);
-
-                log('Filtre paranormal activé');
-            } catch (e) {
-                log('Erreur filtre paranormal: ' + e.message, 'warn');
-            }
-        }
-
-        // Boucle de rendu principale
-        function renderLoop() {
-            if (!appState.running || !appState.analyser) return;
-
-            requestAnimationFrame(renderLoop);
-
-            const canvas = document.getElementById('scope-canvas');
-            const ctx = canvas.getContext('2d');
-
-            // Redimensionnement
-            if (canvas.width !== canvas.clientWidth || canvas.height !== canvas.clientHeight) {
-                canvas.width = canvas.clientWidth;
-                canvas.height = canvas.clientHeight;
-            }
-
-            // Effacement avec effet de traînée
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            // Récupération des données audio
-            const frequencyData = new Uint8Array(appState.analyser.frequencyBinCount);
-            const timeDomainData = new Uint8Array(appState.analyser.frequencyBinCount);
-            appState.analyser.getByteFrequencyData(frequencyData);
-            appState.analyser.getByteTimeDomainData(timeDomainData);
-
-            // Dessin de l'oscilloscope
-            ctx.lineWidth = 2;
-            ctx.strokeStyle = var(--primary-color);
-            ctx.beginPath();
-
-            const sliceWidth = canvas.width * 1.0 / timeDomainData.length;
-            let x = 0;
-
-            for (let i = 0; i < timeDomainData.length; i++) {
-                const v = timeDomainData[i] / 128.0;
-                const y = v * canvas.height / 2;
-
-                if (i === 0) {
-                    ctx.moveTo(x, y);
+                // UI Updates
+                btn.innerText = "DÉMARRER L'ANALYSE...";
+                
+                // Audio Init
+                OMEGA.audio = new AudioEngine();
+                await OMEGA.audio.init();
+                LOG.log("Audio Core: ONLINE (Auto-Gain High)", "sys");
+                
+                // AI Init
+                OMEGA.ai = new Agent(OMEGA.cfg, LOG);
+                if(!OMEGA.ai.connect()) {
+                    LOG("IA: ONLINE", "ai");
+                    OMEGA.visual = new Visualizer('main-canvas');
+                    OMEGA.running = true;
+                    OMEGA.loop();
+                    OMEGA.initSensors();
+                    LOG("SYSTÈME FONCTIONNEL", "sys");
                 } else {
-                    ctx.lineTo(x, y);
+                    LOG("INFO: IA non-disponible. Mode Analyse Seul (Audio Uniquement", "warn");
+                    // On affiche quand même si l'IA est absent pour l'analyse seule
+                    OMEGA.visual = new Visualizer('main-canvas');
+                    OMEGA.running = true;
+                    OMEGA.loop();
+                    LOG("VISUEL SEUL (SEULEMENT)", "sys");
                 }
-
-                x += sliceWidth;
-            }
-
-            ctx.stroke();
-
-            // Dessin du spectre
-            const barWidth = (canvas.width / frequencyData.length) * 2.5;
-            let barX = 0;
-
-            for (let i = 0; i < frequencyData.length; i++) {
-                const val = frequencyData[i];
-                const barHeight = (val / 255) * (canvas.height / 2.5);
-
-                // Couleur dynamique
-                if (val > 240) {
-                    ctx.fillStyle = var(--alert-color);
-                } else if (val > 150) {
-                    ctx.fillStyle = var(--primary-color);
-                } else {
-                    ctx.fillStyle = '#555';
-                }
-
-                ctx.fillRect(barX, canvas.height - barHeight, barWidth, barHeight);
-                barX += barWidth + 1;
-            }
-
-            // Mise à jour des données affichées
-            const avg = frequencyData.reduce((a, b) => a + b, 0) / frequencyData.length;
-            document.getElementById('peak-freq').innerText = `${Math.round(avg * 10)} Hz`;
-            document.getElementById('rms-level').innerText = `${Math.round(avg / 2.5 - 100)} dB`;
-
-            // Détection de patterns vocaux
-            if (appState.modules.pattern) {
-                detectVoicePatterns(frequencyData);
-            }
-
-            // Effets aléatoires
-            if (appState.modules.ghost && Math.random() > 0.95) {
-                const randomWord = CONSTANTS.WORDS[Math.floor(Math.random() * CONSTANTS.WORDS.length)];
-                speak(randomWord);
+            } catch(e) {
+                LOG("ERREUR CRITIQUE: " + e.message, "err");
+                alert("ERREURR: " + e.message);
+                OMEGA.updateUI(false);
             }
         }
 
-        // Détection de patterns vocaux
-        function detectVoicePatterns(frequencyData) {
-            // Analyse simplifiée des bandes de fréquence
-            const bands = [];
-            for (let i = 0; i < 40; i++) {
-                const start = Math.floor(i * frequencyData.length / 40);
-                const end = Math.floor((i + 1) * frequencyData.length / 40);
-                bands.push(frequencyData.slice(start, end).reduce((a, b) => a + b, 0) / (end - start));
-            }
-
-            // Détection simplifiée de mots
-            for (const word of CONSTANTS.PATTERNS) {
-                // Logique simplifiée de détection
-                if (Math.random() > 0.9) {
-                    log(`Pattern détecté: "${word}"`, 'ai');
-                    speak(word);
-                    break;
-                }
-            }
+        stopAnalysis() {
+            OMEGA.running = false;
+            if(OMEGA.audio) OMEGA.audio.stop();
+            if(OMEGA.ai) OMEGA.ai.disconnect();
+            location.reload();
         }
 
-        // Synthèse vocale
-        function speak(text) {
-            if (!text || !appState.running) return;
-
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = 'fr-FR';
-            utterance.volume = appState.config.volume;
-            utterance.pitch = appState.config.pitch;
-            utterance.rate = appState.config.rate;
-
-            window.speechSynthesis.cancel();
-            window.speechSynthesis.speak(utterance);
+        // --- 12. GESTION DES MODULES --- //
+        OMEGA.toggleMod = function(mod) {
+            OMEGA.mods[mod] = !OMEGA.mods[mod];
+            const idMap = { 'microphone': 'btn-mic', 'ttsEngine': 'btn-echo', 'ghostMode': 'btn-trans' };
+            const btn = document.getElementById(idMap[mod]);
+            if (OMEGA.mods[mod]) btn.classList.add('active');
+            else btn.classList.remove('active');
+            LOG(`Module ${mod} : ${OMEGA.mods[mod] ? 'ACTIVÉ' : 'INACTIF'} / "sys");
         }
 
-        // Arrêt du système
-        function stopSystem() {
-            if (!appState.running) return;
-
-            appState.running = false;
-
-            // Arrêt des composants audio
-            if (appState.audioContext) {
-                appState.audioContext.close();
+        // --- 13. LIVE CONFIG UPDATERS ---
+        function updateConfig(key, val) {
+            const numVal = parseFloat(val);
+            OMEGA.config[key] = numVal;
+            
+            // Gestion Audio
+            if (key === 'voiceVolume' || key === 'voicePitch' || key === 'speechRate') {
+                OMEGA.config[key] = numVal;
+                if (key === 'voiceVolume') OME.config.voiceVolume = numVal;
+                if (key === 'speechRate') OME.config.speechRate = numVal;
+                if (key === 'voicePitch') OME.config.voicePitch = numVal;
             }
-
-            if (appState.recognition) {
-                appState.recognition.stop();
-            }
-
-            if (appState.mediaRecorder) {
-                appState.mediaRecorder.stop();
-            }
-
-            window.speechSynthesis.cancel();
-
-            // Réinitialisation de l'interface
-            document.getElementById('start-btn').style.display = 'block';
-            document.getElementById('stop-btn').style.display = 'none';
-            document.getElementById('status-badge').classList.remove('active');
-            document.getElementById('status-badge').innerText = 'OFFLINE';
-            document.getElementById('ai-text').innerText = 'SYSTÈME ARRÊTÉ';
-            document.getElementById('system-state').innerText = 'INACTIF';
-            document.getElementById('peak-freq').innerText = '0 Hz';
-            document.getElementById('rms-level').innerText = '-∞ dB';
-
-            // Réinitialisation des objets
-            appState.audioContext = null;
-            appState.analyser = null;
-            appState.microphone = null;
-            appState.recognition = null;
-            appState.mediaRecorder = null;
-
-            log('Système arrêté');
-        }
-
-        // Basculer les modules
-        function toggleModule(module) {
-            appState.modules[module] = !appState.modules[module];
-            const button = document.getElementById(`${module}-btn`);
-
-            if (appState.modules[module]) {
-                button.classList.add('active');
-            } else {
-                button.classList.remove('active');
-            }
-
-            // Gestion spécifique des modules
-            if (module === 'rec' && !appState.modules.rec && appState.mediaRecorder) {
-                appState.mediaRecorder.stop();
-            } else if (module === 'noise' && appState.modules.noise && appState.audioContext) {
-                initNoiseGenerator();
-            } else if (module === 'paranormal' && appState.modules.paranormal && appState.audioContext) {
-                initParanormalFilter();
-            }
-
-            log(`Module ${module} ${appState.modules[module] ? 'activé' : 'désactivé'}`);
-        }
-
-        // Mettre à jour la configuration
-        function updateConfig(key, value) {
-            appState.config[key] = value;
-
-            // Mise à jour de l'interface
-            const displayMap = {
-                'volume': 'volume-value',
-                'pitch': 'pitch-value',
-                'rate': 'rate-value',
-                'smoothing': 'smooth-value',
-                'minDecibels': 'min-db-value'
+            
+            // UI
+            const dispMap = {
+                'voiceVolume': 'disp-vol',
+                'voicePitch': 'disp-pitch',
+                'speechRate': 'disp-rate'
             };
-
-            if (displayMap[key]) {
-                document.getElementById(displayMap[key]).innerText = value;
-            }
-
-            // Application des changements si le système est actif
-            if (appState.running && appState.analyser) {
-                if (key === 'fftSize') {
-                    appState.analyser.fftSize = parseInt(value);
-                } else if (key === 'smoothing') {
-                    appState.analyser.smoothingTimeConstant = parseFloat(value);
-                }
-            }
+            if (dispMap[key]) document.getElementById(dispMap[key]).innerText = numVal;
         }
 
-        // Gestion de la modale de configuration
-        function openConfigModal() {
-            document.getElementById('config-modal').style.display = 'flex';
-        }
-
-        function closeConfigModal() {
-            document.getElementById('config-modal').style.display = 'none';
-        }
-
-        // Initialisation au chargement
-        window.addEventListener('load', () => {
-            log('OMEGA // ARCHITECTURE INTÉGRALE');
-            log('Système prêt');
-
-            // Charger la configuration sauvegardée
-            const savedConfig = localStorage.getItem('OMEGA_CONFIG');
-            if (savedConfig) {
-                try {
-                    const parsed = JSON.parse(savedConfig);
-                    appState.config = { ...appState.config, ...parsed };
-                    log('Configuration chargée');
-                } catch (e) {
-                    log('Erreur chargement config: ' + e.message, 'warn');
-                }
-            }
-        });
-    </script>
+        // --- 14. INIT ---
+        LOG.log("> SYSTEM CHARGÉ...");
+        LOG.log("En attente de l'utilisateur...", "sys");
+        // OMEGA.updateUI(true); // Active les contrôles
+  </script>
 </body>
-</html>
+        
