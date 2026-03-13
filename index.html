@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>ETERNITY LAB OMNI-SENSOR PRO</title>
+<title>ETERNITY LAB PRO</title>
 <style>
 :root {
   --primary: #ff0000;
@@ -196,34 +196,19 @@ button.active {
 
 <div id="logZone"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.11.0/dist/tf.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/speech-commands@0.5.4/dist/speech-commands.min.js"></script>
-
 <script>
-// Configuration initiale
+// Configuration initiale simplifiée
 const app = {
   running: false,
   simulation: false,
   ctx: null,
   source: null,
-  gain: null,
   analyser: null,
-  monitorGain: null,
-  monitorDelay: null,
-  monitorFeedback: null,
-  ghost: null,
-  ghostGain: null,
-  noiseNode: null,
-  noiseGain: null,
   stream: null,
   vidStream: null,
   recorder: null,
   isRec: false,
   recognition: null,
-  speechModel: null,
-  wordLabels: null,
-  transcriptionActive: true,
-  confidenceThreshold: 0.7,
   config: {
     monitor: false,
     ghostBox: false,
@@ -231,7 +216,8 @@ const app = {
     evp: false,
     radar: false,
     cam: false,
-    flash: false
+    flash: false,
+    transcribe: true
   },
   dataArray: new Uint8Array(2048),
   lastAlpha: 0,
@@ -289,7 +275,7 @@ function addTranscription(text, confidence, time) {
   }
 }
 
-// Initialisation complète
+// Initialisation complète simplifiée
 async function forceStart() {
   if(app.running) return;
 
@@ -298,19 +284,13 @@ async function forceStart() {
   log("Initialisation Omni-Sensor...", 'log-suc');
 
   try {
-    // 1. Vérifier les permissions
-    await checkPermissions();
-
-    // 2. Initialiser l'audio
+    // 1. Initialiser l'audio
     await initAudio();
 
-    // 3. Initialiser les capteurs
+    // 2. Initialiser les capteurs
     initSensors();
 
-    // 4. Initialiser l'IA
-    await initAI();
-
-    // 5. Initialiser la reconnaissance vocale
+    // 3. Initialiser la reconnaissance vocale
     await initSpeechRecognition();
 
     app.running = true;
@@ -326,31 +306,6 @@ async function forceStart() {
   }
 }
 
-// Vérification des permissions
-async function checkPermissions() {
-  if (!navigator.permissions) {
-    log("API Permissions non supportée", 'log-warn');
-    return;
-  }
-
-  try {
-    // Vérifier le microphone
-    const micStatus = await navigator.permissions.query({name: 'microphone'});
-    if (micStatus.state === 'denied') {
-      throw new Error("Accès microphone refusé");
-    }
-
-    // Vérifier la caméra
-    const camStatus = await navigator.permissions.query({name: 'camera'});
-    if (camStatus.state === 'denied') {
-      log("Accès caméra refusé", 'log-warn');
-    }
-
-  } catch (err) {
-    log(`Erreur permissions: ${err.message}`, 'log-err');
-  }
-}
-
 // Initialisation audio
 async function initAudio() {
   log("Initialisation audio...");
@@ -359,40 +314,25 @@ async function initAudio() {
     // Créer le contexte audio
     app.ctx = new (window.AudioContext || window.webkitAudioContext)();
 
-    // Résoudre le contexte suspendu (mobile)
-    if (app.ctx.state === 'suspended') {
-      await app.ctx.resume();
-    }
-
     // Demander l'accès au microphone
     app.stream = await navigator.mediaDevices.getUserMedia({
-      audio: {
-        echoCancellation: false,
-        noiseSuppression: false,
-        autoGainControl: false
-      },
+      audio: true,
       video: false
     });
 
     // Configurer les nœuds audio
     app.source = app.ctx.createMediaStreamSource(app.stream);
-    app.gain = app.ctx.createGain();
     app.analyser = app.ctx.createAnalyser();
     app.analyser.fftSize = 2048;
     app.analyser.smoothingTimeConstant = 0.8;
     app.dataArray = new Uint8Array(app.analyser.frequencyBinCount);
 
     // Connecter les nœuds
-    app.source.connect(app.gain);
-    app.gain.connect(app.analyser);
+    app.source.connect(app.analyser);
 
     // Configurer l'enregistrement
     app.recorder = new MediaRecorder(app.stream);
     app.recorder.ondataavailable = handleRecordingData;
-    app.recorder.onstop = () => {
-      app.isRec = false;
-      log("Enregistrement terminé");
-    };
 
     // Mettre à jour l'interface
     els.mic.textContent = "ON";
@@ -404,115 +344,6 @@ async function initAudio() {
     log(`Erreur audio: ${error.message}`, 'error');
     throw error;
   }
-}
-
-// Initialisation de l'IA
-async function initAI() {
-  log("Chargement de l'IA...");
-
-  try {
-    // Charger le modèle de reconnaissance vocale
-    app.speechModel = await speechCommands.load();
-    app.wordLabels = app.speechModel.wordLabels();
-    log("Modèle IA chargé avec succès", 'success');
-    els.iaText.textContent = "IA PRÊTE";
-
-  } catch (error) {
-    log(`Erreur chargement IA: ${error.message}`, 'error');
-    els.iaText.textContent = "IA INDISPONIBLE";
-  }
-}
-
-// Initialisation de la reconnaissance vocale
-async function initSpeechRecognition() {
-  log("Initialisation reconnaissance vocale...");
-
-  try {
-    // Utiliser l'API Web Speech si disponible
-    const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (SpeechRec) {
-      app.recognition = new SpeechRec();
-      app.recognition.continuous = true;
-      app.recognition.interimResults = true;
-      app.recognition.lang = 'fr-FR';
-
-      app.recognition.onresult = (e) => {
-        let txt = '';
-        for (let i = e.resultIndex; i < e.results.length; i++) {
-          txt += e.results[i][0].transcript;
-        }
-        if (txt) {
-          els.iaText.textContent = txt;
-          if (e.results[e.results.length-1].isFinal) {
-            addTranscription(txt, 0.9, new Date().toLocaleTimeString());
-            log(`VOIX: "${txt}"`, 'log-ai');
-          }
-        }
-      };
-
-      app.recognition.onerror = (e) => {
-        log(`Erreur reconnaissance: ${e.error}`, 'error');
-      };
-
-      app.recognition.onend = () => {
-        if (app.running && app.transcriptionActive) {
-          try {
-            app.recognition.start();
-          } catch (e) {
-            log(`Erreur redémarrage: ${e.message}`, 'error');
-          }
-        }
-      };
-
-      app.recognition.start();
-      log("Reconnaissance vocale active", 'success');
-    } else {
-      // Utiliser le modèle TensorFlow si l'API n'est pas disponible
-      if (app.speechModel) {
-        log("Utilisation du modèle IA pour la reconnaissance");
-        startModelRecognition();
-      } else {
-        log("Reconnaissance vocale non supportée", 'log-warn');
-      }
-    }
-
-  } catch (error) {
-    log(`Erreur reconnaissance: ${error.message}`, 'error');
-  }
-}
-
-// Reconnaissance avec le modèle TensorFlow
-function startModelRecognition() {
-  if (!app.speechModel) return;
-
-  // Créer un processeur audio pour le modèle
-  const audioProcessor = app.ctx.createScriptProcessor(2048, 1, 1);
-  app.source.connect(audioProcessor);
-  audioProcessor.connect(app.ctx.destination);
-
-  audioProcessor.onaudioprocess = async (e) => {
-    if (!app.transcriptionActive) return;
-
-    const input = e.inputBuffer.getChannelData(0);
-    const inputTensor = tf.tensor1d(input);
-
-    try {
-      const predictions = await app.speechModel.predict(inputTensor);
-      const topPrediction = predictions.argMax(-1).dataSync()[0];
-      const confidence = predictions.max().dataSync()[0];
-
-      if (confidence > app.confidenceThreshold) {
-        const word = app.wordLabels[topPrediction + 1]; // +1 car index 0 est le silence
-        els.iaText.textContent = word;
-        addTranscription(word, confidence, new Date().toLocaleTimeString());
-        log(`IA: "${word}" (${Math.round(confidence*100)}%)`, 'log-ai');
-      }
-    } catch (error) {
-      log(`Erreur IA: ${error.message}`, 'error');
-    } finally {
-      tf.dispose([inputTensor, predictions]);
-    }
-  };
 }
 
 // Initialisation des capteurs
@@ -572,6 +403,58 @@ function initSensors() {
     });
   } else {
     els.bat.textContent = "N/A";
+  }
+}
+
+// Initialisation de la reconnaissance vocale simplifiée
+async function initSpeechRecognition() {
+  log("Initialisation reconnaissance vocale...");
+
+  try {
+    // Utiliser l'API Web Speech si disponible
+    const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRec) {
+      app.recognition = new SpeechRec();
+      app.recognition.continuous = true;
+      app.recognition.interimResults = true;
+      app.recognition.lang = 'fr-FR';
+
+      app.recognition.onresult = (e) => {
+        let txt = '';
+        for (let i = e.resultIndex; i < e.results.length; i++) {
+          txt += e.results[i][0].transcript;
+        }
+        if (txt) {
+          els.iaText.textContent = txt;
+          if (e.results[e.results.length-1].isFinal) {
+            addTranscription(txt, 0.9, new Date().toLocaleTimeString());
+            log(`VOIX: "${txt}"`, 'log-ai');
+          }
+        }
+      };
+
+      app.recognition.onerror = (e) => {
+        log(`Erreur reconnaissance: ${e.error}`, 'error');
+      };
+
+      app.recognition.onend = () => {
+        if (app.running && app.config.transcribe) {
+          try {
+            app.recognition.start();
+          } catch (e) {
+            log(`Erreur redémarrage: ${e.message}`, 'error');
+          }
+        }
+      };
+
+      app.recognition.start();
+      log("Reconnaissance vocale active", 'success');
+    } else {
+      log("Reconnaissance vocale non supportée", 'log-warn');
+    }
+
+  } catch (error) {
+    log(`Erreur reconnaissance: ${error.message}`, 'error');
   }
 }
 
@@ -706,45 +589,16 @@ function toggleOpt(key) {
 
   // Gestion spécifique des options
   switch (key) {
-    case 'monitor':
-      if (app.config[key]) {
-        // Activer le monitoring audio
-        if (app.monitorGain && app.monitorDelay) {
-          app.analyser.connect(app.monitorDelay);
-          app.monitorDelay.connect(app.monitorFeedback);
-          app.monitorFeedback.connect(app.monitorDelay);
-          app.monitorDelay.connect(app.monitorGain);
-          app.monitorGain.connect(app.ctx.destination);
-        }
-      } else {
-        // Désactiver le monitoring
-        if (app.analyser && app.monitorGain) {
-          app.analyser.disconnect(app.monitorDelay);
-          app.monitorGain.disconnect(app.ctx.destination);
-        }
-      }
-      break;
-
-    case 'ghostBox':
-      if (app.ghostGain && app.noiseGain) {
-        app.ghostGain.gain.value = app.config[key] ? 0.1 : 0;
-        app.noiseGain.gain.value = app.config[key] ? 0.05 : 0;
-      }
-      break;
-
     case 'cam':
       toggleCam();
       break;
-
     case 'flash':
       toggleFlash();
       break;
-
     case 'transcribe':
-      app.transcriptionActive = !app.transcriptionActive;
-      els.transcriptionArea.style.display = app.transcriptionActive ? 'block' : 'none';
+      app.transcriptionArea.style.display = app.config[key] ? 'block' : 'none';
       if (app.recognition) {
-        if (app.transcriptionActive) {
+        if (app.config[key]) {
           try { app.recognition.start(); } catch (e) {}
         } else {
           app.recognition.stop();
