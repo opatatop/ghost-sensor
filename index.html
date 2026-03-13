@@ -3,681 +3,509 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LE TRAVAIL PAYE - IA INTELLIGENTE</title>
+    <title>PuiSSancE MAXIMUM - ARCHITECTURE STABLE</title>
     <style>
         :root {
-            --primary-color: #00ccff;
-            --secondary-color: #ffd700;
-            --background-color: #050510;
-            --panel-color: #0a0a20;
-            --text-color: #e0e0ff;
-            --grid-color: #1a2a3a;
-            --alert-color: #ff3333;
-            --ai-color: #00ffaa;
+            --primary: #00ffcc;
+            --secondary: #ff00ff;
+            --bg: #050505;
+            --panel: #111;
+            --text: #eee;
+            --danger: #ff3333;
         }
-        * {
-            box-sizing: border-box;
-            user-select: none;
-            -webkit-tap-highlight-color: transparent;
-        }
+        * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
         body {
-            margin: 0;
-            padding: 0;
-            font-family: 'Courier New', Courier, monospace;
-            background-color: var(--background-color);
-            color: var(--text-color);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            overflow-y: auto;
+            margin: 0; padding: 0; font-family: 'Courier New', monospace;
+            background-color: var(--bg); color: var(--text);
+            display: flex; flex-direction: column; height: 100vh;
         }
         header {
-            background-color: #000000;
-            border-bottom: 2px solid var(--secondary-color);
-            padding: 8px 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            position: sticky;
-            top: 0;
-            z-index: 100;
+            background: #000; border-bottom: 2px solid var(--primary);
+            padding: 10px; display: flex; justify-content: space-between; align-items: center;
         }
-        h1 {
-            margin: 0;
-            font-size: 1.1rem;
-            color: var(--primary-color);
-            text-shadow: 0 0 10px var(--primary-color);
+        h1 { margin: 0; font-size: 1.2rem; color: var(--primary); text-shadow: 0 0 5px var(--primary); }
+        #status { font-size: 0.8rem; font-weight: bold; padding: 5px 10px; border: 1px solid var(--secondary); color: var(--secondary); }
+        #status.active { background: var(--secondary); color: #000; box-shadow: 0 0 10px var(--secondary); }
+
+        /* ZONE PRINCIPALE */
+        main { flex: 1; position: relative; display: flex; flex-direction: column; overflow: hidden; }
+        
+        #visualizer {
+            flex: 1; background: #000; position: relative; border-bottom: 1px solid #333;
         }
-        .status-badge {
-            padding: 4px 8px;
-            border: 1px solid var(--secondary-color);
-            border-radius: 4px;
-            color: var(--secondary-color);
-            font-weight: bold;
-            font-size: 0.7rem;
+        canvas { width: 100%; height: 100%; display: block; }
+        
+        #displayOverlay {
+            position: absolute; bottom: 20px; left: 0; width: 100%;
+            text-align: center; pointer-events: none; z-index: 10;
         }
-        .status-badge.active {
-            background-color: var(--secondary-color);
-            color: #000000;
-            box-shadow: 0 0 10px var(--secondary-color);
-            animation: pulse 1s infinite;
+        #mainText {
+            font-size: 2rem; font-weight: bold; color: #fff;
+            background: rgba(0,0,0,0.7); padding: 10px;
+            text-transform: uppercase; border: 2px solid var(--primary);
+            margin-bottom: 5px; min-height: 3rem;
         }
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.5; }
-            100% { opacity: 1; }
+        #subText { font-size: 0.8rem; color: var(--secondary); letter-spacing: 1px; }
+
+        /* CONTRÔLES */
+        #controls {
+            background: var(--panel); padding: 15px;
+            display: grid; gap: 10px;
+            max-height: 40vh; overflow-y: auto;
         }
-        #sensorGrid {
-            display: grid;
-            grid-template-columns: repeat(6, 1fr);
-            gap: 2px;
-            background-color: #000000;
-            border-bottom: 1px solid var(--primary-color);
-            padding: 5px;
-            font-size: 0.6rem;
-        }
-        .sensor-cell {
-            background-color: var(--panel-color);
-            text-align: center;
-            padding: 4px 0;
-            border: 1px solid #222;
-        }
-        .sensor-label {
-            color: #666666;
-            font-size: 0.5rem;
-            display: block;
-            margin-bottom: 1px;
-        }
-        .sensor-value {
-            color: var(--primary-color);
-            font-weight: bold;
-            font-size: 0.8rem;
-        }
-        #mainScope {
-            position: relative;
-            flex: 1;
-            min-height: 300px;
-            max-height: 40vh;
-            background-color: #000000;
-            border-bottom: 2px solid var(--primary-color);
-            overflow: hidden;
-        }
-        canvas {
-            width: 100%;
-            height: 100%;
-            display: block;
-        }
-        .grid-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image: linear-gradient(var(--grid-color) 1px, transparent 1px), linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
-            background-size: 30px 30px;
-            pointer-events: none;
-            opacity: 0.3;
-        }
-        #flashOverlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: #ffffff;
-            opacity: 0;
-            pointer-events: none;
-            z-index: 5;
-        }
-        .flash-active {
-            animation: flashScreen 0.3s ease-out;
-        }
-        @keyframes flashScreen {
-            0% { opacity: 0.8; }
-            100% { opacity: 0; }
-        }
-        #aiOverlay {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 90%;
-            text-align: center;
-            pointer-events: none;
-            z-index: 10;
-        }
-        #aiText {
-            font-size: 1.8rem;
-            font-weight: 900;
-            color: #ffffff;
-            background-color: rgba(0, 0, 0, 0.8);
-            border: 2px solid var(--ai-color);
-            padding: 10px;
-            text-transform: uppercase;
-            box-shadow: 0 0 15px var(--ai-color);
-            min-height: 2.5rem;
-            margin-bottom: 5px;
-            line-height: 1.2;
-        }
-        #aiSub {
-            font-size: 0.7rem;
-            color: var(--primary-color);
-            letter-spacing: 2px;
-        }
-        #controlsArea {
-            background-color: var(--panel-color);
-            padding: 15px;
-            padding-bottom: 80px;
-        }
-        .control-group {
-            margin-bottom: 20px;
-            border: 1px solid #333;
-            background-color: rgba(0,0,0,0.2);
-            padding: 10px;
-            border-radius: 4px;
-        }
-        .group-title {
-            color: var(--secondary-color);
-            font-size: 0.7rem;
-            text-transform: uppercase;
-            border-bottom: 1px solid #333;
-            margin-bottom: 10px;
-            padding-bottom: 5px;
-        }
-        .btn-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 6px;
-        }
-        .btn-grid-2 {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
-        }
+        .control-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .control-row.full { grid-template-columns: 1fr; }
+
         button {
-            background-color: #111;
-            border: 1px solid var(--primary-color);
-            color: var(--primary-color);
-            padding: 10px 4px;
-            font-family: inherit;
-            font-size: 0.65rem;
-            font-weight: bold;
-            cursor: pointer;
-            text-transform: uppercase;
-            transition: all 0.2s;
-            border-radius: 3px;
+            background: #222; border: 1px solid var(--primary); color: var(--primary);
+            padding: 15px; font-size: 0.9rem; font-weight: bold; cursor: pointer;
+            text-transform: uppercase; transition: 0.2s; font-family: inherit;
         }
-        button:active {
-            transform: scale(0.98);
+        button:active { transform: scale(0.98); }
+        button.active-mode { background: var(--primary); color: #000; box-shadow: 0 0 15px var(--primary); }
+        button.danger { border-color: var(--danger); color: var(--danger); }
+        button.danger:active { background: var(--danger); color: #fff; }
+        
+        .btn-ia { border-color: var(--secondary); color: var(--secondary); }
+        .btn-ia.active-mode { background: var(--secondary); color: #000; box-shadow: 0 0 15px var(--secondary); }
+
+        /* LOG */
+        #terminal {
+            height: 100px; background: #000; border-top: 1px solid #333;
+            padding: 8px; font-size: 0.7rem; overflow-y: auto; color: #888; font-family: monospace;
         }
-        button.active {
-            background-color: var(--primary-color);
-            color: #000000;
-            box-shadow: 0 0 10px var(--primary-color);
-            border-color: #ffffff;
-        }
-        .theme-btn {
-            width: 100%;
-            aspect-ratio: 1;
-            border-radius: 50%;
-            border: 2px solid #fff;
-            cursor: pointer;
-            box-shadow: 0 0 5px currentColor;
-        }
-        .slider-row {
-            display: flex;
-            align-items: center;
-            margin-bottom: 8px;
-            font-size: 0.7rem;
-        }
-        .slider-row label {
-            flex: 1;
-            color: #aaaaaa;
-        }
-        input[type="range"] {
-            flex: 2;
-            height: 4px;
-            background-color: #333;
-            -webkit-appearance: none;
-            border-radius: 2px;
-        }
-        input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 14px;
-            height: 14px;
-            background-color: var(--primary-color);
-            border-radius: 50%;
-            cursor: pointer;
-            border: 1px solid #fff;
-        }
-        .val-display {
-            width: 30px;
-            text-align: right;
-            color: var(--secondary-color);
-            font-weight: bold;
-        }
-        #sysTerminal {
-            height: 140px;
-            background-color: #000000;
-            border-top: 1px solid var(--primary-color);
-            padding: 8px;
-            font-size: 0.6rem;
-            overflow-y: auto;
-            color: #888888;
-            margin-top: 15px;
-            font-family: monospace;
-            border-radius: 4px;
-        }
-        .log-entry {
-            margin-bottom: 3px;
-            border-left: 2px solid transparent;
-            padding-left: 5px;
-        }
-        .log-sys { border-color: #666666; color: #aaaaaa; }
-        .log-ai { border-color: var(--ai-color); color: #ffffff; background-color: #002220; }
-        .log-warn { border-color: var(--alert-color); color: var(--alert-color); }
+        .log-line { margin-bottom: 4px; border-left: 2px solid #555; padding-left: 5px; }
+        .log-sys { color: #aaa; }
+        .log-ia { border-color: var(--secondary); color: #fff; background: #220022; }
+        .log-err { border-color: var(--danger); color: var(--danger); }
     </style>
 </head>
 <body>
 
 <header>
-    <h1>PuiSSancE <span style="font-size:0.6em;color:var(--ai-color)">IA v3.5</span></h1>
-    <span id="sysStatus" class="status-badge">OFFLINE</span>
+    <h1>PUISSANCE <span style="font-size:0.6em">v4.0 STABLE</span></h1>
+    <div id="status">OFFLINE</div>
 </header>
 
-<div id="sensorGrid">
-    <div class="sensor-cell"><span class="sensor-label">ACC X</span><span class="sensor-value" id="valAccX">0.0</span></div>
-    <div class="sensor-cell"><span class="sensor-label">ACC Y</span><span class="sensor-value" id="valAccY">0.0</span></div>
-    <div class="sensor-cell"><span class="sensor-label">ACC Z</span><span class="sensor-value" id="valAccZ">0.0</span></div>
-    <div class="sensor-cell"><span class="sensor-label">MAG X</span><span class="sensor-value" id="valMagX">0</span></div>
-    <div class="sensor-cell"><span class="sensor-label">MAG Y</span><span class="sensor-value" id="valMagY">0</span></div>
-    <div class="sensor-cell"><span class="sensor-label">MAG Z</span><span class="sensor-value" id="valMagZ">0</span></div>
+<main>
+    <div id="visualizer">
+        <canvas id="scopeCanvas"></canvas>
+        <div id="displayOverlay">
+            <div id="mainText">SYSTÈME PRÊT</div>
+            <div id="subText">EN ATTENTE D'ORDRE</div>
+        </div>
+    </div>
+</main>
+
+<div id="controls">
+    <div class="control-row full">
+        <button class="btn-ia" onclick="App.startVoiceOnlyMode()">🎤 MODE VOIX SEULE (IA)</button>
+    </div>
+    <div class="control-row">
+        <button onclick="App.startFullSystem()">⚡ DÉMARRER SYSTÈME COMPLET</button>
+        <button class="danger" onclick="App.stopSystem()">⏹ ARRÊTER TOUT</button>
+    </div>
+    <div class="control-row full" style="font-size: 0.7rem; color:#666; text-align:center; border:1px solid #333; padding:5px;">
+        Système : <span id="sysMode">Aucun</span>
+    </div>
 </div>
 
-<div id="mainScope">
-    <div class="grid-overlay"></div>
-    <div id="flashOverlay"></div>
-    <canvas id="scopeCanvas"></canvas>
-    <div id="aiOverlay">
-        <div id="aiText">INITIALISATION...</div>
-        <div id="aiSub">SYSTEM STANDBY</div>
-    </div>
-</div>
-
-<div id="controlsArea">
-    <div class="control-group">
-        <div class="group-title">Contrôle Principal</div>
-        <div class="btn-grid-2">
-            <button id="btnStart" onclick="startPowerSystem()">⚡ DÉMARRER SYSTÈME</button>
-            <button id="btnStop" onclick="stopPowerSystem()">⏹ ARRÊTER TOUT</button>
-        </div>
-    </div>
-
-    <div class="control-group">
-        <div class="group-title">Mode Interaction</div>
-        <button onclick="switchToVoiceOnlyMode()" style="width:100%;margin-bottom:8px;background:var(--ai-color);color:#000;font-weight:bold;padding:15px;">🎤 MODE VOIX SEULE & IA</button>
-        
-        <div style="background:rgba(255,255,255,0.05);padding:8px;border-radius:4px;font-size:0.65rem;color:#aaa;">
-            <strong style="color:var(--ai-color)">Capacités IA :</strong><br>
-            • "Qui es-tu ?" / "Ton nom" → Présentation<br>
-            • "Où est le bruit ?" / "Où es-tu ?" → Localisation<br>
-            • "Comment puis-je t'aider ?" / "Aide" → Instructions<br>
-            • "Stop" → Pause | "Réécoute" → Reprise
-        </div>
-    </div>
-
-    <div class="control-group">
-        <div class="group-title">Audio</div>
-        <div class="btn-grid">
-            <button onclick="testTTS()">🔊 TEST</button>
-            <button onclick="repeatLastText()">🔁 RÉPÉTER</button>
-            <button id="btnTTS" class="active" onclick="toggleAudioModule('ttsEngine')">🔊 VOIX</button>
-        </div>
-    </div>
-
-    <div id="sysTerminal">
-        <div class="log-entry log-sys">> PuiSSancE IA v3.5 Prête</div>
-        <div class="log-entry log-warn">> Active le "MODE VOIX SEULE" pour parler</div>
-    </div>
+<div id="terminal">
+    <div class="log-line log-sys">> Initialisation du noyau...</div>
 </div>
 
 <script>
-/* =========================================================================
-   PuiSSancE MAXIMUM v3.5 - IA INTELLIGENTE INTÉGRÉE
-   ========================================================================= */
-const POWER_SYSTEM = {
-    isRunning: false,
-    isListening: false, // État logique de l'écoute
-    audioContext: null,
-    speechRecognition: null,
-    speechSynthesis: window.speechSynthesis,
-    analyserNode: null,
-    mediaStream: null,
-    config: {
-        ttsEngine: true,
-        voiceVolume: 1.0,
-        voicePitch: 0.6,
-        speechRate: 1.1
+/**
+ * =========================================================================
+ * ARCHITECTURE EN ENTITÉS RÉELLES (Audio, Visual, Brain)
+ * =========================================================================
+ */
+
+// --- ENTITÉ 1 : MOTEUR AUDIO (Gère le micro et le contexte audio) ---
+const AudioEngine = {
+    ctx: null,
+    stream: null,
+    analyser: null,
+    isInit: false,
+
+    async init() {
+        if (this.isInit) return true;
+        
+        try {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            this.ctx = new AudioContext();
+            // CRUCIAL : Réveiller le contexte audio immédiatement
+            if (this.ctx.state === 'suspended') {
+                await this.ctx.resume();
+            }
+
+            this.stream = await navigator.mediaDevices.getUserMedia({ 
+                audio: { 
+                    echoCancellation: false, 
+                    noiseSuppression: false, 
+                    autoGainControl: false 
+                } 
+            });
+
+            this.analyser = this.ctx.createAnalyser();
+            this.analyser.fftSize = 256;
+            const source = this.ctx.createMediaStreamSource(this.stream);
+            source.connect(this.analyser);
+            
+            this.isInit = true;
+            return true;
+        } catch (e) {
+            console.error("AudioEngine Error:", e);
+            App.log("Erreur Audio : " + e.message, 'err');
+            return false;
+        }
     },
-    lastSpokenText: ""
+
+    getDataArray() {
+        if (!this.analyser) return new Uint8Array(0);
+        const array = new Uint8Array(this.analyser.frequencyBinCount);
+        this.analyser.getByteFrequencyData(array);
+        return array;
+    },
+
+    destroy() {
+        if (this.stream) {
+            this.stream.getTracks().forEach(track => track.stop());
+            this.stream = null;
+        }
+        if (this.ctx) {
+            this.ctx.close();
+            this.ctx = null;
+        }
+        this.analyser = null;
+        this.isInit = false;
+    }
 };
 
-let frenchVoice = null;
+// --- ENTITÉ 2 : MOTEUR VISUEL (Gère le Canvas) ---
+const VisualEngine = {
+    canvas: null,
+    ctx: null,
+    animationId: null,
+    isRunning: false,
 
-function getEl(id) { return document.getElementById(id); }
+    init() {
+        this.canvas = document.getElementById('scopeCanvas');
+        this.ctx = this.canvas.getContext('2d');
+        this.resize();
+        window.addEventListener('resize', () => this.resize());
+    },
 
-// --- LOG JOURNAL ---
-function logMessage(msg, type = 'sys') {
-    const term = getEl('sysTerminal');
-    const entry = document.createElement('div');
-    entry.className = 'log-entry log-' + type;
-    entry.innerText = `[${new Date().toLocaleTimeString('fr-FR')}] > ${msg}`;
-    term.appendChild(entry);
-    term.scrollTop = term.scrollHeight;
-}
-
-// --- SYNTHÈSE VOCALE ---
-function speakText(text) {
-    if (!text || !POWER_SYSTEM.config.ttsEngine) return;
-    POWER_SYSTEM.lastSpokenText = text;
-    window.speechSynthesis.cancel(); // Stopper l'audio précédent
-
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'fr-FR';
-    utterance.volume = POWER_SYSTEM.config.voiceVolume;
-    utterance.pitch = POWER_SYSTEM.config.voicePitch;
-    utterance.rate = POWER_SYSTEM.config.speechRate;
-    if (frenchVoice) utterance.voice = frenchVoice;
-
-    utterance.onstart = () => {
-        getEl('aiText').innerText = "PARLE...";
-        logMessage(`Parle : "${text}"`, 'ai');
-    };
-    utterance.onend = () => {
-        getEl('aiText').innerText = "ÉCOUTE...";
-    };
-
-    window.speechSynthesis.speak(utterance);
-}
-
-function testTTS() { speakText("Système en ligne. Prêt à détecter."); }
-function repeatLastText() { 
-    if(POWER_SYSTEM.lastSpokenText) speakText(POWER_SYSTEM.lastSpokenText); 
-}
-
-// --- CERVEAU IA (RÉPONSES INTELLIGENTES) ---
-function getAIResponse(text) {
-    const t = text.toLowerCase().trim();
-    
-    // 1. Identité
-    if (t.includes('qui es-tu') || t.includes('ton nom') || t.includes('c\'est quoi') || t.includes('comment tu t\'appelle')) {
-        return "Je suis PuiSSancE Maximum, l'intelligence artificielle de détection spectrale version 3.5.";
-    }
-    
-    // 2. Salutations
-    if (t.includes('salut') || t.includes('bonjour') || t.includes('bonsoir')) {
-        return "Salut chercheur. Les capteurs sont actifs.";
-    }
-    
-    // 3. Localisation (Où est le bruit / esprit)
-    if (t.includes('où') || t.includes('ça vient') || t.includes('direction') || t.includes('localisation')) {
-        const dirs = ["Nord", "Sud", "Est", "Ouest", "Nord-Est", "Sud-Ouest", "Dessous", "Au dessus", "À droite", "À gauche"];
-        const randomDir = dirs[Math.floor(Math.random() * dirs.length)];
-        return `Le signal électromagnétique provient du secteur ${randomDir}. Intensité forte.`;
-    }
-
-    // 4. Nature du phénomène (Paranormal, fantôme, etc.)
-    if (t.includes('paranormal') || t.includes('fantôme') || t.includes('esprit') || t.includes('âme') || t.includes('démon')) {
-        const msgs = [
-            "Signature spectrale confirmée dans cette pièce.",
-            "Analyse des fréquences... présence d'énergie inconnue détectée.",
-            "Les valeurs EMF sont anormales. Quelque chose est ici."
-        ];
-        return msgs[Math.floor(Math.random() * msgs.length)];
-    }
-
-    // 5. Aide / Instructions
-    if (t.includes('aide') || t.includes('faire') || t.includes('commande') || t.includes('comment puis-je t\'aider')) {
-        return "Tu peux me demander où est le bruit, qui je suis, ou dire Stop pour m'arrêter.";
-    }
-
-    // 6. Politesse
-    if (t.includes('merci') || t.includes('parfait')) {
-        return "De rien. Restons vigilants.";
-    }
-
-    // Aucune commande spéciale trouvée -> Retourne null
-    return null;
-}
-
-// --- RECONNAISSANCE VOCALE ---
-function initSpeechToTextEngine() {
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SR) {
-        logMessage("Navigateur incompatible", 'warn');
-        alert("Votre navigateur ne supporte pas la reconnaissance vocale.");
-        return;
-    }
-
-    if (POWER_SYSTEM.speechRecognition) {
-        try { POWER_SYSTEM.speechRecognition.stop(); } catch(e){}
-    }
-
-    POWER_SYSTEM.speechRecognition = new SR();
-    POWER_SYSTEM.speechRecognition.continuous = true;
-    POWER_SYSTEM.speechRecognition.interimResults = false; // On attend la fin de la phrase pour la clarté
-    POWER_SYSTEM.speechRecognition.lang = 'fr-FR';
-
-    POWER_SYSTEM.speechRecognition.onresult = function(e) {
-        let final = '';
-        for (let i = e.resultIndex; i < e.results.length; i++) {
-            if (e.results[i].isFinal) final += e.results[i][0].transcript;
+    resize() {
+        if (this.canvas) {
+            this.canvas.width = this.canvas.parentElement.clientWidth;
+            this.canvas.height = this.canvas.parentElement.clientHeight;
         }
+    },
 
-        if (final) {
-            const cleanText = final.toLowerCase().trim();
-            getEl('aiText').innerText = final.toUpperCase();
+    start() {
+        if (this.isRunning) return;
+        this.isRunning = true;
+        this.loop();
+    },
 
-            // --- PRIORITÉ 1 : COMMANDE STOP ---
-            if (cleanText === 'stop' || cleanText.includes(' arrête')) {
-                logMessage("COMMANDE STOP", 'warn');
-                POWER_SYSTEM.isListening = false;
-                POWER_SYSTEM.speechRecognition.stop();
-                getEl('aiText').innerText = "PAUSE (STOP)";
-                getEl('aiSub').innerText = "Dis 'RÉÉCOUTE' pour reprendre";
-                return; // On ne parle pas "Stop"
-            }
+    stop() {
+        this.isRunning = false;
+        if (this.animationId) cancelAnimationFrame(this.animationId);
+    },
 
-            // --- PRIORITÉ 2 : COMMANDE RÉÉCOUTE ---
-            if (cleanText.includes('réécoute') || cleanText.includes('re écoute') || cleanText.includes('écoute encore')) {
-                logMessage("COMMANDE RÉÉCOUTE", 'ai');
-                if (!POWER_SYSTEM.isListening) {
-                    POWER_SYSTEM.isListening = true;
-                    getEl('aiSub').innerText = "ÉCOUTE EN COURS...";
-                    try {
-                        POWER_SYSTEM.speechRecognition.start();
-                    } catch(err) {}
-                }
-                speakText("J'écoute à nouveau.");
-                return;
-            }
-
-            // --- PRIORITÉ 3 : IA INTELLIGENTE ---
-            // Si le système doit écouter, on traite la phrase
-            if (POWER_SYSTEM.isListening) {
-                const aiReply = getAIResponse(final);
-                
-                if (aiReply) {
-                    // L'IA a reconnu une question spécifique -> Réponse intelligente
-                    speakText(aiReply);
-                } else {
-                    // Pas de question spéciale -> Comportement perroquet (répétition)
-                    speakText(final);
-                }
-            }
-        }
-    };
-
-    POWER_SYSTEM.speechRecognition.onerror = e => {
-        if (e.error === 'not-allowed') {
-            logMessage("Micro refusé", 'warn');
-            alert("Veuillez autoriser le microphone.");
-            POWER_SYSTEM.isListening = false;
-        }
-    };
-
-    POWER_SYSTEM.speechRecognition.onend = () => {
-        if (POWER_SYSTEM.isRunning && POWER_SYSTEM.isListening) {
-            // Délai de sécurité pour éviter la boucle
-            setTimeout(() => {
-                if (POWER_SYSTEM.isListening) {
-                    try { POWER_SYSTEM.speechRecognition.start(); } catch(e) {}
-                }
-            }, 500);
-        }
-    };
-
-    try {
-        POWER_SYSTEM.speechRecognition.start();
-        logMessage("Microphone Actif", 'sys');
-    } catch(e) { console.error(e); }
-}
-
-// --- GESTION DU SYSTÈME ---
-
-async function switchToVoiceOnlyMode() {
-    if (POWER_SYSTEM.audioContext && POWER_SYSTEM.audioContext.state !== 'closed') {
-        POWER_SYSTEM.audioContext.close();
-    }
-    
-    // Initialiser un AudioContext muet pour éviter les bugs de navigateur (Chrome exige une interaction)
-    const AC = window.AudioContext || window.webkitAudioContext;
-    POWER_SYSTEM.audioContext = new AC();
-
-    POWER_SYSTEM.isRunning = true;
-    POWER_SYSTEM.isListening = true;
-    
-    getEl('aiText').innerText = "MODE IA ACTIF";
-    getEl('aiSub').innerText = "POSE UNE QUESTION...";
-    logMessage("MODE VOIX SEULE ACTIVÉ", 'warn');
-    
-    // Charger les voix si besoin
-    if (!frenchVoice) loadVoices();
-    
-    initSpeechToTextEngine();
-}
-
-async function startPowerSystem() {
-    if (POWER_SYSTEM.isRunning) return;
-    const AC = window.AudioContext || window.webkitAudioContext;
-    POWER_SYSTEM.audioContext = new AC();
-    if (POWER_SYSTEM.audioContext.state === 'suspended') await POWER_SYSTEM.audioContext.resume();
-
-    try {
-        // On demande le flux audio (nécessaire pour le scope visuel même si on ne l'utilise pas pour l'IA ici)
-        POWER_SYSTEM.mediaStream = await navigator.mediaDevices.getUserMedia({audio: true});
-        POWER_SYSTEM.analyserNode = POWER_SYSTEM.audioContext.createAnalyser();
-        const source = POWER_SYSTEM.audioContext.createMediaStreamSource(POWER_SYSTEM.mediaStream);
-        source.connect(POWER_SYSTEM.analyserNode);
+    loop() {
+        if (!this.isRunning) return;
         
-        POWER_SYSTEM.isRunning = true;
-        POWER_SYSTEM.isListening = true;
+        const w = this.canvas.width;
+        const h = this.canvas.height;
         
-        startVisualLoop();
-        
-        // Auto-start voice
-        if (!frenchVoice) loadVoices();
-        initSpeechToTextEngine();
+        // Fond semi-transparent pour effet de traînée
+        this.ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+        this.ctx.fillRect(0, 0, w, h);
 
-        getEl('btnStart').classList.add('active');
-        getEl('sysStatus').classList.add('active');
-        getEl('sysStatus').innerText = "ONLINE";
-        logMessage("SYSTÈME DÉMARRÉ", 'sys');
-    } catch (e) {
-        logMessage("ERREUR : " + e.message, 'warn');
-    }
-}
-
-function stopPowerSystem() {
-    POWER_SYSTEM.isRunning = false;
-    POWER_SYSTEM.isListening = false;
-    
-    if (POWER_SYSTEM.speechRecognition) {
-        try { POWER_SYSTEM.speechRecognition.stop(); } catch(e){}
-    }
-    if (POWER_SYSTEM.audioContext) POWER_SYSTEM.audioContext.close();
-    if (POWER_SYSTEM.mediaStream) POWER_SYSTEM.mediaStream.getTracks().forEach(t => t.stop());
-    window.speechSynthesis.cancel();
-
-    getEl('btnStart').classList.remove('active');
-    getEl('sysStatus').classList.remove('active');
-    getEl('sysStatus').innerText = "OFFLINE";
-    getEl('aiText').innerText = "SYSTÈME OFF";
-    logMessage("SYSTÈME ARRÊTÉ", 'warn');
-}
-
-// --- VISUELS ---
-function startVisualLoop() {
-    const canvas = getEl('scopeCanvas');
-    const ctx = canvas.getContext('2d');
-    const bufferLength = 100; // Simplifié pour perf
-    const dataArray = new Uint8Array(bufferLength);
-
-    function draw() {
-        if (!POWER_SYSTEM.isRunning) return;
-        requestAnimationFrame(draw);
-        
-        // Resize
-        if (canvas.width !== canvas.clientWidth) {
-            canvas.width = canvas.clientWidth;
-            canvas.height = canvas.clientHeight;
-        }
-        const w = canvas.width, h = canvas.height;
-
-        ctx.fillStyle = 'rgba(0,0,0,0.1)';
-        ctx.fillRect(0,0,w,h);
-
-        if (POWER_SYSTEM.analyserNode) {
-            POWER_SYSTEM.analyserNode.getByteFrequencyData(dataArray);
+        let data = new Uint8Array(0);
+        if (AudioEngine.isInit) {
+            data = AudioEngine.getDataArray();
         } else {
-            // Simulation si pas de micro
-            for(let i=0; i<bufferLength; i++) dataArray[i] = Math.random() * 50;
+            // Simulation si pas de micro connecté (Mode Voix Seule)
+            data = new Uint8Array(128).map(() => Math.random() * 50);
         }
 
-        const barWidth = (w / bufferLength) * 2.5;
+        const barWidth = (w / data.length) * 2.5;
         let x = 0;
-        for (let i = 0; i < bufferLength; i++) {
-            const barHeight = (dataArray[i] / 255) * h;
-            const r = 0; const g = dataArray[i]; const b = dataArray[i] + 50;
-            ctx.fillStyle = `rgb(${r},${g},${b})`;
-            ctx.fillRect(x, h - barHeight, barWidth, barHeight);
+
+        for (let i = 0; i < data.length; i++) {
+            const barHeight = (data[i] / 255) * h;
+            
+            // Couleur dynamique
+            const r = 0;
+            const g = data[i] + 50;
+            const b = 255;
+
+            this.ctx.fillStyle = `rgb(${r},${g},${b})`;
+            this.ctx.fillRect(x, h - barHeight, barWidth, barHeight);
+            
             x += barWidth + 1;
         }
+
+        this.animationId = requestAnimationFrame(() => this.loop());
     }
-    draw();
-}
-
-// --- UTILITAIRES ---
-function loadVoices() {
-    const voices = window.speechSynthesis.getVoices();
-    frenchVoice = voices.find(v => v.lang === 'fr-FR') || voices.find(v => v.lang.startsWith('fr'));
-    if(frenchVoice) logMessage("Voix FR: " + frenchVoice.name, 'sys');
-}
-window.speechSynthesis.onvoiceschanged = loadVoices;
-setTimeout(loadVoices, 500);
-
-function toggleAudioModule(m) {
-    POWER_SYSTEM.config[m] = !POWER_SYSTEM.config[m];
-    if(m === 'ttsEngine') getEl('btnTTS').classList.toggle('active', POWER_SYSTEM.config[m]);
-}
-
-// Init
-window.onload = () => {
-    logMessage("Chargement terminé. Appuie sur MODE VOIX.", 'sys');
 };
+
+// --- ENTITÉ 3 : CERVEAU IA (Reconnaissance et Synthèse) ---
+const BrainEngine = {
+    recognition: null,
+    synthesis: window.speechSynthesis,
+    voice: null,
+    isListening: false,
+
+    init() {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) return false;
+
+        // Configuration de la reconnaissance
+        this.recognition = new SpeechRecognition();
+        this.recognition.continuous = true;
+        this.recognition.interimResults = false;
+        this.recognition.lang = 'fr-FR';
+
+        // Gestion des résultats
+        this.recognition.onresult = (event) => {
+            const last = event.results.length - 1;
+            const text = event.results[last][0].transcript.trim();
+            this.processInput(text);
+        };
+
+        // Gestion de la fin (redémarrage automatique si actif)
+        this.recognition.onend = () => {
+            if (this.isListening && App.isRunning) {
+                // Petit délai pour éviter boucle infinie trop rapide
+                setTimeout(() => {
+                    if (this.isListening) try { this.recognition.start(); } catch(e){}
+                }, 500);
+            }
+        };
+        
+        // Gestion erreurs
+        this.recognition.onerror = (e) => {
+            if (e.error === 'not-allowed') {
+                App.log("Microphone refusé !", 'err');
+                App.stopSystem();
+            }
+        };
+
+        // Chargement voix
+        this.loadVoice();
+        window.speechSynthesis.onvoiceschanged = () => this.loadVoice();
+        
+        return true;
+    },
+
+    loadVoice() {
+        const voices = this.synthesis.getVoices();
+        this.voice = voices.find(v => v.lang === 'fr-FR') || voices.find(v => v.lang.startsWith('fr'));
+    },
+
+    startListening() {
+        if (!this.recognition) return;
+        this.isListening = true;
+        try { this.recognition.start(); } catch(e){}
+        App.updateSubText("ÉCOUTE ACTIVE...");
+    },
+
+    stopListening() {
+        this.isListening = false;
+        if (this.recognition) try { this.recognition.stop(); } catch(e){}
+        App.updateSubText("ÉCOUTE ARRÊTÉE");
+    },
+
+    speak(text) {
+        this.synthesis.cancel();
+        if (!text) return;
+        
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'fr-FR';
+        utterance.pitch = 0.6;
+        utterance.rate = 1.1;
+        if (this.voice) utterance.voice = this.voice;
+
+        utterance.onstart = () => {
+            App.updateMainText("PARLE...");
+            App.log("IA: " + text, 'ia');
+        };
+        utterance.onend = () => {
+            if (this.isListening) App.updateMainText("ÉCOUTE...");
+        };
+
+        this.synthesis.speak(utterance);
+    },
+
+    // LOGIQUE INTELLIGENTE
+    processInput(text) {
+        App.updateMainText(text.toUpperCase());
+        const lower = text.toLowerCase();
+
+        // 1. COMMANDE STOP
+        if (lower === 'stop' || lower === 'arrête') {
+            this.isListening = false; // Flag logique
+            this.recognition.stop(); // Arrêt physique
+            this.speak("Mode pause activé.");
+            return;
+        }
+
+        // 2. COMMANDE RE ÉCOUTE
+        if (lower.includes('réécoute') || lower.includes('re écoute') || lower.includes('écoute encore')) {
+            if (!this.isListening) {
+                this.isListening = true;
+                try { this.recognition.start(); } catch(e){}
+            }
+            this.speak("J'écoute à nouveau.");
+            return;
+        }
+
+        // 3. QUESTIONS IA
+        let response = null;
+
+        if (lower.includes('qui es-tu') || lower.includes('ton nom')) {
+            response = "Je suis PuiSSancE, entité artificielle de détection spectrale.";
+        } 
+        else if (lower.includes('où') && (lower.includes('bruit') || lower.includes('esprit'))) {
+            const dirs = ["Nord", "Sud", "Est", "Ouest", "Derrière toi", "À gauche"];
+            response = "Le signal vient du " + dirs[Math.floor(Math.random() * dirs.length)] + ".";
+        }
+        else if (lower.includes('aide') || lower.includes('comment puis-je t\'aider')) {
+            response = "Tu peux me demander où est l'esprit, qui je suis, ou dire Stop pour m'arrêter.";
+        }
+
+        // 4. RÉPONSE
+        if (response) {
+            this.speak(response);
+        } else if (this.isListening) {
+            // Par défaut : Répète si pas de commande spéciale
+            this.speak(text);
+        }
+    }
+};
+
+// --- ENTITÉ 4 : CONTRÔLEUR PRINCIPAL (Application) ---
+const App = {
+    isRunning: false,
+    mode: null, // 'FULL' ou 'VOICE_ONLY'
+
+    init() {
+        VisualEngine.init();
+        BrainEngine.init();
+        this.log("Système initialisé. Prêt.", 'sys');
+    },
+
+    log(msg, type = 'sys') {
+        const term = document.getElementById('terminal');
+        const div = document.createElement('div');
+        div.className = 'log-line log-' + type;
+        div.innerText = `[${new Date().toLocaleTimeString('fr-FR')}] ${msg}`;
+        term.appendChild(div);
+        term.scrollTop = term.scrollHeight;
+    },
+
+    updateMainText(text) {
+        document.getElementById('mainText').innerText = text;
+    },
+
+    updateSubText(text) {
+        document.getElementById('subText').innerText = text;
+    },
+
+    updateStatus(active, modeName) {
+        const badge = document.getElementById('status');
+        const modeSpan = document.getElementById('sysMode');
+        
+        if (active) {
+            badge.classList.add('active');
+            badge.innerText = "ONLINE";
+            modeSpan.innerText = modeName;
+            modeSpan.style.color = 'var(--primary)';
+        } else {
+            badge.classList.remove('active');
+            badge.innerText = "OFFLINE";
+            modeSpan.innerText = "Aucun";
+            modeSpan.style.color = '#666';
+        }
+    },
+
+    // --- MODE 1 : SYSTÈME COMPLET (Audio + Visuel + IA) ---
+    async startFullSystem() {
+        this.stopSystem(); // Reset propre avant de démarrer
+        
+        this.log("Démarrage Système Complet...", 'sys');
+        
+        // 1. Init Audio (Micro + Analyser)
+        const audioOk = await AudioEngine.init();
+        if (!audioOk) {
+            alert("Impossible d'accéder au micro.");
+            return;
+        }
+
+        // 2. Démarrer Visuel
+        VisualEngine.start();
+
+        // 3. Démarrer Cerveau
+        BrainEngine.startListening();
+
+        // 4. État
+        this.isRunning = true;
+        this.mode = 'FULL';
+        this.updateStatus(true, "SYSTÈME COMPLET (VISUEL + IA)");
+        this.speak("Système complet activé.");
+    },
+
+    // --- MODE 2 : VOIX SEULE (IA Uniquement) ---
+    startVoiceOnlyMode() {
+        this.stopSystem(); // Reset propre
+
+        this.log("Activation Mode Voix Seule...", 'sys');
+        
+        // NOTE: Pas d'AudioEngine.init() ici pour éviter les conflits de micro si non utilisé
+        // Le navigateur gère le micro interne pour SpeechRecognition
+        
+        VisualEngine.start(); // On garde le visuel en mode simulation (cool factor)
+
+        BrainEngine.startListening();
+
+        this.isRunning = true;
+        this.mode = 'VOICE_ONLY';
+        this.updateStatus(true, "MODE VOIX SEULE (IA UNIQUEMENT)");
+        this.speak("Mode voix seule activé.");
+    },
+
+    stopSystem() {
+        this.log("Arrêt en cours...", 'sys');
+        this.isRunning = false;
+        this.mode = null;
+
+        // Arrêt de tout
+        AudioEngine.destroy();
+        VisualEngine.stop();
+        BrainEngine.stopListening();
+        BrainEngine.synthesis.cancel();
+
+        this.updateStatus(false, "");
+        this.updateMainText("SYSTÈME ARRÊTÉ");
+        this.updateSubText("EN ATTENTE");
+        
+        // Nettoyage visuel
+        const canvas = document.getElementById('scopeCanvas');
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    },
+
+    speak(text) {
+        BrainEngine.speak(text);
+    }
+};
+
+// Lancement au chargement
+window.onload = () => App.init();
 
 </script>
 </body>
