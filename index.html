@@ -332,11 +332,11 @@
             <h3 style="color:#aaa; font-size:0.8rem;">VOIX</h3>
             <div class="setting-row">
                 <label>Hauteur</label>
-                <input type="range" id="pitch" min="0.1" max="2" step="0.1" value="0.6" oninput="Config.update('pitch', this.value)">
+                <input type="range" id="pitch" min="0.1" max="2" step="0.1" value="1.0" oninput="Config.update('pitch', this.value)">
             </div>
             <div class="setting-row">
                 <label>Vitesse</label>
-                <input type="range" id="rate" min="0.5" max="2" step="0.1" value="1.1" oninput="Config.update('rate', this.value)">
+                <input type="range" id="rate" min="0.5" max="2" step="0.1" value="1.0" oninput="Config.update('rate', this.value)">
             </div>
             <h3 style="color:#aaa; font-size:0.8rem; margin-top:20px;">DÉTECTION</h3>
             <div class="setting-row">
@@ -355,7 +355,7 @@
 
         // --- CONFIGURATION ---
         const Config = {
-            data: { pitch: 0.6, rate: 1.1, volume: 1.0, sensitivity: 80, isActive: false },
+            data: { pitch: 1.0, rate: 1.0, volume: 1.0, sensitivity: 80, isActive: false },
             load() {
                 const saved = localStorage.getItem('supra_ultimate_config');
                 if (saved) this.data = { ...this.data, ...JSON.parse(saved) };
@@ -550,7 +550,7 @@
                 const btn = document.getElementById('btnPower');
                 btn.classList.toggle('active-state');
                 App.log(VisualEngine.powerMode ? "POWER MODE activated." : "Normal Mode.", 'sys');
-                BrainEngine.speak(VisualEngine.powerMode ? "Power mode activated." : "Power mode deactivated.");
+                BrainEngine.speak(VisualEngine.powerMode ? "Mode puissance activé." : "Mode normal.");
             },
 
             toggleDetection() {
@@ -559,7 +559,7 @@
                 btn.classList.toggle('active-state');
                 if (this.detection) {
                     App.log("Spectrum Detection Active.", 'sys');
-                    BrainEngine.speak("Detection active.");
+                    BrainEngine.speak("Détection spectrale activée.");
                     this.startDetectionLoop();
                 } else {
                     clearInterval(this.detectionInterval);
@@ -578,7 +578,7 @@
                     const threshold = 110 - Config.data.sensitivity;
 
                     if (vol > threshold) {
-                        const phrases = ["SIGNAL DETECTED", "AUDIO ACTIVITY", "SOUND SPIKE"];
+                        const phrases = ["SIGNAL DÉTECTÉ", "ACTIVITÉ AUDIO", "PIC SONORE"];
                         const p = phrases[Math.floor(Math.random() * phrases.length)];
                         App.log(p, 'det');
                     }
@@ -588,7 +588,7 @@
             toggleWhiteNoise() {
                 const isActive = document.getElementById('btnNoise').classList.toggle('active-state');
                 AudioEngine.toggleWhiteNoise(isActive);
-                BrainEngine.speak(isActive ? "White noise activated." : "White noise deactivated.");
+                BrainEngine.speak(isActive ? "Bruit blanc activé." : "Bruit blanc désactivé.");
             }
         };
 
@@ -642,7 +642,7 @@
                 this.isListening = true;
                 try {
                     this.recognition.start();
-                    App.updateSub("LISTENING...");
+                    App.updateSub("J'ÉCOUTE...");
                 } catch (e) {}
             },
 
@@ -651,7 +651,7 @@
                 if (this.recognition) try {
                     this.recognition.stop();
                 } catch (e) {}
-                App.updateSub("STANDBY");
+                App.updateSub("VEILLE");
             },
 
             speak(text) {
@@ -664,10 +664,10 @@
                 u.rate = Config.data.rate;
                 if (this.voice) u.voice = this.voice;
                 u.onstart = () => {
-                    App.updateMain("PROCESSING...");
+                    App.updateMain("TRAITEMENT...");
                 };
                 u.onend = () => {
-                    if (this.isListening) App.updateMain("LISTENING...");
+                    if (this.isListening) App.updateMain("J'ÉCOUTE...");
                 };
                 this.synthesis.speak(u);
             },
@@ -680,34 +680,34 @@
                 // 1. SYSTEM COMMANDS (Absolute Priority)
                 if (lower === 'stop' || lower === 'arrête') {
                     this.stop();
-                    this.speak("Paused.");
+                    this.speak("Pause.");
                     return;
                 }
                 if (lower.includes('écoute')) {
                     if (!this.isListening) {
                         this.start();
-                        this.speak("I'm listening.");
+                        this.speak("Je vous écoute.");
                     }
                     return;
                 }
 
                 // 2. AI LOGIC: INTENT ANALYSIS
-                let intent = "UNKNOWN";
+                let intent = "INCONNU";
                 let response = null;
 
                 // Question Detection (Who, What, Where, How, What is)
-                if (lower.match(/^(qui|quoi|où|comment|c'est quoi|qu'est-ce que|pourquoi|définis)/)) {
+                if (lower.match(/^(qui|quoi|où|comment|c'est quoi|qu'est-ce que|pourquoi|définis|explique)/)) {
                     intent = "QUESTION";
                     // Use real knowledge (Wikipedia)
                     this.stopListening(); // Pause to process
-                    App.log("Searching AI knowledge...", 'ai');
-                    this.speak("Let me think...", 'fr', async() => {
+                    App.log("Recherche de connaissances IA...", 'ai');
+                    this.speak("Laissez-moi réfléchir...", 'fr', async() => {
                         const info = await this.fetchKnowledge(text);
                         if (info) {
                             response = info;
                             this.lastTopic = text; // Remember topic
                         } else {
-                            response = "I couldn't find specific information about that in my database.";
+                            response = "Je n'ai pas trouvé d'information précise à ce sujet dans ma base de données.";
                         }
                         this.speak(response);
                         this.startListening(); // Resume
@@ -717,39 +717,44 @@
 
                 // Calculation detection
                 if (lower.match(/[\d]+[\+\-\*\/][\d]+/) || lower.includes('combien font')) {
-                    intent = "CALCULATION";
+                    intent = "CALCUL";
                     const result = this.calculate(text);
-                    response = result !== null ? `The result is ${result}.` : "Calculation impossible.";
+                    response = result !== null ? `Le résultat est ${result}.` : "Calcul impossible.";
                 }
 
                 // Greetings detection
                 if (lower.match(/^(salut|bonjour|bonsoir|coucou|hello|hey)/)) {
-                    intent = "GREETING";
-                    const greetings = ["Hello. I'm ready.", "Hi. How can I help?", "Good evening. System operational.", "Hey. What can I do for you?"];
+                    intent = "SALUTATION";
+                    const greetings = [
+                        "Bonjour. Je suis prêt.",
+                        "Salut. Comment puis-je vous aider ?",
+                        "Bonsoir. Système opérationnel.",
+                        "Coucou. Que puis-je faire pour vous ?"
+                    ];
                     response = greetings[Math.floor(Math.random() * greetings.length)];
                 }
 
                 // Mood detection
                 if (lower.includes('ça va') || lower.includes('comment vas-tu')) {
                     intent = "CHITCHAT";
-                    response = "My systems are at 100%. And you?";
+                    response = "Mes systèmes sont à 100%. Et vous ?";
                 }
                 if (lower.includes('merci')) {
-                    response = "You're welcome. I'm here for that.";
+                    response = "Avec plaisir. Je suis là pour ça.";
                 }
                 if (lower.includes('qui es-tu')) {
-                    response = "I am Supra Eternity, an advanced artificial intelligence designed for control and assistance.";
+                    response = "Je suis Supra Eternity, une intelligence artificielle avancée conçue pour le contrôle et l'assistance.";
                 }
 
                 // --- DEFAULT AI RESPONSE (if no pattern matched) ---
                 if (!response) {
                     // Contextual intelligence simulation
                     const unknownResponses = [
-                        "Noted. Continue.",
-                        "Okay, I understand.",
-                        "Interesting. Is this related to " + (this.lastTopic ? "our discussion about " + this.lastTopic : "something else") + "?",
-                        "Very well.",
-                        "I take good note of that."
+                        "C'est noté. Continuez.",
+                        "D'accord, j'ai bien compris.",
+                        "Intéressant. Cela a-t-il un lien avec " + (this.lastTopic ? "notre discussion sur " + this.lastTopic : "autre chose") + " ?",
+                        "Très bien.",
+                        "J'en prends bonne note."
                     ];
                     response = unknownResponses[Math.floor(Math.random() * unknownResponses.length)];
                 }
@@ -760,7 +765,7 @@
             // Real Knowledge Module (Web Search)
             async fetchKnowledge(query) {
                 try {
-                    const cleanQ = query.replace(/^(qui|quoi|où|comment|c'est quoi|qu'est-ce que|définis|explique|cherche|dis moi sur)\s*/gi, '').trim();
+                    const cleanQ = query.replace(/^(qui|quoi|où|comment|c'est quoi|qu'est-ce que|pourquoi|définis|explique|cherche|dis moi sur)\s*/gi, '').trim();
                     if (cleanQ.length < 2) return null;
 
                     const url = `https://fr.wikipedia.org/w/api.php?origin=*&action=query&format=json&prop=extracts&exintro&explaintext&redirects=1&titles=${encodeURIComponent(cleanQ)}`;
@@ -798,7 +803,7 @@
                 Config.load();
                 VisualEngine.init();
                 BrainEngine.init();
-                this.log("Supra Eternity Ultimate AI ready.", 'sys');
+                this.log("Supra Eternity Ultimate AI prêt.", 'sys');
                 if (Config.data.isActive) this.startVoiceOnlyMode(true);
             },
 
@@ -826,7 +831,7 @@
 
             async startFullSystem() {
                 this.stopSystem();
-                this.updateMain("FULL STARTUP...");
+                this.updateMain("DÉMARRAGE COMPLET...");
                 const ok = await AudioEngine.init();
                 if (!ok) return;
                 VisualEngine.start();
@@ -834,23 +839,23 @@
                 this.isRunning = true;
                 Config.data.isActive = true;
                 Config.save();
-                this.log("Full System Active", 'sys');
-                BrainEngine.speak("Full mode activated. AI online.");
+                this.log("Système Complet Actif", 'sys');
+                BrainEngine.speak("Mode complet activé. IA en ligne.");
             },
 
             async startVoiceOnlyMode(silent = false) {
                 this.stopSystem();
                 if (!silent) {
-                    this.updateMain("AI INITIALIZING...");
-                    this.log("Activating Voice Mode...", 'sys');
+                    this.updateMain("INITIALISATION IA...");
+                    this.log("Activation Mode Voix...", 'sys');
                 }
                 VisualEngine.start();
                 BrainEngine.start();
                 this.isRunning = true;
                 Config.data.isActive = true;
                 Config.save();
-                if (!silent) BrainEngine.speak("Supra Eternity is online. Ask me a question.");
-                else BrainEngine.speak("Back.", 'fr', () => BrainEngine.start());
+                if (!silent) BrainEngine.speak("Supra Eternity est en ligne. Posez-moi une question.");
+                else BrainEngine.speak("De retour.", 'fr', () => BrainEngine.start());
             },
 
             stopSystem() {
@@ -862,8 +867,8 @@
                 clearInterval(FeatureEngine.detectionInterval);
                 Config.data.isActive = false;
                 Config.save();
-                this.updateMain("SYSTEM STOPPED");
-                this.updateSub("STANDBY");
+                this.updateMain("SYSTÈME ARRÊTÉ");
+                this.updateSub("EN ATTENTE");
                 const c = document.getElementById('scopeCanvas');
                 c.getContext('2d').clearRect(0, 0, c.width, c.height);
                 // Reset buttons
