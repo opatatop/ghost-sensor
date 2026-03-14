@@ -3,15 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SUPRA ETERNITY ULTRA</title>
+    <title>SUPRA ETERNITY - EDITION FINALE</title>
     <style>
         :root {
-            --primary: #00ffff; /* Cyan */
-            --secondary: #bc13fe; /* Violet */
+            --primary: #00ffff;
+            --secondary: #bc13fe;
             --bg: #050510;
             --panel: #0a0a20;
             --text: #e0e0ff;
             --danger: #ff3333;
+            --active-btn: #fff;
         }
         * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
         body {
@@ -30,11 +31,9 @@
             background: none; border: 1px solid var(--secondary); color: var(--secondary);
             width: 35px; height: 35px; border-radius: 50%; cursor: pointer;
             display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
-            transition: 0.2s;
         }
         .icon-btn:active { background: var(--secondary); color: #fff; transform: scale(0.9); }
 
-        /* ZONE PRINCIPALE */
         main { flex: 1; position: relative; display: flex; flex-direction: column; overflow: hidden; }
         #visualizer { flex: 1; background: #000; position: relative; border-bottom: 1px solid #333; }
         canvas { width: 100%; height: 100%; display: block; }
@@ -51,18 +50,20 @@
         }
         #subText { font-size: 0.8rem; color: var(--secondary); letter-spacing: 2px; font-weight: bold; }
 
-        /* RACCOURCIS RAPIDES (GRID) */
-        #quickActions {
-            display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 10px; background: var(--panel);
+        /* NOUVELLE GRILLE DE BOUTONS */
+        #actionGrid {
+            display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; padding: 10px; background: var(--panel);
             border-bottom: 1px solid #333;
         }
-        .q-btn {
-            background: #1a1a1a; border: 1px solid #444; color: #fff;
-            padding: 12px 5px; border-radius: 6px; text-align: center; font-size: 0.8rem; cursor: pointer;
-            display: flex; flex-direction: column; align-items: center; gap: 5px;
+        .grid-btn {
+            background: #1a1a1a; border: 1px solid #444; color: #ccc;
+            padding: 10px 2px; border-radius: 4px; text-align: center; font-size: 0.7rem; cursor: pointer;
+            display: flex; flex-direction: column; align-items: center; gap: 5px; font-weight: bold;
         }
-        .q-btn:active { background: var(--primary); color: #000; border-color: var(--primary); }
-        .q-icon { font-size: 1.2rem; }
+        .grid-btn.active-state {
+            background: var(--secondary); color: #fff; border-color: #fff; box-shadow: 0 0 10px var(--secondary);
+        }
+        .grid-icon { font-size: 1.2rem; }
 
         /* CONTROLES */
         #controls {
@@ -96,8 +97,6 @@
         .setting-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
         label { color: #fff; font-size: 0.9rem; }
         input[type=range] { width: 50%; accent-color: var(--secondary); }
-        .theme-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 10px; }
-        .theme-btn { height: 40px; border-radius: 4px; border: 2px solid #fff; cursor: pointer; }
         .close-btn { float: right; color: var(--danger); cursor: pointer; font-size: 1.5rem; }
 
         /* TERMINAL */
@@ -107,15 +106,15 @@
         }
         .log-line { margin-bottom: 2px; border-left: 2px solid #555; padding-left: 5px; }
         .log-sys { color: #aaa; }
+        .log-rec { color: var(--danger); border-color: var(--danger); font-weight: bold; } /* Enregistrement */
         .log-ia { border-color: var(--secondary); color: #fff; background: #220022; }
-        .log-cmd { border-color: var(--primary); color: var(--primary); font-weight: bold; }
-        .log-err { border-color: var(--danger); color: var(--danger); }
+        .log-det { color: var(--primary); border-color: var(--primary); } /* Détection */
     </style>
 </head>
 <body>
 
 <header>
-    <h1>SUPRA <span style="font-size:0.6em; color:var(--secondary)">ETERNITY ULTRA</span></h1>
+    <h1>SUPRA <span style="font-size:0.6em; color:var(--secondary)">ETERNITY FINAL</span></h1>
     <div class="header-icons">
         <button class="icon-btn" onclick="App.toggleSettings()">⚙</button>
     </div>
@@ -126,51 +125,50 @@
         <canvas id="scopeCanvas"></canvas>
         <div id="displayOverlay">
             <div id="mainText">SYSTÈME PRÊT</div>
-            <div id="subText">ULTRA MODE</div>
+            <div id="subText">MODE RÉPONSE</div>
         </div>
     </div>
 </main>
 
-<!-- RACCOURCIS RAPIDES -->
-<div id="quickActions">
-    <div class="q-btn" onclick="ControlEngine.triggerIntent('android.media.action.IMAGE_CAPTURE')">
-        <span class="q-icon">📷</span><span>CAMÉRA</span>
+<!-- GRILLE D'ACTIONS -->
+<div id="actionGrid">
+    <div class="grid-btn" onclick="App.toggleSettings()">
+        <span class="grid-icon">⚙️</span><span>RÉGLAGES</span>
     </div>
-    <div class="q-btn" onclick="ControlEngine.triggerIntent('android.settings.WIFI_SETTINGS')">
-        <span class="q-icon">📶</span><span>WIFI</span>
+    <div class="grid-btn" id="btnSound" onclick="FeatureEngine.toggleMute()">
+        <span class="grid-icon">🔊</span><span>SON</span>
     </div>
-    <div class="q-btn" onclick="ControlEngine.triggerIntent('android.settings.FLASHLIGHT_SETTINGS')">
-        <span class="q-icon">🔦</span><span>LAMPE</span>
+    <div class="grid-btn" id="btnPower" onclick="FeatureEngine.togglePower()">
+        <span class="grid-icon">⚡</span><span>PUISSANCE</span>
     </div>
-    <div class="q-btn" onclick="ControlEngine.openMap()">
-        <span class="q-icon">🗺️</span><span>CARTE</span>
+    <div class="grid-btn" id="btnDetect" onclick="FeatureEngine.toggleDetection()">
+        <span class="grid-icon">📡</span><span>DÉTECTION</span>
+    </div>
+    <div class="grid-btn" id="btnNoise" onclick="FeatureEngine.toggleWhiteNoise()">
+        <span class="grid-icon">🌊</span><span>BRUIT BLANC</span>
     </div>
 </div>
 
 <div id="controls">
     <div class="control-row full">
-        <button class="active-mode" onclick="App.startVoiceOnlyMode()">🎤 ACTIVER SUPRA</button>
+        <button class="active-mode" onclick="App.startVoiceOnlyMode()">🎤 ACTIVER SUPRA (RÉPONSE)</button>
     </div>
     <div class="control-row">
-        <button onclick="App.startFullSystem()">⚡ MODE COMPLET</button>
+        <button onclick="App.startFullSystem()">⚡ MODE COMPLET (VISUEL)</button>
         <button class="danger" onclick="App.stopSystem()">⏹ ARRÊTER</button>
-    </div>
-    <div class="control-row full" style="font-size: 0.7rem; color:#666; text-align:center; border:1px solid #333; padding:5px;">
-        Voice: "Calcule 5 fois 5", "Ouvre les données", "Itinéraire vers Paris"
     </div>
 </div>
 
 <div id="terminal">
-    <div class="log-line log-sys">> Supra Eternity ULTRA chargé.</div>
-    <div class="log-line log-sys">> Modules : Calcul, Carte, Système, IA.</div>
+    <div class="log-line log-sys">> Supra Eternity Final initialisé.</div>
+    <div class="log-line log-sys">> Mode Réponse activé par défaut.</div>
 </div>
 
-<!-- MODAL DE RÉGLAGES -->
+<!-- MODAL RÉGLAGES -->
 <div id="settingsModal">
     <div class="modal-content">
         <span class="close-btn" onclick="App.toggleSettings()">×</span>
         <h2 style="color:var(--primary); margin-top:0;">PARAMÈTRES</h2>
-        
         <h3 style="color:#aaa; font-size:0.8rem;">VOIX</h3>
         <div class="setting-row">
             <label>Hauteur</label>
@@ -180,15 +178,11 @@
             <label>Vitesse</label>
             <input type="range" id="rate" min="0.5" max="2" step="0.1" value="1.1" oninput="Config.update('rate', this.value)">
         </div>
-
-        <h3 style="color:#aaa; font-size:0.8rem; margin-top:20px;">APPARENCE</h3>
-        <div class="theme-grid">
-            <div class="theme-btn" style="background:#00ffff" onclick="Config.setTheme('cyan')"></div>
-            <div class="theme-btn" style="background:#bc13fe" onclick="Config.setTheme('purple')"></div>
-            <div class="theme-btn" style="background:#ff3333" onclick="Config.setTheme('red')"></div>
-            <div class="theme-btn" style="background:#00ff00" onclick="Config.setTheme('green')"></div>
+        <h3 style="color:#aaa; font-size:0.8rem; margin-top:20px;">DÉTECTION</h3>
+        <div class="setting-row">
+            <label>Sensibilité</label>
+            <input type="range" id="sensitivity" min="10" max="100" step="1" value="50" oninput="Config.update('sensitivity', this.value)">
         </div>
-
         <button style="width:100%; margin-top:20px;" onclick="App.toggleSettings()">FERMER</button>
     </div>
 </div>
@@ -196,43 +190,33 @@
 <script>
 /**
  * =========================================================================
- * SUPRA ETERNITY ULTRA - VERSION ULTIME
+ * SUPRA ETERNITY FINAL - MODE RÉPONSE + MODULES
  * =========================================================================
  */
 
 // --- CONFIG ---
 const Config = {
-    data: { pitch: 0.6, rate: 1.1, volume: 1.0, theme: 'cyan', isActive: false },
-    themes: {
-        'cyan': { primary: '#00ffff', secondary: '#bc13fe' },
-        'purple': { primary: '#bc13fe', secondary: '#00ffff' },
-        'red': { primary: '#ff3333', secondary: '#ff9900' },
-        'green': { primary: '#00ff00', secondary: '#008800' }
-    },
+    data: { pitch: 0.6, rate: 1.1, volume: 1.0, sensitivity: 50, isActive: false },
     load() {
-        const saved = localStorage.getItem('supra_ultra_config');
+        const saved = localStorage.getItem('supra_final_config');
         if (saved) this.data = { ...this.data, ...JSON.parse(saved) };
-        this.applyTheme(); this.updateUI();
+        this.updateUI();
     },
-    save() { localStorage.setItem('supra_ultra_config', JSON.stringify(this.data)); },
+    save() { localStorage.setItem('supra_final_config', JSON.stringify(this.data)); },
     update(key, value) { this.data[key] = value; this.save(); },
-    setTheme(name) { this.data.theme = name; this.applyTheme(); this.save(); },
-    applyTheme() {
-        const t = this.themes[this.data.theme];
-        if (t) {
-            document.documentElement.style.setProperty('--primary', t.primary);
-            document.documentElement.style.setProperty('--secondary', t.secondary);
-        }
-    },
     updateUI() {
         document.getElementById('pitch').value = this.data.pitch;
         document.getElementById('rate').value = this.data.rate;
+        document.getElementById('sensitivity').value = this.data.sensitivity;
     }
 };
 
-// --- AUDIO ENGINE ---
+// --- AUDIO ENGINE (AVEC BRUIT BLANC) ---
 const AudioEngine = {
     ctx: null, stream: null, analyser: null, isInit: false,
+    // Bruit Blanc
+    noiseNode: null, noiseGain: null, noiseBuffer: null,
+    
     async init() {
         if (this.isInit) return true;
         try {
@@ -244,20 +228,52 @@ const AudioEngine = {
             this.analyser.fftSize = 256;
             this.ctx.createMediaStreamSource(this.stream).connect(this.analyser);
             this.isInit = true;
-            App.log("Audio OK.", 'sys');
             return true;
-        } catch (e) {
-            App.log("Erreur Micro: " + e.message, 'err');
-            return false;
-        }
+        } catch (e) { return false; }
     },
+
+    // Générateur de Bruit Blanc
+    initWhiteNoise() {
+        if (!this.ctx) return;
+        const bufferSize = 2 * this.ctx.sampleRate;
+        this.noiseBuffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+        const output = this.noiseBuffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+            output[i] = Math.random() * 2 - 1;
+        }
+        this.noiseNode = this.ctx.createBufferSource();
+        this.noiseNode.buffer = this.noiseBuffer;
+        this.noiseNode.loop = true;
+        this.noiseGain = this.ctx.createGain();
+        this.noiseGain.gain.value = 0.05; // Volume faible par défaut
+        this.noiseNode.connect(this.noiseGain);
+        this.noiseGain.connect(this.ctx.destination);
+        this.noiseNode.start(0);
+    },
+
+    toggleWhiteNoise(active) {
+        if (!this.ctx && active) { this.init().then(() => this.initWhiteNoise()); return; }
+        if (!this.noiseNode) this.initWhiteNoise();
+        if (this.noiseGain) this.noiseGain.gain.setTargetAtTime(active ? 0.1 : 0, this.ctx.currentTime, 0.1);
+    },
+
     getDataArray() {
         if (!this.analyser) return new Uint8Array(0);
         const arr = new Uint8Array(this.analyser.frequencyBinCount);
         this.analyser.getByteFrequencyData(arr);
         return arr;
     },
+    
+    getAverageVolume() {
+        if (!this.analyser) return 0;
+        const data = this.getDataArray();
+        let sum = 0;
+        for(let i=0; i<data.length; i++) sum += data[i];
+        return sum / data.length;
+    },
+
     destroy() {
+        if (this.noiseNode) { this.noiseNode.stop(); this.noiseNode = null; }
         if (this.stream) { this.stream.getTracks().forEach(t => t.stop()); this.stream = null; }
         if (this.ctx) { this.ctx.close(); this.ctx = null; }
         this.analyser = null; this.isInit = false;
@@ -266,7 +282,7 @@ const AudioEngine = {
 
 // --- VISUAL ENGINE ---
 const VisualEngine = {
-    canvas: null, ctx: null, animId: null, isRunning: false,
+    canvas: null, ctx: null, animId: null, isRunning: false, powerMode: false,
     init() {
         this.canvas = document.getElementById('scopeCanvas');
         this.ctx = this.canvas.getContext('2d');
@@ -285,14 +301,18 @@ const VisualEngine = {
         const w = this.canvas.width, h = this.canvas.height;
         this.ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
         this.ctx.fillRect(0, 0, w, h);
+        
         let data = AudioEngine.isInit ? AudioEngine.getDataArray() : new Uint8Array(128).map(() => Math.random() * 30);
-        const barW = (w / data.length) * 2.5;
+        const barW = (w / data.length) * (this.powerMode ? 3 : 2.5);
         let x = 0;
-        const primary = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim();
+        
         for (let i = 0; i < data.length; i++) {
-            const barH = (data[i] / 255) * h;
-            this.ctx.fillStyle = primary;
-            this.ctx.shadowBlur = 10; this.ctx.shadowColor = primary;
+            let barH = (data[i] / 255) * h;
+            if (this.powerMode) barH *= 1.2; // Mode Puissance
+            
+            this.ctx.fillStyle = this.powerMode ? '#ff0055' : '#00ffff';
+            this.ctx.shadowBlur = this.powerMode ? 20 : 10;
+            this.ctx.shadowColor = this.ctx.fillStyle;
             this.ctx.fillRect(x, h - barH, barW, barH);
             this.ctx.shadowBlur = 0;
             x += barW + 1;
@@ -301,98 +321,82 @@ const VisualEngine = {
     }
 };
 
-// --- MATH ENGINE (NOUVEAU) ---
-const MathEngine = {
-    calculate(text) {
-        // Nettoyer le texte pour ne garder que les chiffres et opérateurs
-        const cleanText = text.replace(/[^0-9\+\-\*\/\.\x]/g, '');
-        if (!cleanText.match(/[\d]+[\+\-\*\/][\d]+/)) return null;
+// --- FEATURE ENGINE (Gestion des boutons) ---
+const FeatureEngine = {
+    mute: false,
+    detection: false,
+    detectionInterval: null,
+
+    toggleMute() {
+        this.mute = !this.mute;
+        const btn = document.getElementById('btnSound');
+        if(this.mute) {
+            btn.classList.add('active-state');
+            BrainEngine.synthesis.cancel();
+            App.log("Son coupé.", 'sys');
+        } else {
+            btn.classList.remove('active-state');
+            App.log("Son réactivé.", 'sys');
+        }
+    },
+
+    togglePower() {
+        VisualEngine.powerMode = !VisualEngine.powerMode;
+        const btn = document.getElementById('btnPower');
+        btn.classList.toggle('active-state');
+        App.log(VisualEngine.powerMode ? "Mode PUISSANCE activé." : "Mode Normal.", 'sys');
+        BrainEngine.speak(VisualEngine.powerMode ? "Mode puissance activé." : "Mode puissance désactivé.");
+    },
+
+    toggleDetection() {
+        this.detection = !this.detection;
+        const btn = document.getElementById('btnDetect');
+        btn.classList.toggle('active-state');
         
-        try {
-            // Utilisation de Function comme eval plus sûr pour cette contexte simple
-            const result = new Function('return ' + cleanText)();
-            return parseFloat(result.toFixed(2));
-        } catch (e) { return null; }
+        if (this.detection) {
+            App.log("Détection spectrale activée.", 'sys');
+            BrainEngine.speak("Module de détection activé.");
+            this.startDetectionLoop();
+        } else {
+            App.log("Détection désactivée.", 'sys');
+            clearInterval(this.detectionInterval);
+        }
+    },
+
+    startDetectionLoop() {
+        if (this.detectionInterval) clearInterval(this.detectionInterval);
+        this.detectionInterval = setInterval(() => {
+            if (!this.detection || !App.isRunning) return;
+            
+            // Assurer que l'audio tourne pour la détection
+            if (!AudioEngine.isInit) AudioEngine.init().then(()=>{});
+
+            const vol = AudioEngine.getAverageVolume();
+            // Sensibilité : Plus la valeur est haute, moins c'est sensible
+            // Inversé pour le slider (100 slider = très sensible = seuil bas)
+            const threshold = 110 - Config.data.sensitivity;
+
+            if (vol > threshold) {
+                const phrases = ["IMPULSION DÉTECTÉE", "PRÉSENCE CONFIRMÉE", "ANOMALIE SONORE", "SIGNAL REÇU"];
+                const p = phrases[Math.floor(Math.random() * phrases.length)];
+                App.log(p, 'det');
+                // Ne pas parler à chaque fois pour éviter la boucle infinie avec le bruit blanc
+                if (Math.random() > 0.7) { 
+                   // Petit bip sonore au lieu de parler pour éviter de s'entendre
+                }
+            }
+        }, 1000);
+    },
+
+    toggleWhiteNoise() {
+        const isActive = document.getElementById('btnNoise').classList.toggle('active-state');
+        AudioEngine.toggleWhiteNoise(isActive);
+        App.log(isActive ? "Bruit Blanc activé." : "Bruit Blanc coupé.", 'sys');
+        BrainEngine.speak(isActive ? "Bruit blanc activé." : "Bruit blanc coupé.");
     }
 };
 
-// --- CONTROL ENGINE (ÉTENDU) ---
-const ControlEngine = {
-    // Mapping des commandes vocales vers Intents ou URLs
-    commands: {
-        'mise à jour': 'android.settings.DEVICE_INFO_SETTINGS',
-        'réglage|paramètre': 'android.settings.SETTINGS',
-        'wi-fi|wifi': 'android.settings.WIFI_SETTINGS',
-        'bluetooth': 'android.settings.BLUETOOTH_SETTINGS',
-        'donnée|data': 'android.settings.DATA_ROAMING_SETTINGS',
-        'son|audio': 'android.settings.SOUND_SETTINGS',
-        'sécurité': 'android.settings.SECURITY_SETTINGS',
-        'développeur': 'android.settings.APPLICATION_DEVELOPMENT_SETTINGS',
-        'caméra|photo': 'android.media.action.IMAGE_CAPTURE',
-        'vidéo': 'android.media.action.VIDEO_CAPTURE',
-        'lampe|torche|flash': 'android.settings.FLASHLIGHT_SETTINGS'
-    },
-    
-    execute(text) {
-        const lower = text.toLowerCase();
-        let intent = null, msg = "", type = "intent", extra = "";
-
-        // 1. Itinéraire (Carte)
-        if (lower.includes('itinéraire') || lower.includes('comment aller') || lower.includes('carte')) {
-            // Extraire la destination (naïf)
-            let dest = text.replace(/itinéraire vers|comment aller|carte de|maps|ouvre la carte/gi, '').trim();
-            if (dest.length > 2) {
-                intent = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(dest)}`;
-                type = "window"; msg = "Recherche de " + dest + " sur la carte.";
-            }
-        }
-
-        // 2. Commandes Système (Boucle sur le mapping)
-        if (!intent) {
-            for (const [key, value] of Object.entries(this.commands)) {
-                if (lower.match(new RegExp(key))) {
-                    intent = "intent://#Intent;action=" + value + ";end";
-                    msg = "Ouverture " + key.split('|')[0] + ".";
-                    break;
-                }
-            }
-        }
-        
-        // 3. Applications Web
-        if (!intent && lower.includes('youtube')) { intent = "https://www.youtube.com"; type="window"; msg="Ouverture YouTube."; }
-        if (!intent && lower.includes('google')) { intent = "https://www.google.com"; type="window"; msg="Ouverture Google."; }
-
-        if (intent) {
-            App.log("SYSTÈME: " + intent, 'cmd');
-            BrainEngine.speak(msg, false); // Parle sans reprendre l'écoute tout de suite
-            setTimeout(() => {
-                if (type === 'intent') {
-                    Config.data.isActive = true; Config.save();
-                    window.location.href = intent;
-                } else {
-                    window.open(intent, '_blank');
-                    BrainEngine.speak("Ouvert. J'écoute.", true);
-                }
-            }, 1500);
-            return true;
-        }
-        return false;
-    },
-
-    // Pour les boutons rapides (ne parle pas, juste ouvre)
-    triggerIntent(action) {
-        if (navigator.vibrate) navigator.vibrate(50);
-        const url = "intent://#Intent;action=" + action + ";end";
-        window.location.href = url;
-    },
-
-    openMap() {
-        if (navigator.vibrate) navigator.vibrate(50);
-        window.open("https://www.google.com/maps", '_blank');
-    }
-};
-
-// --- BRAIN ENGINE (AVEC CALCUL) ---
+// --- BRAIN ENGINE (LOGIQUE DE RÉPONSE) ---
 const BrainEngine = {
     recognition: null, synthesis: window.speechSynthesis, voice: null, isListening: false,
 
@@ -434,52 +438,53 @@ const BrainEngine = {
         if (this.recognition) try { this.recognition.stop(); } catch(e) {}
         App.updateSub("VEILLE");
     },
-    speak(text, lang='fr', onEnd) {
+    speak(text) {
+        if (FeatureEngine.mute) { App.log("[MUET] " + text, 'sys'); return; }
         this.synthesis.cancel();
         if (!text) return;
-        if(lang !== 'fr') this.stop();
-
         const u = new SpeechSynthesisUtterance(text);
-        u.lang = lang === 'fr' ? 'fr-FR' : lang + '-' + lang.toUpperCase();
+        u.lang = 'fr-FR';
         u.pitch = Config.data.pitch;
         u.rate = Config.data.rate;
-        u.volume = Config.data.volume;
-        
-        const voices = this.synthesis.getVoices();
-        let v = voices.find(v => v.lang.startsWith(lang));
-        if(!v) v = this.voice; if(v) u.voice = v;
-
-        u.onstart = () => { App.updateMain("PARLE..."); App.log("IA: " + text, 'ia'); };
-        u.onend = () => { if(onEnd) onEnd(); else if(this.isListening && lang==='fr') App.updateMain("ÉCOUTE..."); };
+        if (this.voice) u.voice = this.voice;
+        u.onstart = () => { App.updateMain("PARLE..."); };
+        u.onend = () => { if(this.isListening) App.updateMain("ÉCOUTE..."); };
         this.synthesis.speak(u);
     },
     process(text) {
         App.updateMain(text.toUpperCase());
         const lower = text.toLowerCase();
 
-        // 1. STOP / RESTART
+        // 1. STOP
         if (lower === 'stop' || lower === 'arrête') { this.stop(); this.speak("Pause."); return; }
         if (lower.includes('écoute')) { if(!this.isListening){ this.start(); this.speak("J'écoute."); } return; }
 
-        // 2. CALCUL (NOUVEAU)
-        if (lower.includes('combien font') || lower.includes('calcule') || lower.includes('égal') || lower.match(/[\d]+[\+\-\*\/][\d]+/)) {
-            const result = MathEngine.calculate(text);
-            if (result !== null) {
-                this.speak("Le résultat est " + result, 'fr');
-                return;
-            }
+        // 2. COMMANDES SPÉCIFIQUES
+        if (lower.includes('bruit blanc')) { FeatureEngine.toggleWhiteNoise(); return; }
+        if (lower.includes('détection')) { FeatureEngine.toggleDetection(); return; }
+        if (lower.includes('puissance')) { FeatureEngine.togglePower(); return; }
+
+        // 3. LOGIQUE DE RÉPONSE INTELLIGENTE (Au lieu de répéter)
+        let response = null;
+        
+        if (lower.includes('qui es-tu')) response = "Je suis Supra Eternity, votre assistant système.";
+        else if (lower.includes('bonjour') || lower.includes('salut')) response = "Bonjour. Comment puis-je vous aider ?";
+        else if (lower.includes('ça va') || lower.includes('comment vas-tu')) response = "Système opérationnel. Et vous ?";
+        else if (lower.includes('heure')) response = `Il est ${new Date().getHours()} heures ${new Date().getMinutes()}.`;
+        else if (lower.includes('merci')) response = "Je vous en prie.";
+        else if (lower.includes('test')) response = "Système en ligne. Micro actif.";
+        else if (lower.includes('ok') || lower.includes('d\'accord')) response = "Commande acceptée.";
+
+        // 4. CAS PAR DÉFAUT : Enregistrement / Réponse générique
+        if (!response) {
+            // Effet "Enregistrement automatique des mots"
+            App.log("[REC] " + text, 'rec');
+            // Réponse générique pour montrer qu'il a compris sans être un perroquet
+            const generics = ["J'ai enregistré : " + text, "Message reçu.", "Bien noté.", "C'est noté."];
+            response = generics[Math.floor(Math.random() * generics.length)];
         }
 
-        // 3. CONTRÔLE SYSTÈME
-        if (ControlEngine.execute(text)) return;
-
-        // 4. BASE
-        let rep = null;
-        if (lower.includes('qui es-tu')) rep = "Je suis Supra Eternity Ultra, votre assistant de contrôle total.";
-        else if (lower.includes('heure')) rep = `Il est ${new Date().getHours()} heures ${new Date().getMinutes()}.`;
-        
-        if (rep) { this.speak(rep, 'fr'); } 
-        else if (this.isListening) { this.speak(text, 'fr'); }
+        this.speak(response);
     }
 };
 
@@ -490,7 +495,7 @@ const App = {
         Config.load();
         VisualEngine.init();
         BrainEngine.init();
-        this.log("Supra Eternity ULTRA prêt.", 'sys');
+        this.log("Supra Eternity Final prêt.", 'sys');
         if (Config.data.isActive) this.startVoiceOnlyMode(true);
     },
     log(msg, type='sys') {
@@ -516,7 +521,7 @@ const App = {
         this.isRunning = true;
         Config.data.isActive = true; Config.save();
         this.log("Système Complet Actif", 'sys');
-        BrainEngine.speak("Système complet en ligne.");
+        BrainEngine.speak("Mode complet activé.");
     },
     async startVoiceOnlyMode(silent = false) {
         this.stopSystem();
@@ -525,7 +530,7 @@ const App = {
         BrainEngine.start();
         this.isRunning = true;
         Config.data.isActive = true; Config.save();
-        if (!silent) BrainEngine.speak("Supra Eternity Ultra activé.");
+        if (!silent) BrainEngine.speak("Supra Eternity en ligne.");
         else BrainEngine.speak("De retour.", 'fr', () => BrainEngine.start());
     },
     stopSystem() {
@@ -534,11 +539,17 @@ const App = {
         VisualEngine.stop();
         BrainEngine.stop();
         BrainEngine.synthesis.cancel();
+        clearInterval(FeatureEngine.detectionInterval);
         Config.data.isActive = false; Config.save();
         this.updateMain("SYSTÈME ARRÊTÉ");
         this.updateSub("EN ATTENTE");
         const c = document.getElementById('scopeCanvas');
         c.getContext('2d').clearRect(0,0,c.width,c.height);
+        // Reset Boutons
+        document.getElementById('btnSound').classList.remove('active-state');
+        document.getElementById('btnPower').classList.remove('active-state');
+        document.getElementById('btnDetect').classList.remove('active-state');
+        document.getElementById('btnNoise').classList.remove('active-state');
     }
 };
 
