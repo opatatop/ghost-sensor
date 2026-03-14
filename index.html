@@ -305,6 +305,9 @@
         <div class="grid-btn" id="btnNoise" onclick="FeatureEngine.toggleWhiteNoise()">
             <span class="grid-icon">🔊</span><span>BRUIT BLANC</span>
         </div>
+        <div class="grid-btn" id="btnGhost" onclick="FeatureEngine.toggleGhostDetection()">
+            <span class="grid-icon">👻</span><span>FANTÔME</span>
+        </div>
     </div>
 
     <div id="controls">
@@ -344,6 +347,11 @@
                 <input type="range" id="sensitivity" min="1" max="100" step="1" value="80" oninput="Config.update('sensitivity', this.value)">
             </div>
             <div style="font-size:0.7rem; color:#888; margin-top:5px;">Plus élevé = Détecte les chuchotements.</div>
+            <div class="setting-row">
+                <label>Sensibilité Fantôme</label>
+                <input type="range" id="ghostSensitivity" min="1" max="100" step="1" value="50" oninput="Config.update('ghostSensitivity', this.value)">
+            </div>
+            <div style="font-size:0.7rem; color:#888; margin-top:5px;">Plus élevé = Détecte les esprits fantômes.</div>
             <button style="width:100%; margin-top:20px;" onclick="App.toggleSettings()">FERMER</button>
         </div>
     </div>
@@ -355,7 +363,7 @@
 
         // --- CONFIGURATION ---
         const Config = {
-            data: { pitch: 1.0, rate: 1.0, volume: 1.0, sensitivity: 80, isActive: false },
+            data: { pitch: 1.0, rate: 1.0, volume: 1.0, sensitivity: 80, ghostSensitivity: 50, isActive: false },
             load() {
                 const saved = localStorage.getItem('supra_ultimate_config');
                 if (saved) this.data = { ...this.data, ...JSON.parse(saved) };
@@ -372,6 +380,7 @@
                 document.getElementById('pitch').value = this.data.pitch;
                 document.getElementById('rate').value = this.data.rate;
                 document.getElementById('sensitivity').value = this.data.sensitivity;
+                document.getElementById('ghostSensitivity').value = this.data.ghostSensitivity;
             }
         };
 
@@ -455,6 +464,22 @@
                 return sum / data.length;
             },
 
+            detectGhostFrequencies() {
+                if (!this.analyser) return 0;
+                const data = this.getDataArray();
+                // Analyser les fréquences spécifiques associées aux esprits fantômes
+                // Par exemple, les fréquences basses ou des motifs spécifiques
+                let ghostActivity = 0;
+                for (let i = 0; i < data.length; i++) {
+                    // Logique de détection des fréquences fantômes
+                    // Par exemple, les fréquences entre 20Hz et 200Hz
+                    if (i < 20 && data[i] > 50) {
+                        ghostActivity += data[i];
+                    }
+                }
+                return ghostActivity;
+            },
+
             destroy() {
                 if (this.noiseNode) {
                     this.noiseNode.stop();
@@ -536,7 +561,9 @@
         const FeatureEngine = {
             mute: false,
             detection: false,
+            ghostDetection: false,
             detectionInterval: null,
+            ghostDetectionInterval: null,
 
             toggleMute() {
                 this.mute = !this.mute;
@@ -566,6 +593,19 @@
                 }
             },
 
+            toggleGhostDetection() {
+                this.ghostDetection = !this.ghostDetection;
+                const btn = document.getElementById('btnGhost');
+                btn.classList.toggle('active-state');
+                if (this.ghostDetection) {
+                    App.log("Ghost Detection Active.", 'sys');
+                    BrainEngine.speak("Détection de fantômes activée.");
+                    this.startGhostDetectionLoop();
+                } else {
+                    clearInterval(this.ghostDetectionInterval);
+                }
+            },
+
             startDetectionLoop() {
                 if (this.detectionInterval) clearInterval(this.detectionInterval);
                 this.detectionInterval = setInterval(() => {
@@ -583,6 +623,26 @@
                         App.log(p, 'det');
                     }
                 }, 500); // Faster checking (500ms)
+            },
+
+            startGhostDetectionLoop() {
+                if (this.ghostDetectionInterval) clearInterval(this.ghostDetectionInterval);
+                this.ghostDetectionInterval = setInterval(() => {
+                    if (!this.ghostDetection || !App.isRunning) return;
+                    if (!AudioEngine.isInit) AudioEngine.init().then(() => {});
+                    const ghostActivity = AudioEngine.detectGhostFrequencies();
+
+                    // Sensitivity: 100 = very sensitive (low threshold), 1 = less sensitive
+                    // Inverted logic for user experience
+                    const threshold = 100 - Config.data.ghostSensitivity;
+
+                    if (ghostActivity > threshold) {
+                        const phrases = ["ACTIVITÉ FANTÔME DÉTECTÉE", "PRÉSENCE SURNATURELLE", "ESPRIT DÉTECTÉ"];
+                        const p = phrases[Math.floor(Math.random() * phrases.length)];
+                        App.log(p, 'det');
+                        BrainEngine.speak(p);
+                    }
+                }, 1000); // Checking every second
             },
 
             toggleWhiteNoise() {
@@ -746,6 +806,16 @@
                     response = "Je suis Supra Eternity, une intelligence artificielle avancée conçue pour le contrôle et l'assistance.";
                 }
 
+                // Ghost detection
+                if (lower.includes('fantôme') || lower.includes('esprit') || lower.includes('surnaturel')) {
+                    intent = "GHOST";
+                    if (FeatureEngine.ghostDetection) {
+                        response = "La détection de fantômes est activée. Je surveille les activités surnaturelles.";
+                    } else {
+                        response = "La détection de fantômes est désactivée. Souhaitez-vous l'activer ?";
+                    }
+                }
+
                 // --- DEFAULT AI RESPONSE (if no pattern matched) ---
                 if (!response) {
                     // Contextual intelligence simulation
@@ -865,6 +935,7 @@
                 BrainEngine.stop();
                 BrainEngine.synthesis.cancel();
                 clearInterval(FeatureEngine.detectionInterval);
+                clearInterval(FeatureEngine.ghostDetectionInterval);
                 Config.data.isActive = false;
                 Config.save();
                 this.updateMain("SYSTÈME ARRÊTÉ");
