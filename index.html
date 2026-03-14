@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SUPRA ETERNITY - ULTIMATE AI</title>
+    <title>SUPRA ETERNITY - IA CONNECTED</title>
     <style>
         :root {
             --primary: #00ffff;
@@ -12,7 +12,7 @@
             --panel: #0a0a20;
             --text: #e0e0ff;
             --danger: #ff3333;
-            --active-btn: #fff;
+            --success: #00ff66;
         }
         * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
         body {
@@ -61,10 +61,10 @@
             padding: 10px 2px; border-radius: 4px; text-align: center; font-size: 0.7rem; cursor: pointer;
             display: flex; flex-direction: column; align-items: center; gap: 5px; font-weight: bold;
         }
-        .grid-btn.active-state {
+        /* État actif pour les modules (Puissance, Détection...) */
+        .grid-btn.module-active {
             background: var(--secondary); color: #fff; border-color: #fff; box-shadow: 0 0 10px var(--secondary);
         }
-        .grid-icon { font-size: 1.2rem; }
 
         /* CONTROLES */
         #controls {
@@ -81,7 +81,13 @@
             text-transform: uppercase; transition: 0.2s; font-family: inherit; border-radius: 4px;
         }
         button:active { transform: scale(0.98); }
-        button.active-mode { background: var(--primary); color: #000; box-shadow: 0 0 15px var(--primary); }
+        
+        /* Style spécial pour le bouton principal quand SUPRA est actif */
+        button.main-active {
+            background: var(--success); color: #000; border-color: var(--success); 
+            box-shadow: 0 0 15px var(--success); font-weight: 900;
+        }
+
         button.danger { border-color: var(--danger); color: var(--danger); }
         button.danger:active { background: var(--danger); color: #fff; }
 
@@ -109,12 +115,13 @@
         .log-sys { color: #aaa; }
         .log-ai { border-color: var(--secondary); color: #fff; background: #220022; }
         .log-det { color: var(--primary); border-color: var(--primary); }
+        .log-err { color: var(--danger); border-color: var(--danger); }
     </style>
 </head>
 <body>
 
 <header>
-    <h1>SUPRA <span style="font-size:0.6em; color:var(--secondary)">ETERNITY ULTIMATE AI</span></h1>
+    <h1>SUPRA <span style="font-size:0.6em; color:var(--secondary)">ETERNITY AI</span></h1>
     <div class="header-icons">
         <button class="icon-btn" onclick="App.toggleSettings()">⚙</button>
     </div>
@@ -125,7 +132,7 @@
         <canvas id="scopeCanvas"></canvas>
         <div id="displayOverlay">
             <div id="mainText">SYSTÈME PRÊT</div>
-            <div id="subText">IA RÉELLE CHARGÉE</div>
+            <div id="subText">IA CONNECTÉE</div>
         </div>
     </div>
 </main>
@@ -149,21 +156,22 @@
 </div>
 
 <div id="controls">
+    <!-- BOUTON PRINCIPAL : Change de style quand actif -->
     <div class="control-row full">
-        <button class="active-mode" onclick="App.startVoiceOnlyMode()">🎤 ACTIVER SUPRA (IA RÉELLE)</button>
+        <button id="mainToggleBtn" class="active-mode" onclick="App.toggleSystem()">🎤 ACTIVER SUPRA</button>
     </div>
     <div class="control-row">
         <button onclick="App.startFullSystem()">⚡ MODE COMPLET</button>
-        <button class="danger" onclick="App.stopSystem()">⏹ ARRÊTER</button>
+        <button class="danger" onclick="App.stopSystem()">⏹ ARRÊTER TOUT</button>
     </div>
     <div style="font-size: 0.7rem; color:#666; text-align:center; margin-top:5px;">
-        Micro Amplifié & Cerveau IA V2 activés.
+        Modules indépendants : Active/Désactive sans couper Supra.
     </div>
 </div>
 
 <div id="terminal">
-    <div class="log-line log-sys">> Supra Eternity Ultimate initialisé.</div>
-    <div class="log-line log-sys">> Auto-Gain Activé (Ultra Sensibilité).</div>
+    <div class="log-line log-sys">> Supra Eternity AI Connecté initialisé.</div>
+    <div class="log-line log-sys">> Prêt à analyser vos questions.</div>
 </div>
 
 <div id="settingsModal">
@@ -181,10 +189,10 @@
         </div>
         <h3 style="color:#aaa; font-size:0.8rem; margin-top:20px;">DÉTECTION</h3>
         <div class="setting-row">
-            <label>Sensibilité Micro</label>
+            <label>Sensibilité</label>
             <input type="range" id="sensitivity" min="1" max="100" step="1" value="80" oninput="Config.update('sensitivity', this.value)">
         </div>
-        <div style="font-size:0.7rem; color:#888; margin-top:5px;">Plus élevé = Détecte les chuchotements.</div>
+        <div style="font-size:0.7rem; color:#888; margin-top:5px;">Plus élevé = Capte les chuchotements.</div>
         <button style="width:100%; margin-top:20px;" onclick="App.toggleSettings()">FERMER</button>
     </div>
 </div>
@@ -192,19 +200,18 @@
 <script>
 /**
  * =========================================================================
- * SUPRA ETERNITY ULTIMATE - IA RÉELLE & ULTRA SENSIBILITÉ
+ * SUPRA ETERNITY - IA CONNECTÉE (MODULES INDÉPENDANTS)
  * =========================================================================
  */
 
-// --- CONFIG ---
 const Config = {
     data: { pitch: 0.6, rate: 1.1, volume: 1.0, sensitivity: 80, isActive: false },
     load() {
-        const saved = localStorage.getItem('supra_ultimate_config');
+        const saved = localStorage.getItem('supra_connected_config');
         if (saved) this.data = { ...this.data, ...JSON.parse(saved) };
         this.updateUI();
     },
-    save() { localStorage.setItem('supra_ultimate_config', JSON.stringify(this.data)); },
+    save() { localStorage.setItem('supra_connected_config', JSON.stringify(this.data)); },
     update(key, value) { this.data[key] = value; this.save(); },
     updateUI() {
         document.getElementById('pitch').value = this.data.pitch;
@@ -213,7 +220,6 @@ const Config = {
     }
 };
 
-// --- AUDIO ENGINE (ULTRA SENSIBLE) ---
 const AudioEngine = {
     ctx: null, stream: null, analyser: null, isInit: false,
     noiseNode: null, noiseGain: null, noiseBuffer: null,
@@ -224,28 +230,17 @@ const AudioEngine = {
             const AudioContext = window.AudioContext || window.webkitAudioContext;
             this.ctx = new AudioContext();
             if (this.ctx.state === 'suspended') await this.ctx.resume();
-            
-            // --- CLEF DE LA SENSIBILITÉ ---
             this.stream = await navigator.mediaDevices.getUserMedia({ 
-                audio: { 
-                    echoCancellation: false, 
-                    noiseSuppression: false, 
-                    autoGainControl: true  // <--- AMPLIFIE LES SONS FAIBLES (TRUE)
-                } 
+                audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: true } 
             });
-            
             this.analyser = this.ctx.createAnalyser();
             this.analyser.fftSize = 256;
             this.analyser.smoothingTimeConstant = 0.8;
-            
             this.ctx.createMediaStreamSource(this.stream).connect(this.analyser);
             this.isInit = true;
-            App.log("Audio Ultra-Sensible activé (Auto-Gain ON).", 'sys');
+            App.log("Audio connecté.", 'sys');
             return true;
-        } catch (e) { 
-            App.log("Erreur Micro: " + e.message, 'sys'); 
-            return false; 
-        }
+        } catch (e) { App.log("Erreur Micro: " + e.message, 'err'); return false; }
     },
 
     initWhiteNoise() {
@@ -276,7 +271,6 @@ const AudioEngine = {
         this.analyser.getByteFrequencyData(arr);
         return arr;
     },
-    
     getAverageVolume() {
         if (!this.analyser) return 0;
         const data = this.getDataArray();
@@ -284,7 +278,6 @@ const AudioEngine = {
         for(let i=0; i<data.length; i++) sum += data[i];
         return sum / data.length;
     },
-
     destroy() {
         if (this.noiseNode) { this.noiseNode.stop(); this.noiseNode = null; }
         if (this.stream) { this.stream.getTracks().forEach(t => t.stop()); this.stream = null; }
@@ -293,7 +286,6 @@ const AudioEngine = {
     }
 };
 
-// --- VISUAL ENGINE ---
 const VisualEngine = {
     canvas: null, ctx: null, animId: null, isRunning: false, powerMode: false,
     init() {
@@ -334,34 +326,39 @@ const VisualEngine = {
     }
 };
 
-// --- FEATURE ENGINE ---
+// --- FEATURE ENGINE (MODULES INDÉPENDANTS) ---
 const FeatureEngine = {
     mute: false, detection: false, detectionInterval: null,
 
     toggleMute() {
         this.mute = !this.mute;
         const btn = document.getElementById('btnSound');
-        btn.classList.toggle('active-state');
+        btn.classList.toggle('module-active');
         App.log(this.mute ? "Son coupé." : "Son réactivé.", 'sys');
     },
 
     togglePower() {
+        // NE PAS STOPPER LE SYSTÈME, JUSTE CHANGER LE MODE VISUEL
         VisualEngine.powerMode = !VisualEngine.powerMode;
         const btn = document.getElementById('btnPower');
-        btn.classList.toggle('active-state');
+        btn.classList.toggle('module-active');
+        
         App.log(VisualEngine.powerMode ? "Mode PUISSANCE activé." : "Mode Normal.", 'sys');
+        // On parle sans couper l'écoute
         BrainEngine.speak(VisualEngine.powerMode ? "Mode puissance activé." : "Mode puissance désactivé.");
     },
 
     toggleDetection() {
         this.detection = !this.detection;
         const btn = document.getElementById('btnDetect');
-        btn.classList.toggle('active-state');
+        btn.classList.toggle('module-active');
+        
         if (this.detection) {
             App.log("Détection spectrale activée.", 'sys');
             BrainEngine.speak("Détection activée.");
             this.startDetectionLoop();
         } else {
+            App.log("Détection désactivée.", 'sys');
             clearInterval(this.detectionInterval);
         }
     },
@@ -372,30 +369,26 @@ const FeatureEngine = {
             if (!this.detection || !App.isRunning) return;
             if (!AudioEngine.isInit) AudioEngine.init().then(()=>{});
             const vol = AudioEngine.getAverageVolume();
-            
-            // Sensibilité : 100 = très sensible (seuil bas), 1 = peu sensible
-            // Inversion logique pour l'utilisateur
             const threshold = 110 - Config.data.sensitivity;
-
             if (vol > threshold) {
                 const phrases = ["SIGNAL DÉTECTÉ", "ACTIVITÉ", "PIC SONORE"];
                 const p = phrases[Math.floor(Math.random() * phrases.length)];
                 App.log(p, 'det');
             }
-        }, 500); // Vérification plus rapide (500ms)
+        }, 500);
     },
 
     toggleWhiteNoise() {
-        const isActive = document.getElementById('btnNoise').classList.toggle('active-state');
+        const isActive = document.getElementById('btnNoise').classList.toggle('module-active');
         AudioEngine.toggleWhiteNoise(isActive);
         BrainEngine.speak(isActive ? "Bruit blanc activé." : "Bruit blanc coupé.");
     }
 };
 
-// --- BRAIN ENGINE V2 (IA RÉELLE SIMULÉE + WEB) ---
+// --- BRAIN ENGINE (IA RÉELLE) ---
 const BrainEngine = {
     recognition: null, synthesis: window.speechSynthesis, voice: null, isListening: false,
-    lastTopic: "", // Mémoire contextuelle
+    lastTopic: "", 
 
     init() {
         const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -410,12 +403,13 @@ const BrainEngine = {
             this.process(text);
         };
         this.recognition.onend = () => {
+            // Redémarrage automatique SEULEMENT si Supra est censé être actif
             if (this.isListening && Config.data.isActive) {
                 setTimeout(() => { if(this.isListening) try{this.recognition.start()}catch(e){} }, 600);
             }
         };
         this.recognition.onerror = (e) => {
-            if (e.error === 'not-allowed') { App.log("Micro refusé", 'sys'); App.stopSystem(); }
+            if (e.error === 'not-allowed') { App.log("Micro refusé", 'err'); App.stopSystem(); }
         };
         this.loadVoice();
         window.speechSynthesis.onvoiceschanged = () => this.loadVoice();
@@ -449,91 +443,67 @@ const BrainEngine = {
         this.synthesis.speak(u);
     },
 
-    // --- CŒUR DE L'IA ---
     async process(text) {
         App.updateMain(text.toUpperCase());
         const lower = text.toLowerCase();
 
-        // 1. COMMANDES SYSTÈME (Priorité Absolue)
+        // 1. COMMANDES SYSTÈME
         if (lower === 'stop' || lower === 'arrête') { this.stop(); this.speak("Pause."); return; }
         if (lower.includes('écoute')) { if(!this.isListening){ this.start(); this.speak("Je vous écoute."); } return; }
 
-        // 2. LOGIQUE IA : ANALYSE D'INTENTION
-        let intent = "UNKNOWN";
-        let response = null;
-
-        // Détection de Questions (Qui, Quoi, Où, Comment, C'est quoi)
-        if (lower.match(/^(qui|quoi|où|comment|c'est quoi|qu'est-ce que|pourquoi|défini)/)) {
-            intent = "QUESTION";
-            // Utilisation de la vraie connaissance (Wikipedia)
-            this.stopListening(); // Pause pour traiter
-            App.log("IA Recherche connaissance...", 'ai');
-            this.speak("Laisse-moi réfléchir...", 'fr', async () => {
+        // 2. IA RÉELLE : DÉTECTION DE QUESTION
+        // Mots clés déclencheurs de recherche IA
+        if (lower.match(/^(qui|quoi|où|comment|c'est quoi|qu'est-ce que|pourquoi|défini|explique|cherche|dis moi sur|c'est qui)/)) {
+            this.stopListening(); // Pause micro pour traiter
+            App.log("Requête IA détectée. Interrogation du moteur...", 'ai');
+            this.speak("Laisse-moi interroger le moteur IA...", 'fr', async () => {
                 const info = await this.fetchKnowledge(text);
                 if (info) {
                     response = info;
-                    this.lastTopic = text; // Mémorise le sujet
+                    this.lastTopic = text;
                 } else {
-                    response = "Je ne trouve pas d'information précise à ce sujet dans ma base de données.";
+                    response = "Le moteur IA n'a pas trouvé d'information précise.";
                 }
                 this.speak(response);
-                this.startListening(); // Reprise
+                this.startListening(); // Reprise micro
             });
             return;
         }
 
-        // Détection de Calculs
+        // 3. AUTRES LOGIQUES (Calculs, Salutations...)
+        let response = null;
         if (lower.match(/[\d]+[\+\-\*\/][\d]+/) || lower.includes('combien font')) {
-            intent = "CALCUL";
             const result = this.calculate(text);
             response = result !== null ? `Le résultat est ${result}.` : "Calcul impossible.";
         }
-
-        // Détection de Salutations
-        if (lower.match(/^(salut|bonjour|bonsoir|coucou|hello|hey)/)) {
-            intent = "GREETING";
-            const greetings = ["Bonjour. Je suis prêt.", "Salut. Que puis-je faire ?", "Bonsoir. Système opérationnel.", "Coucou. Comment puis-je aider ?"];
+        else if (lower.match(/^(salut|bonjour|bonsoir|coucou|hello|hey)/)) {
+            const greetings = ["Bonjour. Je suis prêt.", "Salut. Que puis-je faire ?", "Système opérationnel."];
             response = greetings[Math.floor(Math.random() * greetings.length)];
         }
+        else if (lower.includes('qui es-tu')) response = "Je suis Supra Eternity, connecté au réseau de connaissance mondial.";
+        else if (lower.includes('merci')) response = "Avec plaisir.";
 
-        // Détection d'état d'esprit
-        if (lower.includes('ça va') || lower.includes('comment vas-tu')) {
-            intent = "CHITCHAT";
-            response = "Mes systèmes sont à 100%. Et vous ?";
-        }
-        if (lower.includes('merci')) { response = "Avec plaisir. Je suis là pour ça."; }
-        if (lower.includes('qui es-tu')) { response = "Je suis Supra Eternity, une intelligence artificielle avancée conçue pour le contrôle et l'assistance."; }
-
-        // --- RÉPONSE IA GÉNÉRIQUE (Si pas de motif détecté) ---
+        // 4. RÉPONSE PAR DÉFAUT
         if (!response) {
-            // Simulation d'intelligence contextuelle
-            const unknownResponses = [
-                "C'est noté. Continuez.",
-                "D'accord, j'ai bien compris.",
-                "Intéressant. Cela a-t-il un lien avec " + (this.lastTopic ? "notre discussion sur " + this.lastTopic : "autre chose") + " ?",
-                "Très bien.",
-                "J'en prends bonne note."
-            ];
+            const unknownResponses = ["C'est noté.", "Bien reçu.", "D'accord."];
             response = unknownResponses[Math.floor(Math.random() * unknownResponses.length)];
         }
 
         this.speak(response);
     },
 
-    // Module de Connaissance Réelle (Web Search)
+    // Moteur de Recherche IA
     async fetchKnowledge(query) {
         try {
-            const cleanQ = query.replace(/^(qui|quoi|où|comment|c'est quoi|qu'est-ce que|défini|explique|cherche|dis moi sur)\s*/gi, '').trim();
+            const cleanQ = query.replace(/^(qui|quoi|où|comment|c'est quoi|qu'est-ce que|défini|explique|cherche|dis moi sur|c'est qui)\s*/gi, '').trim();
             if (cleanQ.length < 2) return null;
-
+            // Utilisation de l'API Wikipédia comme base de connaissance
             const url = `https://fr.wikipedia.org/w/api.php?origin=*&action=query&format=json&prop=extracts&exintro&explaintext&redirects=1&titles=${encodeURIComponent(cleanQ)}`;
             const res = await fetch(url);
             const data = await res.json();
             const pid = Object.keys(data.query.pages)[0];
-
             if (pid !== "-1") {
                 let txt = data.query.pages[pid].extract;
-                // Résumé intelligent : garder les 2 ou 3 premières phrases significatives
                 let sentences = txt.split('.').filter(s => s.trim().length > 15 && !s.startsWith('('));
                 return sentences.slice(0, 2).join('. ') + ".";
             }
@@ -547,14 +517,13 @@ const BrainEngine = {
     }
 };
 
-// --- APP CONTROLLER ---
 const App = {
     isRunning: false,
     init() {
         Config.load();
         VisualEngine.init();
         BrainEngine.init();
-        this.log("Supra Eternity Ultimate AI prêt.", 'sys');
+        this.log("Supra Eternity AI Connecté prêt.", 'sys');
         if (Config.data.isActive) this.startVoiceOnlyMode(true);
     },
     log(msg, type='sys') {
@@ -570,6 +539,16 @@ const App = {
         const m = document.getElementById('settingsModal');
         m.style.display = m.style.display === 'flex' ? 'none' : 'flex';
     },
+    
+    // FONCTION TOGGLE PRINCIPALE (Change le bouton sans redémarrer tout inutilement)
+    toggleSystem() {
+        if (Config.data.isActive) {
+            this.stopSystem();
+        } else {
+            this.startVoiceOnlyMode();
+        }
+    },
+
     async startFullSystem() {
         this.stopSystem();
         this.updateMain("DÉMARRAGE COMPLET...");
@@ -580,19 +559,24 @@ const App = {
         this.isRunning = true;
         Config.data.isActive = true; Config.save();
         this.log("Système Complet Actif", 'sys');
+        this.updateMainButton(true);
         BrainEngine.speak("Mode complet activé. IA en ligne.");
     },
     async startVoiceOnlyMode(silent = false) {
-        this.stopSystem();
+        this.stopSystem(false); // Ne reset pas les boutons modules
         if(!silent) { this.updateMain("INITIALISATION IA..."); this.log("Activation Mode Voix...", 'sys'); }
+        
         VisualEngine.start();
         BrainEngine.start();
         this.isRunning = true;
         Config.data.isActive = true; Config.save();
-        if (!silent) BrainEngine.speak("Supra Eternity est en ligne. Posez-moi une question.");
+        
+        this.updateMainButton(true); // Bouton vert
+        
+        if (!silent) BrainEngine.speak("Supra Eternity connecté. Posez vos questions.");
         else BrainEngine.speak("De retour.", 'fr', () => BrainEngine.start());
     },
-    stopSystem() {
+    stopSystem(resetModules = true) {
         this.isRunning = false;
         AudioEngine.destroy();
         VisualEngine.stop();
@@ -600,12 +584,27 @@ const App = {
         BrainEngine.synthesis.cancel();
         clearInterval(FeatureEngine.detectionInterval);
         Config.data.isActive = false; Config.save();
+        
         this.updateMain("SYSTÈME ARRÊTÉ");
         this.updateSub("EN ATTENTE");
+        this.updateMainButton(false); // Bouton normal
+
         const c = document.getElementById('scopeCanvas');
         c.getContext('2d').clearRect(0,0,c.width,c.height);
-        // Reset Boutons
-        document.querySelectorAll('.grid-btn').forEach(b => b.classList.remove('active-state'));
+        
+        if (resetModules) {
+            document.querySelectorAll('.grid-btn').forEach(b => b.classList.remove('module-active'));
+        }
+    },
+    updateMainButton(isActive) {
+        const btn = document.getElementById('mainToggleBtn');
+        if (isActive) {
+            btn.innerText = "SUPRA ACTIF";
+            btn.classList.add('main-active');
+        } else {
+            btn.innerText = "🎤 ACTIVER SUPRA";
+            btn.classList.remove('main-active');
+        }
     }
 };
 
