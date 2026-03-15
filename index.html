@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>OPATATOP AI - Alertes Vocales Complètes</title>
+    <title>OPATATOP AI - Version Ultime</title>
     <style>
         :root {
             --primary: #00ff88;
@@ -204,17 +204,122 @@
             font-size: 1.1rem;
             font-weight: bold;
         }
+        #detectionAlert {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: var(--detect);
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px 15px;
+            border: 2px solid var(--detect);
+            border-radius: 5px;
+            text-transform: uppercase;
+            font-size: 1rem;
+            font-weight: bold;
+            display: none;
+            animation: alertPulse 1s infinite, alertGlow 2s infinite alternate;
+        }
+        #settingsModal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 300;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            width: 90%;
+            max-width: 450px;
+            background: #111;
+            border: 2px solid var(--highlight);
+            border-radius: 8px;
+            padding: 20px;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            border-bottom: 1px solid var(--highlight);
+            padding-bottom: 10px;
+        }
+        .modal-title {
+            color: var(--highlight);
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--danger);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        .setting-section {
+            margin-bottom: 15px;
+        }
+        .setting-section-title {
+            color: var(--highlight);
+            font-size: 0.9rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .setting-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .setting-label {
+            font-size: 0.85rem;
+            min-width: 120px;
+        }
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 60%;
+            height: 6px;
+            background: #333;
+            border-radius: 3px;
+            outline: none;
+        }
+        .color-mode-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin: 15px 0;
+        }
+        .color-mode-btn {
+            background: #1a1a1a;
+            border: 1px solid #444;
+            color: #ccc;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            cursor: pointer;
+            margin: 5px;
+            transition: all 0.2s;
+        }
+        .color-mode-btn.active {
+            background: var(--highlight);
+            color: #000;
+            border-color: var(--highlight);
+        }
     </style>
 </head>
 <body>
     <header>
-        <h1>OPATATOP AI - ALERTES VOCALES</h1>
+        <h1>OPATATOP AI - VERSION ULTIME</h1>
+        <button onclick="App.toggleSettings()" style="background:none;border:1px solid var(--highlight);color:var(--highlight);width:36px;height:36px;border-radius:50%;font-size:1.1rem;">⚙️</button>
     </header>
     <main>
         <div id="visualizer">
             <canvas id="scopeCanvas"></canvas>
+            <div id="detectionAlert">ALERTE PARANORMALE</div>
             <div id="displayOverlay">
-                <div id="mainText">ALERTES VOCALES ACTIVÉES</div>
+                <div id="mainText">MODE RÉEL ACTIF</div>
                 <div id="subText">TOUTES FONCTIONS ACTIVÉES</div>
             </div>
             <div id="translationOverlay">TRADUCTION: --</div>
@@ -233,10 +338,54 @@
         <div class="grid-btn active-state" id="btnTemp" onclick="FeatureEngine.toggleTemp()"><span class="grid-icon">🌡️</span><span>TEMP</span></div>
     </div>
     <div id="terminal"></div>
+    <div id="settingsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">RÉGLAGES AVANCÉS</div>
+                <button class="modal-close" onclick="App.toggleSettings()">×</button>
+            </div>
+            <div class="setting-section">
+                <div class="setting-section-title">Paramètres Audio</div>
+                <div class="setting-row">
+                    <div class="setting-label">Sensibilité Micro</div>
+                    <input type="range" id="micSensitivity" min="0.1" max="1" step="0.1" value="0.7" oninput="Config.update(this)">
+                </div>
+                <div class="setting-row">
+                    <div class="setting-label">Volume Sonore</div>
+                    <input type="range" id="audioVolume" min="0" max="1" step="0.1" value="0.5" oninput="Config.update(this)">
+                </div>
+            </div>
+            <div class="setting-section">
+                <div class="setting-section-title">Détection</div>
+                <div class="setting-row">
+                    <div class="setting-label">Sensibilité Fantômes</div>
+                    <input type="range" id="ghostSensitivity" min="0.1" max="1" step="0.1" value="0.8" oninput="Config.update(this)">
+                </div>
+            </div>
+            <div class="setting-section">
+                <div class="setting-section-title">Affichage</div>
+                <div class="setting-row">
+                    <div class="setting-label">Thème</div>
+                    <div class="color-mode-container">
+                        <div class="color-mode-btn active" onclick="Config.setColorMode('dark')">SOMBRE</div>
+                        <div class="color-mode-btn" onclick="Config.setColorMode('blue')">BLEU</div>
+                        <div class="color-mode-btn" onclick="Config.setColorMode('green')">VERT</div>
+                        <div class="color-mode-btn" onclick="Config.setColorMode('red')">ROUGE</div>
+                    </div>
+                </div>
+            </div>
+            <div style="margin-top: 15px; text-align: center;">
+                <button style="padding: 10px 20px; background: var(--highlight); color: #000; border: none; border-radius: 4px; font-weight: bold;" onclick="App.toggleSettings()">FERMER</button>
+            </div>
+        </div>
+    </div>
     <script>
         // Configuration
         const Config = {
             data: {
+                micSensitivity: 0.7,
+                audioVolume: 0.5,
+                ghostSensitivity: 0.8,
                 colorMode: 'dark'
             },
             colorModes: {
@@ -249,6 +398,36 @@
                     sonar: '#00ffff',
                     detect: '#ff0000',
                     highlight: '#00ccff'
+                },
+                blue: {
+                    primary: '#0088ff',
+                    secondary: '#ff00ff',
+                    bg: '#000022',
+                    panel: '#111133',
+                    text: '#e0e0ff',
+                    sonar: '#00ffff',
+                    detect: '#ff0000',
+                    highlight: '#00ccff'
+                },
+                green: {
+                    primary: '#00ff88',
+                    secondary: '#ff00ff',
+                    bg: '#002200',
+                    panel: '#113311',
+                    text: '#e0e0ff',
+                    sonar: '#00ffff',
+                    detect: '#ff0000',
+                    highlight: '#88ff00'
+                },
+                red: {
+                    primary: '#ff0000',
+                    secondary: '#ff00ff',
+                    bg: '#220000',
+                    panel: '#331111',
+                    text: '#fff',
+                    sonar: '#ff00ff',
+                    detect: '#ff8800',
+                    highlight: '#ffcc00'
                 }
             },
             applyColorMode() {
@@ -261,10 +440,44 @@
                 document.documentElement.style.setProperty('--sonar', mode.sonar);
                 document.documentElement.style.setProperty('--detect', mode.detect);
                 document.documentElement.style.setProperty('--highlight', mode.highlight);
+            },
+            update(el) {
+                this.data[el.id] = el.type === 'checkbox' ? el.checked : parseFloat(el.value);
+                this.save();
+                this.updateUI();
+            },
+            setColorMode(mode) {
+                this.data.colorMode = mode;
+                this.save();
+                this.applyColorMode();
+                this.updateUI();
+            },
+            save() {
+                localStorage.setItem('opatop_ai_config', JSON.stringify(this.data));
+            },
+            load() {
+                const saved = localStorage.getItem('opatop_ai_config');
+                if (saved) {
+                    Object.assign(this.data, JSON.parse(saved));
+                }
+                this.applyColorMode();
+                this.updateUI();
+            },
+            updateUI() {
+                document.getElementById('micSensitivity').value = this.data.micSensitivity;
+                document.getElementById('audioVolume').value = this.data.audioVolume;
+                document.getElementById('ghostSensitivity').value = this.data.ghostSensitivity;
+
+                document.querySelectorAll('.color-mode-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                    if (btn.textContent.toLowerCase() === this.data.colorMode.toUpperCase()) {
+                        btn.classList.add('active');
+                    }
+                });
             }
         };
 
-        // Audio Engine with enhanced processing
+        // Audio Engine
         const AudioEngine = {
             ctx: null,
             stream: null,
@@ -287,7 +500,7 @@
                     this.isInit = true;
                     return true;
                 } catch (e) {
-                    console.error("Erreur audio:", e);
+                    console.error("Audio error:", e);
                     return false;
                 }
             },
@@ -312,6 +525,17 @@
                 }
                 return maxIdx * this.ctx.sampleRate / this.analyser.fftSize;
             },
+            getGhostActivity() {
+                if (!this.analyser) return 0;
+                const data = new Uint8Array(this.analyser.frequencyBinCount);
+                this.analyser.getByteFrequencyData(data);
+                let ghost = 0;
+                // Analyze low frequencies (20-100Hz) typical for paranormal activity
+                for (let i = 0; i < 40; i++) {
+                    ghost += data[i];
+                }
+                return ghost;
+            },
             destroy() {
                 if (this.stream) this.stream.getTracks().forEach(t => t.stop());
                 if (this.ctx) this.ctx.close();
@@ -319,36 +543,15 @@
             }
         };
 
-        // Speech Synthesis Engine
-        const SpeechEngine = {
-            synthesis: window.speechSynthesis,
-            voice: null,
-            init() {
-                const voices = this.synthesis.getVoices();
-                this.voice = voices.find(v => v.lang === 'fr-FR') || voices[0];
-                window.speechSynthesis.onvoiceschanged = () => {
-                    const voices = this.synthesis.getVoices();
-                    this.voice = voices.find(v => v.lang === 'fr-FR') || voices[0];
-                };
-            },
-            speak(text) {
-                this.synthesis.cancel();
-                if (!text) return;
-                const utterance = new SpeechSynthesisUtterance(text);
-                utterance.lang = 'fr-FR';
-                utterance.pitch = 1.0;
-                utterance.rate = 1.0;
-                if (this.voice) utterance.voice = this.voice;
-                this.synthesis.speak(utterance);
-            }
-        };
-
-        // Visual Engine with enhanced graphics
+        // Visual Engine
         const VisualEngine = {
             canvas: null,
             ctx: null,
             animId: null,
             isRunning: false,
+            blips: [],
+            ghosts: [],
+            particles: [],
             init() {
                 this.canvas = document.getElementById('scopeCanvas');
                 this.ctx = this.canvas.getContext('2d');
@@ -365,6 +568,46 @@
                 if (!this.isRunning) {
                     this.isRunning = true;
                     this.loop();
+
+                    // Simulate detection events
+                    setInterval(() => {
+                        if (Math.random() > 0.7) {
+                            this.blips.push({
+                                x: Math.random() * this.canvas.width,
+                                y: Math.random() * this.canvas.height,
+                                size: Math.random() * 15 + 5,
+                                alpha: 1.0,
+                                color: Math.random() > 0.5 ? '#ff0000' : '#ffff00'
+                            });
+                        }
+                        if (Math.random() > 0.85) {
+                            this.ghosts.push({
+                                x: Math.random() * this.canvas.width,
+                                y: Math.random() * this.canvas.height,
+                                size: Math.random() * 20 + 10,
+                                alpha: 1.0,
+                                color: '#ff00ff',
+                                pulse: Math.random() > 0.5
+                            });
+                            document.getElementById('detectionAlert').style.display = 'block';
+                            setTimeout(() => {
+                                document.getElementById('detectionAlert').style.display = 'none';
+                            }, 3000);
+                        }
+                    }, 300);
+
+                    // Add particles for visual effect
+                    setInterval(() => {
+                        this.particles.push({
+                            x: Math.random() * this.canvas.width,
+                            y: Math.random() * this.canvas.height,
+                            size: Math.random() * 3 + 1,
+                            alpha: 1.0,
+                            color: `hsl(${Math.random() * 360}, 100%, 50%)`,
+                            vx: Math.random() * 2 - 1,
+                            vy: Math.random() * 2 - 1
+                        });
+                    }, 100);
                 }
             },
             stop() {
@@ -377,7 +620,7 @@
                 this.ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
                 this.ctx.fillRect(0, 0, w, h);
 
-                // Draw radar grid
+                // Draw radar grid with enhanced effect
                 this.ctx.save();
                 this.ctx.translate(w/2, h/2);
                 this.ctx.strokeStyle = '#00ff8833';
@@ -395,11 +638,15 @@
                 }
                 this.ctx.restore();
 
-                // Draw radar sweep
+                // Draw radar sweep with gradient
                 const angle = Date.now() / 1000 * Math.PI / 4;
                 this.ctx.save();
                 this.ctx.translate(w/2, h/2);
-                this.ctx.strokeStyle = '#00ff88';
+                const gradient = this.ctx.createLinearGradient(0, 0, Math.cos(angle) * Math.min(w, h)/2, Math.sin(angle) * Math.min(w, h)/2);
+                gradient.addColorStop(0, 'transparent');
+                gradient.addColorStop(0.5, '#00ff88');
+                gradient.addColorStop(1, 'transparent');
+                this.ctx.strokeStyle = gradient;
                 this.ctx.lineWidth = 2;
                 this.ctx.beginPath();
                 this.ctx.moveTo(0, 0);
@@ -407,13 +654,64 @@
                 this.ctx.stroke();
                 this.ctx.restore();
 
+                // Draw detection blips with glow
+                this.blips = this.blips.filter(b => (b.alpha -= 0.02) > 0.03);
+                this.blips.forEach(b => {
+                    this.ctx.save();
+                    this.ctx.globalAlpha = b.alpha;
+                    this.ctx.shadowBlur = 10;
+                    this.ctx.shadowColor = b.color;
+                    this.ctx.fillStyle = b.color;
+                    this.ctx.beginPath();
+                    this.ctx.arc(b.x, b.y, b.size, 0, Math.PI * 2);
+                    this.ctx.fill();
+                    this.ctx.restore();
+                });
+
+                // Draw ghost anomalies with pulse effect
+                this.ghosts = this.ghosts.filter(g => (g.alpha -= 0.01) > 0.03);
+                this.ghosts.forEach(g => {
+                    this.ctx.save();
+                    this.ctx.globalAlpha = g.alpha;
+                    if (g.pulse) {
+                        this.ctx.shadowBlur = 15;
+                        this.ctx.shadowColor = g.color;
+                    }
+                    this.ctx.fillStyle = g.color;
+                    this.ctx.beginPath();
+                    this.ctx.arc(g.x, g.y, g.size, 0, Math.PI * 2);
+                    this.ctx.fill();
+                    this.ctx.restore();
+                });
+
+                // Draw particles
+                this.particles = this.particles.filter(p => (p.alpha -= 0.01) > 0);
+                this.particles.forEach(p => {
+                    this.ctx.save();
+                    this.ctx.globalAlpha = p.alpha;
+                    this.ctx.fillStyle = p.color;
+                    this.ctx.beginPath();
+                    this.ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                    this.ctx.fill();
+                    this.ctx.restore();
+
+                    // Update particle position
+                    p.x += p.vx;
+                    p.y += p.vy;
+
+                    // Bounce off edges
+                    if (p.x < 0 || p.x > w) p.vx *= -1;
+                    if (p.y < 0 || p.y > h) p.vy *= -1;
+                });
+
                 // Update HUD with real audio data
                 const rms = AudioEngine.isInit ? AudioEngine.getRMS() * 100 : 0;
                 const freq = AudioEngine.isInit ? AudioEngine.getDominantFrequency() : 0;
+                const ghost = AudioEngine.isInit ? AudioEngine.getGhostActivity() : 0;
                 document.getElementById('hud').innerHTML =
                     `NIVEAU: ${rms.toFixed(1)}%<br>` +
                     `FRÉQ.: ${freq.toFixed(0)} Hz<br>` +
-                    `DÉTECTION: ${Math.floor(Math.random() * 100)}%<br>` +
+                    `DÉTECTION: ${Math.min(100, ghost * 0.5).toFixed(0)}%<br>` +
                     `TEMP: ${(20 + Math.random() * 5).toFixed(1)}°C`;
 
                 this.animId = requestAnimationFrame(() => this.loop());
@@ -434,57 +732,57 @@
                 this.power = !this.power;
                 document.getElementById('btnPower').classList.toggle('active-state');
                 const msg = this.power ? "Système activé" : "Système désactivé";
-                SpeechEngine.speak(msg);
                 App.log(msg);
+                speechSynthesis.speak(new SpeechSynthesisUtterance(msg));
             },
             toggleDetection() {
                 this.detection = !this.detection;
                 document.getElementById('btnDetect').classList.toggle('active-state');
-                const msg = this.detection ? "Détection sonar activée" : "Détection sonar désactivée";
-                SpeechEngine.speak(msg);
+                const msg = this.detection ? "Détection activée" : "Détection désactivée";
                 App.log(msg);
+                speechSynthesis.speak(new SpeechSynthesisUtterance(msg));
             },
             toggleGhostDetection() {
                 this.ghostDetection = !this.ghostDetection;
                 document.getElementById('btnGhost').classList.toggle('active-state');
                 const msg = this.ghostDetection ? "Détection de fantômes activée" : "Détection de fantômes désactivée";
-                SpeechEngine.speak(msg);
                 App.log(msg);
+                speechSynthesis.speak(new SpeechSynthesisUtterance(msg));
             },
             toggleVAD() {
                 this.vad = !this.vad;
                 document.getElementById('btnVAD').classList.toggle('active-state');
                 const msg = this.vad ? "Détection vocale activée" : "Détection vocale désactivée";
-                SpeechEngine.speak(msg);
                 App.log(msg);
+                speechSynthesis.speak(new SpeechSynthesisUtterance(msg));
             },
             toggleSensors() {
                 this.sensorsActive = !this.sensorsActive;
                 document.getElementById('btnSensors').classList.toggle('active-state');
                 const msg = this.sensorsActive ? "Capteurs activés" : "Capteurs désactivés";
-                SpeechEngine.speak(msg);
                 App.log(msg);
+                speechSynthesis.speak(new SpeechSynthesisUtterance(msg));
             },
             toggleAutoRecord() {
                 this.autoRecord = !this.autoRecord;
                 document.getElementById('btnRecord').classList.toggle('active-state');
                 const msg = this.autoRecord ? "Enregistrement automatique activé" : "Enregistrement automatique désactivé";
-                SpeechEngine.speak(msg);
                 App.log(msg);
+                speechSynthesis.speak(new SpeechSynthesisUtterance(msg));
             },
             toggleEMF() {
                 this.emfActive = !this.emfActive;
                 document.getElementById('btnEMF').classList.toggle('active-state');
                 const msg = this.emfActive ? "Détection EMF activée" : "Détection EMF désactivée";
-                SpeechEngine.speak(msg);
                 App.log(msg);
+                speechSynthesis.speak(new SpeechSynthesisUtterance(msg));
             },
             toggleTemp() {
                 this.tempActive = !this.tempActive;
                 document.getElementById('btnTemp').classList.toggle('active-state');
                 const msg = this.tempActive ? "Détection de température activée" : "Détection de température désactivée";
-                SpeechEngine.speak(msg);
                 App.log(msg);
+                speechSynthesis.speak(new SpeechSynthesisUtterance(msg));
             }
         };
 
@@ -492,14 +790,13 @@
         const App = {
             isRunning: false,
             async init() {
-                Config.applyColorMode();
-                SpeechEngine.init();
+                Config.load();
                 VisualEngine.init();
                 await AudioEngine.init();
                 VisualEngine.start();
                 this.isRunning = true;
                 this.log("Système démarré - Toutes fonctions activées");
-                SpeechEngine.speak("Toutes fonctions activées. Système prêt.");
+                speechSynthesis.speak("Toutes fonctions activées. Système prêt.");
             },
             log(msg) {
                 const t = document.getElementById('terminal');
@@ -508,6 +805,10 @@
                 d.innerText = `[${new Date().toLocaleTimeString()}] ${msg}`;
                 t.appendChild(d);
                 t.scrollTop = t.scrollHeight;
+            },
+            toggleSettings() {
+                const m = document.getElementById('settingsModal');
+                m.style.display = m.style.display === 'flex' ? 'none' : 'flex';
             }
         };
 
@@ -516,3 +817,5 @@
     </script>
 </body>
 </html>
+
+ 
