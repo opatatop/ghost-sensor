@@ -218,6 +218,23 @@
             accent-color: var(--secondary);
             width: 58%;
         }
+        #translationOverlay {
+            position: absolute;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            pointer-events: none;
+            z-index: 30;
+            color: var(--text);
+            background: rgba(5, 5, 16, 0.9);
+            padding: 10px 25px;
+            border: 3px solid var(--primary);
+            text-transform: uppercase;
+            text-shadow: 0 0 12px var(--primary);
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -232,6 +249,7 @@
                 <div id="mainText">SYSTÈME DE ZEUS ACTIVÉ</div>
                 <div id="subText">RADAR MILITAIRE + IA ONLINE RÉELLE + TRADUCTION PARFAITE + ENREGISTREMENT AUTO + EMF RÉEL + TEMP RÉELLE</div>
             </div>
+            <div id="translationOverlay">TRADUCTION INSTANTANÉE: --</div>
             <div id="hud">ÉNERGIE: -- %<br>FRÉQ. DOM.: -- Hz<br>EMF RÉEL: -- μT<br>TEMP RÉELLE: -- °C<br>ACTIVITÉ: --</div>
         </div>
     </main>
@@ -774,12 +792,25 @@
                 if (!SR) return false;
                 this.recognition = new SR();
                 this.recognition.continuous = true;
-                this.recognition.interimResults = false;
+                this.recognition.interimResults = true;
                 this.recognition.lang = 'fr-FR';
                 this.recognition.onresult = (e) => {
-                    const text = e.results[e.results.length - 1][0].transcript.trim();
-                    App.log(`Reconstruction IA des mots : "${text}"`, 'ai');
-                    this.process(text);
+                    let interimTranscript = '';
+                    let finalTranscript = '';
+                    for (let i = e.resultIndex; i < e.results.length; ++i) {
+                        if (e.results[i].isFinal) {
+                            finalTranscript += e.results[i][0].transcript;
+                        } else {
+                            interimTranscript += e.results[i][0].transcript;
+                        }
+                    }
+                    if (finalTranscript) {
+                        App.log(`Reconstruction IA des mots : "${finalTranscript}"`, 'ai');
+                        this.process(finalTranscript);
+                    }
+                    if (interimTranscript) {
+                        this.updateTranslationOverlay(interimTranscript);
+                    }
                 };
                 this.recognition.onend = () => {
                     if (this.isListening && Config.data.isActive) {
@@ -833,6 +864,9 @@
                     const entry = `[${new Date().toLocaleTimeString('fr-FR')}] [ORAL] ${text}`;
                     this.translationsLog.push(entry);
                 }
+            },
+            updateTranslationOverlay(text) {
+                document.getElementById('translationOverlay').innerText = `TRADUCTION INSTANTANÉE: ${text}`;
             },
             async fetchKnowledge(query) {
                 try {
@@ -899,6 +933,7 @@
             },
             async process(text) {
                 App.updateMain(text.toUpperCase());
+                this.updateTranslationOverlay(text);
                 const lower = text.toLowerCase();
                 if (lower === 'stop' || lower === 'arrête') {
                     this.stop();
