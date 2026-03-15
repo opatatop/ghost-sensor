@@ -3,781 +3,521 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>OPATATOP AI — ULTRA-PRO SYSTEM ⚡</title>
+    <title>OPATATOP REAL — DONNÉES BRUTES</title>
     <style>
         :root {
-            --primary: #00ffff;
-            --secondary: #bc13fe;
-            --bg: #020205;
-            --panel: #080812;
-            --text: #c0c0e0;
-            --danger: #ff3333;
-            --accent: #00ff88;
-            --zeus: #ffff00;
-            --font-stack: 'Courier New', Courier, monospace;
+            --bg: #000000;
+            --panel: #0a0a0a;
+            --text: #e0e0e0;
+            --real: #00ff00; /* Vert pour les données réelles */
+            --warn: #ffcc00;
+            --err: #ff3333;
+            --border: #333;
         }
 
-        * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; outline: none; }
+        * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
 
         body {
-            margin: 0; padding: 0; font-family: var(--font-stack);
+            margin: 0; padding: 0; font-family: 'Consolas', 'Monaco', monospace;
             background: var(--bg); color: var(--text);
             display: flex; flex-direction: column; height: 100vh; overflow: hidden;
         }
 
-        /* Scanlines CRT avancés */
-        body::after {
-            content: " "; display: block; position: absolute; top: 0; left: 0; bottom: 0; right: 0;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.4) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
-            z-index: 200; background-size: 100% 3px, 4px 100%; pointer-events: none;
-        }
-
-        /* HEADER */
+        /* UI Structure */
         header {
-            background: #000; border-bottom: 2px solid var(--primary);
-            padding: 8px 15px; display: flex; justify-content: space-between; align-items: center;
-            box-shadow: 0 0 20px rgba(0, 255, 255, 0.15); z-index: 150;
-            height: 50px;
+            background: #000; border-bottom: 1px solid var(--real);
+            padding: 10px; display: flex; justify-content: space-between; align-items: center;
+            height: 40px;
         }
+        h1 { margin: 0; font-size: 0.9rem; color: var(--real); text-transform: uppercase; letter-spacing: 1px; }
 
-        h1 {
-            font-size: 0.9rem; color: var(--primary); text-shadow: 0 0 8px var(--primary);
-            letter-spacing: 1px; margin: 0; font-weight: 800; text-transform: uppercase;
-        }
-        .version { font-size: 0.6rem; color: var(--secondary); vertical-align: super; }
+        main { flex: 1; display: flex; flex-direction: column; position: relative; }
 
-        /* MAIN AREA */
-        main { flex: 1; position: relative; display: flex; flex-direction: column; overflow: hidden; }
+        /* Canvas pour Audio Réel */
+        #scopeContainer { flex: 1; background: #000; border-bottom: 1px solid var(--border); position: relative; }
+        canvas { width: 100%; height: 100%; display: block; }
         
-        #visualizerContainer {
-            flex: 1; position: relative; background: #000; overflow: hidden;
-            border-bottom: 1px solid #222;
+        /* Overlay Données Réelles */
+        #dataOverlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; padding: 10px; display: grid;
+            grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr;
         }
 
-        canvas { display: block; width: 100%; height: 100%; }
+        .data-box {
+            background: rgba(0, 20, 0, 0.6); border: 1px solid var(--real);
+            padding: 5px; font-size: 0.7rem; color: var(--real);
+            display: flex; flex-direction: column; justify-content: center;
+        }
+        .data-val { font-size: 1.2rem; font-weight: bold; margin-top: 5px; }
+        .na { color: #555; } /* Style pour Non Disponible */
 
-        /* HUD SURCouches */
-        .hud-panel {
-            position: absolute; background: rgba(0,0,0,0.85); border: 1px solid var(--accent);
-            padding: 5px 10px; font-size: 0.6rem; color: var(--accent); pointer-events: none;
-            backdrop-filter: blur(2px); z-index: 100;
+        /* Controls Grid */
+        #controls {
+            height: 180px; background: var(--panel); border-top: 1px solid var(--border);
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 2px;
+            overflow-y: auto;
         }
 
-        #hudTopLeft { top: 10px; left: 10px; border-left: 3px solid var(--primary); }
-        #hudTopRight { top: 10px; right: 10px; border-right: 3px solid var(--primary); text-align: right; }
-        #hudBottomLeft { bottom: 10px; left: 10px; border-bottom: 3px solid var(--zeus); color: var(--zeus); }
-        
-        #mainDisplay {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            text-align: center; z-index: 110; pointer-events: none; width: 90%;
-        }
-
-        #mainText {
-            font-size: 1.8rem; font-weight: 900; color: #fff;
-            background: rgba(0, 0, 0, 0.8); padding: 10px 30px;
-            border: 2px solid var(--primary); text-shadow: 0 0 15px var(--primary);
-            margin-bottom: 5px; letter-spacing: 2px; text-transform: uppercase;
-            box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
-        }
-
-        /* GRILLE DE COMMANDES (12 Boutons) */
-        #actionGrid {
-            display: grid; grid-template-columns: repeat(6, 1fr); /* 6x2 layout for compactness or 4x3 */
-            grid-template-columns: repeat(4, 1fr);
-            gap: 4px; padding: 5px; background: var(--panel);
-            border-top: 1px solid #333; z-index: 150; height: 140px;
-        }
-
-        .grid-btn {
-            background: #0a0a0a; border: 1px solid #333; color: #666;
+        .ctrl-btn {
+            background: #111; border: 1px solid #333; color: #888;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            font-size: 0.6rem; cursor: pointer; transition: 0.2s; position: relative;
+            font-size: 0.7rem; padding: 5px; cursor: pointer; text-align: center;
         }
+        .ctrl-btn:active { background: #222; }
+        .ctrl-btn.active { background: rgba(0, 255, 0, 0.1); color: var(--real); border-color: var(--real); }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #333; margin-bottom: 5px; }
+        .ctrl-btn.active .status-dot { background: var(--real); box-shadow: 0 0 5px var(--real); }
 
-        .grid-btn:active { background: #222; }
-        .grid-btn.active-state {
-            background: rgba(188, 19, 254, 0.15); color: #fff;
-            border-color: var(--secondary); box-shadow: 0 0 10px rgba(188, 19, 254, 0.3) inset;
-        }
-        
-        /* Indicateur LED sur les boutons */
-        .led { width: 6px; height: 6px; background: #333; border-radius: 50%; margin-bottom: 4px; transition: 0.3s; }
-        .grid-btn.active-state .led { background: var(--secondary); box-shadow: 0 0 5px var(--secondary); }
-        .grid-btn.danger-state .led { background: var(--danger); }
-
-        /* TERMINAL */
+        /* Terminal Logs */
         #terminal {
-            height: 100px; background: #000; border-top: 1px solid #444;
-            padding: 5px; font-size: 0.6rem; overflow-y: auto;
-            font-family: 'Consolas', monospace; z-index: 150; color: #aaa;
-            line-height: 1.2;
+            height: 120px; background: #050505; border-top: 1px solid var(--border);
+            padding: 5px; font-size: 0.65rem; overflow-y: auto; font-family: monospace;
+            color: #aaa;
         }
+        .log-entry { margin-bottom: 2px; border-left: 2px solid #333; padding-left: 5px; }
+        .log-real { border-color: var(--real); color: #ccffcc; }
+        .log-warn { border-color: var(--warn); color: var(--warn); }
+        .log-err { border-color: var(--err); color: var(--err); }
 
-        /* SETTINGS MODAL (COMPLEXE) */
-        #settingsModal {
-            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95);
-            z-index: 300; overflow-y: auto; backdrop-filter: blur(5px);
-        }
-        
-        .settings-header {
-            position: sticky; top: 0; background: #111; padding: 15px;
-            border-bottom: 2px solid var(--primary); z-index: 301;
-            display: flex; justify-content: space-between; align-items: center;
-        }
-
-        .modal-content {
-            max-width: 800px; margin: 0 auto; padding: 20px;
-        }
-
-        .settings-group {
-            border: 1px solid #333; margin-bottom: 15px; background: #0a0a0a;
-        }
-        .settings-group-title {
-            background: #222; padding: 8px 15px; color: var(--primary); font-weight: bold;
-            font-size: 0.8rem; border-bottom: 1px solid #333;
-        }
-        .settings-row {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 10px 15px; border-bottom: 1px solid #1a1a1a; font-size: 0.8rem;
-        }
-        .settings-row:last-child { border-bottom: none; }
-        
-        /* UI ELEMENTS */
-        input[type=range] {
-            width: 150px; accent-color: var(--primary); height: 4px;
-        }
-        select {
-            background: #000; color: #fff; border: 1px solid #555; padding: 5px;
-        }
-        
-        /* Logs Colors */
-        .log-info { color: #888; }
-        .log-sys { color: var(--primary); }
-        .log-warn { color: var(--zeus); }
-        .log-err { color: var(--danger); font-weight: bold; }
-        .log-ai { color: var(--secondary); }
-        .log-data { color: #555; font-size: 0.55rem; }
-
-        @media (max-width: 600px) {
-            #actionGrid { height: 180px; grid-template-columns: repeat(3, 1fr); }
-            .grid-btn { height: 100%; }
-            #terminal { height: 80px; }
+        /* Bouton Permission iOS (Caché par défaut) */
+        #iosPermBtn {
+            display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: var(--real); color: #000; padding: 20px; border: none; font-weight: bold;
+            z-index: 1000; cursor: pointer;
         }
     </style>
 </head>
 <body>
 
-    <header>
-        <div>
-            <h1>OPATATOP <span class="version">ULTRA-PRO v4.5</span></h1>
-        </div>
-        <div>
-            <button onclick="UI.toggleSettings()" style="background:none; border:1px solid var(--primary); color:var(--primary); width:32px; height:32px; border-radius:4px;">⚙️</button>
-        </div>
-    </header>
+<header>
+    <h1>OPATATOP <span style="color:#fff">REAL DATA LINK</span></h1>
+    <div id="systemTime" style="color:#fff; font-size:0.8rem;">00:00:00</div>
+</header>
 
-    <main>
-        <div id="visualizerContainer">
-            <canvas id="mainCanvas"></canvas>
+<main>
+    <div id="scopeContainer">
+        <canvas id="audioCanvas"></canvas>
+        
+        <div id="dataOverlay">
+            <!-- Données Audio Réelles -->
+            <div class="data-box">
+                <div>FREQUENCE DOMINANTE</div>
+                <div class="data-val" id="valFreq">-- Hz</div>
+            </div>
+            <div class="data-box">
+                <div>AMPLITUDE RMS</div>
+                <div class="data-val" id="valRms">-- dB</div>
+            </div>
             
-            <!-- HUD Complex -->
-            <div id="hudTopLeft" class="hud-panel">
-                <div>CPU: <span id="cpuVal">0</span>%</div>
-                <div>MEM: <span id="memVal">0</span> MB</div>
-                <div>THREADS: <span id="threadVal">OFF</span></div>
-                <div>UPTIME: <span id="uptimeVal">00:00:00</span></div>
+            <!-- Données Réseau Réelles -->
+            <div class="data-box">
+                <div>RÉSEAU (TYPE)</div>
+                <div class="data-val" id="valNet">--</div>
             </div>
-
-            <div id="hudTopRight" class="hud-panel">
-                <div>MODE: <span id="modeVal" style="color:var(--zeus)">STANDBY</span></div>
-                <div>FPS: <span id="fpsVal">0</span></div>
-                <div>BUFFER: <span id="bufVal">0</span>ms</div>
-                <div>LATENCY: <span id="latVal">--</span></div>
-            </div>
-
-            <div id="hudBottomLeft" class="hud-panel">
-                <div>NET: <span id="netVal">DISCONNECTED</span></div>
-                <div>GPS: <span id="gpsVal">NO SIGNAL</span></div>
-            </div>
-
-            <div id="mainDisplay">
-                <div id="mainText">SYSTÈME EN ATTENTE</div>
+            <div class="data-box">
+                <div>BATTERIE</div>
+                <div class="data-val" id="valBatt">-- %</div>
             </div>
         </div>
-    </main>
 
-    <!-- GRID 12 BOUTONS -->
-    <div id="actionGrid">
-        <div class="grid-btn" id="btn_mic" onclick="System.toggle('mic')">
-            <div class="led"></div><span>MICRO</span>
-        </div>
-        <div class="grid-btn" id="btn_audio" onclick="System.toggle('audio')">
-            <div class="led"></div><span>AUDIO OUT</span>
-        </div>
-        <div class="grid-btn" id="btn_radar" onclick="System.toggle('radar')">
-            <div class="led"></div><span>RADAR</span>
-        </div>
-        <div class="grid-btn" id="btn_spectrum" onclick="System.toggle('spectrum')">
-            <div class="led"></div><span>SPECTRE</span>
-        </div>
-        <div class="grid-btn" id="btn_ghost" onclick="System.toggle('ghost')">
-            <div class="led"></div><span>FANTÔME</span>
-        </div>
-        <div class="grid-btn" id="btn_vad" onclick="System.toggle('vad')">
-            <div class="led"></div><span>VAD PRO</span>
-        </div>
-        <div class="grid-btn" id="btn_emf" onclick="System.toggle('emf')">
-            <div class="led"></div><span>EMF MÈTRE</span>
-        </div>
-        <div class="grid-btn" id="btn_temp" onclick="System.toggle('temp')">
-            <div class="led"></div><span>THERMIQUE</span>
-        </div>
-        <div class="grid-btn" id="btn_spirit" onclick="System.toggle('spirit')">
-            <div class="led"></div><span>SPIRIT BOX</span>
-        </div>
-        <div class="grid-btn" id="btn_record" onclick="System.toggle('record')">
-            <div class="led"></div><span>ENREGISTREUR</span>
-        </div>
-        <div class="grid-btn" id="btn_scan" onclick="System.runDiagnostics()">
-            <div class="led"></div><span>DIAGNOSTIC</span>
-        </div>
-        <div class="grid-btn danger-state" onclick="System.fullShutdown()">
-            <div class="led"></div><span>ARRÊT TOTAL</span>
-        </div>
+        <!-- Bouton pour permission iOS 13+ -->
+        <button id="iosPermBtn" onclick="RealSensors.requestPermission()">ACTIVER LES CAPTEURS</button>
     </div>
+</main>
 
-    <div id="terminal"></div>
-
-    <!-- MASSIVE SETTINGS MODAL -->
-    <div id="settingsModal">
-        <div class="settings-header">
-            <h2 style="margin:0; color:var(--primary)">CONFIGURATION SYSTÈME AVANCÉE</h2>
-            <button onclick="UI.toggleSettings()" style="background:var(--danger); border:none; color:#fff; padding:5px 15px; cursor:pointer;">FERMER</button>
-        </div>
-        <div class="modal-content" id="settingsContainer">
-            <!-- Injecté dynamiquement par JS -->
-        </div>
+<div id="controls">
+    <div class="ctrl-btn active" id="btn_audio" onclick="RealSensors.toggle('audio')">
+        <div class="status-dot"></div><span>AUDIO IN</span>
     </div>
+    <div class="ctrl-btn" id="btn_motion" onclick="RealSensors.toggle('motion')">
+        <div class="status-dot"></div><span>ACCELÉROMÈTRE</span>
+    </div>
+    <div class="ctrl-btn" id="btn_orient" onclick="RealSensors.toggle('orientation')">
+        <div class="status-dot"></div><span>GYRO / BOUSSOLE</span>
+    </div>
+    <div class="ctrl-btn" id="btn_geo" onclick="RealSensors.toggle('geo')">
+        <div class="status-dot"></div><span>GEOLOCATION</span>
+    </div>
+    <div class="ctrl-btn" id="btn_batt" onclick="RealSensors.toggle('battery')">
+        <div class="status-dot"></div><span>BATTERIE</span>
+    </div>
+    <div class="ctrl-btn" id="btn_net" onclick="RealSensors.toggle('network')">
+        <div class="status-dot"></div><span>RÉSEAU</span>
+    </div>
+</div>
 
-    <script>
-        /**
-         * OPATATOP AI ULTRA-PRO CORE
-         * Architecture modulaire complexe pour simulation système 2000+ lignes
-         */
+<div id="terminal"></div>
 
-        // --- 1. CONFIGURATION GLOBALE (Massive Object) ---
-        const Config = {
-            system: {
-                bootTime: 0,
-                debugMode: false,
-                logLevel: 3, // 0:None, 1:Err, 2:Warn, 3:Info, 4:Debug
-                autoSave: true,
-                uiScale: 1.0
-            },
-            audio: {
-                inputDevice: 'default',
-                outputVolume: 1.0,
-                fftSize: 2048,
-                smoothing: 0.8,
-                minDecibels: -90,
-                maxDecibels: -10,
-                echoCancellation: false,
-                noiseSuppression: false,
-                autoGain: false
-            },
-            visual: {
-                primaryColor: '#00ffff',
-                secondaryColor: '#bc13fe',
-                theme: 'cyber',
-                renderMode: 'radar', // radar, spectrum, wave, histogram
-                gridOpacity: 0.3,
-                trailEffect: 0.2, // 0 to 1
-                radarSpeed: 0.05,
-                lineThickness: 2,
-                barWidth: 4
-            },
-            sensors: {
-                emfSensitivity: 50,
-                emfFilter: true,
-                tempOffset: 0,
-                motionThreshold: 1.5,
-                updateRate: 60
-            },
-            paranormal: {
-                ghostThreshold: 80,
-                spiritBoxScanSpeed: 100, // ms per hop
-                evpFilter: 'highpass',
-                autoRecording: false
-            },
-            ai: {
-                voice: 'Google Français',
-                pitch: 1.0,
-                rate: 1.0,
-                language: 'fr-FR',
-                continuousListening: true,
-                interimResults: false
-            }
-        };
+<script>
+    /**
+     * OPATATOP REAL ENGINE
+     * Aucune simulation. Uniquement API Web du navigateur.
+     */
 
-        // --- 2. UTILITAIRES SYSTÈME ---
-        const Utils = {
-            log(msg, type = 'info') {
-                const t = document.getElementById('terminal');
-                const d = document.createElement('div');
-                const time = new Date().toLocaleTimeString('fr-FR', {hour12:false}) + "." + new Date().getMilliseconds().toString().padStart(3, '0');
+    const Terminal = {
+        log: (msg, type = 'real') => {
+            const t = document.getElementById('terminal');
+            const d = document.createElement('div');
+            d.className = `log-entry log-${type}`;
+            const time = new Date().toLocaleTimeString('fr-FR', {hour12:false});
+            d.innerText = `[${time}] ${msg}`;
+            t.appendChild(d);
+            t.scrollTop = t.scrollHeight;
+        }
+    };
+
+    /**
+     * 1. MOTEUR AUDIO RÉEL (FFT & dB)
+     */
+    const RealAudio = {
+        ctx: null,
+        analyser: null,
+        stream: null,
+        active: false,
+        dataArray: null,
+        
+        async init() {
+            try {
+                const AC = window.AudioContext || window.webkitAudioContext;
+                this.ctx = new AC();
+                // Pas de réglages de suppression de bruit pour garder le signal brut
+                this.stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
                 
-                let cls = 'log-info';
-                if(type === 'sys') cls = 'log-sys';
-                if(type === 'warn') cls = 'log-warn';
-                if(type === 'err') cls = 'log-err';
-                if(type === 'ai') cls = 'log-ai';
-                if(type === 'data') cls = 'log-data';
+                const source = this.ctx.createMediaStreamSource(this.stream);
+                this.analyser = this.ctx.createAnalyser();
+                this.analyser.fftSize = 2048;
+                this.analyser.smoothingTimeConstant = 0.8;
+                
+                source.connect(this.analyser);
+                this.dataArray = new Uint8Array(this.analyser.frequencyBinCount);
+                this.active = true;
+                
+                Terminal.log("AudioContext: Connecté. Fréquence d'échantillonnage: " + this.ctx.sampleRate + "Hz");
+                Visuals.start();
+                return true;
+            } catch(e) {
+                Terminal.log("Erreur Micro: " + e.message, 'err');
+                return false;
+            }
+        },
 
-                d.className = cls;
-                d.innerHTML = `<span style="opacity:0.5">[${time}]</span> ${msg}`;
-                t.appendChild(d);
-                t.scrollTop = t.scrollHeight;
-            },
-            randomRange(min, max) { return Math.random() * (max - min) + min; },
-            formatBytes(bytes) {
-                if(bytes === 0) return '0 B';
-                const k = 1024;
-                const sizes = ['B', 'KB', 'MB', 'GB'];
-                const i = Math.floor(Math.log(bytes) / Math.log(k));
-                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-            },
-            generateId() { return Math.random().toString(36).substr(2, 9); }
-        };
+        getMetrics() {
+            if(!this.active) return { freq: 0, rms: 0, raw: new Uint8Array(0) };
+            
+            this.analyser.getByteFrequencyData(this.dataArray);
+            
+            let sum = 0;
+            let maxVal = 0;
+            let maxIndex = 0;
 
-        // --- 3. MOTEUR AUDIO (Avancé) ---
-        const AudioEngine = {
-            ctx: null,
-            stream: null,
-            analyser: null,
-            micNode: null,
-            isInit: false,
-            dataArray: null,
-            bufferLength: 0,
-            history: [], // Pour l'historique des données
+            for(let i = 0; i < this.dataArray.length; i++) {
+                const v = this.dataArray[i];
+                sum += v * v;
+                if(v > maxVal) {
+                    maxVal = v;
+                    maxIndex = i;
+                }
+            }
 
-            async init() {
-                if(this.isInit) return true;
+            // RMS (Root Mean Square) - Indicateur réel de puissance
+            const rms = Math.sqrt(sum / this.dataArray.length);
+            
+            // Fréquence dominante réelle
+            const freq = maxIndex > 0 ? (maxIndex * this.ctx.sampleRate / this.analyser.fftSize) : 0;
+
+            return { freq, rms, raw: this.dataArray };
+        },
+
+        stop() {
+            if(this.stream) {
+                this.stream.getTracks().forEach(t => t.stop());
+                this.stream = null;
+            }
+            if(this.ctx) this.ctx.close();
+            this.active = false;
+            Terminal.log("AudioContext: Déconnecté.", 'warn');
+        }
+    };
+
+    /**
+     * 2. MOTEUR CAPTEURS RÉELS (Motion, Orient, Geo, Batt, Net)
+     */
+    const RealSensors = {
+        state: {
+            audio: false,
+            motion: false,
+            orientation: false,
+            geo: false,
+            battery: false,
+            network: false
+        },
+        
+        watchers: [], // Pour nettoyer les events (geoID)
+
+        async toggle(sensor) {
+            this.state[sensor] = !this.state[sensor];
+            const btn = document.getElementById(sensor === 'network' ? 'btn_net' : 'btn_' + sensor);
+            btn.classList.toggle('active', this.state[sensor]);
+
+            if(this.state[sensor]) {
+                await this.startSensor(sensor);
+            } else {
+                this.stopSensor(sensor);
+            }
+        },
+
+        async requestPermission() {
+            // iOS 13+ nécessite une interaction utilisateur pour les capteurs de mouvement
+            if (typeof DeviceMotionEvent.requestPermission === 'function') {
                 try {
-                    const AC = window.AudioContext || window.webkitAudioContext;
-                    this.ctx = new AC();
-                    await this.ctx.resume();
-
-                    // Configuration des contraintes audio détaillées
-                    const constraints = {
-                        audio: {
-                            echoCancellation: Config.audio.echoCancellation,
-                            noiseSuppression: Config.audio.noiseSuppression,
-                            autoGainControl: Config.audio.autoGain,
-                            latency: 0
-                        }
-                    };
-
-                    this.stream = await navigator.mediaDevices.getUserMedia(constraints);
-                    this.analyser = this.ctx.createAnalyser();
-                    
-                    // Application de la config FFT
-                    this.analyser.fftSize = Config.audio.fftSize;
-                    this.analyser.smoothingTimeConstant = Config.audio.smoothing;
-                    this.analyser.minDecibels = Config.audio.minDecibels;
-                    this.analyser.maxDecibels = Config.audio.maxDecibels;
-
-                    this.micNode = this.ctx.createMediaStreamSource(this.stream);
-                    this.micNode.connect(this.analyser);
-                    
-                    this.bufferLength = this.analyser.frequencyBinCount;
-                    this.dataArray = new Uint8Array(this.bufferLength);
-                    this.isInit = true;
-                    
-                    Utils.log(`AudioEngine initialisé. FFT: ${Config.audio.fftSize}, SampleRate: ${this.ctx.sampleRate}Hz`, 'sys');
-                    return true;
+                    const response = await DeviceMotionEvent.requestPermission();
+                    if (response === 'granted') {
+                        document.getElementById('iosPermBtn').style.display = 'none';
+                        this.toggle('motion');
+                        this.toggle('orientation');
+                    } else {
+                        Terminal.log("Permission capteurs refusée.", 'err');
+                    }
                 } catch(e) {
-                    Utils.log(`Erreur Audio Init: ${e.message}`, 'err');
-                    return false;
+                    Terminal.log("Erreur permission: " + e, 'err');
                 }
-            },
-
-            getData() {
-                if(!this.isInit) return { raw: new Uint8Array(1024), rms: 0, peak: 0, freq: 0 };
-                
-                this.analyser.getByteFrequencyData(this.dataArray);
-                
-                let sum = 0;
-                let peak = 0;
-                let peakIndex = 0;
-
-                for(let i = 0; i < this.bufferLength; i++) {
-                    const val = this.dataArray[i];
-                    sum += val * val;
-                    if(val > peak) {
-                        peak = val;
-                        peakIndex = i;
-                    }
-                }
-
-                const rms = Math.sqrt(sum / this.bufferLength);
-                const freq = peakIndex * this.ctx.sampleRate / this.analyser.fftSize;
-
-                return { raw: this.dataArray, rms, peak, freq };
-            },
-
-            destroy() {
-                if(this.stream) this.stream.getTracks().forEach(t => t.stop());
-                if(this.ctx) this.ctx.close();
-                this.isInit = false;
-                this.ctx = null;
+            } else {
+                // Android ou vieux iOS
+                document.getElementById('iosPermBtn').style.display = 'none';
+                this.toggle('motion');
+                this.toggle('orientation');
             }
-        };
+        },
 
-        // --- 4. MOTEUR VISUEL (Multi-Mode) ---
-        const VisualEngine = {
-            canvas: null,
-            ctx: null,
-            running: false,
-            width: 0,
-            height: 0,
-            sweep: 0,
-            lastTime: 0,
-            frameCount: 0,
-            fps: 0,
-            
-            init() {
-                this.canvas = document.getElementById('mainCanvas');
-                this.ctx = this.canvas.getContext('2d', { alpha: false }); // Optimisation
-                window.addEventListener('resize', () => this.resize());
-                this.resize();
-            },
+        async startSensor(type) {
+            switch(type) {
+                case 'audio':
+                    const ok = await RealAudio.init();
+                    if(ok) Terminal.log("Microphone: ACTIF (Données brutes)", 'real');
+                    else this.state.audio = false;
+                    break;
 
-            resize() {
-                const p = this.canvas.parentElement;
-                this.width = p.clientWidth;
-                this.height = p.clientHeight;
-                const dpr = window.devicePixelRatio || 1;
-                this.canvas.width = this.width * dpr;
-                this.canvas.height = this.height * dpr;
-                this.ctx.scale(dpr, dpr);
-            },
+                case 'motion':
+                    window.addEventListener('devicemotion', this.handleMotion);
+                    Terminal.log("Accéléromètre: Écoute en cours...", 'real');
+                    break;
 
-            start() {
-                if(!this.running) {
-                    this.running = true;
-                    this.lastTime = performance.now();
-                    this.loop();
-                    Utils.log("VisualEngine: Démarrage du rendu graphique", 'sys');
-                }
-            },
+                case 'orientation':
+                    window.addEventListener('deviceorientation', this.handleOrientation);
+                    Terminal.log("Gyroscope/Boussole: Écoute en cours...", 'real');
+                    break;
 
-            stop() { this.running = false; },
-
-            loop(timestamp) {
-                if(!this.running) return;
-
-                // FPS Calc
-                this.frameCount++;
-                if(timestamp - this.lastTime >= 1000) {
-                    this.fps = this.frameCount;
-                    this.frameCount = 0;
-                    this.lastTime = timestamp;
-                    document.getElementById('fpsVal').innerText = this.fps;
-                }
-
-                const { raw, rms, peak, freq } = AudioEngine.getData();
-                const cx = this.width / 2;
-                const cy = this.height / 2;
-                const radius = Math.min(this.width, this.height) * 0.4;
-
-                // Fond avec effet de traine
-                this.ctx.fillStyle = `rgba(2, 2, 5, ${1.0 - Config.visual.trailEffect})`;
-                this.ctx.fillRect(0, 0, this.width, this.height);
-
-                // Selection du mode de rendu
-                switch(Config.visual.renderMode) {
-                    case 'radar': this.renderRadar(cx, cy, radius, raw, rms); break;
-                    case 'spectrum': this.renderSpectrum(raw); break;
-                    case 'wave': this.renderWaveform(raw); break;
-                    case 'histogram': this.renderHistogram(raw); break;
-                }
-
-                // Mise à jour overlays
-                if(this.frameCount % 10 === 0) {
-                    document.getElementById('cpuVal').innerText = Math.min(100, Math.floor(rms * 1.5));
-                    document.getElementById('modeVal').innerText = Config.visual.renderMode.toUpperCase();
-                }
-
-                requestAnimationFrame((t) => this.loop(t));
-            },
-
-            renderRadar(cx, cy, r, data, rms) {
-                const col = Config.visual.primaryColor;
-                const sec = Config.visual.secondaryColor;
-
-                // Grille
-                this.ctx.strokeStyle = `rgba(0, 255, 255, ${Config.visual.gridOpacity})`;
-                this.ctx.lineWidth = 1;
-                this.ctx.beginPath(); this.ctx.arc(cx, cy, r, 0, Math.PI*2); this.ctx.stroke();
-                this.ctx.beginPath(); this.ctx.moveTo(cx-r, cy); this.ctx.lineTo(cx+r, cy); this.ctx.stroke();
-                this.ctx.beginPath(); this.ctx.moveTo(cx, cy-r); this.ctx.lineTo(cx, cy+r); this.ctx.stroke();
-
-                // Sweep
-                this.sweep = (this.sweep + Config.visual.radarSpeed) % (Math.PI * 2);
-                this.ctx.save();
-                this.ctx.translate(cx, cy);
-                this.ctx.rotate(this.sweep);
-
-                const grad = this.ctx.createLinearGradient(0,0,r,0);
-                grad.addColorStop(0, 'rgba(0,0,0,0)');
-                grad.addColorStop(1, col);
-                this.ctx.fillStyle = grad;
-                this.ctx.beginPath(); this.ctx.moveTo(0,0); this.ctx.arc(0,0,r, -0.1, 0.1); this.ctx.fill();
-                
-                this.ctx.strokeStyle = '#fff';
-                this.ctx.lineWidth = 2;
-                this.ctx.shadowBlur = 10;
-                this.ctx.shadowColor = col;
-                this.ctx.beginPath(); this.ctx.moveTo(0,0); this.ctx.lineTo(r,0); this.ctx.stroke();
-                this.ctx.restore();
-
-                // Blips
-                if(rms > 20) {
-                    if(Math.random() > 0.6) {
-                        const a = Math.random() * Math.PI * 2;
-                        const d = Math.random() * r * 0.9;
-                        this.ctx.fillStyle = Config.system.ghostMode ? '#ff0055' : '#00ff88';
-                        this.ctx.shadowBlur = 5;
-                        this.ctx.shadowColor = this.ctx.fillStyle;
-                        this.ctx.beginPath(); 
-                        this.ctx.arc(cx + Math.cos(a)*d, cy + Math.sin(a)*d, 2, 0, Math.PI*2); 
-                        this.ctx.fill();
-                    }
-                }
-            },
-
-            renderSpectrum(data) {
-                const barWidth = (this.width / data.length) * 2.5;
-                let x = 0;
-                for(let i = 0; i < data.length; i++) {
-                    const barHeight = (data[i] / 255) * this.height;
-                    this.ctx.fillStyle = `hsl(${i + 180}, 100%, 50%)`;
-                    this.ctx.fillRect(x, this.height - barHeight, barWidth, barHeight);
-                    x += barWidth + 1;
-                }
-            },
-
-            renderWaveform(data) {
-                this.ctx.lineWidth = Config.visual.lineThickness;
-                this.ctx.strokeStyle = Config.visual.primaryColor;
-                this.ctx.beginPath();
-                const sliceWidth = this.width / data.length;
-                let x = 0;
-                for(let i = 0; i < data.length; i++) {
-                    const v = data[i] / 128.0;
-                    const y = v * this.height / 2;
-                    if(i===0) this.ctx.moveTo(x, y);
-                    else this.ctx.lineTo(x, y);
-                    x += sliceWidth;
-                }
-                this.ctx.stroke();
-            },
-            
-            renderHistogram(data) {
-                 // Simplifié pour la démo
-                 const step = Math.ceil(data.length / 50);
-                 const w = this.width / 50;
-                 for(let i=0; i<50; i++) {
-                     const sum = data.slice(i*step, (i+1)*step).reduce((a,b)=>a+b,0);
-                     const h = (sum / (step*255)) * this.height;
-                     this.ctx.fillStyle = Config.visual.secondaryColor;
-                     this.ctx.fillRect(i*w, this.height - h, w-2, h);
-                 }
-            }
-        };
-
-        // --- 5. MOTEUR UI & SETTINGS (Génération Dynamique) ---
-        const UI = {
-            init() {
-                this.generateSettings();
-                // Écouteurs pour les inputs créés dynamiquement
-                document.getElementById('settingsContainer').addEventListener('input', (e) => {
-                    if(e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') {
-                        const path = e.target.dataset.path.split('.');
-                        const val = e.target.type === 'checkbox' ? e.target.checked : parseFloat(e.target.value);
-                        
-                        // Mise à jour profonde de l'objet Config
-                        let obj = Config;
-                        for(let i=0; i<path.length-1; i++) obj = obj[path[i]];
-                        obj[path[path.length-1]] = val;
-                        
-                        // Application immédiate si nécessaire
-                        if(path.includes('fftSize') && AudioEngine.analyser) AudioEngine.analyser.fftSize = val;
-                        if(path.includes('smoothing') && AudioEngine.analyser) AudioEngine.analyser.smoothingTimeConstant = val;
-                        if(path.includes('trailEffect')) VisualEngine.resize(); // Force redraw
-                    }
-                });
-            },
-
-            toggleSettings() {
-                const m = document.getElementById('settingsModal');
-                m.style.display = (m.style.display === 'block') ? 'none' : 'block';
-            },
-
-            generateSettings() {
-                const container = document.getElementById('settingsContainer');
-                const groups = [
-                    { title: "SYSTÈME", obj: Config.system, exclude: [] },
-                    { title: "AUDIO (INPUT/FFT)", obj: Config.audio, exclude: ['inputDevice'] },
-                    { title: "VISUALISATION", obj: Config.visual, exclude: [] },
-                    { title: "CAPTEURS & PHYSIQUE", obj: Config.sensors, exclude: [] },
-                    { title: "PARANORMAL & IA", obj: Config.paranormal, exclude: [] },
-                    { title: "VOIX (TTS)", obj: Config.ai, exclude: ['voice'] }
-                ];
-
-                let html = '';
-                groups.forEach(g => {
-                    html += `<div class="settings-group">
-                        <div class="settings-group-title">${g.title}</div>`;
-                    
-                    for(let key in g.obj) {
-                        if(g.exclude.includes(key)) continue;
-                        const val = g.obj[key];
-                        const path = `${g.title.split(' ')[0].toLowerCase() === 'système' ? 'system' : 
-                                      g.title.split(' ')[0].toLowerCase() === 'audio' ? 'audio' :
-                                      g.title.split(' ')[0].toLowerCase() === 'visualisation' ? 'visual' :
-                                      g.title.split(' ')[0].toLowerCase() === 'capteurs' ? 'sensors' :
-                                      g.title.split(' ')[0].toLowerCase() === 'paranormal' ? 'paranormal' : 'ai'}.${key}`;
-                        
-                        let inputHtml = '';
-                        if(typeof val === 'boolean') {
-                            inputHtml = `<input type="checkbox" data-path="${path}" ${val ? 'checked' : ''}>`;
-                        } else if(typeof val === 'number') {
-                            inputHtml = `<input type="range" min="0" max="${val > 1 ? 100 : 2}" step="${val > 1 ? 1 : 0.1}" data-path="${path}" value="${val}"> <span style="color:#888">${val}</span>`;
-                        } else if (key === 'renderMode') {
-                            inputHtml = `<select data-path="${path}">
-                                <option value="radar" ${val==='radar'?'selected':''}>RADAR</option>
-                                <option value="spectrum" ${val==='spectrum'?'selected':''}>SPECTRE</option>
-                                <option value="wave" ${val==='wave'?'selected':''}>ONDE</option>
-                                <option value="histogram" ${val==='histogram'?'selected':''}>HISTOGRAMME</option>
-                            </select>`;
-                        }
-
-                        html += `<div class="settings-row">
-                            <label>${key.toUpperCase()}</label>
-                            <div>${inputHtml}</div>
-                        </div>`;
-                    }
-                    html += `</div>`;
-                });
-                container.innerHTML = html;
-            }
-        };
-
-        // --- 6. LOGIQUE SYSTÈME PRINCIPALE ---
-        const System = {
-            state: {
-                mic: false, audio: false, radar: true, spectrum: false,
-                ghost: false, vad: false, emf: false, temp: false, spirit: false, record: false
-            },
-            startTime: null,
-
-            async toggle(feature) {
-                if(feature === 'mic') {
-                    if(!this.state.mic) {
-                        const success = await AudioEngine.init();
-                        if(success) {
-                            this.state.mic = true;
-                            Utils.log("Microphone connecté et actif.", 'sys');
-                            VisualEngine.start();
-                            this.startUptime();
-                        }
+                case 'geo':
+                    if("geolocation" in navigator) {
+                        this.watchers.push(navigator.geolocation.watchPosition(this.handleGeo, this.handleGeoErr, { enableHighAccuracy: true }));
+                        Terminal.log("GPS: Recherche satellite...", 'real');
                     } else {
-                        AudioEngine.destroy();
-                        this.state.mic = false;
-                        VisualEngine.stop();
-                        Utils.log("Microphone déconnecté.", 'warn');
+                        Terminal.log("GPS: Non supporté par ce navigateur.", 'err');
                     }
-                } else {
-                    // Toggle standard
-                    this.state[feature] = !this.state[feature];
-                    Utils.log(`Module ${feature.toUpperCase()}: ${this.state[feature] ? 'ACTIF' : 'INACTIF'}`, 'sys');
-                    
-                    // Effets spécifiques
-                    if(feature === 'ghost') Config.system.ghostMode = this.state.ghost;
-                    if(feature === 'spirit' && this.state.spirit) this.startSpiritBox();
-                }
-                
-                // UI Update
-                const btn = document.getElementById(`btn_${feature}`);
-                if(btn) btn.classList.toggle('active-state', this.state[feature]);
-            },
+                    break;
 
-            startUptime() {
-                if(this.startTime) return;
-                this.startTime = Date.now();
-                setInterval(() => {
-                    if(!this.state.mic) return;
-                    const diff = Date.now() - this.startTime;
-                    const h = Math.floor(diff / 3600000).toString().padStart(2,'0');
-                    const m = Math.floor((diff % 3600000) / 60000).toString().padStart(2,'0');
-                    const s = Math.floor((diff % 60000) / 1000).toString().padStart(2,'0');
-                    document.getElementById('uptimeVal').innerText = `${h}:${m}:${s}`;
-                    
-                    // Simulation Data RAM
-                    document.getElementById('memVal').innerText = (120 + Math.random()*20).toFixed(0);
-                }, 1000);
-            },
-
-            runDiagnostics() {
-                Utils.log("--- LANCEMENT DU DIAGNOSTIC SYSTÈME ---", 'warn');
-                const checks = ['Vérification FFT...', 'Calibration EMF...', 'Test Latence Audio...', 'Scan Mémoire...'];
-                let i = 0;
-                const interval = setInterval(() => {
-                    if(i < checks.length) {
-                        Utils.log(checks[i], 'data');
-                        i++;
+                case 'battery':
+                    if("getBattery" in navigator) {
+                        try {
+                            const batt = await navigator.getBattery();
+                            this.updateBattery(batt);
+                            batt.addEventListener('levelchange', () => this.updateBattery(batt));
+                            batt.addEventListener('chargingchange', () => this.updateBattery(batt));
+                            Terminal.log("Batterie: Surveillance active.", 'real');
+                        } catch(e) { Terminal.log("Batterie: API non accessible.", 'err'); }
                     } else {
-                        clearInterval(interval);
-                        Utils.log("DIAGNOSTIC TERMINÉ: SYSTÈME NOMINAL", 'sys');
-                        document.getElementById('mainText').innerText = "DIAGNOSTIC OK";
-                        document.getElementById('mainText').style.borderColor = Config.visual.primaryColor;
+                        Terminal.log("Batterie: Non supportée.", 'err');
                     }
-                }, 800);
-            },
+                    break;
 
-            startSpiritBox() {
-                if(!this.state.spirit) return;
-                Utils.log("Spirit Box: Balayage fréquences 88MHz - 108MHz...", 'warn');
-                let freq = 88.0;
-                const boxInterval = setInterval(() => {
-                    if(!this.state.spirit) { clearInterval(boxInterval); return; }
-                    freq += 0.1;
-                    if(freq > 108) freq = 88.0;
-                    document.getElementById('mainText').innerText = `FM ${freq.toFixed(1)} MHz`;
-                    document.getElementById('mainText').style.color = '#fff';
-                    // Simulation bruit blanc
-                }, 100);
-            },
-            
-            fullShutdown() {
-                Utils.log("COMMANDE ARRÊT TOTAL RECUE.", 'err');
-                AudioEngine.destroy();
-                VisualEngine.stop();
-                Object.keys(this.state).forEach(k => this.state[k] = false);
-                document.querySelectorAll('.grid-btn').forEach(b => b.classList.remove('active-state'));
-                document.getElementById('mainText').innerText = "SYSTEM HALTED";
-                document.getElementById('mainText').style.borderColor = 'red';
+                case 'network':
+                    if("connection" in navigator) {
+                        this.updateNetwork();
+                        navigator.connection.addEventListener('change', this.updateNetwork);
+                        Terminal.log("Réseau: Surveillance active.", 'real');
+                    } else {
+                        Terminal.log("Réseau: API non supportée.", 'err');
+                    }
+                    break;
             }
-        };
+        },
 
-        // --- INITIALISATION ---
-        window.onload = () => {
-            UI.init();
-            VisualEngine.init();
-            Utils.log("OPATATOP ULTRA-PRO: Prêt. Initialisez le microphone pour commencer.", 'info');
-        };
+        stopSensor(type) {
+            switch(type) {
+                case 'audio': RealAudio.stop(); break;
+                case 'motion': window.removeEventListener('devicemotion', this.handleMotion); break;
+                case 'orientation': window.removeEventListener('deviceorientation', this.handleOrientation); break;
+                case 'geo': 
+                    this.watchers.forEach(id => navigator.geolocation.clearWatch(id)); 
+                    this.watchers = [];
+                    Terminal.log("GPS: Arrêté.", 'warn');
+                    document.getElementById('valGeo').innerText = "N/A";
+                    break;
+                case 'battery': /* Battery API ne permet pas de stop propre, on arrête juste l'affichage */ break;
+                case 'network': /* Network API est passif */ break;
+            }
+        },
 
-    </script>
+        // --- HANDLERS (Traitement des données réelles) ---
+
+        handleMotion(e) {
+            if(!this.state.motion) return;
+            // Accélération réelle en m/s²
+            const acc = e.accelerationIncludingGravity;
+            if(acc) {
+                // Log seulement si mouvement significatif pour éviter spam
+                if(Math.abs(acc.x || 0) > 0.2 || Math.abs(acc.y || 0) > 0.2) {
+                    // On pourrait loguer ici, mais pour la perf on affiche juste
+                }
+            }
+        },
+
+        handleOrientation(e) {
+            if(!this.state.orientation) return;
+            // Alpha: Compas (0-360), Beta/Gamma: Inclinaison
+            const heading = e.webkitCompassHeading || e.alpha; 
+            if(heading) {
+                // Affichage boussole réel
+                document.getElementById('valOrient').innerText = Math.round(heading) + "°";
+            }
+        },
+
+        handleGeo(pos) {
+            if(!this.state.geo) return;
+            const crd = pos.coords;
+            const lat = crd.latitude.toFixed(5);
+            const lng = crd.longitude.toFixed(5);
+            const acc = crd.accuracy ? Math.round(crd.accuracy) + "m" : "N/A";
+            const alt = crd.altitude ? crd.altitude.toFixed(1) + "m" : "N/A";
+            
+            const txt = `LAT:${lat} LNG:${lng} ALT:${alt} PRÉC:${acc}`;
+            // Création dynamique d'un élément si besoin, ou utilisation de l'overlay existant
+            // Pour ce layout, on log dans le terminal pour garder l'UI propre
+            Terminal.log(`GPS UPDATE: ${txt}`, 'real');
+        },
+
+        handleGeoErr(err) {
+            Terminal.log(`GPS ERR: ${err.message}`, 'err');
+        },
+
+        updateBattery(batt) {
+            if(!this.state.battery) return;
+            const p = Math.round(batt.level * 100);
+            const ch = batt.charging ? "CHARGE" : "Décharge";
+            document.getElementById('valBatt').innerText = `${p}% (${ch})`;
+            Terminal.log(`Batterie: ${p}% - ${ch}`, 'real');
+        },
+
+        updateNetwork() {
+            if(!this.state.network) return;
+            const conn = navigator.connection;
+            const type = conn.effectiveType ? conn.effectiveType.toUpperCase() : "N/A";
+            const down = conn.downlink ? conn.downlink + " Mbps" : "N/A";
+            const rtt = conn.rtt ? conn.rtt + " ms" : "N/A";
+            
+            document.getElementById('valNet').innerText = `${type} / ${down}`;
+            Terminal.log(`Réseau: ${type}, Down: ${down}, Ping: ${rtt}`, 'real');
+        }
+    };
+
+    /**
+     * 3. VISUALISATION RÉELLE (Spectre Audio)
+     */
+    const Visuals = {
+        canvas: null,
+        ctx: null,
+        active: false,
+
+        init() {
+            this.canvas = document.getElementById('audioCanvas');
+            this.ctx = this.canvas.getContext('2d');
+            this.resize();
+            window.addEventListener('resize', () => this.resize());
+        },
+
+        resize() {
+            const p = this.canvas.parentElement;
+            this.canvas.width = p.clientWidth;
+            this.canvas.height = p.clientHeight;
+        },
+
+        start() {
+            if(!this.active) {
+                this.active = true;
+                this.loop();
+            }
+        },
+
+        stop() {
+            this.active = false;
+            // Nettoyer canvas
+            this.ctx.clearRect(0,0, this.canvas.width, this.canvas.height);
+        },
+
+        loop() {
+            if(!this.active) return;
+            requestAnimationFrame(() => this.loop());
+
+            const w = this.canvas.width;
+            const h = this.canvas.height;
+            const { rms, freq, raw } = RealAudio.getMetrics();
+
+            // Mise à jour Overlay Audio
+            document.getElementById('valFreq').innerText = Math.round(freq) + " Hz";
+            document.getElementById('valRms').innerText = rms.toFixed(2); // Unité arbitraire 0-255 (proche dB relatif)
+
+            // Dessin Spectre (Données brutes)
+            this.ctx.fillStyle = '#000';
+            this.ctx.fillRect(0, 0, w, h);
+
+            const barWidth = (w / raw.length) * 2.5;
+            let x = 0;
+
+            for(let i = 0; i < raw.length; i++) {
+                const barHeight = (raw[i] / 255) * h;
+                
+                // Couleur basée sur l'intensité réelle
+                const r = barHeight + (25 * (i/raw.length));
+                const g = 250 * (i/raw.length);
+                const b = 50;
+
+                this.ctx.fillStyle = `rgb(${r},${g},${b})`;
+                this.ctx.fillRect(x, h - barHeight, barWidth, barHeight);
+
+                x += barWidth + 1;
+            }
+        }
+    };
+
+    /**
+     * INITIALISATION HORLOGE SYSTÈME
+     */
+    setInterval(() => {
+        const now = new Date();
+        document.getElementById('systemTime').innerText = now.toLocaleTimeString('fr-FR');
+    }, 1000);
+
+    // Boot
+    window.onload = () => {
+        Visuals.init();
+        Terminal.log("SYSTÈME OPATATOP REAL PRÊT.", 'real');
+        Terminal.log("ATTENTION: Aucune donnée ne sera simulée.", 'warn');
+        
+        // Détection iOS pour afficher le bouton de permission
+        if (typeof DeviceMotionEvent.requestPermission === 'function') {
+            document.getElementById('iosPermBtn').style.display = 'block';
+        }
+    };
+
+    // Expose handlers globalement pour les events HTML
+    RealSensors.handleMotion = RealSensors.handleMotion.bind(RealSensors);
+    RealSensors.handleOrientation = RealSensors.handleOrientation.bind(RealSensors);
+    RealSensors.handleGeo = RealSensors.handleGeo.bind(RealSensors);
+    RealSensors.handleGeoErr = RealSensors.handleGeoErr.bind(RealSensors);
+    RealSensors.updateBattery = RealSensors.updateBattery.bind(RealSensors);
+    RealSensors.updateNetwork = RealSensors.updateNetwork.bind(RealSensors);
+
+</script>
 </body>
 </html>
