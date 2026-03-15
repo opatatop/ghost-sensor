@@ -234,6 +234,35 @@
             text-shadow: 0 0 12px var(--primary);
             font-size: 1.2rem;
             font-weight: bold;
+            animation: blink 2s infinite;
+        }
+        @keyframes blink {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+        #liveTranslation {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            pointer-events: none;
+            z-index: 30;
+            color: var(--zeus);
+            background: rgba(0, 0, 0, 0.7);
+            padding: 20px 30px;
+            border: 3px solid var(--zeus);
+            text-transform: uppercase;
+            text-shadow: 0 0 15px var(--zeus);
+            font-size: 1.5rem;
+            font-weight: bold;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(255, 255, 0, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(255, 255, 0, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 255, 0, 0); }
         }
         .color-mode-btn {
             background: #1a1a1a;
@@ -274,6 +303,7 @@
                 <div id="subText">RADAR MILITAIRE + IA EN LIGNE + TRADUCTION PARFAITE + ENREGISTREMENT AUTO + EMF RÉEL + TEMPÉRATURE RÉELLE</div>
             </div>
             <div id="translationOverlay">TRADUCTION INSTANTANÉE: --</div>
+            <div id="liveTranslation">TRADUCTION EN DIRECT: --</div>
             <div id="hud">ÉNERGIE: -- %<br>FRÉQ. DOM.: -- Hz<br>EMF RÉEL: -- μT<br>TEMPÉRATURE: -- °C<br>ACTIVITÉ: --</div>
         </div>
     </main>
@@ -909,6 +939,7 @@
             lastTopic: "",
             lastResponses: new Set(),
             translationsLog: [],
+            liveTranslationTimeout: null,
             init() {
                 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
                 if (!SR) return false;
@@ -931,7 +962,7 @@
                         this.process(finalTranscript);
                     }
                     if (interimTranscript) {
-                        this.updateTranslationOverlay(interimTranscript);
+                        this.updateLiveTranslation(interimTranscript);
                     }
                 };
                 this.recognition.onend = () => {
@@ -986,6 +1017,14 @@
                     const entry = `[${new Date().toLocaleTimeString('fr-FR')}] [ORAL] ${text}`;
                     this.translationsLog.push(entry);
                 }
+            },
+            updateLiveTranslation(text) {
+                document.getElementById('liveTranslation').innerText = `TRADUCTION EN DIRECT: ${text}`;
+                App.log(`TRADUCTION EN DIRECT: ${text}`, 'det');
+                clearTimeout(this.liveTranslationTimeout);
+                this.liveTranslationTimeout = setTimeout(() => {
+                    document.getElementById('liveTranslation').innerText = `TRADUCTION EN DIRECT: --`;
+                }, 2000);
             },
             updateTranslationOverlay(text) {
                 document.getElementById('translationOverlay').innerText = `TRADUCTION INSTANTANÉE: ${text}`;
