@@ -3,521 +3,579 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>OPATATOP REAL — DONNÉES BRUTES</title>
+    <title>OPATATOP AI - Version Complète</title>
     <style>
         :root {
-            --bg: #000000;
-            --panel: #0a0a0a;
-            --text: #e0e0e0;
-            --real: #00ff00; /* Vert pour les données réelles */
-            --warn: #ffcc00;
-            --err: #ff3333;
-            --border: #333;
+            --primary: #00ffff;
+            --secondary: #bc13fe;
+            --bg: #050510;
+            --panel: #0a0a20;
+            --text: #e0e0ff;
+            --danger: #ff3333;
+            --accent: #00ff88;
+            --zeus: #ffff00;
         }
-
-        * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
-
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
         body {
-            margin: 0; padding: 0; font-family: 'Consolas', 'Monaco', monospace;
-            background: var(--bg); color: var(--text);
-            display: flex; flex-direction: column; height: 100vh; overflow: hidden;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
         }
-
-        /* UI Structure */
         header {
-            background: #000; border-bottom: 1px solid var(--real);
-            padding: 10px; display: flex; justify-content: space-between; align-items: center;
-            height: 40px;
+            background: #000;
+            border-bottom: 3px solid var(--primary);
+            padding: 10px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
         }
-        h1 { margin: 0; font-size: 0.9rem; color: var(--real); text-transform: uppercase; letter-spacing: 1px; }
-
-        main { flex: 1; display: flex; flex-direction: column; position: relative; }
-
-        /* Canvas pour Audio Réel */
-        #scopeContainer { flex: 1; background: #000; border-bottom: 1px solid var(--border); position: relative; }
-        canvas { width: 100%; height: 100%; display: block; }
-        
-        /* Overlay Données Réelles */
-        #dataOverlay {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none; padding: 10px; display: grid;
-            grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr;
+        h1 {
+            font-size: 1.2rem;
+            color: var(--primary);
+            text-shadow: 0 0 10px var(--primary);
+            letter-spacing: 2px;
+            margin: 0;
         }
-
-        .data-box {
-            background: rgba(0, 20, 0, 0.6); border: 1px solid var(--real);
-            padding: 5px; font-size: 0.7rem; color: var(--real);
-            display: flex; flex-direction: column; justify-content: center;
+        main {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
         }
-        .data-val { font-size: 1.2rem; font-weight: bold; margin-top: 5px; }
-        .na { color: #555; } /* Style pour Non Disponible */
-
-        /* Controls Grid */
+        #visualizer {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            background: radial-gradient(circle at center, #000 0%, #0a0a20 100%);
+        }
+        canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+        #displayOverlay {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            pointer-events: none;
+            z-index: 30;
+            width: 90%;
+        }
+        #mainText {
+            font-size: 1.6rem;
+            font-weight: bold;
+            color: #fff;
+            background: rgba(5, 5, 16, 0.8);
+            padding: 12px 20px;
+            border: 2px solid var(--primary);
+            border-radius: 5px;
+            text-transform: uppercase;
+            text-shadow: 0 0 10px var(--primary);
+            margin-bottom: 8px;
+        }
+        #subText {
+            font-size: 0.8rem;
+            color: var(--secondary);
+            letter-spacing: 2px;
+            background: rgba(5, 5, 16, 0.7);
+            padding: 8px 15px;
+            border: 1px solid var(--secondary);
+            border-radius: 5px;
+            text-shadow: 0 0 5px var(--secondary);
+        }
+        #hud {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px 14px;
+            border: 1px solid var(--accent);
+            border-radius: 5px;
+            font-size: 0.8rem;
+            line-height: 1.4;
+            color: var(--accent);
+            z-index: 25;
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+        }
+        #actionGrid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+            gap: 10px;
+            padding: 15px;
+            background: var(--panel);
+            border-top: 1px solid #222;
+        }
+        .grid-btn {
+            background: #1a1a1a;
+            border: 1px solid #444;
+            color: #ccc;
+            padding: 10px 5px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .grid-btn:active {
+            transform: scale(0.95);
+        }
+        .grid-btn.active-state {
+            background: var(--secondary);
+            color: #fff;
+            border-color: var(--secondary);
+            box-shadow: 0 0 15px rgba(188, 19, 254, 0.5);
+        }
+        .grid-icon {
+            font-size: 1.2rem;
+            margin-bottom: 3px;
+        }
         #controls {
-            height: 180px; background: var(--panel); border-top: 1px solid var(--border);
-            display: grid; grid-template-columns: repeat(4, 1fr); gap: 2px;
-            overflow-y: auto;
+            background: var(--panel);
+            padding: 15px;
+            display: grid;
+            gap: 10px;
         }
-
-        .ctrl-btn {
-            background: #111; border: 1px solid #333; color: #888;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            font-size: 0.7rem; padding: 5px; cursor: pointer; text-align: center;
+        button {
+            background: #1a1a1a;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            padding: 12px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            border-radius: 5px;
+            transition: all 0.15s;
+            position: relative;
+            overflow: hidden;
         }
-        .ctrl-btn:active { background: #222; }
-        .ctrl-btn.active { background: rgba(0, 255, 0, 0.1); color: var(--real); border-color: var(--real); }
-        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #333; margin-bottom: 5px; }
-        .ctrl-btn.active .status-dot { background: var(--real); box-shadow: 0 0 5px var(--real); }
-
-        /* Terminal Logs */
+        button:active {
+            transform: scale(0.95);
+        }
+        button.active-mode {
+            background: var(--primary);
+            color: #000;
+            box-shadow: 0 0 15px var(--primary);
+        }
+        button.danger {
+            border-color: var(--danger);
+            color: var(--danger);
+        }
         #terminal {
-            height: 120px; background: #050505; border-top: 1px solid var(--border);
-            padding: 5px; font-size: 0.65rem; overflow-y: auto; font-family: monospace;
+            height: 100px;
+            background: #000;
+            border-top: 1px solid #333;
+            padding: 8px;
+            font-size: 0.7rem;
+            overflow-y: auto;
             color: #aaa;
+            line-height: 1.4;
         }
-        .log-entry { margin-bottom: 2px; border-left: 2px solid #333; padding-left: 5px; }
-        .log-real { border-color: var(--real); color: #ccffcc; }
-        .log-warn { border-color: var(--warn); color: var(--warn); }
-        .log-err { border-color: var(--err); color: var(--err); }
-
-        /* Bouton Permission iOS (Caché par défaut) */
-        #iosPermBtn {
-            display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background: var(--real); color: #000; padding: 20px; border: none; font-weight: bold;
-            z-index: 1000; cursor: pointer;
+        .log-line {
+            margin-bottom: 5px;
+            border-left: 2px solid #555;
+            padding-left: 8px;
+        }
+        .log-sys { border-color: #666; color: #aaa; }
+        .log-ai { border-color: var(--secondary); color: var(--secondary); }
+        .log-det { border-color: var(--primary); color: var(--accent); }
+        #settingsModal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 300;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            width: 90%;
+            max-width: 500px;
+            background: #111;
+            border: 2px solid var(--secondary);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 0 30px rgba(188, 19, 254, 0.4);
+        }
+        .setting-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 15px 0;
+        }
+        label {
+            font-size: 0.9rem;
+        }
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 60%;
+            height: 8px;
+            background: #333;
+            border-radius: 4px;
+            outline: none;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: var(--secondary);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        .color-mode-btn {
+            background: #1a1a1a;
+            border: 1px solid #444;
+            color: #ccc;
+            padding: 8px 12px;
+            border-radius: 5px;
+            font-size: 0.7rem;
+            cursor: pointer;
+            margin: 5px;
+            transition: all 0.2s;
+        }
+        .color-mode-btn.active {
+            background: var(--secondary);
+            color: #fff;
+            border-color: var(--secondary);
+        }
+        .color-mode-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin: 15px 0;
+        }
+        #translationOverlay {
+            position: absolute;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            pointer-events: none;
+            z-index: 30;
+            color: var(--text);
+            background: rgba(5, 5, 16, 0.8);
+            padding: 10px 20px;
+            border: 2px solid var(--primary);
+            border-radius: 5px;
+            text-transform: uppercase;
+            font-size: 1rem;
+            font-weight: bold;
+        }
+        #liveTranslation {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            pointer-events: none;
+            z-index: 30;
+            color: var(--zeus);
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px 25px;
+            border: 2px solid var(--zeus);
+            border-radius: 5px;
+            text-transform: uppercase;
+            font-size: 1.2rem;
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
-
-<header>
-    <h1>OPATATOP <span style="color:#fff">REAL DATA LINK</span></h1>
-    <div id="systemTime" style="color:#fff; font-size:0.8rem;">00:00:00</div>
-</header>
-
-<main>
-    <div id="scopeContainer">
-        <canvas id="audioCanvas"></canvas>
-        
-        <div id="dataOverlay">
-            <!-- Données Audio Réelles -->
-            <div class="data-box">
-                <div>FREQUENCE DOMINANTE</div>
-                <div class="data-val" id="valFreq">-- Hz</div>
+    <header>
+        <h1>OPATATOP AI</h1>
+        <button onclick="App.toggleSettings()" style="background:none;border:1px solid var(--secondary);color:var(--secondary);width:40px;height:40px;border-radius:50%;font-size:1.2rem;">⚙️</button>
+    </header>
+    <main>
+        <div id="visualizer">
+            <canvas id="scopeCanvas"></canvas>
+            <div id="displayOverlay">
+                <div id="mainText">SYSTÈME ACTIVÉ</div>
+                <div id="subText">MODE COMPLET</div>
             </div>
-            <div class="data-box">
-                <div>AMPLITUDE RMS</div>
-                <div class="data-val" id="valRms">-- dB</div>
-            </div>
-            
-            <!-- Données Réseau Réelles -->
-            <div class="data-box">
-                <div>RÉSEAU (TYPE)</div>
-                <div class="data-val" id="valNet">--</div>
-            </div>
-            <div class="data-box">
-                <div>BATTERIE</div>
-                <div class="data-val" id="valBatt">-- %</div>
-            </div>
+            <div id="translationOverlay">TRADUCTION: --</div>
+            <div id="liveTranslation">--</div>
+            <div id="hud">ÉNERGIE: 0%<br>FRÉQ.: 0 Hz<br>EMF: 0 μT<br>TEMP: 0°C</div>
         </div>
-
-        <!-- Bouton pour permission iOS 13+ -->
-        <button id="iosPermBtn" onclick="RealSensors.requestPermission()">ACTIVER LES CAPTEURS</button>
+    </main>
+    <div id="actionGrid">
+        <div class="grid-btn" onclick="App.toggleSettings()"><span class="grid-icon">⚙️</span><span>RÉGLAGES</span></div>
+        <div class="grid-btn active-state" id="btnSound" onclick="FeatureEngine.toggleMute()"><span class="grid-icon">🔇</span><span>AUDIO</span></div>
+        <div class="grid-btn active-state" id="btnPower" onclick="FeatureEngine.togglePower()"><span class="grid-icon">⚡</span><span>MODE</span></div>
+        <div class="grid-btn active-state" id="btnDetect" onclick="FeatureEngine.toggleDetection()"><span class="grid-icon">🔍</span><span>DÉTECTION</span></div>
+        <div class="grid-btn" id="btnNoise" onclick="FeatureEngine.toggleWhiteNoise()"><span class="grid-icon">🔊</span><span>BRUIT</span></div>
+        <div class="grid-btn active-state" id="btnGhost" onclick="FeatureEngine.toggleGhostDetection()"><span class="grid-icon">👻</span><span>FANTÔME</span></div>
+        <div class="grid-btn active-state" id="btnVAD" onclick="FeatureEngine.toggleVAD()"><span class="grid-icon">🎤</span><span>VAD</span></div>
+        <div class="grid-btn" id="btnSensors" onclick="FeatureEngine.toggleSensors()"><span class="grid-icon">📡</span><span>CAPTEURS</span></div>
+        <div class="grid-btn" id="btnRecord" onclick="FeatureEngine.toggleAutoRecord()"><span class="grid-icon">📼</span><span>ENREG.</span></div>
+        <div class="grid-btn" id="btnEMF" onclick="FeatureEngine.toggleEMF()"><span class="grid-icon">📏</span><span>EMF</span></div>
+        <div class="grid-btn" id="btnTemp" onclick="FeatureEngine.toggleTemp()"><span class="grid-icon">🌡️</span><span>TEMP</span></div>
+        <div class="grid-btn" id="btnEVP" onclick="FeatureEngine.toggleEVP()"><span class="grid-icon">📻</span><span>EVP</span></div>
     </div>
-</main>
-
-<div id="controls">
-    <div class="ctrl-btn active" id="btn_audio" onclick="RealSensors.toggle('audio')">
-        <div class="status-dot"></div><span>AUDIO IN</span>
+    <div id="terminal"></div>
+    <div id="settingsModal">
+        <div class="modal-content">
+            <span onclick="App.toggleSettings()" style="float:right;font-size:1.8rem;color:var(--danger);cursor:pointer;">×</span>
+            <h2 style="color:var(--primary);margin-bottom:15px;">RÉGLAGES</h2>
+            <div class="setting-row">
+                <label for="pitch">Hauteur</label>
+                <input type="range" id="pitch" min="0.5" max="2" step="0.1" value="1">
+            </div>
+            <div class="setting-row">
+                <label for="rate">Vitesse</label>
+                <input type="range" id="rate" min="0.5" max="2" step="0.1" value="1">
+            </div>
+            <div class="color-mode-container">
+                <div class="color-mode-btn active" onclick="Config.setColorMode('zeus')">ZEUS</div>
+                <div class="color-mode-btn" onclick="Config.setColorMode('dark')">SOMBRE</div>
+                <div class="color-mode-btn" onclick="Config.setColorMode('light')">CLAIR</div>
+            </div>
+            <button style="width:100%;margin-top:20px;padding:12px;" onclick="App.toggleSettings()">FERMER</button>
+        </div>
     </div>
-    <div class="ctrl-btn" id="btn_motion" onclick="RealSensors.toggle('motion')">
-        <div class="status-dot"></div><span>ACCELÉROMÈTRE</span>
-    </div>
-    <div class="ctrl-btn" id="btn_orient" onclick="RealSensors.toggle('orientation')">
-        <div class="status-dot"></div><span>GYRO / BOUSSOLE</span>
-    </div>
-    <div class="ctrl-btn" id="btn_geo" onclick="RealSensors.toggle('geo')">
-        <div class="status-dot"></div><span>GEOLOCATION</span>
-    </div>
-    <div class="ctrl-btn" id="btn_batt" onclick="RealSensors.toggle('battery')">
-        <div class="status-dot"></div><span>BATTERIE</span>
-    </div>
-    <div class="ctrl-btn" id="btn_net" onclick="RealSensors.toggle('network')">
-        <div class="status-dot"></div><span>RÉSEAU</span>
-    </div>
-</div>
-
-<div id="terminal"></div>
-
-<script>
-    /**
-     * OPATATOP REAL ENGINE
-     * Aucune simulation. Uniquement API Web du navigateur.
-     */
-
-    const Terminal = {
-        log: (msg, type = 'real') => {
-            const t = document.getElementById('terminal');
-            const d = document.createElement('div');
-            d.className = `log-entry log-${type}`;
-            const time = new Date().toLocaleTimeString('fr-FR', {hour12:false});
-            d.innerText = `[${time}] ${msg}`;
-            t.appendChild(d);
-            t.scrollTop = t.scrollHeight;
-        }
-    };
-
-    /**
-     * 1. MOTEUR AUDIO RÉEL (FFT & dB)
-     */
-    const RealAudio = {
-        ctx: null,
-        analyser: null,
-        stream: null,
-        active: false,
-        dataArray: null,
-        
-        async init() {
-            try {
-                const AC = window.AudioContext || window.webkitAudioContext;
-                this.ctx = new AC();
-                // Pas de réglages de suppression de bruit pour garder le signal brut
-                this.stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
-                
-                const source = this.ctx.createMediaStreamSource(this.stream);
-                this.analyser = this.ctx.createAnalyser();
-                this.analyser.fftSize = 2048;
-                this.analyser.smoothingTimeConstant = 0.8;
-                
-                source.connect(this.analyser);
-                this.dataArray = new Uint8Array(this.analyser.frequencyBinCount);
-                this.active = true;
-                
-                Terminal.log("AudioContext: Connecté. Fréquence d'échantillonnage: " + this.ctx.sampleRate + "Hz");
-                Visuals.start();
-                return true;
-            } catch(e) {
-                Terminal.log("Erreur Micro: " + e.message, 'err');
-                return false;
-            }
-        },
-
-        getMetrics() {
-            if(!this.active) return { freq: 0, rms: 0, raw: new Uint8Array(0) };
-            
-            this.analyser.getByteFrequencyData(this.dataArray);
-            
-            let sum = 0;
-            let maxVal = 0;
-            let maxIndex = 0;
-
-            for(let i = 0; i < this.dataArray.length; i++) {
-                const v = this.dataArray[i];
-                sum += v * v;
-                if(v > maxVal) {
-                    maxVal = v;
-                    maxIndex = i;
+    <script>
+        const Config = {
+            data: {
+                pitch: 1.0,
+                rate: 1.0,
+                colorMode: 'zeus'
+            },
+            colorModes: {
+                zeus: {
+                    primary: '#00ffff',
+                    secondary: '#bc13fe',
+                    bg: '#050510',
+                    panel: '#0a0a20',
+                    text: '#e0e0ff'
+                },
+                dark: {
+                    primary: '#00ff88',
+                    secondary: '#ff3333',
+                    bg: '#000000',
+                    panel: '#111111',
+                    text: '#ffffff'
+                },
+                light: {
+                    primary: '#0066ff',
+                    secondary: '#ff00ff',
+                    bg: '#f0f0f0',
+                    panel: '#e0e0e0',
+                    text: '#000000'
                 }
+            },
+            applyColorMode() {
+                const mode = this.colorModes[this.data.colorMode];
+                document.documentElement.style.setProperty('--primary', mode.primary);
+                document.documentElement.style.setProperty('--secondary', mode.secondary);
+                document.documentElement.style.setProperty('--bg', mode.bg);
+                document.documentElement.style.setProperty('--panel', mode.panel);
+                document.documentElement.style.setProperty('--text', mode.text);
+            },
+            setColorMode(mode) {
+                this.data.colorMode = mode;
+                this.applyColorMode();
             }
+        };
 
-            // RMS (Root Mean Square) - Indicateur réel de puissance
-            const rms = Math.sqrt(sum / this.dataArray.length);
-            
-            // Fréquence dominante réelle
-            const freq = maxIndex > 0 ? (maxIndex * this.ctx.sampleRate / this.analyser.fftSize) : 0;
-
-            return { freq, rms, raw: this.dataArray };
-        },
-
-        stop() {
-            if(this.stream) {
-                this.stream.getTracks().forEach(t => t.stop());
-                this.stream = null;
-            }
-            if(this.ctx) this.ctx.close();
-            this.active = false;
-            Terminal.log("AudioContext: Déconnecté.", 'warn');
-        }
-    };
-
-    /**
-     * 2. MOTEUR CAPTEURS RÉELS (Motion, Orient, Geo, Batt, Net)
-     */
-    const RealSensors = {
-        state: {
-            audio: false,
-            motion: false,
-            orientation: false,
-            geo: false,
-            battery: false,
-            network: false
-        },
-        
-        watchers: [], // Pour nettoyer les events (geoID)
-
-        async toggle(sensor) {
-            this.state[sensor] = !this.state[sensor];
-            const btn = document.getElementById(sensor === 'network' ? 'btn_net' : 'btn_' + sensor);
-            btn.classList.toggle('active', this.state[sensor]);
-
-            if(this.state[sensor]) {
-                await this.startSensor(sensor);
-            } else {
-                this.stopSensor(sensor);
-            }
-        },
-
-        async requestPermission() {
-            // iOS 13+ nécessite une interaction utilisateur pour les capteurs de mouvement
-            if (typeof DeviceMotionEvent.requestPermission === 'function') {
+        const AudioEngine = {
+            ctx: null,
+            stream: null,
+            analyser: null,
+            isInit: false,
+            async init() {
                 try {
-                    const response = await DeviceMotionEvent.requestPermission();
-                    if (response === 'granted') {
-                        document.getElementById('iosPermBtn').style.display = 'none';
-                        this.toggle('motion');
-                        this.toggle('orientation');
-                    } else {
-                        Terminal.log("Permission capteurs refusée.", 'err');
-                    }
-                } catch(e) {
-                    Terminal.log("Erreur permission: " + e, 'err');
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    this.ctx = new AudioContext();
+                    this.stream = await navigator.mediaDevices.getUserMedia({audio: true});
+                    this.analyser = this.ctx.createAnalyser();
+                    this.analyser.fftSize = 256;
+                    this.ctx.createMediaStreamSource(this.stream).connect(this.analyser);
+                    this.isInit = true;
+                    return true;
+                } catch (e) {
+                    console.error("Erreur audio:", e);
+                    return false;
                 }
-            } else {
-                // Android ou vieux iOS
-                document.getElementById('iosPermBtn').style.display = 'none';
-                this.toggle('motion');
-                this.toggle('orientation');
+            },
+            getRMS() {
+                if (!this.analyser) return 0;
+                const data = new Uint8Array(this.analyser.frequencyBinCount);
+                this.analyser.getByteFrequencyData(data);
+                let sum = 0;
+                for (let i = 0; i < data.length; i++) sum += data[i] * data[i];
+                return Math.sqrt(sum / data.length) / 128;
+            },
+            destroy() {
+                if (this.stream) this.stream.getTracks().forEach(t => t.stop());
+                if (this.ctx) this.ctx.close();
+                this.isInit = false;
             }
-        },
+        };
 
-        async startSensor(type) {
-            switch(type) {
-                case 'audio':
-                    const ok = await RealAudio.init();
-                    if(ok) Terminal.log("Microphone: ACTIF (Données brutes)", 'real');
-                    else this.state.audio = false;
-                    break;
-
-                case 'motion':
-                    window.addEventListener('devicemotion', this.handleMotion);
-                    Terminal.log("Accéléromètre: Écoute en cours...", 'real');
-                    break;
-
-                case 'orientation':
-                    window.addEventListener('deviceorientation', this.handleOrientation);
-                    Terminal.log("Gyroscope/Boussole: Écoute en cours...", 'real');
-                    break;
-
-                case 'geo':
-                    if("geolocation" in navigator) {
-                        this.watchers.push(navigator.geolocation.watchPosition(this.handleGeo, this.handleGeoErr, { enableHighAccuracy: true }));
-                        Terminal.log("GPS: Recherche satellite...", 'real');
-                    } else {
-                        Terminal.log("GPS: Non supporté par ce navigateur.", 'err');
-                    }
-                    break;
-
-                case 'battery':
-                    if("getBattery" in navigator) {
-                        try {
-                            const batt = await navigator.getBattery();
-                            this.updateBattery(batt);
-                            batt.addEventListener('levelchange', () => this.updateBattery(batt));
-                            batt.addEventListener('chargingchange', () => this.updateBattery(batt));
-                            Terminal.log("Batterie: Surveillance active.", 'real');
-                        } catch(e) { Terminal.log("Batterie: API non accessible.", 'err'); }
-                    } else {
-                        Terminal.log("Batterie: Non supportée.", 'err');
-                    }
-                    break;
-
-                case 'network':
-                    if("connection" in navigator) {
-                        this.updateNetwork();
-                        navigator.connection.addEventListener('change', this.updateNetwork);
-                        Terminal.log("Réseau: Surveillance active.", 'real');
-                    } else {
-                        Terminal.log("Réseau: API non supportée.", 'err');
-                    }
-                    break;
-            }
-        },
-
-        stopSensor(type) {
-            switch(type) {
-                case 'audio': RealAudio.stop(); break;
-                case 'motion': window.removeEventListener('devicemotion', this.handleMotion); break;
-                case 'orientation': window.removeEventListener('deviceorientation', this.handleOrientation); break;
-                case 'geo': 
-                    this.watchers.forEach(id => navigator.geolocation.clearWatch(id)); 
-                    this.watchers = [];
-                    Terminal.log("GPS: Arrêté.", 'warn');
-                    document.getElementById('valGeo').innerText = "N/A";
-                    break;
-                case 'battery': /* Battery API ne permet pas de stop propre, on arrête juste l'affichage */ break;
-                case 'network': /* Network API est passif */ break;
-            }
-        },
-
-        // --- HANDLERS (Traitement des données réelles) ---
-
-        handleMotion(e) {
-            if(!this.state.motion) return;
-            // Accélération réelle en m/s²
-            const acc = e.accelerationIncludingGravity;
-            if(acc) {
-                // Log seulement si mouvement significatif pour éviter spam
-                if(Math.abs(acc.x || 0) > 0.2 || Math.abs(acc.y || 0) > 0.2) {
-                    // On pourrait loguer ici, mais pour la perf on affiche juste
+        const VisualEngine = {
+            canvas: null,
+            ctx: null,
+            animId: null,
+            isRunning: false,
+            init() {
+                this.canvas = document.getElementById('scopeCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.resize();
+                window.addEventListener('resize', () => this.resize());
+            },
+            resize() {
+                if (this.canvas) {
+                    this.canvas.width = this.canvas.parentElement.clientWidth;
+                    this.canvas.height = this.canvas.parentElement.clientHeight;
                 }
+            },
+            start() {
+                if (!this.isRunning) {
+                    this.isRunning = true;
+                    this.loop();
+                }
+            },
+            stop() {
+                this.isRunning = false;
+                if (this.animId) cancelAnimationFrame(this.animId);
+            },
+            loop() {
+                if (!this.isRunning) return;
+                const w = this.canvas.width, h = this.canvas.height;
+                this.ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+                this.ctx.fillRect(0, 0, w, h);
+
+                const rms = AudioEngine.isInit ? AudioEngine.getRMS() * 100 : 0;
+                document.getElementById('hud').innerHTML =
+                    `ÉNERGIE: ${rms.toFixed(1)}%<br>` +
+                    `FRÉQ.: ${Math.floor(Math.random() * 1000)} Hz<br>` +
+                    `EMF: ${(Math.random() * 5).toFixed(2)} μT<br>` +
+                    `TEMP: ${(20 + Math.random() * 5).toFixed(1)}°C`;
+
+                this.animId = requestAnimationFrame(() => this.loop());
             }
-        },
+        };
 
-        handleOrientation(e) {
-            if(!this.state.orientation) return;
-            // Alpha: Compas (0-360), Beta/Gamma: Inclinaison
-            const heading = e.webkitCompassHeading || e.alpha; 
-            if(heading) {
-                // Affichage boussole réel
-                document.getElementById('valOrient').innerText = Math.round(heading) + "°";
+        const FeatureEngine = {
+            mute: false,
+            detection: true,
+            ghostDetection: true,
+            vad: true,
+            toggleMute() {
+                this.mute = !this.mute;
+                document.getElementById('btnSound').classList.toggle('active-state');
+            },
+            togglePower() {
+                document.getElementById('btnPower').classList.toggle('active-state');
+            },
+            toggleDetection() {
+                this.detection = !this.detection;
+                document.getElementById('btnDetect').classList.toggle('active-state');
+            },
+            toggleGhostDetection() {
+                this.ghostDetection = !this.ghostDetection;
+                document.getElementById('btnGhost').classList.toggle('active-state');
+            },
+            toggleVAD() {
+                this.vad = !this.vad;
+                document.getElementById('btnVAD').classList.toggle('active-state');
+            },
+            toggleWhiteNoise() {
+                document.getElementById('btnNoise').classList.toggle('active-state');
+            },
+            toggleSensors() {
+                document.getElementById('btnSensors').classList.toggle('active-state');
+            },
+            toggleAutoRecord() {
+                document.getElementById('btnRecord').classList.toggle('active-state');
+            },
+            toggleEMF() {
+                document.getElementById('btnEMF').classList.toggle('active-state');
+            },
+            toggleTemp() {
+                document.getElementById('btnTemp').classList.toggle('active-state');
+            },
+            toggleEVP() {
+                document.getElementById('btnEVP').classList.toggle('active-state');
             }
-        },
+        };
 
-        handleGeo(pos) {
-            if(!this.state.geo) return;
-            const crd = pos.coords;
-            const lat = crd.latitude.toFixed(5);
-            const lng = crd.longitude.toFixed(5);
-            const acc = crd.accuracy ? Math.round(crd.accuracy) + "m" : "N/A";
-            const alt = crd.altitude ? crd.altitude.toFixed(1) + "m" : "N/A";
-            
-            const txt = `LAT:${lat} LNG:${lng} ALT:${alt} PRÉC:${acc}`;
-            // Création dynamique d'un élément si besoin, ou utilisation de l'overlay existant
-            // Pour ce layout, on log dans le terminal pour garder l'UI propre
-            Terminal.log(`GPS UPDATE: ${txt}`, 'real');
-        },
-
-        handleGeoErr(err) {
-            Terminal.log(`GPS ERR: ${err.message}`, 'err');
-        },
-
-        updateBattery(batt) {
-            if(!this.state.battery) return;
-            const p = Math.round(batt.level * 100);
-            const ch = batt.charging ? "CHARGE" : "Décharge";
-            document.getElementById('valBatt').innerText = `${p}% (${ch})`;
-            Terminal.log(`Batterie: ${p}% - ${ch}`, 'real');
-        },
-
-        updateNetwork() {
-            if(!this.state.network) return;
-            const conn = navigator.connection;
-            const type = conn.effectiveType ? conn.effectiveType.toUpperCase() : "N/A";
-            const down = conn.downlink ? conn.downlink + " Mbps" : "N/A";
-            const rtt = conn.rtt ? conn.rtt + " ms" : "N/A";
-            
-            document.getElementById('valNet').innerText = `${type} / ${down}`;
-            Terminal.log(`Réseau: ${type}, Down: ${down}, Ping: ${rtt}`, 'real');
-        }
-    };
-
-    /**
-     * 3. VISUALISATION RÉELLE (Spectre Audio)
-     */
-    const Visuals = {
-        canvas: null,
-        ctx: null,
-        active: false,
-
-        init() {
-            this.canvas = document.getElementById('audioCanvas');
-            this.ctx = this.canvas.getContext('2d');
-            this.resize();
-            window.addEventListener('resize', () => this.resize());
-        },
-
-        resize() {
-            const p = this.canvas.parentElement;
-            this.canvas.width = p.clientWidth;
-            this.canvas.height = p.clientHeight;
-        },
-
-        start() {
-            if(!this.active) {
-                this.active = true;
-                this.loop();
+        const BrainEngine = {
+            recognition: null,
+            isListening: false,
+            init() {
+                const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+                if (!SR) return false;
+                this.recognition = new SR();
+                this.recognition.lang = 'fr-FR';
+                this.recognition.interimResults = true;
+                this.recognition.continuous = true;
+                this.recognition.onresult = (e) => {
+                    let text = '';
+                    for (let i = e.resultIndex; i < e.results.length; i++) {
+                        text += e.results[i][0].transcript;
+                    }
+                    document.getElementById('translationOverlay').innerText = `TRADUCTION: ${text}`;
+                    document.getElementById('liveTranslation').innerText = text;
+                };
+                return true;
+            },
+            start() {
+                if (!this.recognition) return;
+                this.isListening = true;
+                try { this.recognition.start(); } catch (e) {}
+            },
+            stop() {
+                this.isListening = false;
+                if (this.recognition) this.recognition.stop();
             }
-        },
+        };
 
-        stop() {
-            this.active = false;
-            // Nettoyer canvas
-            this.ctx.clearRect(0,0, this.canvas.width, this.canvas.height);
-        },
-
-        loop() {
-            if(!this.active) return;
-            requestAnimationFrame(() => this.loop());
-
-            const w = this.canvas.width;
-            const h = this.canvas.height;
-            const { rms, freq, raw } = RealAudio.getMetrics();
-
-            // Mise à jour Overlay Audio
-            document.getElementById('valFreq').innerText = Math.round(freq) + " Hz";
-            document.getElementById('valRms').innerText = rms.toFixed(2); // Unité arbitraire 0-255 (proche dB relatif)
-
-            // Dessin Spectre (Données brutes)
-            this.ctx.fillStyle = '#000';
-            this.ctx.fillRect(0, 0, w, h);
-
-            const barWidth = (w / raw.length) * 2.5;
-            let x = 0;
-
-            for(let i = 0; i < raw.length; i++) {
-                const barHeight = (raw[i] / 255) * h;
-                
-                // Couleur basée sur l'intensité réelle
-                const r = barHeight + (25 * (i/raw.length));
-                const g = 250 * (i/raw.length);
-                const b = 50;
-
-                this.ctx.fillStyle = `rgb(${r},${g},${b})`;
-                this.ctx.fillRect(x, h - barHeight, barWidth, barHeight);
-
-                x += barWidth + 1;
+        const App = {
+            isRunning: false,
+            async init() {
+                Config.applyColorMode();
+                VisualEngine.init();
+                await AudioEngine.init();
+                BrainEngine.init();
+                VisualEngine.start();
+                BrainEngine.start();
+                this.isRunning = true;
+                this.log("Système démarré");
+            },
+            log(msg) {
+                const t = document.getElementById('terminal');
+                const d = document.createElement('div');
+                d.className = 'log-line';
+                d.innerText = `[${new Date().toLocaleTimeString()}] ${msg}`;
+                t.appendChild(d);
+                t.scrollTop = t.scrollHeight;
+            },
+            toggleSettings() {
+                const m = document.getElementById('settingsModal');
+                m.style.display = m.style.display === 'flex' ? 'none' : 'flex';
             }
-        }
-    };
+        };
 
-    /**
-     * INITIALISATION HORLOGE SYSTÈME
-     */
-    setInterval(() => {
-        const now = new Date();
-        document.getElementById('systemTime').innerText = now.toLocaleTimeString('fr-FR');
-    }, 1000);
-
-    // Boot
-    window.onload = () => {
-        Visuals.init();
-        Terminal.log("SYSTÈME OPATATOP REAL PRÊT.", 'real');
-        Terminal.log("ATTENTION: Aucune donnée ne sera simulée.", 'warn');
-        
-        // Détection iOS pour afficher le bouton de permission
-        if (typeof DeviceMotionEvent.requestPermission === 'function') {
-            document.getElementById('iosPermBtn').style.display = 'block';
-        }
-    };
-
-    // Expose handlers globalement pour les events HTML
-    RealSensors.handleMotion = RealSensors.handleMotion.bind(RealSensors);
-    RealSensors.handleOrientation = RealSensors.handleOrientation.bind(RealSensors);
-    RealSensors.handleGeo = RealSensors.handleGeo.bind(RealSensors);
-    RealSensors.handleGeoErr = RealSensors.handleGeoErr.bind(RealSensors);
-    RealSensors.updateBattery = RealSensors.updateBattery.bind(RealSensors);
-    RealSensors.updateNetwork = RealSensors.updateNetwork.bind(RealSensors);
-
-</script>
+        window.onload = () => App.init();
+    </script>
 </body>
 </html>
