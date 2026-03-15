@@ -342,11 +342,11 @@
                 <label for="rate">Vitesse</label>
                 <input type="range" id="rate" min="0.5" max="2.0" step="0.05" value="1.0" oninput="Config.update(this)">
             </div>
-            <h3 style="color:#aaa;font-size:0.82rem;margin-top:25px;">DÉTECTION</h3>
             <div class="setting-row">
-                <label for="sensitivity">Sensibilité Micro (dB)</label>
-                <input type="range" id="sensitivity" min="5" max="98" step="1" value="78" oninput="Config.update(this)">
+                <label for="sensitivity">Sensibilité de la Reconnaissance Vocale</label>
+                <input type="range" id="sensitivity" min="0.1" max="1.0" step="0.1" value="0.7" oninput="Config.update(this)">
             </div>
+            <h3 style="color:#aaa;font-size:0.82rem;margin-top:25px;">DÉTECTION</h3>
             <div class="setting-row">
                 <label for="ghostSensitivity">Sensibilité Fantôme</label>
                 <input type="range" id="ghostSensitivity" min="15" max="98" step="1" value="58" oninput="Config.update(this)">
@@ -389,7 +389,7 @@
             data: {
                 pitch: 1.0,
                 rate: 1.0,
-                sensitivity: 78,
+                sensitivity: 0.7,
                 ghostSensitivity: 58,
                 noiseLevel: 20,
                 radarSpeed: 1.0,
@@ -468,6 +468,11 @@
                 }
                 if (el.id === 'transparency') {
                     document.getElementById('translationOverlay').style.background = `rgba(5, 5, 16, ${this.data.transparency})`;
+                }
+                if (el.id === 'sensitivity') {
+                    if (BrainEngine.recognition) {
+                        BrainEngine.recognition.interimResults = Config.data.sensitivity > 0.5;
+                    }
                 }
             },
             updateUI() {
@@ -848,7 +853,7 @@
                     if (!this.detection || !App.isRunning) return;
                     if (!AudioEngine.isInit) AudioEngine.init();
                     const vol = AudioEngine.getRMS();
-                    const threshold = 110 - Config.data.sensitivity;
+                    const threshold = 110 - Config.data.sensitivity * 100;
                     if (vol > threshold) {
                         const phrases = ["SIGNAL DÉTECTÉ", "ACTIVITÉ AUDIO", "PIC SONORE"];
                         App.log(phrases[Math.floor(Math.random() * phrases.length)], 'det');
@@ -878,7 +883,7 @@
                     const rms = AudioEngine.getRMS();
                     const freq = AudioEngine.getDominantFrequency();
                     const ghost = AudioEngine.getGhostEnergy();
-                    const isVoice = rms > (110 - Config.data.sensitivity * 0.6);
+                    const isVoice = rms > (110 - Config.data.sensitivity * 100 * 0.6);
                     if (isVoice) {
                         if (ghost > 95 && FeatureEngine.ghostDetection) {
                             BrainEngine.interpretNoise('ghost', rms, freq);
