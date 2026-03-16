@@ -1,627 +1,305 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>JARVIS ARCHITECT v20.0 - POLYGLOT TRANSLATOR</title>
-    <style>
-        :root {
-            --bg: #020202;
-            --panel: #0a0f12;
-            --primary: #00f3ff;   /* Cyan (FR) */
-            --trans: #ffe600;     /* Jaune (Traduction EN) */
-            --ghost: #bc13fe;
-            --demon: #ff003c;
-            --text: #e0f7fa;
-            --dim: #445566;
-            --font-mono: 'Consolas', 'Courier New', monospace;
-        }
+<meta charset="UTF-8">
+<title>JARVIS ULTRA</title>
 
-        * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
+<style>
 
-        body {
-            margin: 0; background: var(--bg); color: var(--text);
-            font-family: 'Segoe UI', sans-serif;
-            min-height: 100vh; display: flex; flex-direction: column;
-            overflow-y: auto;
-        }
+body{
+margin:0;
+background:#000;
+color:#00f3ff;
+font-family:Consolas,monospace;
+overflow:hidden;
+}
 
-        header {
-            background: rgba(0,0,0,0.9); border-bottom: 1px solid #333;
-            padding: 10px 20px; display: flex; justify-content: space-between; align-items: center;
-            position: sticky; top: 0; z-index: 100;
-        }
-        .brand { font-size: 1.1rem; font-weight: bold; color: var(--primary); letter-spacing: 2px; font-family: var(--font-mono); }
-        .clock { font-family: var(--font-mono); color: #888; font-size: 0.9rem; }
+#hud{
+position:absolute;
+top:10px;
+left:10px;
+z-index:5;
+}
 
-        #main-layout {
-            display: flex; flex-wrap: wrap; flex: 1;
-        }
+button{
+background:#111;
+border:1px solid #00f3ff;
+color:#00f3ff;
+padding:8px 15px;
+margin:4px;
+cursor:pointer;
+}
 
-        aside {
-            background: var(--panel); padding: 15px; font-family: var(--font-mono); font-size: 0.75rem;
-            flex: 1; min-width: 250px; border-right: 1px solid #222; display: flex; flex-direction: column;
-        }
-        aside:last-child { border-right: none; border-left: 1px solid #222; }
+button:hover{
+background:#00f3ff;
+color:#000;
+}
 
-        .panel-title { color: #666; text-transform: uppercase; margin-bottom: 10px; border-bottom: 1px solid #333; padding-bottom: 5px; font-weight: bold; }
+#log{
+position:absolute;
+bottom:0;
+width:100%;
+height:160px;
+overflow:auto;
+background:#000;
+border-top:1px solid #333;
+font-size:12px;
+padding:6px;
+}
 
-        #logs { flex: 1; overflow-y: auto; color: #888; display: flex; flex-direction: column-reverse; max-height: 300px; }
-        .log { margin-bottom: 4px; border-left: 2px solid #333; padding-left: 5px; font-size: 0.7rem; }
-        .log.detected { color: var(--primary); border-color: var(--primary); }
-        .log.speech { color: #fff; border-color: #fff; background: rgba(255,255,255,0.05); }
-        .log.translate { color: var(--trans); border-color: var(--trans); font-weight: bold; }
+canvas{
+position:absolute;
+top:0;
+left:0;
+}
 
-        #stage {
-            flex: 3; min-width: 300px; min-height: 400px;
-            background: radial-gradient(circle at center, #0d1418 0%, #000 100%);
-            position: relative; overflow: hidden; display: flex; justify-content: center; align-items: center;
-        }
-        canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
-
-        #display-overlay {
-            position: absolute; z-index: 5; text-align: center; pointer-events: none; width: 90%;
-        }
-        #main-text {
-            font-size: 2rem; font-weight: 900; text-transform: uppercase;
-            letter-spacing: 4px; text-shadow: 0 0 20px #000; margin-bottom: 10px;
-            transition: color 0.3s;
-        }
-        #sub-text {
-            font-size: 0.9rem; background: rgba(0,0,0,0.7); padding: 5px 15px;
-            border-radius: 20px; border: 1px solid #444; color: #ccc;
-        }
-
-        #controls {
-            background: var(--panel); border-top: 1px solid #333;
-            padding: 20px; display: flex; flex-wrap: wrap; gap: 20px; width: 100%; flex-shrink: 0;
-        }
-        .control-group { flex: 1; min-width: 280px; display: flex; flex-direction: column; gap: 10px; }
-
-        button {
-            background: #111; border: 1px solid #444; color: #aaa;
-            padding: 12px; font-family: var(--font-mono); font-size: 0.8rem;
-            text-transform: uppercase; cursor: pointer; transition: 0.2s; border-radius: 4px;
-            width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;
-        }
-        button:hover { background: #222; color: #fff; }
-        button.active { border-color: var(--primary); color: var(--primary); background: rgba(0, 243, 255, 0.1); }
-        button.trans-active { border-color: var(--trans); color: var(--trans); background: rgba(255, 230, 0, 0.1); animation: pulse-yellow 2s infinite; }
-        
-        @keyframes pulse-yellow { 0% { box-shadow: 0 0 0 0 rgba(255, 230, 0, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(255, 230, 0, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 230, 0, 0); } }
-        
-        .btn-power { height: 60px; font-weight: bold; font-size: 1.1rem; }
-        
-        .slider-row { display: flex; flex-direction: column; gap: 5px; margin-bottom: 10px; }
-        .slider-label { display: flex; justify-content: space-between; color: #aaa; font-size: 0.75rem; font-family: var(--font-mono); }
-        input[type="range"] { width: 100%; height: 6px; background: #222; outline: none; -webkit-appearance: none; border-radius: 3px; cursor: pointer; }
-        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; background: #fff; border-radius: 50%; box-shadow: 0 0 10px rgba(255,255,255,0.5); }
-
-        .bar-container { width: 100%; height: 8px; background: #222; border-radius: 4px; overflow: hidden; margin-top: 2px; }
-        .bar-fill { height: 100%; transition: width 0.1s; }
-
-        @media (max-width: 800px) {
-            #main-layout { flex-direction: column; }
-            aside { width: 100%; border-right: none; border-bottom: 1px solid #222; min-height: auto; }
-            #stage { height: 350px; flex: none; }
-            #controls { flex-direction: column; }
-        }
-    </style>
+</style>
 </head>
+
 <body>
 
-<header>
-    <div class="brand">JARVIS ARCHITECT v20.0 POLYGLOT</div>
-    <div class="clock" id="clock">00:00:00</div>
-</header>
+<div id="hud">
 
-<div id="main-layout">
-    <!-- LOGS -->
-    <aside>
-        <div class="panel-title">TRADUCTION & LOGS</div>
-        <div id="logs">
-            <div class="log">> En attente d'initialisation...</div>
-        </div>
-    </aside>
+<h2>JARVIS ULTRA</h2>
 
-    <!-- VISUEL -->
-    <div id="stage">
-        <canvas id="mainCanvas"></canvas>
-        <div id="display-overlay">
-            <div id="main-text" style="color:var(--primary)">VEILLE</div>
-            <div id="sub-text">Activez pour parler ou traduire</div>
-        </div>
-    </div>
+<button onclick="startJarvis()">START</button>
+<button onclick="toggleTranslate()">TRANSLATE</button>
 
-    <!-- PARAMÈTRES -->
-    <aside>
-        <div class="panel-title">ANALYSE AUDIO</div>
-        <div style="margin-bottom: 15px;">
-            <div class="slider-label"><span>BASSES (Démons)</span> <span id="val-bass">0%</span></div>
-            <div class="bar-container"><div id="bar-bass" class="bar-fill" style="background:var(--demon); width:0%"></div></div>
-        </div>
-        <div style="margin-bottom: 15px;">
-            <div class="slider-label"><span>AIGUS (Fantômes)</span> <span id="val-treble">0%</span></div>
-            <div class="bar-container"><div id="bar-treble" class="bar-fill" style="background:var(--ghost); width:0%"></div></div>
-        </div>
-        <div style="margin-bottom: 15px;">
-            <div class="slider-label"><span>VOLUME TOTAL</span> <span id="val-vol">0%</span></div>
-            <div class="bar-container"><div id="bar-vol" class="bar-fill" style="background:var(--primary); width:0%"></div></div>
-        </div>
-        <div class="panel-title" style="margin-top:20px;">RÉGLAGES</div>
-        <div class="slider-row">
-            <div class="slider-label">SENSIBILITÉ <span id="sens-val">50</span></div>
-            <input type="range" id="rng-sens" min="0" max="100" value="50" oninput="Config.update('sens', this.value)">
-        </div>
-        <button onclick="AudioSys.calibrate()">🎚️ CALIBRER LE SILENCE</button>
-    </aside>
 </div>
 
-<!-- CONTROLS -->
-<div id="controls">
-    <div class="control-group">
-        <button id="btn-power" class="btn-power" onclick="App.togglePower()">⚡ DÉMARRER JARVIS</button>
-        <button id="btn-translate" onclick="App.toggleTranslate()">🌐 MODE TRADUCTEUR (FR -> EN)</button>
-        <div style="font-size:0.75rem; color:#666; text-align:center; margin-top:5px;">
-            Mode Traducteur: Parlez Français, Jarvis répond en Anglais.
-        </div>
-    </div>
+<canvas id="screen"></canvas>
 
-    <div class="control-group">
-        <div class="panel-title">MODES</div>
-        <button id="mod-normal" class="active" onclick="App.setMode('normal')">👁️ STANDARD</button>
-        <button id="mod-ghost" onclick="App.setMode('ghost')">👻 FANTÔMES</button>
-        <button id="mod-demon" onclick="App.setMode('demon')">😈 DÉMONS</button>
-    </div>
-
-    <div class="control-group">
-        <div class="panel-title">OPTIONS</div>
-        <button id="mod-humor" class="active" onclick="App.toggle('humor')">🗣️ HUMEUR (Ricolà)</button>
-        <button id="mod-voice" class="active" onclick="App.toggle('voice')">🎙️ RÉPONSE VOCALE</button>
-        <button onclick="App.clearLogs()" style="margin-top:auto; font-size:0.7rem; opacity:0.6;">🗑️ Effacer logs</button>
-    </div>
-</div>
+<div id="log"></div>
 
 <script>
-/**
- * JARVIS ARCHITECT v20.0 - POLYGLOT
- * Module de Traduction Temps Réel (Dictionary-based).
- */
 
-// --- 1. CONFIGURATION ---
-const Config = {
-    sens: 50,
-    thresholdVol: 15,
-    thresholdZCR: 200,
-    bassThreshold: 100,
-    trebleThreshold: 80,
-    translateMode: false, // NOUVEAU: Mode Traducteur
-    
-    update(key, val) {
-        this[key] = parseInt(val);
-        if(key === 'sens') {
-            const factor = (100 - this.sens) / 100;
-            this.thresholdVol = 10 + (factor * 20);
-            this.bassThreshold = 80 + (factor * 50);
-            this.trebleThreshold = 60 + (factor * 50);
-            document.getElementById('sens-val').innerText = val;
-        }
-    }
-};
+let translate=false
 
-const State = {
-    active: false,
-    mode: 'normal',
-    options: { humor: true, voice: true },
-    lastEvent: 0,
-    mouse: { x: 0, y: 0 }
-};
+function log(t){
 
-// --- 2. DICTIONNAIRE DE TRADUCTION (EMBARQUÉ) ---
-const Translator = {
-    // Dictionnaire contextuel pour la démo
-    dict: {
-        "bonjour": "hello", "salut": "hi", "hello": "bonjour",
-        "comment ça va": "how are you", "ça va": "are you okay",
-        "qui es-tu": "who are you", "c'est qui": "who is that",
-        "merci": "thank you", "parfait": "perfect", "nickel": "great",
-        "jarvis": "jarvis", "ia": "ai", "système": "system",
-        "fantôme": "ghost", "esprit": "spirit", "âme": "soul",
-        "démon": "demon", "diable": "devil", "mal": "evil",
-        "peur": "fear", "effrayant": "scary", "horreur": "horror",
-        "oui": "yes", "non": "no", "peut-être": "maybe",
-        "aide-moi": "help me", "au secours": "help", "sauve-moi": "save me",
-        "regarde": "look", "écoute": "listen", "parle": "speak",
-        "traduis": "translate", "anglais": "english", "français": "french",
-        "heure": "time", "date": "date", "où": "where"
-    },
+let d=document.createElement("div")
+d.innerText=new Date().toLocaleTimeString()+" : "+t
 
-    translate(text) {
-        // Logique simple : remplacement de mots clés
-        let t = text.toLowerCase();
-        let res = text; // Garde l'original par défaut
-        
-        // Essaye de traduire mot par mot ou groupe de mots
-        for (let fr in this.dict) {
-            if (t.includes(fr)) {
-                // Remplace toutes les occurrences
-                const regex = new RegExp(fr, 'gi');
-                res = res.replace(regex, this.dict[fr]);
-            }
-        }
-        
-        // Si rien n'a changé, on retourne le texte original (l'IA dira le mot français avec un accent anglais)
-        return res;
-    }
-};
+document.getElementById("log").prepend(d)
 
-// --- 3. MOTEUR AUDIO & VISUEL (Identique) ---
-const AudioSys = {
-    ctx: null, analyser: null, source: null,
-    freqData: null, timeData: null, bufferLen: 0,
+}
 
-    async init() {
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
-            this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-            if (this.ctx.state === 'suspended') await this.ctx.resume();
-            this.analyser = this.ctx.createAnalyser();
-            this.analyser.fftSize = 2048; 
-            this.source = this.ctx.createMediaStreamSource(stream);
-            this.source.connect(this.analyser);
-            this.bufferLen = this.analyser.frequencyBinCount;
-            this.freqData = new Uint8Array(this.bufferLen);
-            this.timeData = new Uint8Array(this.bufferLen);
-            Log.add("Flux audio connecté.", "ok");
-            return true;
-        } catch (e) {
-            Log.add("Erreur Micro: " + e.message, "err");
-            alert("Micro requis.");
-            return false;
-        }
-    },
+function toggleTranslate(){
 
-    analyze() {
-        if (!State.active) return null;
-        this.analyser.getByteFrequencyData(this.freqData);
-        this.analyser.getByteTimeDomainData(this.timeData);
+translate=!translate
+log("translate mode "+translate)
 
-        let sum = 0;
-        for (let i = 0; i < this.bufferLen; i++) {
-            const x = (this.timeData[i] / 128.0) - 1;
-            sum += x * x;
-        }
-        const rms = Math.sqrt(sum / this.bufferLen);
-        const volume = Math.min(100, rms * 100 * 2.5);
+}
 
-        let zcr = 0;
-        for (let i = 1; i < this.bufferLen; i++) {
-            if ((this.timeData[i] >= 128 && this.timeData[i - 1] < 128) ||
-                (this.timeData[i] < 128 && this.timeData[i - 1] >= 128)) zcr++;
-        }
+const AI={
 
-        let bassSum = 0;
-        for(let i=0; i<15; i++) bassSum += this.freqData[i];
-        const bassAvg = bassSum / 15;
+endpoint:"http://localhost:11434/api/generate",
+model:"llama3",
 
-        let trebleSum = 0;
-        for(let i=200; i<450; i++) trebleSum += this.freqData[i];
-        const trebleAvg = trebleSum / 250;
+async ask(prompt){
 
-        return { volume, zcr, bassAvg, trebleAvg, freq: this.freqData, time: this.timeData };
-    },
+try{
 
-    calibrate() {
-        if (!State.active) return;
-        Log.add("Calibration... Faites silence.", "info");
-        let samples = 0, sumVol = 0;
-        const interval = setInterval(() => {
-            const m = this.analyze();
-            if(!m) return;
-            sumVol += m.volume;
-            samples++;
-            if(samples >= 40) {
-                clearInterval(interval);
-                const floor = (sumVol / samples) + 5;
-                Config.sens = Math.max(0, 100 - (floor * 3)); 
-                document.getElementById('rng-sens').value = Config.sens;
-                document.getElementById('sens-val').innerText = Math.round(Config.sens);
-                Log.add(`Calibration OK.`, "ok");
-                Voice.speak("Calibration terminée.");
-            }
-        }, 50);
-    }
-};
+let r=await fetch(this.endpoint,{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({
+model:this.model,
+prompt:prompt,
+stream:false
+})
+})
 
-const Visuals = {
-    canvas: document.getElementById('mainCanvas'),
-    ctx: document.getElementById('mainCanvas').getContext('2d'),
-    resize() {
-        this.canvas.width = this.canvas.parentElement.clientWidth;
-        this.canvas.height = this.canvas.parentElement.clientHeight;
-    },
-    draw(m) {
-        const w = this.canvas.width;
-        const h = this.canvas.height;
-        const ctx = this.ctx;
-        const cx = w / 2;
-        const cy = h / 2;
-        ctx.fillStyle = 'rgba(2, 2, 2, 0.2)';
-        ctx.fillRect(0, 0, w, h);
-        if (!m) return;
+let j=await r.json()
 
-        let color = '#00f3ff';
-        if (Config.translateMode) color = '#ffe600'; // Jaune si traducteur
-        else if (State.mode === 'ghost') color = '#bc13fe';
-        else if (State.mode === 'demon') color = '#ff003c';
+return j.response
 
-        const rect = this.canvas.getBoundingClientRect();
-        const mouseX = State.mouse.x - rect.left;
-        const mouseY = State.mouse.y - rect.top;
-        const angle = Math.atan2(mouseY - cy, mouseX - cx);
-        const dist = Math.min(Math.sqrt(Math.pow(mouseX - cx, 2) + Math.pow(mouseY - cy, 2)), 20);
+}catch(e){
 
-        ctx.save();
-        ctx.translate(cx + Math.cos(angle)*dist, cy + Math.sin(angle)*dist);
-        const pSize = 30 + (m.volume / 100) * 50;
-        ctx.beginPath(); ctx.arc(0, 0, pSize, 0, Math.PI * 2);
-        ctx.fillStyle = '#000'; ctx.shadowColor = color; ctx.shadowBlur = 30; ctx.fill(); ctx.shadowBlur = 0;
-        ctx.strokeStyle = color; ctx.lineWidth = 3; ctx.setLineDash([10, 5]);
-        ctx.beginPath(); ctx.arc(0, 0, pSize + 20, 0, Math.PI*2); ctx.stroke();
-        ctx.restore();
-    }
-};
+log("AI offline")
+return "AI error"
 
-// --- 4. CERVEAU CONVERSATIONNEL & TRADUCTION ---
-const ChatBrain = {
-    process(text) {
-        const lower = text.toLowerCase();
-        
-        // 1. PRIORITÉ : MODE TRADUCTEUR
-        if (Config.translateMode) {
-            const translatedText = Translator.translate(text);
-            Log.add(`TRADUCTION: "${text}" -> "${translatedText}"`, "translate");
-            UI.setText("TRANSLATING...");
-            // Parle en Anglais (Voix Anglaise du navigateur)
-            Voice.speak(translatedText, 'english');
-            return true;
-        }
+}
 
-        // 2. MODE STANDARD (Conversationnel)
-        if (State.mode === 'normal') {
-            // Simple IA de réponse
-            if (lower.includes("bonjour") || lower.includes("salut")) Voice.speak("Bonjour. Comment puis-je vous aider ?", 'normal');
-            else if (lower.includes("qui es-tu")) Voice.speak("Je suis Jarvis, votre assistant IA.", 'normal');
-            else if (lower.includes("merci")) Voice.speak("Je suis là pour servir.", 'normal');
-            else if (lower.includes("peur")) Voice.speak("Rassurez-vous, je surveille les environs.", 'normal');
-            else Voice.speak("J'ai entendu : " + text, 'normal');
-        }
-        else if (State.mode === 'ghost') {
-             // En mode fantôme, on ne traduit pas, on répond en fantôme
-            const phrases = ["Je suis ici...", "Laisse-moi tranquille...", "Il fait si froid..."];
-            Voice.speak(phrases[Math.floor(Math.random() * phrases.length)], 'ghost');
-        }
-        else if (State.mode === 'demon') {
-            const phrases = ["Tu ne devrais pas être là...", "Je vais te dévorer...", "Fuis !"];
-            Voice.speak(phrases[Math.floor(Math.random() * phrases.length)], 'demon');
-        }
-        return false;
-    }
-};
+}
 
-// --- 5. MOTEUR VOCAL (GÈRE LES VOIX FR/EN) ---
-const Voice = {
-    synth: window.speechSynthesis,
-    voices: [],
-    
-    init() {
-        // Chargement des voix
-        this.voices = this.synth.getVoices();
-        this.synth.onvoiceschanged = () => { this.voices = this.synth.getVoices(); };
-    },
-    
-    speak(text, type = 'normal') {
-        if (!State.active) return;
-        this.synth.cancel();
-        const u = new SpeechSynthesisUtterance(text);
-        
-        // Sélection de la langue et de la voix
-        if (type === 'english') {
-            u.lang = 'en-US';
-            u.rate = 1.0;
-            u.pitch = 1.0;
-            // Cherche une voix anglaise (Google ou Microsoft)
-            const enVoice = this.voices.find(v => v.lang.includes('en') && v.name.includes('Google')) || 
-                            this.voices.find(v => v.lang.includes('en'));
-            if (enVoice) u.voice = enVoice;
-        } 
-        else if (type === 'ghost') {
-            u.lang = 'fr-FR'; u.rate = 0.8; u.pitch = 0.6;
-        }
-        else if (type === 'demon') {
-            u.lang = 'fr-FR'; u.rate = 0.6; u.pitch = 0.2;
-        }
-        else { // Normal FR
-            u.lang = 'fr-FR'; u.rate = 1.0; u.pitch = 1.0;
-            const frVoice = this.voices.find(v => v.lang.includes('fr') && v.name.includes('Google')) || 
-                            this.voices.find(v => v.lang.includes('fr'));
-            if (frVoice) u.voice = frVoice;
-        }
-        
-        this.synth.speak(u);
-    },
+}
 
-    initRec() {
-        const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (!SR) return;
-        const rec = new SR();
-        rec.continuous = true; rec.interimResults = false; rec.lang = 'fr-FR';
-        
-        rec.onresult = (e) => {
-            if (!State.options.voice) return;
-            const txt = e.results[e.results.length-1][0].transcript.trim().toLowerCase();
-            if (txt) {
-                Log.add(`Vous: "${txt}"`, "speech");
-                UI.setText(txt.toUpperCase());
-                State.lastEvent = Date.now();
-                
-                // Traitement IA / Traduction
-                ChatBrain.process(txt);
-            }
-        };
-        rec.start();
-    }
-};
+async function translateFR(text){
 
-// --- 6. LOGIC ---
-const Logic = {
-    loop() {
-        if (!State.active) { requestAnimationFrame(() => this.loop()); return; }
-        const m = AudioSys.analyze();
-        Visuals.draw(m);
+let p=`
+Translate French to English:
 
-        // UI Update
-        document.getElementById('bar-vol').style.width = m.volume + '%';
-        document.getElementById('val-vol').innerText = Math.round(m.volume);
-        document.getElementById('bar-bass').style.width = (m.bassAvg / 255 * 100) + '%';
-        document.getElementById('val-bass').innerText = Math.round(m.bassAvg);
-        document.getElementById('bar-treble').style.width = (m.trebleAvg / 255 * 100) + '%';
-        document.getElementById('val-treble').innerText = Math.round(m.trebleAvg);
+${text}
+`
 
-        const now = Date.now();
-        if (now - State.lastEvent < 1500) { requestAnimationFrame(() => this.loop()); return; }
+return await AI.ask(p)
 
-        // 1. TOUX
-        if (m.volume > Config.thresholdVol && m.zcr > Config.thresholdZCR) {
-            this.trigger('TOUX', "Irritation détectée.");
-            if (State.options.humor) Voice.speak("Tiens, tu t'es raclé la gorge. Veux-tu un Ricolà ?");
-            else Voice.speak("Toux détectée.");
-            State.lastEvent = now;
-            return;
-        }
+}
 
-        // 2. MODES (Désactivés si Mode Traducteur est prioritaire ? Non, on garde les sons réels)
-        if (State.mode === 'demon' && !Config.translateMode) {
-            if (m.bassAvg > Config.bassThreshold && m.volume > 10) {
-                this.trigger('DÉMON', "Présence sombre.");
-                Voice.speak("Je ressens une énergie négative...", "demon");
-                State.lastEvent = now;
-                return;
-            }
-        } else if (State.mode === 'ghost' && !Config.translateMode) {
-            if (m.trebleAvg > Config.trebleThreshold && m.volume > 10) {
-                this.trigger('FANTÔME', "Présence éthérée.");
-                Voice.speak("Quelqu'un marche derrière vous...", "ghost");
-                State.lastEvent = now;
-                return;
-            }
-        } else if (State.mode === 'normal' && !Config.translateMode) {
-            if (m.volume > Config.thresholdVol * 2.5) {
-                this.trigger('BRUIT', "Pic sonore.");
-                Voice.speak("Bruitage enregistré.");
-                State.lastEvent = now;
-                return;
-            }
-        }
+async function askJarvis(text){
 
-        requestAnimationFrame(() => this.loop());
-    },
+let p=`
+You are Jarvis AI assistant.
+Respond briefly.
 
-    trigger(type, msg) {
-        Log.add(`${type}: ${msg}`, "detected");
-        UI.setText(type);
-        document.getElementById('stage').style.filter = "brightness(1.5)";
-        setTimeout(() => document.getElementById('stage').style.filter = "brightness(1)", 100);
-    }
-};
+User:
+${text}
 
-// --- 7. CONTROLLER ---
-const App = {
-    async togglePower() {
-        State.active = !State.active;
-        const btn = document.getElementById('btn-power');
-        if (State.active) {
-            btn.classList.add('active');
-            btn.innerHTML = "⚡ SYSTÈME ACTIF";
-            const ok = await AudioSys.init();
-            if (ok) {
-                Voice.init(); // Init voices
-                Visuals.resize();
-                Logic.loop();
-                Voice.initRec();
-                Voice.speak("Jarvis en ligne. Système de traduction prêt.", 'normal');
-                Log.add("Système Polyglot initialisé.", "ok");
-            } else { State.active = false; btn.classList.remove('active'); }
-        } else {
-            btn.classList.remove('active');
-            btn.innerHTML = "⚡ DÉMARRER JARVIS";
-            Voice.speak("Arrêt.");
-            Log.add("Système éteint.", "system");
-        }
-    },
-    
-    toggleTranslate() {
-        Config.translateMode = !Config.translateMode;
-        const btn = document.getElementById('btn-translate');
-        if(Config.translateMode) {
-            btn.classList.add('trans-active');
-            Voice.speak("Mode Traducteur Activé. Je parlerai en anglais.", 'english');
-            Log.add("MODE TRADUCTEUR ACTIVÉ", "translate");
-        } else {
-            btn.classList.remove('trans-active');
-            Voice.speak("Mode Traducteur Désactivé.", 'normal');
-            Log.add("MODE TRADUCTEUR DÉSACTIVÉ", "system");
-        }
-    },
+Jarvis:
+`
 
-    setMode(mode) {
-        State.mode = mode;
-        ['normal', 'ghost', 'demon'].forEach(m => {
-            const btn = document.getElementById('mod-'+m);
-            btn.className = ""; 
-            if (m === mode) btn.classList.add('active');
-        });
-        Voice.speak(`Mode ${mode} activé.`);
-        UI.setText("MODE: " + mode.toUpperCase());
-    },
-    toggle(opt) {
-        State.options[opt] = !State.options[opt];
-        document.getElementById('mod-'+opt).classList.toggle('active');
-        Voice.speak(`${opt} ${State.options[opt] ? 'activé' : 'désactivé'}.`);
-    },
-    clearLogs() { document.getElementById('logs').innerHTML = ''; }
-};
+return await AI.ask(p)
 
-const UI = {
-    setText(txt) {
-        document.getElementById('main-text').innerText = txt;
-        const el = document.getElementById('main-text');
-        if(Config.translateMode) el.style.color = 'var(--trans)';
-        else if(State.mode === 'demon') el.style.color = 'var(--demon)';
-        else if(State.mode === 'ghost') el.style.color = 'var(--ghost)';
-        else el.style.color = 'var(--primary)';
-    }
-};
+}
 
-const Log = {
-    add(msg, type='') {
-        const d = document.createElement('div');
-        d.className = `log ${type}`;
-        d.innerText = `[${new Date().toLocaleTimeString().split(' ')[0]}] ${msg}`;
-        const c = document.getElementById('logs');
-        c.prepend(d);
-        if(c.children.length > 20) c.lastChild.remove();
-    }
-};
+const voice=window.speechSynthesis
 
-window.onload = () => {
-    Visuals.resize();
-    window.addEventListener('resize', () => Visuals.resize());
-    document.addEventListener('mousemove', e => { State.mouse.x = e.clientX; State.mouse.y = e.clientY; });
-    document.addEventListener('touchmove', e => { State.mouse.x = e.touches[0].clientX; State.mouse.y = e.touches[0].clientY; });
-    setInterval(() => document.getElementById('clock').innerText = new Date().toLocaleTimeString(), 1000);
-    Log.add("Prêt. Mode Traducteur disponible.", "info");
-};
+function speak(t){
+
+let u=new SpeechSynthesisUtterance(t)
+
+u.lang="en-US"
+
+voice.speak(u)
+
+}
+
+async function process(text){
+
+log("YOU: "+text)
+
+if(translate){
+
+let r=await translateFR(text)
+
+log("EN: "+r)
+
+speak(r)
+
+}else{
+
+let r=await askJarvis(text)
+
+log("JARVIS: "+r)
+
+speak(r)
+
+}
+
+}
+
+function startJarvis(){
+
+startSpeech()
+startAudio()
+
+}
+
+function startSpeech(){
+
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition
+
+if(!SR){
+log("speech recognition unsupported")
+return
+}
+
+let rec=new SR()
+
+rec.lang="fr-FR"
+rec.continuous=true
+
+rec.onresult=(e)=>{
+
+let txt=e.results[e.results.length-1][0].transcript
+
+process(txt)
+
+}
+
+rec.start()
+
+}
+
+let analyser
+let data
+let ctx
+let canvas
+
+async function startAudio(){
+
+const stream=await navigator.mediaDevices.getUserMedia({audio:true})
+
+const audioCtx=new AudioContext()
+
+const src=audioCtx.createMediaStreamSource(stream)
+
+analyser=audioCtx.createAnalyser()
+
+src.connect(analyser)
+
+data=new Uint8Array(analyser.frequencyBinCount)
+
+canvas=document.getElementById("screen")
+
+ctx=canvas.getContext("2d")
+
+resize()
+
+loop()
+
+}
+
+function resize(){
+
+canvas.width=window.innerWidth
+canvas.height=window.innerHeight
+
+}
+
+window.onresize=resize
+
+function loop(){
+
+requestAnimationFrame(loop)
+
+if(!analyser)return
+
+analyser.getByteFrequencyData(data)
+
+ctx.fillStyle="rgba(0,0,0,0.25)"
+ctx.fillRect(0,0,canvas.width,canvas.height)
+
+let cx=canvas.width/2
+let cy=canvas.height/2
+
+ctx.strokeStyle="#00f3ff"
+
+ctx.beginPath()
+ctx.arc(cx,cy,140,0,Math.PI*2)
+ctx.stroke()
+
+for(let i=0;i<data.length;i+=6){
+
+let v=data[i]
+
+let angle=i*0.02
+
+let r=140+v
+
+let x=cx+Math.cos(angle)*r
+let y=cy+Math.sin(angle)*r
+
+ctx.fillStyle="rgb(0,"+v+",255)"
+
+ctx.fillRect(x,y,3,3)
+
+}
+
+}
+
 </script>
+
 </body>
 </html>
