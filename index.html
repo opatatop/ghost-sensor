@@ -3,388 +3,749 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>OPATATOP AI ULTIMATE v10.3 - 100% RÉEL LIVE (plus de boucle infinie)</title>
+    <title>J.A.R.V.I.S. PARANORMAL ULTIMATE v10.3</title>
     <style>
         :root {
-            --primary: #00ff88; --secondary: #ff00ff; --bg: #000; --panel: #111;
-            --text: #fff; --danger: #ff5555; --accent: #ffff00; --sonar: #00ffff;
-            --detect: #ff0000; --highlight: #00ccff;
+            --primary: #00ff88; /* Vert Jarvis */
+            --secondary: #00ccff; /* Cyan Sonar */
+            --alert: #ff3333; /* Rouge Alerte */
+            --bg: #050505;
+            --panel: #0a0a0a;
+            --text: #e0e0e0;
+            --grid-line: rgba(0, 255, 136, 0.15);
         }
 
-        @keyframes pulse { 0%,100% {opacity:1; text-shadow:0 0 15px var(--primary);} 50% {opacity:0.6; text-shadow:0 0 35px var(--primary);} }
-        @keyframes pulseBtn { 0%,100% {box-shadow:0 0 15px rgba(255,0,255,0.8);} 50% {box-shadow:0 0 35px rgba(255,0,255,1);} }
-        @keyframes alertPulse { 0%,100% {transform:scale(1);} 50% {transform:scale(1.18);} }
-        @keyframes alertGlow { 0% {box-shadow:0 0 20px var(--detect);} 100% {box-shadow:0 0 60px var(--detect),0 0 100px var(--detect);} }
-        @keyframes scanline { 0% {transform:translateY(-100%);} 100% {transform:translateY(300%);} }
+        @keyframes scanline {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(100vh); }
+        }
+        @keyframes pulseRed {
+            0%, 100% { box-shadow: 0 0 20px var(--alert); border-color: var(--alert); }
+            50% { box-shadow: 0 0 50px var(--alert); border-color: #ff8888; }
+        }
+        @keyframes pulseGreen {
+            0%, 100% { text-shadow: 0 0 10px var(--primary); opacity: 1; }
+            50% { text-shadow: 0 0 25px var(--primary); opacity: 0.7; }
+        }
 
-        * { box-sizing:border-box; user-select:none; -webkit-tap-highlight-color:transparent; touch-action:manipulation; }
-        body { margin:0; padding:0; font-family:'Courier New',monospace; background:var(--bg); color:var(--text); display:flex; flex-direction:column; height:100vh; overflow:hidden; }
-        header { background:linear-gradient(to right,#000,#111); border-bottom:4px solid var(--primary); padding:12px 18px; display:flex; justify-content:space-between; align-items:center; }
-        h1 { font-size:1.35rem; color:var(--primary); text-shadow:0 0 12px var(--primary); letter-spacing:3px; margin:0; font-weight:bold; }
+        * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
+        
+        body {
+            margin: 0; padding: 0;
+            font-family: 'Courier New', Courier, monospace;
+            background-color: var(--bg);
+            color: var(--text);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
 
-        main { flex:1; position:relative; overflow:hidden; }
-        #visualizer { width:100%; height:100%; position:relative; background:radial-gradient(circle at center,#000 0%,#111 70%,#000 100%); }
-        canvas { width:100%; height:100%; display:block; }
+        /* Effet de vieillissement/écran CRT */
+        body::after {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 2;
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+        }
 
-        #displayOverlay { position:absolute; bottom:22px; left:50%; transform:translateX(-50%); text-align:center; pointer-events:none; z-index:40; width:92%; }
-        #mainText { font-size:1.65rem; font-weight:bold; color:var(--primary); background:rgba(0,0,0,0.8); padding:14px 24px; border:3px solid var(--primary); border-radius:6px; text-transform:uppercase; text-shadow:0 0 15px var(--primary); margin-bottom:9px; letter-spacing:2px; animation:pulse 1.8s infinite; }
-        #subText { font-size:0.95rem; color:var(--accent); letter-spacing:3px; background:rgba(0,0,0,0.8); padding:9px 18px; border:1px solid var(--accent); border-radius:6px; text-shadow:0 0 8px var(--accent); }
+        /* En-tête */
+        header {
+            background: rgba(0, 20, 10, 0.9);
+            border-bottom: 2px solid var(--primary);
+            padding: 10px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 10;
+        }
+        h1 {
+            font-size: 1.2rem;
+            margin: 0;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            animation: pulseGreen 2s infinite;
+        }
+        .status-badge {
+            font-size: 0.7rem;
+            background: var(--primary);
+            color: #000;
+            padding: 2px 6px;
+            border-radius: 2px;
+            font-weight: bold;
+        }
 
-        #hud { position:absolute; top:18px; right:18px; background:rgba(0,0,0,0.8); padding:12px 16px; border:2px solid var(--primary); border-radius:6px; font-size:0.82rem; line-height:1.45; color:var(--primary); z-index:35; min-width:175px; }
-        #emfBar { height:6px; background:linear-gradient(to right,#00ff88,#ffff00,#ff0000); margin-top:4px; border-radius:3px; overflow:hidden; }
-        #emfFill { height:100%; background:#ffff00; width:0%; transition:width 0.4s; }
+        /* Zone Principale */
+        main {
+            flex: 1;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
 
+        /* Canvas Radar */
+        #radarCanvas {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0; left: 0;
+            z-index: 1;
+        }
+
+        /* Overlay Interface */
+        .hud-overlay {
+            position: absolute;
+            z-index: 5;
+            pointer-events: none;
+            width: 100%;
+            height: 100%;
+        }
+
+        #centerText {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            width: 80%;
+        }
+        
         #liveTranslation {
-            position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
-            text-align:center; pointer-events:none; z-index:45;
-            color:var(--sonar); background:rgba(0,0,0,0.85);
-            padding:16px 26px; border:3px solid var(--sonar);
-            border-radius:8px; text-transform:uppercase; font-size:1.18rem;
-            font-weight:bold; max-width:88%; word-break:break-all;
-            box-shadow:0 0 30px var(--sonar); line-height:1.35;
+            font-size: 1.4rem;
+            color: var(--secondary);
+            text-shadow: 0 0 10px var(--secondary);
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border: 1px solid var(--secondary);
+            margin-bottom: 10px;
+            min-height: 1.5em;
+            font-weight: bold;
         }
-        #translationOverlay { position:absolute; bottom:78px; left:50%; transform:translateX(-50%); color:var(--text); background:rgba(0,0,0,0.7); padding:9px 22px; border:2px solid var(--primary); border-radius:6px; text-transform:uppercase; font-size:0.95rem; font-weight:bold; z-index:30; }
 
-        #detectionAlert { position:absolute; top:25px; right:25px; color:var(--detect); background:rgba(0,0,0,0.85); padding:14px 22px; border:3px solid var(--detect); border-radius:6px; text-transform:uppercase; font-size:1.15rem; font-weight:bold; display:none; animation:alertPulse 0.9s infinite, alertGlow 1.8s infinite alternate; box-shadow:0 0 40px var(--detect); }
+        #subInfo {
+            font-size: 0.9rem;
+            color: #aaa;
+            letter-spacing: 1px;
+        }
 
-        #actionGrid { display:grid; grid-template-columns:repeat(auto-fit,minmax(68px,1fr)); gap:9px; padding:14px; background:var(--panel); border-top:2px solid #222; }
-        .grid-btn { background:#1a1a1a; border:2px solid #444; color:#ccc; padding:10px 4px; border-radius:6px; text-align:center; font-size:0.68rem; cursor:pointer; transition:all .2s; display:flex; flex-direction:column; align-items:center; justify-content:center; }
-        .grid-icon { font-size:1.45rem; margin-bottom:4px; }
-        .grid-btn:active { transform:scale(0.93); }
-        .grid-btn.active-state { background:var(--secondary); color:#000; border-color:#000; box-shadow:0 0 18px rgba(255,0,255,0.9); animation:pulseBtn 1.8s infinite; }
+        /* Panneaux latéraux */
+        .side-panel {
+            position: absolute;
+            background: rgba(0, 10, 5, 0.85);
+            border: 1px solid var(--primary);
+            padding: 8px;
+            font-size: 0.75rem;
+            color: var(--primary);
+            width: 140px;
+            border-radius: 4px;
+        }
+        #statsPanel { top: 10px; right: 10px; text-align: right; }
+        #logPanel { bottom: 180px; left: 10px; width: 200px; height: 100px; overflow: hidden; display: flex; flex-direction: column-reverse; opacity: 0.8; }
+        .log-entry { margin-top: 2px; border-bottom: 1px solid #333; padding-bottom: 2px; }
 
-        #terminal { height:88px; background:#000; border-top:1px solid #333; padding:8px; font-size:0.63rem; overflow-y:auto; color:#aaa; line-height:1.35; font-family:monospace; }
-        .log-line { margin-bottom:5px; border-left:3px solid #555; padding-left:8px; }
+        /* Alerte Entité */
+        #entityAlert {
+            position: absolute;
+            top: 20%; left: 50%;
+            transform: translateX(-50%) scale(0);
+            background: rgba(50, 0, 0, 0.9);
+            border: 2px solid var(--alert);
+            color: var(--alert);
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            z-index: 20;
+            transition: transform 0.2s;
+            text-align: center;
+            box-shadow: 0 0 30px rgba(255, 0, 0, 0.5);
+        }
+        #entityAlert.active {
+            transform: translateX(-50%) scale(1);
+            animation: pulseRed 0.5s infinite;
+        }
 
-        #evpPanel { background:var(--panel); padding:8px 12px; border-top:1px solid #333; max-height:110px; overflow-y:auto; font-size:0.68rem; }
-        .evp-item { display:flex; justify-content:space-between; align-items:center; padding:4px 8px; background:#1a1a1a; margin-bottom:4px; border-radius:4px; cursor:pointer; }
-        .evp-item:hover { background:#222; }
-        .scanline { position:absolute; top:0; left:0; width:100%; height:100%; background:linear-gradient(transparent,rgba(0,255,136,0.08),transparent); animation:scanline 4s linear infinite; pointer-events:none; z-index:10; opacity:0.3; }
+        /* Contrôles Bas */
+        #controls {
+            background: var(--panel);
+            border-top: 2px solid #333;
+            padding: 10px;
+            z-index: 10;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+        }
+
+        .btn {
+            background: #111;
+            border: 1px solid #444;
+            color: #888;
+            padding: 12px 5px;
+            font-family: inherit;
+            font-size: 0.7rem;
+            cursor: pointer;
+            text-transform: uppercase;
+            border-radius: 4px;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+        .btn span.icon { font-size: 1.2rem; }
+        
+        .btn:active { transform: scale(0.95); }
+        .btn.active {
+            background: rgba(0, 255, 136, 0.1);
+            border-color: var(--primary);
+            color: var(--primary);
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.2);
+        }
+        .btn.danger.active {
+            background: rgba(255, 50, 50, 0.1);
+            border-color: var(--alert);
+            color: var(--alert);
+            box-shadow: 0 0 10px rgba(255, 50, 50, 0.2);
+        }
+
+        /* Bibliothèque EVP */
+        #evpLibrary {
+            height: 0; /* Caché par défaut */
+            background: #000;
+            border-top: 1px solid #333;
+            overflow-y: auto;
+            transition: height 0.3s;
+            z-index: 15;
+            position: relative;
+        }
+        #evpLibrary.open { height: 100px; padding: 10px; }
+        .evp-item {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            padding: 5px;
+            border-bottom: 1px solid #222;
+            color: var(--secondary);
+            cursor: pointer;
+        }
+        .evp-item:hover { color: #fff; }
+
+        /* Scanline animée */
+        .scanner-bar {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 5px;
+            background: var(--primary);
+            opacity: 0.3;
+            animation: scanline 3s linear infinite;
+            pointer-events: none;
+            z-index: 3;
+        }
+
     </style>
 </head>
 <body>
-    <header>
-        <h1>OPATATOP AI ULTIMATE v10.3</h1>
-        <div style="font-size:0.7rem;color:#00ccff;">100% RÉEL LIVE • PLUS DE BOUCLE INFINIE</div>
-    </header>
-    <main>
-        <div id="visualizer">
-            <canvas id="scopeCanvas"></canvas>
-            <div class="scanline"></div>
-            <div id="detectionAlert">ENTITÉ RÉPOND EN DIRECT</div>
-            <div id="displayOverlay">
-                <div id="mainText">TRADUCTION RÉELLE DE TOUT</div>
-                <div id="subText">MOTS • BRUITS • SONS • FRÉQUENCES • RÉPONSES</div>
-            </div>
-            <div id="translationOverlay">CAPTÉ EN DIRECT • RÉPONSE IMMÉDIATE</div>
-            <div id="liveTranslation">-- ATTENDS UN BRUIT OU PARLE --</div>
-            <div id="hud">
-                NIVEAU: 0%<br>
-                FRÉQ.: 0 Hz<br>
-                DÉTECTION: 0%<br>
-                TEMP: 21.4°C<br>
-                <div style="margin-top:6px;font-size:0.75rem;">EMF <span id="emfBar"><span id="emfFill"></span></span></div>
-            </div>
+
+<header>
+    <h1>J.A.R.V.I.S. <span style="font-size:0.6em; color:#fff;">PARANORMAL</span></h1>
+    <div class="status-badge" id="sysStatus">SYSTÈME ACTIF</div>
+</header>
+
+<main>
+    <canvas id="radarCanvas"></canvas>
+    <div class="scanner-bar"></div>
+    
+    <div id="statsPanel" class="side-panel">
+        <div>EMF : <span id="emfVal">0.0</span> mG</div>
+        <div>TEMP : <span id="tempVal">20.4</span> °C</div>
+        <div>AUDIO : <span id="audioVal">-dB</span></div>
+        <div style="margin-top:5px; border-top:1px solid #333; padding-top:2px;">
+            ÉTAT: <span id="stateText" style="color:var(--secondary)">VEILLE</span>
         </div>
-    </main>
-    <div id="actionGrid">
-        <div class="grid-btn active-state" id="btnPower"><span class="grid-icon">⚡</span><span>POWER</span></div>
-        <div class="grid-btn active-state" id="btnDetect"><span class="grid-icon">🔍</span><span>SONAR</span></div>
-        <div class="grid-btn active-state" id="btnGhost"><span class="grid-icon">👻</span><span>GHOST</span></div>
-        <div class="grid-btn active-state" id="btnVAD"><span class="grid-icon">🎤</span><span>VAD+IA RÉEL</span></div>
-        <div class="grid-btn active-state" id="btnSpirit"><span class="grid-icon">📻</span><span>SPIRIT BOX</span></div>
-        <div class="grid-btn active-state" id="btnRecord"><span class="grid-icon">📼</span><span>EVP REC</span></div>
-        <div class="grid-btn active-state" id="btnEMF"><span class="grid-icon">📏</span><span>EMF</span></div>
-        <div class="grid-btn active-state" id="btnTemp"><span class="grid-icon">🌡️</span><span>TEMP</span></div>
     </div>
-    <div id="terminal"></div>
-    <div id="evpPanel"><strong>EVP LIBRARY (RÉEL)</strong> <span id="evpCount" style="color:#00ff88;">0 clips</span><ul id="evpList" style="list-style:none;padding:0;margin:6px 0 0 0;"></ul></div>
 
-    <script>
-        // ==================== CONFIG ====================
-        const Config = { apply() {
-            const m = {primary:'#00ff88',secondary:'#ff00ff',bg:'#000',panel:'#111',text:'#fff',
-                       sonar:'#00ffff',detect:'#ff0000',accent:'#ffff00',danger:'#ff5555',highlight:'#00ccff'};
-            Object.keys(m).forEach(k=>document.documentElement.style.setProperty(`--${k}`,m[k]));
-        }};
+    <div id="logPanel" class="side-panel">
+        <!-- Les logs s'affichent ici -->
+    </div>
 
-        // ==================== AUDIO ENGINE ====================
-        const AudioEngine = {
-            ctx:null, stream:null, analyser:null, isInit:false,
-            async init() {
-                try {
-                    const AC = window.AudioContext || window.webkitAudioContext;
-                    this.ctx = new AC();
-                    this.stream = await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false,sampleRate:44100}});
-                    this.analyser = this.ctx.createAnalyser(); this.analyser.fftSize = 2048;
-                    this.ctx.createMediaStreamSource(this.stream).connect(this.analyser);
-                    this.isInit = true; return true;
-                } catch(e){ console.error(e); return false; }
-            },
-            getRMS(){ if(!this.analyser) return 0; const d=new Uint8Array(this.analyser.fftSize); this.analyser.getByteTimeDomainData(d);
-                let s=0; for(let i=0;i<d.length;i++){const v=(d[i]/128)-1; s+=v*v;} return Math.sqrt(s/d.length); },
-            getPeakFreq(){ if(!this.analyser) return 0; const d=new Uint8Array(this.analyser.frequencyBinCount); this.analyser.getByteFrequencyData(d);
-                let max=0,idx=0; for(let i=2;i<d.length;i++) if(d[i]>max){max=d[i];idx=i;}
-                return Math.round((idx/d.length)*(this.ctx.sampleRate/2)); },
-            playClick(f=1100,dur=40){ if(!this.ctx)return; const o=this.ctx.createOscillator(),g=this.ctx.createGain();
-                o.type='sine'; o.frequency.value=f; g.gain.value=0.09; o.connect(g); g.connect(this.ctx.destination);
-                o.start(); setTimeout(()=>o.stop(),dur); }
-        };
+    <div class="hud-overlay">
+        <div id="centerText">
+            <div id="liveTranslation">INITIALISATION...</div>
+            <div id="subInfo">ATTENTE SIGNAUX VOCAUX OU ÉNERGÉTIQUES</div>
+        </div>
+    </div>
 
-        // ==================== SPEECH ENGINE ====================
-        const SpeechEngine = {
-            synth:window.speechSynthesis, voice:null,
-            init(){ const load=()=>{const v=this.synth.getVoices(); this.voice=v.find(vv=>vv.lang.startsWith('fr'))||v[0];};
-                load(); this.synth.onvoiceschanged=load; },
-            speak(t,p=1.05,r=0.96){ if(!t)return; this.synth.cancel();
-                const u=new SpeechSynthesisUtterance(t); u.lang='fr-FR'; u.pitch=p; u.rate=r;
-                if(this.voice) u.voice=this.voice; this.synth.speak(u); }
-        };
+    <div id="entityAlert">
+        DÉTECTION<br>ENTITÉ CONFIRMÉE
+    </div>
+</main>
 
-        // ==================== ENTITY SPEAKER (RÉEL, PAS DE BOUCLE) ====================
-        const EntitySpeaker = {
-            phrases: ["Aide-moi je suis piégé ici","J'ai froid très froid","Je suis juste derrière toi","Partez maintenant","Je suis ici avec vous","Oui je suis là","Non ne pars pas","Il fait si froid ici","Touche-moi","Je vais te prendre avec moi","Sauve-moi","L'obscurité m'engloutit","La mort est déjà là","Suis-moi","Entité très proche"],
-            userResponses: ["Je t'entends... que veux-tu ?","Oui je suis là... parle plus fort","Pourquoi m'appelles-tu ?","Je réponds seulement à toi","Entité très proche... tu m'as appelé ?","Je suis juste à côté de toi maintenant"],
-            speakRandom() {
-                const phrase = this.phrases[Math.floor(Math.random()*this.phrases.length)];
-                SpeechEngine.speak(phrase, 0.55, 0.68);
-                document.getElementById('liveTranslation').innerHTML = `ENTITÉ : <span style="color:#ff5555">${phrase.toUpperCase()}</span>`;
-                App.log(`👻 ENTITÉ RÉELLE : ${phrase}`);
-                setTimeout(() => SpeechEngine.speak(`Traduction : ${phrase}`, 1.05, 0.95), 1600);
-                RecorderEngine.startRecording();
-                setTimeout(() => { RecorderEngine.stopRecording(); RecorderEngine.updateEVPList(); }, 6200);
-                App.triggerGhostVisual();
-            },
-            respondToUser() {
-                const phrase = this.userResponses[Math.floor(Math.random()*this.userResponses.length)];
-                SpeechEngine.speak(phrase, 0.52, 0.65);
-                document.getElementById('liveTranslation').innerHTML = `ENTITÉ RÉPOND À TOI : <span style="color:#ff5555">${phrase.toUpperCase()}</span>`;
-                App.log(`👻 RÉPONSE DIRECTE À TOI : ${phrase}`);
-                setTimeout(() => SpeechEngine.speak(`L'entité a répondu : ${phrase}`, 1.08, 0.95), 1800);
-                RecorderEngine.startRecording();
-                setTimeout(() => { RecorderEngine.stopRecording(); RecorderEngine.updateEVPList(); }, 6500);
-                App.triggerGhostVisual();
+<div id="controls">
+    <button class="btn active" id="btnPower" onclick="togglePower()"><span class="icon">⚡</span>Power</button>
+    <button class="btn active" id="btnRadar" onclick="toggleModule('radar')"><span class="icon">📡</span>Sonar</button>
+    <button class="btn active" id="btnVAD" onclick="toggleModule('vad')"><span class="icon">🎙️</span>Voice AI</button>
+    <button class="btn" id="btnSpirit" onclick="toggleModule('spirit')"><span class="icon">📻</span>Spirit Box</button>
+    <button class="btn danger" id="btnRecord" onclick="toggleRecording()"><span class="icon">🔴</span>EVP REC</button>
+    <button class="btn" id="btnClean" onclick="cleanAudio()"><span class="icon">🧹</span>Clean</button>
+    <button class="btn" id="btnEvp" onclick="toggleEvpLib()"><span class="icon">📂</span>Biblio.</button>
+    <button class="btn" onclick="speakSystem('Système diagnostic complet terminé. Aucune anomalie critique détectée dans la structure.')"><span class="icon">💬</span>Test</button>
+</div>
+
+<div id="evpLibrary">
+    <div style="color:var(--primary); font-size:0.8rem; margin-bottom:5px;">ENREGISTREMENTS CAPTURÉS :</div>
+    <div id="evpList"></div>
+</div>
+
+<script>
+    // --- CONFIGURATION & VARIABLES GLOBALES ---
+    const UI = {
+        canvas: document.getElementById('radarCanvas'),
+        ctx: document.getElementById('radarCanvas').getContext('2d'),
+        liveText: document.getElementById('liveTranslation'),
+        subInfo: document.getElementById('subInfo'),
+        alertBox: document.getElementById('entityAlert'),
+        logPanel: document.getElementById('logPanel'),
+        emf: document.getElementById('emfVal'),
+        temp: document.getElementById('tempVal'),
+        audio: document.getElementById('audioVal'),
+        state: document.getElementById('stateText'),
+        status: document.getElementById('sysStatus')
+    };
+
+    let State = {
+        power: true,
+        radar: true,
+        vad: true,
+        spirit: false,
+        recording: false
+    };
+
+    let AudioSys = {
+        ctx: null,
+        analyser: null,
+        mic: null,
+        stream: null,
+        dataArray: null,
+        isInit: false
+    };
+
+    let Recorder = {
+        mediaRecorder: null,
+        chunks: [],
+        clips: []
+    };
+
+    // --- SYSTÈME AUDIO (Radar & Analyse) ---
+    async function initAudio() {
+        if (AudioSys.isInit) return;
+        try {
+            AudioSys.ctx = new (window.AudioContext || window.webkitAudioContext)();
+            AudioSys.stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            AudioSys.mic = AudioSys.ctx.createMediaStreamSource(AudioSys.stream);
+            AudioSys.analyser = AudioSys.ctx.createAnalyser();
+            AudioSys.analyser.fftSize = 256;
+            AudioSys.mic.connect(AudioSys.analyser);
+            
+            const bufferLength = AudioSys.analyser.frequencyBinCount;
+            AudioSys.dataArray = new Uint8Array(bufferLength);
+            AudioSys.isInit = true;
+            log("Audio connecté. Analyse spectrale active.");
+        } catch (e) {
+            log("ERREUR MICRO: Accès refusé.");
+            UI.status.textContent = "ERREUR MATÉRIEL";
+            UI.status.style.background = "red";
+        }
+    }
+
+    // --- MOTEUR VISUEL (RADAR JARVIS) ---
+    let radarAngle = 0;
+
+    function resizeCanvas() {
+        UI.canvas.width = UI.canvas.parentElement.clientWidth;
+        UI.canvas.height = UI.canvas.parentElement.clientHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    function drawRadar() {
+        if (!State.power) {
+            UI.ctx.fillStyle = "#000";
+            UI.ctx.fillRect(0, 0, UI.canvas.width, UI.canvas.height);
+            return;
+        }
+
+        const w = UI.canvas.width;
+        const h = UI.canvas.height;
+        const cx = w / 2;
+        const cy = h / 2;
+        const maxRadius = Math.min(w, h) / 2.2;
+
+        // Effet de traînée (fade out)
+        UI.ctx.fillStyle = "rgba(5, 5, 5, 0.1)";
+        UI.ctx.fillRect(0, 0, w, h);
+
+        if (!State.radar) {
+            requestAnimationFrame(drawRadar);
+            return;
+        }
+
+        // Dessiner la grille
+        UI.ctx.strokeStyle = "rgba(0, 255, 136, 0.3)";
+        UI.ctx.lineWidth = 1;
+        
+        // Cercles concentriques
+        [0.25, 0.5, 0.75, 1].forEach(scale => {
+            UI.ctx.beginPath();
+            UI.ctx.arc(cx, cy, maxRadius * scale, 0, Math.PI * 2);
+            UI.ctx.stroke();
+        });
+
+        // Lignes croisées
+        UI.ctx.beginPath();
+        UI.ctx.moveTo(cx - maxRadius, cy); UI.ctx.lineTo(cx + maxRadius, cy);
+        UI.ctx.moveTo(cx, cy - maxRadius); UI.ctx.lineTo(cx, cy + maxRadius);
+        UI.ctx.stroke();
+
+        // Balayage (Ligne scanner)
+        radarAngle += 0.03;
+        UI.ctx.save();
+        UI.ctx.translate(cx, cy);
+        UI.ctx.rotate(radarAngle);
+        
+        // Gradient pour le faisceau
+        const gradient = UI.ctx.createLinearGradient(0, 0, maxRadius, 0);
+        gradient.addColorStop(0, "rgba(0, 255, 136, 0)");
+        gradient.addColorStop(1, "rgba(0, 255, 136, 0.5)");
+        
+        UI.ctx.fillStyle = gradient;
+        UI.ctx.beginPath();
+        UI.ctx.moveTo(0, 0);
+        UI.ctx.arc(0, 0, maxRadius, -0.2, 0.2);
+        UI.ctx.fill();
+        
+        UI.ctx.strokeStyle = "#fff";
+        UI.ctx.beginPath();
+        UI.ctx.moveTo(0,0);
+        UI.ctx.lineTo(maxRadius, 0);
+        UI.ctx.stroke();
+        
+        UI.ctx.restore();
+
+        // Visualisation fréquentielle (Points sur le cercle)
+        if (AudioSys.isInit) {
+            AudioSys.analyser.getByteFrequencyData(AudioSys.dataArray);
+            const bufferLength = AudioSys.analyser.frequencyBinCount;
+            
+            for(let i = 0; i < bufferLength; i+=4) {
+                const v = AudioSys.dataArray[i] / 128.0; // 0..2
+                const radius = maxRadius + (v * 20);
+                const angle = (radarAngle - (Math.PI * 2 * (i/bufferLength))) % (Math.PI * 2);
+                
+                const x = cx + Math.cos(angle) * radius;
+                const y = cy + Math.sin(angle) * radius;
+                
+                UI.ctx.fillStyle = `hsl(${120 + v * 50}, 100%, 50%)`;
+                UI.ctx.beginPath();
+                UI.ctx.arc(x, y, 2 + v, 0, Math.PI*2);
+                UI.ctx.fill();
             }
-        };
+        }
 
-        // ==================== RECOGNITION IA (100% RÉELLE) ====================
-        let RecognitionEngine = {
-            rec:null, active:false,
-            init(){
-                const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-                if(!SR){ App.log("❌ Reconnaissance vocale non supportée (Chrome/Edge obligatoire)"); return false; }
-                this.rec = new SR(); this.rec.continuous=true; this.rec.interimResults=true; this.rec.lang='fr-FR';
-                this.rec.onresult = e => {
-                    let txt = '';
-                    for(let i=e.resultIndex;i<e.results.length;i++) txt += e.results[i][0].transcript;
-                    if(!txt.trim()) return;
+        // Simulation présence aléatoire (Ghost Blip)
+        if (State.spirit && Math.random() > 0.98) {
+            const gAngle = Math.random() * Math.PI * 2;
+            const gRad = Math.random() * maxRadius * 0.8;
+            const gx = cx + Math.cos(gAngle) * gRad;
+            const gy = cy + Math.sin(gAngle) * gRad;
+            
+            UI.ctx.fillStyle = "#ff0000";
+            UI.ctx.beginPath();
+            UI.ctx.arc(gx, gy, 6, 0, Math.PI*2);
+            UI.ctx.fill();
+            // Cercle expansion
+            UI.ctx.strokeStyle = "#ff0000";
+            UI.ctx.beginPath();
+            UI.ctx.arc(gx, gy, 15, 0, Math.PI*2);
+            UI.ctx.stroke();
+        }
 
-                    document.getElementById('liveTranslation').textContent = `TOI : ${txt.toUpperCase()}`;
-                    App.log(`🎤 TOI : ${txt}`);
+        requestAnimationFrame(drawRadar);
+    }
 
-                    const lower = txt.toLowerCase();
-                    if (lower.includes('réponds') || lower.includes('répond') || lower.includes('parle') || lower.includes('qui es tu') || lower.includes('répond moi')) {
-                        EntitySpeaker.respondToUser();
-                    } else {
-                        SpeechEngine.speak(`Capté : ${txt}`, 1.0, 0.98);
-                    }
-                };
-                this.rec.onerror = e => App.log(`ERREUR MICRO : ${e.error}`);
-                this.rec.onend = () => { if(this.active) this.rec.start(); };
-                return true;
-            },
-            start(){ if(!this.rec||this.active) return; this.rec.start(); this.active=true; App.log("✅ RECONNAISSANCE RÉELLE ACTIVÉE"); },
-            stop(){ if(this.rec){this.rec.stop(); this.active=false;} }
-        };
+    // --- IA VOCAL & SYNTHÈSE ---
+    
+    function speakSystem(text) {
+        window.speechSynthesis.cancel(); // Évite la file d'attente infinie
+        const msg = new SpeechSynthesisUtterance(text);
+        msg.lang = 'fr-FR';
+        msg.pitch = 0.8; // Voix plus grave (Jarvis)
+        msg.rate = 1.1;
+        window.speechSynthesis.speak(msg);
+    }
 
-        // ==================== RECORDER ENGINE ====================
-        const RecorderEngine = {
-            mediaRecorder: null, clips: [], currentStream: null, isRecording: false,
-            startRecording() {
-                if(this.isRecording) return;
-                navigator.mediaDevices.getUserMedia({audio:true}).then(stream => {
-                    this.currentStream = stream;
-                    this.mediaRecorder = new MediaRecorder(stream);
-                    const chunks = [];
-                    this.mediaRecorder.ondataavailable = e => chunks.push(e.data);
-                    this.mediaRecorder.onstop = () => {
-                        const blob = new Blob(chunks, {type:'audio/webm'});
-                        const url = URL.createObjectURL(blob);
-                        this.clips.push({url, time:new Date().toLocaleTimeString('fr-FR'), name:`RÉEL_${this.clips.length+1}`});
-                        this.updateEVPList();
-                    };
-                    this.mediaRecorder.start();
-                    this.isRecording = true;
-                });
-            },
-            stopRecording() {
-                if(this.mediaRecorder && this.isRecording){
-                    this.mediaRecorder.stop();
-                    this.isRecording = false;
-                    if(this.currentStream) this.currentStream.getTracks().forEach(t=>t.stop());
+    function speakGhost(text) {
+        window.speechSynthesis.cancel();
+        const msg = new SpeechSynthesisUtterance(text);
+        msg.lang = 'fr-FR';
+        msg.pitch = 0.3; // Voix très grave/étrange
+        msg.rate = 0.7;
+        // Appliquer un filtre si possible (limité en vanilla JS simple, on joue sur le pitch/rate)
+        window.speechSynthesis.speak(msg);
+    }
+
+    const GhostPhrases = [
+        "Je suis... ici...",
+        "Pourquoi tu m'as dérangé",
+        "Sortez... maintenant...",
+        "Il fait si froid...",
+        "Aide-moi...",
+        "Tu ne peux pas me voir",
+        "Derrière toi",
+        "Je meurs... encore..."
+    ];
+
+    // Reconnaissance Vocale (Web Speech API)
+    let Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let recog = null;
+
+    function startSpeech() {
+        if (!Recognition) return;
+        recog = new Recognition();
+        recog.continuous = true;
+        recog.interimResults = true;
+        recog.lang = 'fr-FR';
+
+        recog.onresult = (event) => {
+            if (!State.vad) return;
+            let transcript = '';
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+                transcript += event.results[i][0].transcript;
+            }
+            
+            if (transcript.trim().length > 0) {
+                UI.liveText.textContent = `UTILISATEUR: "${transcript.toUpperCase()}"`;
+                UI.liveText.style.color = "var(--secondary)";
+                
+                // Détection simple de mots clés
+                const lower = transcript.toLowerCase();
+                if (lower.includes("qui est là") || lower.includes("présence") || lower.includes("fantôme")) {
+                    triggerEntityResponse(true); // Réponse contextuelle
                 }
-            },
-            updateEVPList() {
-                const ul = document.getElementById('evpList');
-                ul.innerHTML = '';
-                this.clips.forEach(clip => {
-                    const li = document.createElement('li');
-                    li.className = 'evp-item';
-                    li.innerHTML = `<span>${clip.name} • ${clip.time}</span><span style="color:var(--primary)">▶</span>`;
-                    li.onclick = () => { new Audio(clip.url).play(); };
-                    ul.appendChild(li);
-                });
-                document.getElementById('evpCount').textContent = `${this.clips.length} clips réels`;
             }
         };
 
-        // ==================== SPIRIT BOX (MANUEL SEULEMENT) ====================
-        const SpiritBoxEngine = {
-            active: false, interval: null,
-            toggle() {
-                this.active = !this.active;
-                document.getElementById('btnSpirit').classList.toggle('active-state');
-                if(this.active){
-                    App.log("📻 SPIRIT BOX RÉELLE ACTIVÉE");
-                    SpeechEngine.speak("Spirit box activée – parle ou fais du bruit");
-                    this.interval = setInterval(() => {
-                        if (Math.random() < 0.4) EntitySpeaker.speakRandom();
-                    }, 4500);
-                } else {
-                    clearInterval(this.interval);
-                    App.log("📻 SPIRIT BOX ARRÊTÉE");
-                }
-            }
+        recog.onerror = (e) => {
+            if(e.error !== 'no-speech') log("Erreur Vocale: " + e.error);
         };
 
-        // ==================== VISUAL ENGINE (détection réelle de bruit) ====================
-        const VisualEngine = {
-            canvas:null, ctx:null, animId:null, isRunning:false, lastHud:0, lastTrigger:0,
-            particles: [],
-            init(){ this.canvas = document.getElementById('scopeCanvas'); this.ctx = this.canvas.getContext('2d'); this.resize(); window.addEventListener('resize',()=>this.resize()); },
-            resize(){ this.canvas.width = this.canvas.parentElement.clientWidth; this.canvas.height = this.canvas.parentElement.clientHeight; },
-            start(){ if(!this.isRunning){this.isRunning=true; this.loop();} },
-            stop(){ this.isRunning=false; cancelAnimationFrame(this.animId); },
-            spawnParticles(n){ for(let i=0;i<n;i++){ this.particles.push({x:Math.random()*this.canvas.width, y:Math.random()*this.canvas.height*0.6, size:3+Math.random()*5, life:80+Math.random()*60, vx:(Math.random()-0.5)*1.2, vy:(Math.random()-0.5)*1.8}); } },
-            loop(){
-                if(!this.isRunning) return;
-                const w=this.canvas.width, h=this.canvas.height;
-                this.ctx.fillStyle='rgba(0,0,0,0.13)'; this.ctx.fillRect(0,0,w,h);
+        recog.start();
+        log("Module Vocale Activé.");
+    }
 
-                this.ctx.save(); this.ctx.translate(w/2,h/2);
-                this.ctx.strokeStyle='#00ff8833'; this.ctx.lineWidth=1.6;
-                const maxR = Math.min(w,h)/2.15;
-                for(let r=28;r<=maxR;r+=29){ this.ctx.beginPath(); this.ctx.arc(0,0,r,0,Math.PI*2); this.ctx.stroke(); }
-                for(let a=0;a<Math.PI*2;a+=Math.PI/11){ this.ctx.beginPath(); this.ctx.moveTo(0,0); this.ctx.lineTo(Math.cos(a)*maxR,Math.sin(a)*maxR); this.ctx.stroke(); }
-                this.ctx.restore();
+    // --- LOGIQUE MÉTIER ---
 
-                const angle = (Date.now()/720)%(Math.PI*2);
-                this.ctx.save(); this.ctx.translate(w/2,h/2);
-                this.ctx.strokeStyle='#00ff88'; this.ctx.lineWidth=4; this.ctx.shadowBlur=25; this.ctx.shadowColor='#00ff88';
-                this.ctx.beginPath(); this.ctx.moveTo(0,0); this.ctx.lineTo(Math.cos(angle)*maxR,Math.sin(angle)*maxR); this.ctx.stroke();
-                this.ctx.restore();
+    function triggerEntityResponse(contextual = false) {
+        if (!State.power) return;
+        
+        UI.alertBox.classList.add('active');
+        UI.state.textContent = "MENACE DÉTECTÉE";
+        UI.state.style.color = "var(--alert)";
+        
+        let phrase;
+        if (contextual) {
+            phrase = "Je suis l'esprit de cette machine";
+        } else {
+            phrase = GhostPhrases[Math.floor(Math.random() * GhostPhrases.length)];
+        }
 
-                if(AudioEngine.isInit){
-                    const td = new Uint8Array(AudioEngine.analyser.fftSize);
-                    AudioEngine.analyser.getByteTimeDomainData(td);
-                    this.ctx.save(); this.ctx.strokeStyle='#00ffff'; this.ctx.lineWidth=2.8; this.ctx.shadowBlur=18; this.ctx.shadowColor='#00ffff';
-                    this.ctx.beginPath();
-                    const sw = w/td.length*1.9; let x=25;
-                    for(let i=0;i<td.length;i+=2){
-                        const y = h*0.78 + ((td[i]/128)-0.5)*62;
-                        i===0?this.ctx.moveTo(x,y):this.ctx.lineTo(x,y);
-                        x+=sw;
-                    }
-                    this.ctx.stroke(); this.ctx.restore();
-                }
+        UI.liveText.textContent = `ENTITÉ: "${phrase.toUpperCase()}"`;
+        UI.liveText.style.color = "var(--alert)";
+        
+        speakGhost(phrase);
+        log(`ALERT: Entité détectée. Message: ${phrase}`);
 
-                // === DÉTECTION RÉELLE DE BRUIT (pas de boucle infinie) ===
-                const rms = AudioEngine.isInit ? AudioEngine.getRMS() : 0;
-                const now = Date.now();
-                if (rms > 0.28 && now - this.lastTrigger > 6500) {
-                    this.lastTrigger = now;
-                    App.log("BRUIT / FRÉQUENCE RÉELLE DÉTECTÉE");
-                    EntitySpeaker.speakRandom();
-                }
+        if (State.recording) log("EVP: Capture en cours...");
 
-                this.particles = this.particles.filter(p=>{ p.x+=p.vx; p.y+=p.vy; p.life--; this.ctx.save(); this.ctx.globalAlpha=p.life/120; this.ctx.fillStyle='#00ffff'; this.ctx.shadowBlur=12; this.ctx.shadowColor='#00ffff'; this.ctx.beginPath(); this.ctx.arc(p.x,p.y,p.size,0,Math.PI*2); this.ctx.fill(); this.ctx.restore(); return p.life>0; });
+        setTimeout(() => {
+            UI.alertBox.classList.remove('active');
+            UI.state.textContent = "VEILLE";
+            UI.state.style.color = "var(--secondary)";
+        }, 4000);
+    }
 
-                if(Date.now()-this.lastHud>140){
-                    const freq = AudioEngine.isInit?AudioEngine.getPeakFreq():0;
-                    const emf = Math.min(100, Math.floor(rms*1.1));
-                    document.getElementById('hud').innerHTML = `NIVEAU: ${rms.toFixed(1)}%<br>FRÉQ.: ${freq} Hz<br>DÉTECTION: ${Math.floor(rms*0.85)}%<br>TEMP: ${(19.8 + Math.random()*6.4).toFixed(1)}°C<br><div style="margin-top:6px;font-size:0.75rem;">EMF <span id="emfBar"><span id="emfFill" style="width:${emf}%"></span></span></div>`;
-                    this.lastHud = Date.now();
-                }
-                this.animId = requestAnimationFrame(()=>this.loop());
+    function updateHUD() {
+        if (!State.power) return;
+
+        // Simulation valeurs capteurs
+        if (AudioSys.isInit) {
+            AudioSys.analyser.getByteFrequencyData(AudioSys.dataArray);
+            let sum = 0;
+            for(let i=0; i<AudioSys.dataArray.length; i++) sum += AudioSys.dataArray[i];
+            let average = sum / AudioSys.dataArray.length;
+            
+            UI.audio.textContent = (average - 100).toFixed(1) + " dB";
+            
+            // EMF basé sur le volume audio + bruit aléatoire
+            let emf = (average / 10) + (Math.random() * 2);
+            if (State.spirit) emf += Math.random() * 5; // Boost si spirit box
+            UI.emf.textContent = emf.toFixed(1);
+
+            // Détection automatique de bruit fort (Ghost Trigger)
+            if (average > 50 && Math.random() > 0.95 && !UI.alertBox.classList.contains('active')) {
+                triggerEntityResponse();
             }
-        };
+        } else {
+            // Mode démo sans micro
+            UI.emf.textContent = (Math.random() * 3).toFixed(1);
+            UI.audio.textContent = "- dB";
+        }
 
-        // ==================== FEATURE ENGINE ====================
-        const FeatureEngine = {
-            power:true, detection:true, ghost:true, vad:true, spirit:false, record:true, emf:true, temp:true,
-            toggle(id, stateName, msgOn, msgOff){
-                AudioEngine.playClick();
-                this[stateName] = !this[stateName];
-                document.getElementById(id).classList.toggle('active-state');
-                const msg = this[stateName] ? msgOn : msgOff;
-                App.log(msg); SpeechEngine.speak(msg);
+        // Température (variation lente)
+        let baseTemp = 20.0;
+        if (State.spirit) baseTemp -= 2.0; // Froid quand fantôme
+        UI.temp.textContent = (baseTemp + (Math.random() * 0.5)).toFixed(1);
+
+        setTimeout(updateHUD, 200);
+    }
+
+    // --- GESTION DES BOUTONS ---
+
+    function togglePower() {
+        State.power = !State.power;
+        const btn = document.getElementById('btnPower');
+        btn.classList.toggle('active');
+        UI.status.textContent = State.power ? "SYSTÈME ACTIF" : "HORS LIGNE";
+        UI.status.style.background = State.power ? "var(--primary)" : "#333";
+        UI.status.style.color = State.power ? "#000" : "#fff";
+        
+        if (State.power) {
+            speakSystem("Système en ligne. Protocoles de détection activés.");
+            initAudio();
+        } else {
+            window.speechSynthesis.cancel();
+            UI.liveText.textContent = "SYSTÈME OFF";
+        }
+    }
+
+    function toggleModule(mod) {
+        if (!State.power) return;
+        
+        if (mod === 'radar') {
+            State.radar = !State.radar;
+            document.getElementById('btnRadar').classList.toggle('active');
+            speakSystem(State.radar ? "Sonar activé" : "Sonar désactivé");
+        }
+        else if (mod === 'vad') {
+            State.vad = !State.vad;
+            document.getElementById('btnVAD').classList.toggle('active');
+            if(State.vad) startSpeech();
+            else if(recog) { recog.stop(); UI.liveText.textContent = "MIC OFF"; }
+        }
+        else if (mod === 'spirit') {
+            State.spirit = !State.spirit;
+            document.getElementById('btnSpirit').classList.toggle('active');
+            if(State.spirit) {
+                speakSystem("Spirit Box activée. Balayage des fréquences.");
+                UI.subInfo.textContent = "BALAYAGE FRÉQUENCES SPECTRALES...";
+                // Loop sons aléatoires
+                spiritLoop = setInterval(() => {
+                    if(Math.random() > 0.6) triggerEntityResponse();
+                }, 8000);
+            } else {
+                speakSystem("Spirit Box désactivée.");
+                UI.subInfo.textContent = "MODE STANDARD";
+                clearInterval(spiritLoop);
             }
-        };
+        }
+    }
 
-        // ==================== MAIN APP ====================
-        const App = {
-            isRunning:false,
-            async init(){
-                Config.apply();
-                SpeechEngine.init();
-                VisualEngine.init();
-                const audioOK = await AudioEngine.init();
-                if(!audioOK) this.log("⚠️ MICRO REFUSÉ – MODE DÉMO");
+    let spiritLoop = null;
 
-                RecognitionEngine.init();
-                VisualEngine.start();
-                this.isRunning = true;
+    function toggleRecording() {
+        if (!State.power) return;
+        State.recording = !State.recording;
+        const btn = document.getElementById('btnRecord');
+        btn.classList.toggle('active');
 
-                this.log("=== OPATATOP AI v10.3 ===");
-                this.log("✅ 100% RÉEL – PLUS DE RÉPÉTITION INFINIE");
-                this.log("Parle normalement ou dis 'réponds moi' → réponse immédiate");
-                SpeechEngine.speak("Version réelle activée. Plus de boucle. Parle ou fais du bruit.",1.08,0.94);
+        if (State.recording) {
+            if (!AudioSys.stream) { log("Pas de signal audio pour enregistrer."); State.recording=false; btn.classList.remove('active'); return; }
+            
+            Recorder.mediaRecorder = new MediaRecorder(AudioSys.stream);
+            Recorder.chunks = [];
+            Recorder.mediaRecorder.ondataavailable = e => Recorder.chunks.push(e.data);
+            Recorder.mediaRecorder.onstop = saveRecording;
+            Recorder.mediaRecorder.start();
+            btn.querySelector('.icon').textContent = "⏹️"; // Symbole Stop
+            log("Enregistrement EVP démarré.");
+            speakSystem("Enregistrement activé.");
+        } else {
+            Recorder.mediaRecorder.stop();
+            btn.querySelector('.icon').textContent = "🔴";
+            log("Enregistrement terminé.");
+        }
+    }
 
-                const map = [
-                    {id:'btnPower', fn:()=>{ FeatureEngine.toggle('btnPower','power',"POWER ON","POWER OFF");
-                        document.getElementById('mainText').textContent = FeatureEngine.power?"TRADUCTION RÉELLE DE TOUT":"SYSTÈME OFF";
-                        document.getElementById('mainText').style.color = FeatureEngine.power?'var(--primary)':'var(--danger)'; }},
-                    {id:'btnDetect', fn:()=>FeatureEngine.toggle('btnDetect','detection',"SONAR ACTIF","SONAR OFF")},
-                    {id:'btnGhost', fn:()=>FeatureEngine.toggle('btnGhost','ghost',"GHOST ACTIF","GHOST OFF")},
-                    {id:'btnVAD', fn:()=>{ FeatureEngine.toggle('btnVAD','vad',"VAD+IA RÉEL ON","VAD OFF"); FeatureEngine.vad ? RecognitionEngine.start() : RecognitionEngine.stop(); }},
-                    {id:'btnSpirit', fn:()=>SpiritBoxEngine.toggle()},
-                    {id:'btnRecord', fn:()=>{ FeatureEngine.toggle('btnRecord','record',"EVP REC ON","EVP OFF"); FeatureEngine.record ? RecorderEngine.startRecording() : RecorderEngine.stopRecording(); }},
-                    {id:'btnEMF', fn:()=>FeatureEngine.toggle('btnEMF','emf',"EMF ACTIF","EMF OFF")},
-                    {id:'btnTemp', fn:()=>FeatureEngine.toggle('btnTemp','temp',"TEMP ACTIF","TEMP OFF")}
-                ];
-                map.forEach(b=>document.getElementById(b.id).addEventListener('click',b.fn));
+    function saveRecording() {
+        const blob = new Blob(Recorder.chunks, { 'type' : 'audio/ogg; codecs=opus' });
+        const audioURL = window.URL.createObjectURL(blob);
+        const clipName = `EVP_${new Date().toLocaleTimeString('fr-FR')}`;
+        
+        Recorder.clips.push({ name: clipName, url: audioURL });
+        updateEvpList();
+        speakSystem("Phénomène sauvegardé.");
+    }
 
-                setTimeout(()=>{ if(FeatureEngine.vad) RecognitionEngine.start(); },800);
-                setTimeout(()=>{ VisualEngine.spawnParticles(12); },1500);
-            },
-            log(m){
-                const t=document.getElementById('terminal');
-                const d=document.createElement('div'); d.className='log-line';
-                d.textContent=`[${new Date().toLocaleTimeString('fr-FR')}] ${m}`;
-                t.appendChild(d);
-                if(t.children.length>22) t.removeChild(t.firstChild);
-                t.scrollTop=t.scrollHeight;
-            },
-            triggerGhostVisual(){
-                const alertEl = document.getElementById('detectionAlert');
-                alertEl.textContent = "ENTITÉ RÉPOND EN DIRECT";
-                alertEl.style.display='block';
-                VisualEngine.spawnParticles(40);
-                setTimeout(()=>{ alertEl.style.display='none'; },5200);
-            }
-        };
+    function updateEvpList() {
+        const list = document.getElementById('evpList');
+        list.innerHTML = "";
+        Recorder.clips.forEach((clip, index) => {
+            const div = document.createElement('div');
+            div.className = 'evp-item';
+            div.innerHTML = `<span>${clip.name}</span> <span>▶ PLAY</span>`;
+            div.onclick = () => { new Audio(clip.url).play(); };
+            list.appendChild(div);
+        });
+    }
 
-        window.onload = () => App.init();
-    </script>
+    function toggleEvpLib() {
+        document.getElementById('evpLibrary').classList.toggle('open');
+    }
+
+    function cleanAudio() {
+        // Simule un nettoyage de l'audio (stoppe la parole)
+        window.speechSynthesis.cancel();
+        UI.liveText.textContent = "AUDIO NETTOYÉ";
+        log("Cache audio purgée.");
+    }
+
+    function log(msg) {
+        const div = document.createElement('div');
+        div.className = 'log-entry';
+        div.textContent = `> ${msg}`;
+        UI.logPanel.prepend(div); // Ajoute au début (flex-direction reverse)
+        if (UI.logPanel.children.length > 8) UI.logPanel.lastChild.remove();
+    }
+
+    // --- INITIALISATION ---
+    window.onload = () => {
+        log("Démarrage JARVIS Paranormal v10.3");
+        resizeCanvas();
+        drawRadar();
+        updateHUD();
+        
+        // Message d'accueil après un court délai
+        setTimeout(() => {
+            speakSystem("Bonjour. Je suis prêt. Les capteurs sont en veille.");
+        }, 1000);
+    };
+
+</script>
 </body>
 </html>
