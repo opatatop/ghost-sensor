@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>OPATATOP AI ULTIMATE v10.1 - ENTITÉS PARLENT EN FRANÇAIS</title>
+    <title>OPATATOP AI ULTIMATE v10.2 - TOUT EN DIRECT LIVE</title>
     <style>
         :root {
             --primary: #00ff88; --secondary: #ff00ff; --bg: #000; --panel: #111;
@@ -64,20 +64,20 @@
 </head>
 <body>
     <header>
-        <h1>OPATATOP AI ULTIMATE v10.1</h1>
-        <div style="font-size:0.7rem;color:#00ccff;">ENTITÉS PARLENT + TRADUCTION FRANÇAISE</div>
+        <h1>OPATATOP AI ULTIMATE v10.2</h1>
+        <div style="font-size:0.7rem;color:#00ccff;">TOUT EN DIRECT LIVE • RÉPOND À TOI</div>
     </header>
     <main>
         <div id="visualizer">
             <canvas id="scopeCanvas"></canvas>
             <div class="scanline"></div>
-            <div id="detectionAlert">ENTITÉ TRÈS PROCHE</div>
+            <div id="detectionAlert">ENTITÉ RÉPOND EN DIRECT</div>
             <div id="displayOverlay">
-                <div id="mainText">ALERTES VOCALES + ENTITÉS PARLENT</div>
-                <div id="subText">TRADUCTION FRANÇAISE EN DIRECT • ENREGISTREMENT AUTO</div>
+                <div id="mainText">TRADUCTION DE TOUT EN DIRECT</div>
+                <div id="subText">MOTS • BRUITS • FRÉQUENCES • SONS • ENTITÉS</div>
             </div>
-            <div id="translationOverlay">ENTITÉ PARLE + TRADUCTION IA FRANÇAISE</div>
-            <div id="liveTranslation">-- ENTITÉS EN COURS DE PAROLE --</div>
+            <div id="translationOverlay">TOUT CAPTÉ LIVE • RÉPONSE IMMÉDIATE</div>
+            <div id="liveTranslation">-- TOUT EST CAPTÉ EN DIRECT --</div>
             <div id="hud">
                 NIVEAU: 0%<br>
                 FRÉQ.: 0 Hz<br>
@@ -98,7 +98,7 @@
         <div class="grid-btn active-state" id="btnTemp"><span class="grid-icon">🌡️</span><span>TEMP</span></div>
     </div>
     <div id="terminal"></div>
-    <div id="evpPanel"><strong>EVP LIBRARY (ENTITÉS PARLÉES)</strong> <span id="evpCount" style="color:#00ff88;">0 clips</span><ul id="evpList" style="list-style:none;padding:0;margin:6px 0 0 0;"></ul></div>
+    <div id="evpPanel"><strong>EVP LIBRARY (TOUT CAPTÉ)</strong> <span id="evpCount" style="color:#00ff88;">0 clips</span><ul id="evpList" style="list-style:none;padding:0;margin:6px 0 0 0;"></ul></div>
 
     <script>
         // ==================== CONFIG ====================
@@ -141,10 +141,10 @@
                 if(this.voice) u.voice=this.voice; this.synth.speak(u); }
         };
 
-        // ==================== ENTITY SPEAKER (TOUT EN FRANÇAIS) ====================
+        // ==================== ENTITY SPEAKER (RÉPOND À TOI) ====================
         const EntitySpeaker = {
             phrases: [
-                "Aide-moi je suis piégé",
+                "Aide-moi je suis piégé ici",
                 "J'ai froid... très froid",
                 "Je suis juste derrière toi",
                 "Partez maintenant ou restez pour toujours",
@@ -162,59 +162,67 @@
                 "Entité très proche... très proche",
                 "Je t'attends depuis longtemps"
             ],
-            speakAndTranslate() {
+            userResponses: [
+                "Je t'entends... que veux-tu de moi ?",
+                "Oui je suis là... parle plus fort",
+                "Pourquoi m'appelles-tu ? Je suis piégé",
+                "Je réponds... seulement à toi",
+                "Entité très proche... tu m'as appelé ?",
+                "Je suis juste à côté de toi maintenant"
+            ],
+            speakRandom() {
                 const phrase = this.phrases[Math.floor(Math.random() * this.phrases.length)];
-
-                // 1. Voix de l'ENTITÉ (grave, lente, effrayante)
                 SpeechEngine.speak(phrase, 0.55, 0.68);
-
-                // 2. Affichage LIVE en français
                 const live = document.getElementById('liveTranslation');
-                live.innerHTML = `ENTITÉ : <span style="color:#ff5555">${phrase.toUpperCase()}</span><br>TRADUCTION IA : <span style="color:#00ff88">« ${phrase} » – SIGNAL TRÈS FORT</span>`;
-
-                App.log(`👻 ENTITÉ PARLE : ${phrase}`);
-
-                // 3. Voix de TRADUCTION IA claire (français normal)
-                setTimeout(() => {
-                    SpeechEngine.speak(`Traduction : ${phrase}. Entité très proche.`, 1.05, 0.95);
-                }, 1600);
-
-                // 4. ENREGISTREMENT AUTOMATIQUE IMMÉDIAT
+                live.innerHTML = `ENTITÉ : <span style="color:#ff5555">${phrase.toUpperCase()}</span>`;
+                App.log(`👻 ENTITÉ : ${phrase}`);
+                setTimeout(() => SpeechEngine.speak(`Traduction : ${phrase}`, 1.05, 0.95), 1600);
                 RecorderEngine.startRecording();
-                setTimeout(() => {
-                    RecorderEngine.stopRecording();
-                    if (RecorderEngine.clips.length > 0) {
-                        const last = RecorderEngine.clips[RecorderEngine.clips.length-1];
-                        last.name = `ENTITÉ_${RecorderEngine.clips.length}_PARLÉE`;
-                        RecorderEngine.updateEVPList();
-                    }
-                }, 6200);
-
-                // Alerte visuelle
+                setTimeout(() => { RecorderEngine.stopRecording(); RecorderEngine.updateEVPList(); }, 6200);
+                App.triggerGhostVisual();
+            },
+            respondToUser() {
+                const phrase = this.userResponses[Math.floor(Math.random() * this.userResponses.length)];
+                SpeechEngine.speak(phrase, 0.52, 0.65);
+                const live = document.getElementById('liveTranslation');
+                live.innerHTML = `ENTITÉ RÉPOND À TOI : <span style="color:#ff5555">${phrase.toUpperCase()}</span>`;
+                App.log(`👻 RÉPONSE DIRECTE : ${phrase}`);
+                setTimeout(() => SpeechEngine.speak(`L'entité a répondu : ${phrase}`, 1.08, 0.95), 1800);
+                RecorderEngine.startRecording();
+                setTimeout(() => { RecorderEngine.stopRecording(); RecorderEngine.updateEVPList(); }, 6500);
                 App.triggerGhostVisual();
             }
         };
 
-        // ==================== RECOGNITION IA ====================
+        // ==================== RECOGNITION IA (TOUT CAPTÉ EN DIRECT) ====================
         let RecognitionEngine = {
             rec:null, active:false,
             init(){
                 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-                if(!SR){ App.log("❌ Reconnaissance non supportée (Chrome obligatoire)"); return false; }
+                if(!SR){ App.log("❌ Reconnaissance non supportée – utilise Chrome/Edge"); return false; }
                 this.rec = new SR(); this.rec.continuous=true; this.rec.interimResults=true; this.rec.lang='fr-FR';
                 this.rec.onresult = e => {
                     let txt = '';
                     for(let i=e.resultIndex;i<e.results.length;i++) txt += e.results[i][0].transcript;
                     if(!txt.trim()) return;
-                    document.getElementById('liveTranslation').textContent = `VOIX HUMAINE : ${txt.toUpperCase()}`;
-                    App.log(`🎤 VOIX HUMAINE : ${txt}`);
-                    SpeechEngine.speak(`Capté : ${txt}`);
+
+                    const live = document.getElementById('liveTranslation');
+                    live.textContent = `CAPTÉ EN DIRECT : ${txt.toUpperCase()}`;
+
+                    App.log(`🎤 TOUT CAPTÉ : ${txt}`);
+
+                    const lower = txt.toLowerCase();
+                    if (lower.includes('réponds') || lower.includes('répond') || lower.includes('parle') || lower.includes('qui es tu') || lower.includes('répond moi') || lower.includes('réponds moi')) {
+                        EntitySpeaker.respondToUser();
+                    } else {
+                        SpeechEngine.speak(`Capté : ${txt}`, 1.0, 0.98);
+                    }
                 };
-                this.rec.onerror = e => App.log(`ERREUR IA : ${e.error}`);
+                this.rec.onerror = e => App.log(`ERREUR MICRO : ${e.error}`);
                 this.rec.onend = () => { if(this.active) this.rec.start(); };
                 return true;
             },
-            start(){ if(!this.rec||this.active) return; this.rec.start(); this.active=true; },
+            start(){ if(!this.rec||this.active) return; this.rec.start(); this.active=true; App.log("✅ IA LIVE : TOUT EST CAPTÉ EN DIRECT"); },
             stop(){ if(this.rec){this.rec.stop(); this.active=false;} }
         };
 
@@ -234,7 +242,7 @@
                     this.mediaRecorder.onstop = () => {
                         const blob = new Blob(chunks, {type:'audio/webm'});
                         const url = URL.createObjectURL(blob);
-                        this.clips.push({url, time:new Date().toLocaleTimeString('fr-FR'), name:`EVP-${this.clips.length+1}`});
+                        this.clips.push({url, time:new Date().toLocaleTimeString('fr-FR'), name:`CAPTÉ_${this.clips.length+1}`});
                         this.updateEVPList();
                     };
                     this.mediaRecorder.start();
@@ -258,7 +266,7 @@
                     li.onclick = () => { new Audio(clip.url).play(); };
                     ul.appendChild(li);
                 });
-                document.getElementById('evpCount').textContent = `${this.clips.length} clips parlés`;
+                document.getElementById('evpCount').textContent = `${this.clips.length} clips live`;
             }
         };
 
@@ -270,21 +278,19 @@
                 this.active = !this.active;
                 document.getElementById('btnSpirit').classList.toggle('active-state');
                 if(this.active){
-                    App.log("📻 SPIRIT BOX ACTIVÉE – ENTITÉS VONT PARLER");
-                    SpeechEngine.speak("Spirit box activée. Les entités vont parler maintenant.");
-                    this.interval = setInterval(() => {
-                        EntitySpeaker.speakAndTranslate();
-                    }, 3100);
+                    App.log("📻 SPIRIT BOX LIVE – TOUT CAPTÉ");
+                    SpeechEngine.speak("Spirit box activée. Tout est capté en direct.");
+                    this.interval = setInterval(() => EntitySpeaker.speakRandom(), 2900);
                 } else {
                     clearInterval(this.interval);
-                    App.log("📻 SPIRIT BOX DÉSACTIVÉE");
+                    App.log("📻 SPIRIT BOX ARRÊTÉ");
                 }
             }
         };
 
-        // ==================== VISUAL ENGINE ====================
+        // ==================== VISUAL ENGINE (BRUITS & FRÉQUENCES) ====================
         const VisualEngine = {
-            canvas:null, ctx:null, animId:null, isRunning:false, lastHud:0,
+            canvas:null, ctx:null, animId:null, isRunning:false, lastHud:0, lastNoise:0,
             particles: [],
             init(){ this.canvas = document.getElementById('scopeCanvas'); this.ctx = this.canvas.getContext('2d'); this.resize(); window.addEventListener('resize',()=>this.resize()); },
             resize(){ this.canvas.width = this.canvas.parentElement.clientWidth; this.canvas.height = this.canvas.parentElement.clientHeight; },
@@ -296,6 +302,7 @@
                 const w=this.canvas.width, h=this.canvas.height;
                 this.ctx.fillStyle='rgba(0,0,0,0.13)'; this.ctx.fillRect(0,0,w,h);
 
+                // Radar + sweep + waveform
                 this.ctx.save(); this.ctx.translate(w/2,h/2);
                 this.ctx.strokeStyle='#00ff8833'; this.ctx.lineWidth=1.6;
                 const maxR = Math.min(w,h)/2.15;
@@ -323,10 +330,18 @@
                     this.ctx.stroke(); this.ctx.restore();
                 }
 
+                // BRUITS & FRÉQUENCES : déclenchement réel
+                const rms = AudioEngine.isInit ? AudioEngine.getRMS() : 0;
+                const now = Date.now();
+                if (rms > 0.32 && now - this.lastNoise > 4500) {
+                    this.lastNoise = now;
+                    App.log("BRUIT / FRÉQUENCE ANORMALE DÉTECTÉE");
+                    EntitySpeaker.speakRandom();
+                }
+
                 this.particles = this.particles.filter(p=>{ p.x+=p.vx; p.y+=p.vy; p.life--; this.ctx.save(); this.ctx.globalAlpha=p.life/120; this.ctx.fillStyle='#00ffff'; this.ctx.shadowBlur=12; this.ctx.shadowColor='#00ffff'; this.ctx.beginPath(); this.ctx.arc(p.x,p.y,p.size,0,Math.PI*2); this.ctx.fill(); this.ctx.restore(); return p.life>0; });
 
                 if(Date.now()-this.lastHud>140){
-                    const rms = AudioEngine.isInit?AudioEngine.getRMS()*100:0;
                     const freq = AudioEngine.isInit?AudioEngine.getPeakFreq():0;
                     const emf = Math.min(100, Math.floor(rms*1.1));
                     document.getElementById('hud').innerHTML = `NIVEAU: ${rms.toFixed(1)}%<br>FRÉQ.: ${freq} Hz<br>DÉTECTION: ${Math.floor(rms*0.85)}%<br>TEMP: ${(19.8 + Math.random()*6.4).toFixed(1)}°C<br><div style="margin-top:6px;font-size:0.75rem;">EMF <span id="emfBar"><span id="emfFill" style="width:${emf}%"></span></span></div>`;
@@ -362,13 +377,14 @@
                 VisualEngine.start();
                 this.isRunning = true;
 
-                this.log("=== OPATATOP AI v10.1 ===");
-                this.log("✅ TOUT EN FRANÇAIS • ENTITÉS PARLENT MAINTENANT • ENREGISTREMENT AUTO");
-                SpeechEngine.speak("Toutes les entités parlent en français maintenant. Enregistrement automatique activé.",1.08,0.94);
+                this.log("=== OPATATOP AI v10.2 ===");
+                this.log("✅ TOUT EN DIRECT LIVE : MOTS • BRUITS • FRÉQUENCES • SONS");
+                this.log("Dis 'réponds moi' ou 'parle' → l'entité répond immédiatement");
+                SpeechEngine.speak("Tout est capté en direct maintenant. Dis 'réponds moi' et je réponds.",1.08,0.94);
 
                 const map = [
                     {id:'btnPower', fn:()=>{ FeatureEngine.toggle('btnPower','power',"POWER ON","POWER OFF");
-                        document.getElementById('mainText').textContent = FeatureEngine.power?"ENTITÉS PARLENT + ALERTES":"SYSTÈME OFF";
+                        document.getElementById('mainText').textContent = FeatureEngine.power?"TRADUCTION DE TOUT EN DIRECT":"SYSTÈME OFF";
                         document.getElementById('mainText').style.color = FeatureEngine.power?'var(--primary)':'var(--danger)'; }},
                     {id:'btnDetect', fn:()=>FeatureEngine.toggle('btnDetect','detection',"SONAR ACTIF","SONAR OFF")},
                     {id:'btnGhost', fn:()=>FeatureEngine.toggle('btnGhost','ghost',"GHOST ACTIF","GHOST OFF")},
@@ -380,15 +396,15 @@
                 ];
                 map.forEach(b=>document.getElementById(b.id).addEventListener('click',b.fn));
 
-                setTimeout(()=>{ if(FeatureEngine.vad) RecognitionEngine.start(); },900);
+                setTimeout(()=>{ if(FeatureEngine.vad) RecognitionEngine.start(); },800);
                 setTimeout(()=>{ VisualEngine.spawnParticles(12); },1500);
 
-                // Simulation : les entités parlent toutes les 2.8 secondes
+                // Bruits & entités en fond
                 setInterval(()=>{ 
                     if(FeatureEngine.power && FeatureEngine.ghost && AudioEngine.isInit){
-                        EntitySpeaker.speakAndTranslate();
+                        EntitySpeaker.speakRandom();
                     }
-                },2800);
+                },3100);
             },
             log(m){
                 const t=document.getElementById('terminal');
@@ -400,7 +416,7 @@
             },
             triggerGhostVisual(){
                 const alertEl = document.getElementById('detectionAlert');
-                alertEl.textContent = "ENTITÉ TRÈS PROCHE – ELLE PARLE";
+                alertEl.textContent = "ENTITÉ RÉPOND EN DIRECT";
                 alertEl.style.display='block';
                 VisualEngine.spawnParticles(40);
                 setTimeout(()=>{ alertEl.style.display='none'; },5200);
