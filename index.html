@@ -3,603 +3,332 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>JARVIS ARCHITECT v15.0 - SYSTEM CORE</title>
+    <title>JARVIS ARCHITECT v17.0 - REAL RESPONSE</title>
     <style>
         :root {
-            --c-bg: #020202;
-            --c-panel: rgba(10, 15, 18, 0.95);
-            --c-primary: #00f3ff; /* Cyan */
-            --c-secondary: #00ff9d; /* Vert */
-            --c-danger: #ff003c; /* Rouge */
-            --c-demon: #bc13fe; /* Violet */
-            --c-text: #e0f7fa;
-            --c-border: rgba(0, 243, 255, 0.2);
+            --bg: #020202;
+            --panel: #0a0f12;
+            --primary: #00f3ff; /* Cyan */
+            --ghost: #bc13fe;   /* Violet */
+            --demon: #ff003c;   /* Rouge */
+            --text: #e0f7fa;
+            --dim: #445566;
             --font-mono: 'Consolas', 'Courier New', monospace;
-            --font-ui: 'Segoe UI', Roboto, sans-serif;
         }
 
-        * { box-sizing: border-box; user-select: none; }
+        * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
 
         body {
-            margin: 0; background: var(--c-bg); color: var(--c-text);
+            margin: 0; background: var(--bg); color: var(--text);
             height: 100vh; width: 100vw; overflow: hidden;
-            font-family: var(--font-ui); display: grid;
-            grid-template-columns: 250px 1fr 250px; /* Sidebar Gauche, Centre, Droite */
-            grid-template-rows: 60px 1fr 200px; /* Header, Main, Controls */
+            font-family: 'Segoe UI', sans-serif; display: grid;
+            grid-template-columns: 300px 1fr 300px;
+            grid-template-rows: 60px 1fr 200px;
         }
 
         /* --- HEADER --- */
         header {
-            grid-column: 1 / -1; background: #000; border-bottom: 1px solid var(--c-primary);
-            display: flex; align-items: center; justify-content: space-between; padding: 0 20px; z-index: 100;
+            grid-column: 1 / -1; background: rgba(0,0,0,0.9); border-bottom: 1px solid #333;
+            display: flex; align-items: center; justify-content: space-between; padding: 0 20px; z-index: 10;
         }
-        .brand { font-size: 1.2rem; font-weight: bold; color: var(--c-primary); letter-spacing: 2px; font-family: var(--font-mono); }
-        .sys-time { font-family: var(--font-mono); color: var(--c-secondary); font-size: 0.9rem; }
+        .brand { font-size: 1.2rem; font-weight: bold; color: var(--primary); letter-spacing: 2px; font-family: var(--font-mono); }
+        .clock { font-family: var(--font-mono); color: #888; }
 
-        /* --- SIDEBARS (TERMINAL & DATA) --- */
-        aside {
-            background: var(--c-panel); border-right: 1px solid #333; padding: 10px;
-            overflow: hidden; display: flex; flex-direction: column; font-family: var(--font-mono); font-size: 0.7rem;
-        }
-        aside:last-child { border-right: none; border-left: 1px solid #333; }
-        
-        .panel-title { color: #666; text-transform: uppercase; font-size: 0.65rem; margin-bottom: 10px; border-bottom: 1px solid #333; padding-bottom: 5px; display: flex; justify-content: space-between; }
-        
-        #log-terminal { flex: 1; overflow-y: auto; color: #888; display: flex; flex-direction: column-reverse; }
-        .log-line { margin-bottom: 2px; word-break: break-all; }
-        .log-info { color: var(--c-primary); }
-        .log-warn { color: var(--c-secondary); }
-        .log-crit { color: var(--c-danger); font-weight: bold; }
-
-        #data-stream { color: var(--c-primary); opacity: 0.7; line-height: 1.2; font-size: 0.65rem; white-space: pre; overflow: hidden; }
-
-        /* --- MAIN STAGE (L'ŒIL) --- */
-        #main-stage {
+        /* --- MAIN STAGE (L'OEIL) --- */
+        #stage {
             grid-column: 2; grid-row: 2; position: relative;
-            background: radial-gradient(circle at center, #0a0f12 0%, #000 100%);
-            overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            background: radial-gradient(circle at center, #0d1418 0%, #000 100%);
+            overflow: hidden; display: flex; justify-content: center; align-items: center;
+        }
+        canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+
+        #display-overlay {
+            position: absolute; z-index: 5; text-align: center; pointer-events: none;
+        }
+        #main-text {
+            font-size: 2.5rem; font-weight: 900; text-transform: uppercase;
+            letter-spacing: 4px; text-shadow: 0 0 20px #000; margin-bottom: 10px;
+        }
+        #sub-text {
+            font-size: 1rem; background: rgba(0,0,0,0.7); padding: 5px 15px;
+            border-radius: 20px; border: 1px solid #444; color: #ccc;
         }
 
-        canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; }
+        /* --- SIDEBARS --- */
+        aside {
+            background: var(--panel); padding: 15px; font-family: var(--font-mono); font-size: 0.7rem;
+            display: flex; flex-direction: column; border-right: 1px solid #222;
+        }
+        aside:last-child { border-right: none; border-left: 1px solid #222; }
         
-        /* HUD Overlay sur l'œil */
-        #hud-overlay {
-            position: absolute; z-index: 20; width: 100%; height: 100%; pointer-events: none;
-            display: flex; flex-direction: column; justify-content: space-between; padding: 20px;
-        }
-        .top-hud { display: flex; justify-content: space-between; width: 100%; }
-        .center-hud { text-align: center; margin-top: 20%; }
-        .bottom-hud { display: flex; justify-content: center; width: 100%; padding-bottom: 20px; }
+        .panel-title { color: #666; text-transform: uppercase; margin-bottom: 10px; border-bottom: 1px solid #333; padding-bottom: 5px; }
 
-        #main-status { font-size: 2rem; font-weight: 900; text-transform: uppercase; text-shadow: 0 0 20px rgba(0,0,0,0.8); letter-spacing: 3px; }
-        #sub-status { font-size: 0.9rem; background: rgba(0,0,0,0.7); padding: 5px 15px; border-radius: 20px; color: #ccc; border: 1px solid #444; margin-top: 10px; }
+        #logs { flex: 1; overflow-y: auto; color: #888; display: flex; flex-direction: column-reverse; }
+        .log { margin-bottom: 4px; border-left: 2px solid #333; padding-left: 5px; }
+        .log.detected { color: var(--primary); border-color: var(--primary); }
+        .log.speech { color: #fff; border-color: #fff; }
 
         /* --- CONTROLS --- */
-        #control-deck {
-            grid-column: 1 / -1; grid-row: 3; background: var(--c-panel);
+        #controls {
+            grid-column: 1 / -1; grid-row: 3; background: var(--panel);
             border-top: 1px solid #333; padding: 15px; display: grid;
-            grid-template-columns: 1fr 2fr 1fr; gap: 20px; overflow-y: auto; z-index: 100;
+            grid-template-columns: 1fr 1fr 1fr; gap: 20px; z-index: 10;
         }
 
-        /* Settings Grid */
-        .settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .setting-item { display: flex; flex-direction: column; }
-        .setting-label { font-size: 0.7rem; color: #888; margin-bottom: 2px; display: flex; justify-content: space-between; }
-        .setting-val { color: var(--c-primary); }
-        
-        input[type="range"] { width: 100%; height: 4px; background: #333; outline: none; -webkit-appearance: none; border-radius: 2px; }
-        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; background: var(--c-primary); border-radius: 50%; cursor: pointer; }
-
-        /* Buttons */
-        .btn-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
         button {
-            background: #111; border: 1px solid #444; color: #aaa; padding: 10px;
-            font-family: var(--font-mono); font-size: 0.7rem; text-transform: uppercase;
-            cursor: pointer; transition: all 0.2s; border-radius: 2px;
+            background: #111; border: 1px solid #444; color: #aaa;
+            padding: 12px; font-family: var(--font-mono); font-size: 0.75rem;
+            text-transform: uppercase; cursor: pointer; transition: 0.2s; border-radius: 2px;
+            margin-bottom: 5px; width: 100%;
         }
-        button:hover { background: #222; color: #fff; border-color: #666; }
-        button:active { transform: scale(0.98); }
-        button.active { border-color: var(--c-primary); color: var(--c-primary); background: rgba(0, 243, 255, 0.1); box-shadow: 0 0 10px rgba(0, 243, 255, 0.2) inset; }
-        button.danger.active { border-color: var(--c-danger); color: var(--c-danger); background: rgba(255, 0, 60, 0.1); box-shadow: 0 0 10px rgba(255, 0, 60, 0.2) inset; }
+        button:hover { background: #222; color: #fff; }
+        button.active { border-color: var(--primary); color: var(--primary); background: rgba(0, 243, 255, 0.1); }
+        button.active-ghost { border-color: var(--ghost); color: var(--ghost); background: rgba(188, 19, 254, 0.1); }
+        button.active-demon { border-color: var(--demon); color: var(--demon); background: rgba(255, 0, 60, 0.1); }
         
-        /* Modal Settings */
-        #settings-modal {
-            display: none; position: absolute; top: 60px; right: 0; width: 300px; height: calc(100% - 260px);
-            background: rgba(0,0,0,0.95); border-left: 1px solid var(--c-primary);
-            z-index: 200; padding: 20px; backdrop-filter: blur(10px);
-            transform: translateX(100%); transition: transform 0.3s ease;
-        }
-        #settings-modal.open { transform: translateX(0); }
+        .btn-power { height: 100%; font-weight: bold; font-size: 1rem; border-color: #555; }
 
-        /* Responsive */
-        @media (max-width: 1000px) {
-            body { grid-template-columns: 1fr; grid-template-rows: 50px 1fr 250px; }
-            aside { display: none; } /* Cache les sidebars sur petit écran */
-            #control-deck { grid-template-columns: 1fr; }
+        /* Sliders */
+        .slider-group { margin-bottom: 10px; }
+        .slider-label { display: flex; justify-content: space-between; color: #888; margin-bottom: 2px; font-size: 0.7rem; }
+        input[type="range"] { width: 100%; height: 4px; background: #222; outline: none; -webkit-appearance: none; border-radius: 2px; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; background: #fff; border-radius: 50%; cursor: pointer; }
+
+        /* Status Bars */
+        .bar-container { width: 100%; height: 6px; background: #222; margin-top: 5px; position: relative; }
+        .bar-fill { height: 100%; transition: width 0.05s; }
+        
+        @media (max-width: 900px) {
+            body { grid-template-columns: 1fr; grid-template-rows: 50px 1fr auto; }
+            aside { display: none; } 
+            #controls { grid-template-columns: 1fr; height: auto; }
+            #main-text { font-size: 1.5rem; }
         }
     </style>
 </head>
 <body>
 
-<!-- HEADER -->
 <header>
-    <div class="brand">JARVIS <span style="font-size:0.5em; color:#fff;">ARCHITECT v15</span></div>
-    <div class="sys-time" id="clock">00:00:00</div>
+    <div class="brand">JARVIS ARCHITECT v17.0</div>
+    <div class="clock" id="clock">00:00:00</div>
 </header>
 
-<!-- SIDEBAR GAUCHE : LOGS -->
+<!-- GAUCHE : LOGS -->
 <aside>
-    <div class="panel-title"><span>SYSTEM LOGS</span> <span>[LIVE]</span></div>
-    <div id="log-terminal">
-        <div class="log-line log-info">> Initialising Core...</div>
+    <div class="panel-title">Journal d'Événements</div>
+    <div id="logs">
+        <div class="log">> Système en attente...</div>
     </div>
 </aside>
 
-<!-- MAIN STAGE -->
-<div id="main-stage">
+<!-- CENTRE : VISUEL -->
+<div id="stage">
     <canvas id="mainCanvas"></canvas>
-    <div id="hud-overlay">
-        <div class="top-hud">
-            <div style="color:var(--c-primary); font-family:var(--font-mono); font-size:0.8rem;">CAM_01 [REC ●]</div>
-            <div style="color:var(--c-secondary); font-family:var(--font-mono); font-size:0.8rem;">SAT_LINK: STABLE</div>
-        </div>
-        
-        <div class="center-hud">
-            <div id="main-status" style="color:var(--c-primary);">STANDBY</div>
-            <div id="sub-status">EN ATTENTE D'ACTIVATION</div>
-        </div>
-
-        <div class="bottom-hud">
-            <div style="font-family:var(--font-mono); font-size:0.7rem; color:rgba(255,255,255,0.5);">
-                COORDINATES: <span id="coords">00.000, 00.000</span> | THREAT: <span id="threat-lvl">0%</span>
-            </div>
-        </div>
+    <div id="display-overlay">
+        <div id="main-text" style="color:var(--primary)">VEILLE</div>
+        <div id="sub-text">Initialisez le système</div>
     </div>
 </div>
 
-<!-- SIDEBAR DROITE : DONNÉES -->
+<!-- DROITE : SPECTRE -->
 <aside>
-    <div class="panel-title"><span>BINARY STREAM</span> <span>[RAW]</span></div>
-    <div id="data-stream">LOADING...</div>
-    <div style="margin-top:20px; border-top:1px solid #333; padding-top:10px;">
-        <div class="panel-title">SPECTRUM ANALYSIS</div>
-        <canvas id="spectrumCanvas" height="100" style="width:100%; border:1px solid #333; background:#000;"></canvas>
+    <div class="panel-title">Analyse Spectrale</div>
+    <div style="margin-bottom: 10px;">
+        <div class="slider-label"><span>BASSES (Démons)</span> <span id="val-bass">0%</span></div>
+        <div class="bar-container"><div id="bar-bass" class="bar-fill" style="background:var(--demon); width:0%"></div></div>
     </div>
-</aside>
-
-<!-- CONTROLS -->
-<div id="control-deck">
-    <!-- SECTION 1 : POWER & STATUS -->
-    <div style="border-right:1px solid #333; padding-right:10px;">
-        <button id="btnPower" onclick="System.togglePower()" style="width:100%; height:50px; font-size:1rem; font-weight:bold; margin-bottom:10px;">⚡ ALIMENTER LE SYSTÈME</button>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:5px;">
-            <button id="btnCalibrate" onclick="AudioCore.calibrate()">🎚️ CALIBRER SILENCE</button>
-            <button onclick="System.clearLogs()">🧹 CLEAR LOGS</button>
-        </div>
+    <div style="margin-bottom: 10px;">
+        <div class="slider-label"><span>AIGUS (Fantômes)</span> <span id="val-treble">0%</span></div>
+        <div class="bar-container"><div id="bar-treble" class="bar-fill" style="background:var(--ghost); width:0%"></div></div>
     </div>
-
-    <!-- SECTION 2 : MODULES -->
-    <div style="border-right:1px solid #333; padding-right:10px;">
-        <div style="margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
-            <span class="panel-title" style="margin:0;">MODULES ACTIFS</span>
-            <button onclick="toggleSettings()" style="width:auto; padding:2px 8px;">⚙️ PARAMÈTRES</button>
-        </div>
-        <div class="btn-grid">
-            <button id="btnGhost" class="active" onclick="System.setMode('ghost')">👻 FANTÔMES</button>
-            <button id="btnDemon" class="danger" onclick="System.setMode('demon')">😈 DÉMONS</button>
-            <button id="btnHumor" class="active" onclick="System.setMode('humor')">🗣️ HUMOUR</button>
-            <button id="btnVoice" class="active" onclick="System.setMode('voice')">🎙️ RECO. VOCALE</button>
-        </div>
-    </div>
-
-    <!-- SECTION 3 : DIAGNOSTICS -->
-    <div>
-        <div class="panel-title">DIAGNOSTIQUE MANUEL</div>
-        <div class="btn-grid">
-            <button onclick="Simulation.trigger('cough')">TEST TOUX</button>
-            <button onclick="Simulation.trigger('clap')">TEST CLAP</button>
-            <button onclick="Simulation.trigger('spirit')">TEST ESprit</button>
-            <button onclick="Simulation.trigger('demon')">TEST DÉMON</button>
-        </div>
-    </div>
-</div>
-
-<!-- PARAMÈTRES AVANCÉS (MODAL) -->
-<div id="settings-modal">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-        <h2 style="margin:0; color:var(--c-primary); font-size:1rem;">CONFIGURATION AVANCÉE</h2>
-        <button onclick="toggleSettings()" style="width:30px; padding:0;">✕</button>
+    <div style="margin-bottom: 10px;">
+        <div class="slider-label"><span>VOLUME TOTAL</span> <span id="val-vol">0%</span></div>
+        <div class="bar-container"><div id="bar-vol" class="bar-fill" style="background:var(--primary); width:0%"></div></div>
     </div>
     
-    <div class="settings-grid">
-        <div class="setting-item">
-            <div class="setting-label">Seuil Volume (Trigger) <span id="val-vol" class="setting-val">15</span></div>
-            <input type="range" id="rng-vol" min="1" max="100" value="15" oninput="Config.update('thresholdVol', this.value)">
-        </div>
-        <div class="setting-item">
-            <div class="setting-label">Sensibilité Spectrale <span id="val-spec" class="setting-val">1.0</span></div>
-            <input type="range" id="rng-spec" min="0.1" max="5.0" step="0.1" value="1.0" oninput="Config.update('sensitivitySpec', this.value)">
-        </div>
-        <div class="setting-item">
-            <div class="setting-label">Probabilité Paranormale <span id="val-prob" class="setting-val">5%</span></div>
-            <input type="range" id="rng-prob" min="0" max="100" value="5" oninput="Config.update('ghostProb', this.value)">
-        </div>
-        <div class="setting-item">
-            <div class="setting-label">Vitesse Synthèse Vocale <span id="val-rate" class="setting-val">1.0</span></div>
-            <input type="range" id="rng-rate" min="0.5" max="2.0" step="0.1" value="1.0" oninput="Config.update('voiceRate', this.value)">
+    <div class="panel-title" style="margin-top:20px;">Paramètres Audio</div>
+    <div class="slider-group">
+        <div class="slider-label">Sensibilité Micro <span id="set-sens-val">50</span></div>
+        <input type="range" id="rng-sens" min="0" max="100" value="50" oninput="Config.update('sens', this.value)">
+    </div>
+    <button onclick="AudioSys.calibrate()">🎚️ CALIBRER LE SILENCE</button>
+</aside>
+
+<!-- CONTROLS (BAS) -->
+<div id="controls">
+    <!-- POWER -->
+    <div style="border-right:1px solid #333; padding-right:15px;">
+        <button id="btn-power" class="btn-power" onclick="App.togglePower()">⚡ DÉMARRER JARVIS</button>
+        <div style="margin-top:10px; font-size:0.7rem; color:#666; text-align:center;">
+            Le système réagit uniquement aux sons réels captés par le micro.
         </div>
     </div>
-    <div style="margin-top:20px; font-size:0.7rem; color:#666; line-height:1.4;">
-        Ajustez ces paramètres pour calibrer le système selon votre environnement acoustique. Utilisez "CALIBRER SILENCE" pour définir le plancher de bruit.
+
+    <!-- MODES -->
+    <div style="padding:0 15px; border-right:1px solid #333;">
+        <div class="panel-title" style="border:none; margin-bottom:5px;">MODES DE DÉTECTION</div>
+        <button id="mod-normal" class="active" onclick="App.setMode('normal')">👁️ STANDARD (Tout)</button>
+        <button id="mod-ghost" onclick="App.setMode('ghost')">👻 FANTÔMES (Aigus)</button>
+        <button id="mod-demon" onclick="App.setMode('demon')">😈 DÉMONS (Graves)</button>
+        <div style="margin-top:10px; border-top:1px solid #333; padding-top:10px;">
+            <button id="mod-humor" class="active" onclick="App.toggle('humor')">🗣️ HUMEUR (Ricolà)</button>
+            <button id="mod-voice" class="active" onclick="App.toggle('voice')">🎙️ RÉPONSE VOCALE</button>
+        </div>
+    </div>
+
+    <!-- INFO -->
+    <div style="padding-left:15px; display:flex; flex-direction:column; justify-content:space-between;">
+        <div>
+            <div class="panel-title">État du Système</div>
+            <div style="color:#888; font-size:0.8rem; margin-bottom:5px;">Audio: <span id="status-audio" style="color:var(--danger)">OFF</span></div>
+            <div style="color:#888; font-size:0.8rem;">Reconnaissance: <span id="status-speech" style="color:var(--danger)">OFF</span></div>
+        </div>
+        <button onclick="App.clearLogs()" style="margin-top:auto; font-size:0.7rem; opacity:0.6;">🗑️ Effacer logs</button>
     </div>
 </div>
 
 <script>
 /**
- * JARVIS ARCHITECT v15.0
- * Système modulaire complet pour l'analyse audio et la détection surnaturelle.
+ * JARVIS ARCHITECT v17.0 - REAL AUDIO RESPONSE
+ * Aucun bouton de test. Tout est basé sur l'analyse FFT réelle.
  */
 
-// --- 1. CONFIGURATION GLOBALE ---
+// --- 1. CONFIGURATION & ÉTAT ---
 const Config = {
-    thresholdVol: 15,      // Seuil de volume pour déclencher un événement
-    sensitivitySpec: 1.0,  // Multiplicateur de sensibilité spectrale
-    ghostProb: 5,          // Chance sur 100 de détection auto par seconde (si silence)
-    voiceRate: 1.0,        // Vitesse de la voix Jarvis
-    voicePitch: 1.0,       // Hauteur de la voix
-    noiseFloor: 5,         // Niveau de bruit de fond (calculé par calibration)
+    sens: 50, // Sensibilité globale (0-100)
+    thresholdVol: 15,
+    thresholdZCR: 200, // Pour la toux
+    bassThreshold: 100, // Pour démons
+    trebleThreshold: 80, // Pour fantômes
     
-    update(key, value) {
-        this[key] = parseFloat(value);
-        // Update UI Labels
-        if(key === 'thresholdVol') document.getElementById('val-vol').innerText = value;
-        if(key === 'sensitivitySpec') document.getElementById('val-spec').innerText = value;
-        if(key === 'ghostProb') document.getElementById('val-prob').innerText = value + '%';
-        if(key === 'voiceRate') document.getElementById('val-rate').innerText = value;
-        Log.sys(`Configuration modifiée: ${key} = ${value}`);
+    update(key, val) {
+        this[key] = parseInt(val);
+        if(key === 'sens') {
+            // Ajustement dynamique des seuils selon la sensibilité
+            const factor = (100 - this.sens) / 100;
+            this.thresholdVol = 10 + (factor * 20);
+            this.bassThreshold = 80 + (factor * 50);
+            this.trebleThreshold = 60 + (factor * 50);
+            document.getElementById('set-sens-val').innerText = val;
+        }
     }
 };
 
 const State = {
     active: false,
-    modes: { ghost: true, demon: false, humor: true, voice: true },
+    mode: 'normal', // normal, ghost, demon
+    options: { humor: true, voice: true },
     lastEvent: 0,
-    threatLevel: 0,
-    isSpeaking: false
+    mouse: { x: 0, y: 0 }
 };
 
-// --- 2. MOTEUR AUDIO (ANALYSE FFT & RMS) ---
-const AudioCore = {
-    ctx: null, analyser: null, source: null, stream: null,
-    bufferLength: 0, freqData: null, timeData: null,
-    
+// --- 2. MOTEUR AUDIO (L'OREILLE) ---
+const AudioSys = {
+    ctx: null, analyser: null, source: null,
+    freqData: null, timeData: null, bufferLen: 0,
+
     async init() {
         try {
-            this.stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
             this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+            if (this.ctx.state === 'suspended') await this.ctx.resume();
+
             this.analyser = this.ctx.createAnalyser();
-            this.analyser.fftSize = 4096; // Haute résolution pour détails fins
-            this.analyser.smoothingTimeConstant = 0.85;
-            
-            this.source = this.ctx.createMediaStreamSource(this.stream);
+            this.analyser.fftSize = 2048; 
+            this.source = this.ctx.createMediaStreamSource(stream);
             this.source.connect(this.analyser);
             
-            this.bufferLength = this.analyser.frequencyBinCount;
-            this.freqData = new Uint8Array(this.bufferLength);
-            this.timeData = new Uint8Array(this.bufferLength);
+            this.bufferLen = this.analyser.frequencyBinCount;
+            this.freqData = new Uint8Array(this.bufferLen);
+            this.timeData = new Uint8Array(this.bufferLen);
             
-            Log.sys("Flux audio connecté. FFT Size: 4096.");
+            Log.add("Flux audio connecté.", "ok");
+            document.getElementById('status-audio').innerText = "ACTIF";
+            document.getElementById('status-audio').style.color = "var(--primary)";
             return true;
         } catch (e) {
-            Log.crit("Erreur Micro: " + e.message);
+            Log.add("Erreur Micro: " + e.message, "err");
+            alert("Micro requis. Vérifiez les permissions.");
             return false;
         }
     },
 
-    calibrate() {
-        if (!State.active || !this.analyser) return;
-        Log.sys("Calibration du silence en cours...");
-        let samples = 0;
-        let sum = 0;
-        
-        const interval = setInterval(() => {
-            this.analyser.getByteFrequencyData(this.freqData);
-            let avg = 0;
-            for(let i=0; i<100; i++) avg += this.freqData[i];
-            avg /= 100;
-            sum += avg;
-            samples++;
-            
-            if(samples >= 20) { // 1 seconde environ
-                clearInterval(interval);
-                const floor = (sum / samples) + 5; // Marge de sécurité
-                Config.noiseFloor = floor;
-                Config.thresholdVol = Math.max(Config.thresholdVol, floor + 10);
-                Log.sys(`Calibration terminée. Bruit de fond: ${Math.round(floor)}. Seuil auto-ajusté.`);
-                // Met à jour l'UI
-                document.getElementById('rng-vol').value = Config.thresholdVol;
-                document.getElementById('val-vol').innerText = Math.round(Config.thresholdVol);
-            }
-        }, 50);
-    },
-
-    getMetrics() {
+    // Analyse approfondie du spectre
+    analyze() {
         if (!State.active) return null;
         this.analyser.getByteFrequencyData(this.freqData);
         this.analyser.getByteTimeDomainData(this.timeData);
 
-        // 1. RMS Volume
+        // 1. Volume RMS
         let sum = 0;
-        for(let i=0; i<this.bufferLength; i++) {
-            const x = (this.timeData[i]/128.0) - 1;
-            sum += x*x;
+        for (let i = 0; i < this.bufferLen; i++) {
+            const x = (this.timeData[i] / 128.0) - 1;
+            sum += x * x;
         }
-        const rms = Math.sqrt(sum / this.bufferLength);
-        const volume = Math.min(100, rms * 100);
+        const rms = Math.sqrt(sum / this.bufferLen);
+        const volume = Math.min(100, rms * 100 * 2.5);
 
-        // 2. ZCR (Zero Crossing Rate) - Pour les bruits blancs (toux)
+        // 2. ZCR (Zero Crossing Rate) - Indique le bruit blanc/chaotique (Toux)
         let zcr = 0;
-        for(let i=1; i<this.bufferLength; i++) {
-            if((this.timeData[i]>=128 && this.timeData[i-1]<128) || 
-               (this.timeData[i]<128 && this.timeData[i-1]>=128)) zcr++;
+        for (let i = 1; i < this.bufferLen; i++) {
+            if ((this.timeData[i] >= 128 && this.timeData[i - 1] < 128) ||
+                (this.timeData[i] < 128 && this.timeData[i - 1] >= 128)) zcr++;
         }
 
-        // 3. Bandes de Fréquence
-        const bass = this.getAvgFreq(0, 20);      // Démons
-        const mid = this.getAvgFreq(20, 200);     // Voix
-        const high = this.getAvgFreq(200, 800);   // Esprits
-        
-        return { volume, zcr, bass, mid, high, rawFreq: this.freqData, rawTime: this.timeData };
+        // 3. Analyse de Bandes (Bass vs Treble)
+        // Basses: Indices 0 à 10 (Fréquences très basses)
+        let bassSum = 0;
+        for(let i=0; i<15; i++) bassSum += this.freqData[i];
+        const bassAvg = bassSum / 15;
+
+        // Aigus: Indices 200 à 400 (Fréquences hautes)
+        let trebleSum = 0;
+        for(let i=200; i<450; i++) trebleSum += this.freqData[i];
+        const trebleAvg = trebleSum / 250;
+
+        return { volume, zcr, bassAvg, trebleAvg, freq: this.freqData, time: this.timeData };
     },
 
-    getAvgFreq(start, end) {
-        if(!this.freqData) return 0;
-        let sum = 0;
-        for(let i=start; i<end; i++) sum += this.freqData[i];
-        return sum / (end - start);
-    }
-};
-
-// --- 3. MOTEUR VISUEL (CANVAS COMPLEXE) ---
-const Visuals = {
-    canvas: document.getElementById('mainCanvas'),
-    ctx: document.getElementById('mainCanvas').getContext('2d'),
-    specCanvas: document.getElementById('spectrumCanvas'),
-    specCtx: document.getElementById('spectrumCanvas').getContext('2d'),
-    
-    resize() {
-        this.canvas.width = this.canvas.parentElement.clientWidth;
-        this.canvas.height = this.canvas.parentElement.clientHeight;
-        this.specCanvas.width = this.specCanvas.parentElement.clientWidth;
-    },
-    
-    draw(metrics) {
-        const w = this.canvas.width;
-        const h = this.canvas.height;
-        const cx = w / 2;
-        const cy = h / 2;
-        const ctx = this.ctx;
-
-        // Effet traînée
-        ctx.fillStyle = 'rgba(2, 2, 2, 0.15)';
-        ctx.fillRect(0, 0, w, h);
-
-        if (!metrics) return;
-
-        // --- DESSIN DE L'OEIL AVANCÉ ---
-        const pupilSize = 30 + (metrics.volume / 100) * 70;
-        const irisRadius = 140;
+    calibrate() {
+        if (!State.active) return;
+        Log.add("Calibration en cours... Faites du silence.", "info");
+        let samples = 0, sumVol = 0;
         
-        ctx.save();
-        ctx.translate(cx, cy);
-
-        // Couleur dynamique
-        let eyeColor = '#00f3ff'; // Normal
-        if (State.modes.demon) eyeColor = '#ff003c';
-        else if (State.modes.ghost && State.threatLevel > 30) eyeColor = '#bc13fe';
-        else if (State.threatLevel > 50) eyeColor = '#ff9d00';
-
-        // Sclère (Gris foncé)
-        ctx.beginPath();
-        ctx.arc(0, 0, irisRadius + 20, 0, Math.PI * 2);
-        ctx.fillStyle = '#111';
-        ctx.fill();
-        ctx.strokeStyle = '#333';
-        ctx.stroke();
-
-        // Iris (Cercles concentriques rotatifs)
-        const time = Date.now() * 0.001;
-        ctx.rotate(time * 0.2);
-        
-        for(let i=0; i<6; i++) {
-            ctx.beginPath();
-            ctx.arc(0, 0, irisRadius - (i*15), 0, Math.PI*2);
-            ctx.strokeStyle = eyeColor;
-            ctx.globalAlpha = 0.3 + (i * 0.1);
-            ctx.lineWidth = 2;
-            ctx.setLineDash([20 + i*10, 10]);
-            ctx.stroke();
-        }
-        ctx.restore(); // Reset rotation pour la pupille
-
-        ctx.save();
-        ctx.translate(cx, cy);
-        // Pupille
-        ctx.beginPath();
-        ctx.arc(0, 0, pupilSize, 0, Math.PI * 2);
-        ctx.fillStyle = '#000';
-        ctx.shadowColor = eyeColor;
-        ctx.shadowBlur = 20;
-        ctx.fill();
-        ctx.shadowBlur = 0;
-
-        // Reflet "Vivant"
-        ctx.beginPath();
-        ctx.arc(-pupilSize/3, -pupilSize/3, pupilSize/4, 0, Math.PI*2);
-        ctx.fillStyle = `rgba(255,255,255,${0.5 + Math.sin(time*5)*0.2})`;
-        ctx.fill();
-        ctx.restore();
-
-        // --- GRAPHIQUE BAS (FORME D'ONDE) ---
-        ctx.beginPath();
-        ctx.strokeStyle = eyeColor;
-        ctx.lineWidth = 2;
-        const sliceWidth = w / metrics.rawTime.length;
-        let x = 0;
-        for(let i = 0; i < metrics.rawTime.length; i+=4) { // Optimisation
-            const v = metrics.rawTime[i] / 128.0;
-            const y = (h - 40) + (v * 30);
-            if(i===0) ctx.moveTo(x, y);
-            else ctx.lineTo(x, y);
-            x += sliceWidth * 4;
-        }
-        ctx.stroke();
-
-        // --- DESSIN SPECTRE (SIDEBAR) ---
-        this.drawSpectrum(metrics.rawFreq);
-    },
-
-    drawSpectrum(data) {
-        const ctx = this.specCtx;
-        const w = this.specCanvas.width;
-        const h = this.specCanvas.height;
-        ctx.clearRect(0, 0, w, h);
-        
-        const barWidth = (w / data.length) * 2.5;
-        let x = 0;
-        for(let i = 0; i < data.length; i++) {
-            const barHeight = (data[i] / 255) * h;
-            ctx.fillStyle = `hsl(${160 + (data[i]/2)}, 100%, 50%)`;
-            ctx.fillRect(x, h - barHeight, barWidth, barHeight);
-            x += barWidth + 1;
-        }
-    }
-};
-
-// --- 4. LOGIQUE DE DÉTECTION (CERVEAU) ---
-const Logic = {
-    loop() {
-        if (!State.active) {
-            requestAnimationFrame(() => this.loop());
-            return;
-        }
-
-        const m = AudioCore.getMetrics();
-        Visuals.draw(m);
-        
-        // Gestion de la menace (décroissance lente)
-        if (State.threatLevel > 0) State.threatLevel -= 0.05;
-        document.getElementById('threat-lvl').innerText = Math.round(State.threatLevel) + "%";
-
-        const now = Date.now();
-        const effectiveThreshold = Config.thresholdVol;
-
-        // --- DÉTECTION 1 : TOUX / RACLEMENT (ZCR Élevé) ---
-        // Condition: Volume > Seuil ET ZCR > 200 (Bruit blanc)
-        if (m.volume > effectiveThreshold && m.zcr > 200 && (now - State.lastEvent > 2000)) {
-            this.trigger('COUGH', "Irritation laryngée détectée.");
-            if (State.modes.humor) {
-                const ricolaJokes = [
-                    "Tiens, tu t'es raclé la gorge. Veux-tu un Ricolà ?",
-                    "Son analysé : Raclement de gorge. Je prescris du Ricolà.",
-                    "Hrrrm... Besoin d'un Ricolà pour apaiser ça ?"
-                ];
-                Speech.say(ricolaJokes[Math.floor(Math.random() * ricolaJokes.length)]);
-            } else {
-                Speech.say("Toux détectée.");
+        const interval = setInterval(() => {
+            const m = this.analyze();
+            if(!m) return;
+            sumVol += m.volume;
+            samples++;
+            
+            if(samples >= 40) { // Environ 2 secondes
+                clearInterval(interval);
+                const floor = (sumVol / samples) + 5;
+                // On force la sensibilité pour ignorer ce bruit de fond
+                Config.sens = Math.max(0, 100 - (floor * 3)); 
+                document.getElementById('rng-sens').value = Config.sens;
+                document.getElementById('set-sens-val').innerText = Math.round(Config.sens);
+                Log.add(`Calibration terminée. Seuil adapté.`, "ok");
+                Voice.speak("Calibration terminée. Je suis prêt.");
             }
-            State.lastEvent = now;
-        }
-
-        // --- DÉTECTION 2 : CLAP / CHOC (Volume Soudain) ---
-        if (m.volume > effectiveThreshold * 2.5 && (now - State.lastEvent > 1000)) {
-            this.trigger('CLAP', "Onde de choc acoustique.");
-            Speech.say("Claquement détecté.");
-            State.lastEvent = now;
-        }
-
-        // --- DÉTECTION 3 : FRÉQUENCES (DÉMONS vs ESPRITS) ---
-        // Si mode démon actif, on écoute les Basses (Bass)
-        if (State.modes.demon && m.bass > 150 * Config.sensitivitySpec && (now - State.lastEvent > 3000)) {
-            this.trigger('DEMON', "Résonance basse fréquence (Entité maléfique).");
-            Speech.demon("Je sens le mal...");
-            State.threatLevel = 100;
-            State.lastEvent = now;
-        }
-        // Si mode fantôme, on écoute les Aigus (High)
-        else if (State.modes.ghost && m.high > 100 * Config.sensitivitySpec && (now - State.lastEvent > 3000)) {
-            this.trigger('SPIRIT', "Anomalie haute fréquence.");
-            Speech.ghost("Je suis là...");
-            State.threatLevel = 60;
-            State.lastEvent = now;
-        }
-
-        // --- DÉTECTION 4 : ALÉATOIRE (SIMULATION) ---
-        // Si silence prolongé, chance d'apparition selon probabilité config
-        if ((now - State.lastEvent > 5000) && Math.random() * 100 < Config.ghostProb) {
-            const type = State.modes.demon ? 'DEMON' : 'SPIRIT';
-            this.trigger(type, "Détection automatique environnementale.");
-            if(type === 'DEMON') Speech.demon("Quelqu'un m'a appelé ?");
-            else Speech.ghost("Écoutez moi...");
-            State.threatLevel = type === 'DEMON' ? 90 : 50;
-            State.lastEvent = now;
-        }
-
-        requestAnimationFrame(() => this.loop());
-    },
-
-    trigger(type, logMsg) {
-        Log.warn(`EVENT: ${type} - ${logMsg}`);
-        
-        // Visuel
-        const status = document.getElementById('main-status');
-        const sub = document.getElementById('sub-status');
-        
-        status.innerText = type;
-        sub.innerText = logMsg.toUpperCase();
-        
-        if(type === 'DEMON' || type === 'COUGH') {
-            status.style.color = 'var(--c-danger)';
-            document.body.style.boxShadow = "inset 0 0 50px rgba(255,0,60,0.5)";
-        } else {
-            status.style.color = 'var(--c-primary)';
-            document.body.style.boxShadow = "none";
-        }
-        
-        // Flash Canvas
-        Visuals.canvas.style.filter = "brightness(1.5) contrast(1.2)";
-        setTimeout(() => Visuals.canvas.style.filter = "none", 100);
+        }, 50);
     }
 };
 
-// --- 5. SYSTÈME DE PAROLE (TTS & STT) ---
-const Speech = {
+// --- 3. MOTEUR VOCAL (LA BOUCHE) ---
+const Voice = {
     synth: window.speechSynthesis,
     
-    say(text) {
+    speak(text, type = 'normal') {
+        if (!State.active) return;
         this.synth.cancel();
         const u = new SpeechSynthesisUtterance(text);
         u.lang = 'fr-FR';
-        u.rate = Config.voiceRate;
-        u.pitch = 1.0;
-        this.synth.speak(u);
-    },
-    
-    ghost(text) {
-        this.synth.cancel();
-        const u = new SpeechSynthesisUtterance(text);
-        u.lang = 'fr-FR';
-        u.rate = 0.8;
-        u.pitch = 0.6; // Voix éthérée
-        this.synth.speak(u);
-    },
-
-    demon(text) {
-        this.synth.cancel();
-        const u = new SpeechSynthesisUtterance(text);
-        u.lang = 'fr-FR';
-        u.rate = 0.6;
-        u.pitch = 0.2; // Voix profonde
+        u.rate = 1.0;
+        
+        if (type === 'ghost') { u.pitch = 0.6; u.rate = 0.8; }
+        else if (type === 'demon') { u.pitch = 0.2; u.rate = 0.6; }
+        else { u.pitch = 1.0; }
+        
         this.synth.speak(u);
     },
 
@@ -607,127 +336,261 @@ const Speech = {
         const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (!SR) return;
         const rec = new SR();
-        rec.continuous = true;
-        rec.interimResults = false;
-        rec.lang = 'fr-FR';
+        rec.continuous = true; rec.interimResults = false; rec.lang = 'fr-FR';
         
         rec.onresult = (e) => {
-            if (!State.modes.voice) return;
+            if (!State.options.voice) return;
             const txt = e.results[e.results.length-1][0].transcript.trim().toLowerCase();
-            if(txt) {
-                Log.sys(`USER INPUT: "${txt}"`);
-                document.getElementById('sub-status').innerText = `VOIX: "${txt.toUpperCase()}"`;
+            if (txt) {
+                Log.add(`Vous: "${txt}"`, "speech");
+                UI.setText(txt.toUpperCase());
                 State.lastEvent = Date.now();
                 
-                if(txt.includes('jarvis')) this.say("Oui.");
-                else if(txt.includes('démon')) this.say("Je surveille les basses fréquences.");
+                // Réponses intelligentes
+                if (txt.includes('jarvis')) this.speak("Je vous écoute.");
+                else if (txt.includes('bonjour')) this.speak("Bonjour. Analyse en cours.");
+                else if (txt.includes('merci')) this.speak("Je suis là pour servir.");
+                else if (txt.includes('démon') || txt.includes('peur')) this.speak("Ne vous inquiétez pas, je surveille les basses fréquences.");
+                else if (txt.includes('fantôme')) this.speak("Je détecte toute anomalie spectrale.");
             }
         };
         rec.start();
+        document.getElementById('status-speech').innerText = "ACTIF";
+        document.getElementById('status-speech').style.color = "var(--primary)";
     }
 };
 
-// --- 6. LOGS & DONNÉES SYSTÈME ---
-const Log = {
-    sys(msg) { this.add(msg, 'log-info'); },
-    warn(msg) { this.add(msg, 'log-warn'); },
-    crit(msg) { this.add(msg, 'log-crit'); },
-    add(msg, cls) {
-        const d = document.createElement('div');
-        d.className = `log-line ${cls}`;
-        const time = new Date().toLocaleTimeString('fr-FR', {hour12:false});
-        d.innerText = `[${time}] ${msg}`;
-        const term = document.getElementById('log-terminal');
-        term.prepend(d);
-        if(term.children.length > 30) term.lastChild.remove();
+// --- 4. VISUELS (L'OEIL QUI REGARDE) ---
+const Visuals = {
+    canvas: document.getElementById('mainCanvas'),
+    ctx: document.getElementById('mainCanvas').getContext('2d'),
+    
+    resize() {
+        this.canvas.width = this.canvas.parentElement.clientWidth;
+        this.canvas.height = this.canvas.parentElement.clientHeight;
+    },
+
+    draw(m) {
+        const w = this.canvas.width;
+        const h = this.canvas.height;
+        const ctx = this.ctx;
+        const cx = w / 2;
+        const cy = h / 2;
+
+        ctx.fillStyle = 'rgba(2, 2, 2, 0.2)'; // Traînée
+        ctx.fillRect(0, 0, w, h);
+        if (!m) return;
+
+        // Couleur selon le mode
+        let color = '#00f3ff'; // Standard
+        if (State.mode === 'ghost') color = '#bc13fe';
+        if (State.mode === 'demon') color = '#ff003c';
+
+        // Calcul regard (suit la souris)
+        const dx = State.mouse.x - cx;
+        const dy = State.mouse.y - cy;
+        const angle = Math.atan2(dy, dx);
+        const dist = Math.min(Math.sqrt(dx*dx + dy*dy), 20);
+
+        ctx.save();
+        ctx.translate(cx + Math.cos(angle)*dist, cy + Math.sin(angle)*dist);
+
+        // Pupille (Dilate avec le volume)
+        const pSize = 30 + (m.volume / 100) * 50;
+        ctx.beginPath();
+        ctx.arc(0, 0, pSize, 0, Math.PI * 2);
+        ctx.fillStyle = '#000';
+        ctx.shadowColor = color;
+        ctx.shadowBlur = 30;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        // Iris (Cercles)
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 3;
+        ctx.setLineDash([10, 5]);
+        ctx.beginPath(); ctx.arc(0, 0, pSize + 20, 0, Math.PI*2); ctx.stroke();
+        
+        ctx.restore();
     }
 };
 
-const DataStream = {
-    init() {
-        const el = document.getElementById('data-stream');
-        setInterval(() => {
-            if(!State.active) return;
-            // Génère du charabia binaire hexadécimal
-            let str = "";
-            for(let i=0; i<8; i++) {
-                str += Math.floor(Math.random()*255).toString(16).toUpperCase().padStart(2,'0') + " ";
+// --- 5. CERVEAU (LOGIQUE DE DÉTECTION RÉELLE) ---
+const Logic = {
+    loop() {
+        if (!State.active) { requestAnimationFrame(() => this.loop()); return; }
+
+        const m = AudioSys.analyze();
+        Visuals.draw(m);
+
+        // Mise à jour UI Bars
+        document.getElementById('bar-vol').style.width = m.volume + '%';
+        document.getElementById('val-vol').innerText = Math.round(m.volume);
+        
+        document.getElementById('bar-bass').style.width = (m.bassAvg / 255 * 100) + '%';
+        document.getElementById('val-bass').innerText = Math.round(m.bassAvg);
+        
+        document.getElementById('bar-treble').style.width = (m.trebleAvg / 255 * 100) + '%';
+        document.getElementById('val-treble').innerText = Math.round(m.trebleAvg);
+
+        const now = Date.now();
+        if (now - State.lastEvent < 1500) { requestAnimationFrame(() => this.loop()); return; } // Cooldown
+
+        // --- LOGIQUE DE DÉTECTION ---
+
+        // 1. TOUX / RACLEMENT (Fonctionne tout le temps)
+        // Condition: Volume suffisant + ZCR très élevé (Bruit blanc)
+        if (m.volume > Config.thresholdVol && m.zcr > Config.thresholdZCR) {
+            this.trigger('COUGH', "Irritation laryngée détectée.");
+            if (State.options.humor) {
+                Voice.speak("Tiens, tu t'es raclé la gorge. Veux-tu un Ricolà ?");
+            } else {
+                Voice.speak("Toux détectée.");
             }
-            el.innerText = str + "\n" + el.innerText.substring(0, 200);
-            
-            // Clock
-            document.getElementById('clock').innerText = new Date().toLocaleTimeString('fr-FR');
-            
-            // Faux Coordonnées
-            document.getElementById('coords').innerText = 
-                (Math.random()*90).toFixed(3) + ", " + (Math.random()*180).toFixed(3);
-        }, 100);
+            State.lastEvent = now;
+            return; // Priorité à la toux
+        }
+
+        // 2. MODE SPÉCIFIQUE (Démons vs Fantômes)
+        if (State.mode === 'demon') {
+            // Démon: Réagit aux BASSSES (Frapper sur la table, voix grave)
+            if (m.bassAvg > Config.bassThreshold && m.volume > 10) {
+                this.trigger('DEMON', "Énergie basse fréquence massive.");
+                Voice.speak("Je sens une présence maléfique... Les basses fréquences montent.", "demon");
+                State.lastEvent = now;
+                return;
+            }
+        } 
+        else if (State.mode === 'ghost') {
+            // Fantôme: Réagit aux AIGUS (Craquement, sifflement, claquement sec)
+            if (m.trebleAvg > Config.trebleThreshold && m.volume > 10) {
+                this.trigger('SPIRIT', "Anomalie haute fréquence.");
+                Voice.speak("Une entité essaie de communiquer...", "ghost");
+                State.lastEvent = now;
+                return;
+            }
+        }
+        else {
+            // Mode Normal: Réagit au VOLUME (Clap, Parole forte)
+            if (m.volume > Config.thresholdVol * 2.5) {
+                this.trigger('IMPACT', "Pic sonore détecté.");
+                Voice.speak("J'ai entendu ça.");
+                State.lastEvent = now;
+                return;
+            }
+        }
+
+        requestAnimationFrame(() => this.loop());
+    },
+
+    trigger(type, msg) {
+        Log.add(`${type}: ${msg}`, "detected");
+        UI.setText(type);
+        
+        // Effet visuel flash
+        const stage = document.getElementById('stage');
+        stage.style.filter = "brightness(1.5)";
+        setTimeout(() => stage.style.filter = "brightness(1)", 100);
     }
 };
 
-// --- 7. INTERFACE CONTRÔLEUR ---
-const System = {
+// --- 6. CONTROLEUR ---
+const App = {
     async togglePower() {
         State.active = !State.active;
-        const btn = document.getElementById('btnPower');
+        const btn = document.getElementById('btn-power');
         
         if (State.active) {
             btn.classList.add('active');
-            btn.innerText = "SYSTÈME ACTIF";
-            const ok = await AudioCore.init();
+            btn.innerHTML = "⚡ SYSTÈME ACTIF";
+            const ok = await AudioSys.init();
             if (ok) {
-                Log.sys("Système JARVIS initialisé avec succès.");
-                this.say("Système en ligne. Capteurs acoustiques actifs.");
                 Visuals.resize();
                 Logic.loop();
-                Speech.initRec();
+                Voice.initRec();
+                Voice.speak("Jarvis en ligne. J'écoute vos sons réels.");
             } else {
-                State.active = false; btn.classList.remove('active'); btn.innerText = "ERREUR MICRO";
+                State.active = false; btn.classList.remove('active');
             }
         } else {
             btn.classList.remove('active');
-            btn.innerText = "SYSTÈME HORS LIGNE";
-            Log.sys("Arrêt du système demandé.");
+            btn.innerHTML = "⚡ DÉMARRER JARVIS";
+            Voice.speak("Arrêt du système.");
+            document.getElementById('status-audio').innerText = "OFF";
         }
     },
-    
+
     setMode(mode) {
-        State.modes[mode] = !State.modes[mode];
-        const btn = document.getElementById('btn' + mode.charAt(0).toUpperCase() + mode.slice(1));
-        btn.classList.toggle('active');
+        State.mode = mode;
+        // Update boutons
+        ['normal', 'ghost', 'demon'].forEach(m => {
+            const btn = document.getElementById('mod-'+m);
+            if (m === mode) {
+                btn.classList.add('active');
+                if (m === 'ghost') btn.classList.add('active-ghost');
+                if (m === 'demon') btn.classList.add('active-demon');
+            } else {
+                btn.classList.remove('active', 'active-ghost', 'active-demon');
+            }
+        });
         
-        let status = State.modes[mode] ? "activé" : "désactivé";
-        Log.sys(`Mode ${mode.toUpperCase()} ${status}.`);
-        this.say(`Mode ${mode} ${status}.`);
+        // Feedback
+        let msg = mode === 'normal' ? "Mode standard activé." :
+                   mode === 'ghost' ? "Mode chasseur de fantômes actif. Je cherche les sons aigus." :
+                   "Mode chasseur de démons actif. Je surveille les basses fréquences.";
+        Voice.speak(msg);
+        UI.setText("MODE: " + mode.toUpperCase());
     },
 
-    say(txt) { Speech.say(txt); },
-    clearLogs() { document.getElementById('log-terminal').innerHTML = ''; }
-};
+    toggle(opt) {
+        State.options[opt] = !State.options[opt];
+        const btn = document.getElementById('mod-'+opt);
+        btn.classList.toggle('active');
+        Voice.speak(`${opt} ${State.options[opt] ? 'activé' : 'désactivé'}.`);
+    },
 
-const Simulation = {
-    trigger(type) {
-        Logic.trigger(type, "Simulation manuelle.");
-        if(type === 'cough') Speech.say("Simulation : Toux.");
-        if(type === 'clap') Speech.say("Simulation : Claquement.");
-        if(type === 'spirit') { Speech.ghost("Je suis un test."); State.threatLevel = 50; }
-        if(type === 'demon') { Speech.demon("Je suis l'ombre."); State.threatLevel = 100; }
+    clearLogs() {
+        document.getElementById('logs').innerHTML = '';
     }
 };
 
-// --- UTILITAIRES UI ---
-function toggleSettings() {
-    document.getElementById('settings-modal').classList.toggle('open');
-}
+const UI = {
+    setText(txt) {
+        document.getElementById('main-text').innerText = txt;
+        document.getElementById('sub-text').innerText = new Date().toLocaleTimeString();
+        
+        const el = document.getElementById('main-text');
+        if(State.mode === 'demon') el.style.color = 'var(--demon)';
+        else if(State.mode === 'ghost') el.style.color = 'var(--ghost)';
+        else el.style.color = 'var(--primary)';
+    }
+};
 
-// --- DÉMARRAGE ---
+const Log = {
+    add(msg, type='') {
+        const d = document.createElement('div');
+        d.className = `log ${type}`;
+        d.innerText = `[${new Date().toLocaleTimeString().split(' ')[0]}] ${msg}`;
+        const c = document.getElementById('logs');
+        c.prepend(d);
+        if(c.children.length > 20) c.lastChild.remove();
+    }
+};
+
+// --- INIT ---
 window.onload = () => {
     Visuals.resize();
     window.addEventListener('resize', () => Visuals.resize());
-    DataStream.init();
-    Log.sys("JARVIS ARCHITECT v15.0 Prêt.");
+    
+    // Suivi souris pour l'oeil
+    document.addEventListener('mousemove', e => { State.mouse.x = e.clientX; State.mouse.y = e.clientY; });
+    document.addEventListener('touchmove', e => { State.mouse.x = e.touches[0].clientX; State.mouse.y = e.touches[0].clientY; });
+    
+    // Clock
+    setInterval(() => document.getElementById('clock').innerText = new Date().toLocaleTimeString(), 1000);
+    
+    Log.add("Prêt. Cliquez sur DÉMARRER.", "info");
 };
-
 </script>
 </body>
 </html>
