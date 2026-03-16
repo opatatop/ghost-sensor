@@ -3,756 +3,499 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>OPATATOP AI - Alertes Vocales Complètes</title>
+    <title>OPATATOP AI ULTIMATE v9.9 - PARANORMAL MAX</title>
     <style>
         :root {
-            --primary: #00ff88;
-            --secondary: #ff00ff;
-            --bg: #000;
-            --panel: #111;
-            --text: #fff;
-            --danger: #ff5555;
-            --accent: #ffff00;
-            --sonar: #00ffff;
-            --detect: #ff0000;
-            --highlight: #00ccff;
+            --primary: #00ff88; --secondary: #ff00ff; --bg: #000; --panel: #111;
+            --text: #fff; --danger: #ff5555; --accent: #ffff00; --sonar: #00ffff;
+            --detect: #ff0000; --highlight: #00ccff;
         }
 
-        @keyframes pulse {
-            0%, 100% { opacity: 1; text-shadow: 0 0 10px var(--primary); }
-            50% { opacity: 0.65; text-shadow: 0 0 25px var(--primary); }
-        }
+        @keyframes pulse { 0%,100% {opacity:1; text-shadow:0 0 15px var(--primary);} 50% {opacity:0.6; text-shadow:0 0 35px var(--primary);} }
+        @keyframes pulseBtn { 0%,100% {box-shadow:0 0 15px rgba(255,0,255,0.8);} 50% {box-shadow:0 0 35px rgba(255,0,255,1);} }
+        @keyframes alertPulse { 0%,100% {transform:scale(1);} 50% {transform:scale(1.18);} }
+        @keyframes alertGlow { 0% {box-shadow:0 0 20px var(--detect);} 100% {box-shadow:0 0 60px var(--detect),0 0 100px var(--detect);} }
+        @keyframes scanline { 0% {transform:translateY(-100%);} 100% {transform:translateY(300%);} }
 
-        @keyframes pulseBtn {
-            0%, 100% { box-shadow: 0 0 12px rgba(255, 0, 255, 0.7); }
-            50% { box-shadow: 0 0 25px rgba(255, 0, 255, 1); }
-        }
-
-        @keyframes alertPulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.12); }
-        }
-
-        @keyframes alertGlow {
-            0% { box-shadow: 0 0 15px var(--detect); }
-            100% { box-shadow: 0 0 40px var(--detect), 0 0 70px var(--detect); }
-        }
-
-        * {
-            box-sizing: border-box;
-            user-select: none;
-            -webkit-tap-highlight-color: transparent;
-            touch-action: manipulation;
-        }
-
+        * { box-sizing:border-box; user-select:none; -webkit-tap-highlight-color:transparent; touch-action:manipulation; }
         body {
-            margin: 0;
-            padding: 0;
-            font-family: 'Courier New', monospace;
-            background: var(--bg);
-            color: var(--text);
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            overflow: hidden;
+            margin:0; padding:0; font-family:'Courier New',monospace;
+            background:var(--bg); color:var(--text);
+            display:flex; flex-direction:column; height:100vh; overflow:hidden;
         }
-
         header {
-            background: linear-gradient(to right, #000, #111);
-            border-bottom: 3px solid var(--primary);
-            padding: 10px 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            background:linear-gradient(to right,#000,#111); border-bottom:4px solid var(--primary);
+            padding:12px 18px; display:flex; justify-content:space-between; align-items:center;
         }
+        h1 { font-size:1.35rem; color:var(--primary); text-shadow:0 0 12px var(--primary); letter-spacing:3px; margin:0; font-weight:bold; }
 
-        h1 {
-            font-size: 1.3rem;
-            color: var(--primary);
-            text-shadow: 0 0 10px var(--primary);
-            letter-spacing: 2px;
-            margin: 0;
-            font-weight: bold;
-        }
-
-        main {
-            flex: 1;
-            position: relative;
-            overflow: hidden;
-        }
-
+        main { flex:1; position:relative; overflow:hidden; }
         #visualizer {
-            width: 100%;
-            height: 100%;
-            position: relative;
-            background: radial-gradient(circle at center, #000 0%, #111 100%);
+            width:100%; height:100%; position:relative;
+            background:radial-gradient(circle at center,#000 0%,#111 70%,#000 100%);
         }
+        canvas { width:100%; height:100%; display:block; }
 
-        canvas {
-            width: 100%;
-            height: 100%;
-            display: block;
-        }
-
-        #displayOverlay {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            text-align: center;
-            pointer-events: none;
-            z-index: 30;
-            width: 90%;
-        }
-
+        /* HUD & Overlays */
+        #displayOverlay { position:absolute; bottom:22px; left:50%; transform:translateX(-50%); text-align:center; pointer-events:none; z-index:40; width:92%; }
         #mainText {
-            font-size: 1.6rem;
-            font-weight: bold;
-            color: var(--primary);
-            background: rgba(0, 0, 0, 0.75);
-            padding: 12px 20px;
-            border: 2px solid var(--primary);
-            border-radius: 5px;
-            text-transform: uppercase;
-            text-shadow: 0 0 10px var(--primary);
-            margin-bottom: 8px;
-            letter-spacing: 1px;
-            animation: pulse 2s infinite;
+            font-size:1.65rem; font-weight:bold; color:var(--primary);
+            background:rgba(0,0,0,0.8); padding:14px 24px;
+            border:3px solid var(--primary); border-radius:6px;
+            text-transform:uppercase; text-shadow:0 0 15px var(--primary);
+            margin-bottom:9px; letter-spacing:2px; animation:pulse 1.8s infinite;
         }
-
-        #subText {
-            font-size: 0.9rem;
-            color: var(--accent);
-            letter-spacing: 2px;
-            background: rgba(0, 0, 0, 0.75);
-            padding: 8px 15px;
-            border: 1px solid var(--accent);
-            border-radius: 5px;
-            text-shadow: 0 0 5px var(--accent);
-        }
+        #subText { font-size:0.95rem; color:var(--accent); letter-spacing:3px; background:rgba(0,0,0,0.8); padding:9px 18px; border:1px solid var(--accent); border-radius:6px; text-shadow:0 0 8px var(--accent); }
 
         #hud {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            background: rgba(0, 0, 0, 0.75);
-            padding: 10px 14px;
-            border: 1px solid var(--primary);
-            border-radius: 5px;
-            font-size: 0.8rem;
-            line-height: 1.4;
-            color: var(--primary);
-            z-index: 25;
-            min-width: 160px;
+            position:absolute; top:18px; right:18px; background:rgba(0,0,0,0.8);
+            padding:12px 16px; border:2px solid var(--primary); border-radius:6px;
+            font-size:0.82rem; line-height:1.45; color:var(--primary); z-index:35; min-width:175px;
         }
-
-        #actionGrid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(65px, 1fr));
-            gap: 8px;
-            padding: 12px;
-            background: var(--panel);
-            border-top: 1px solid #222;
-        }
-
-        .grid-btn {
-            background: #1a1a1a;
-            border: 1px solid #444;
-            color: #ccc;
-            padding: 8px 3px;
-            border-radius: 5px;
-            text-align: center;
-            font-size: 0.65rem;
-            cursor: pointer;
-            transition: all 0.2s;
-            position: relative;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .grid-icon {
-            font-size: 1.35rem;
-            margin-bottom: 3px;
-            display: block;
-        }
-
-        .grid-btn:active {
-            transform: scale(0.95);
-        }
-
-        .grid-btn.active-state {
-            background: var(--secondary);
-            color: #000;
-            border-color: #000;
-            box-shadow: 0 0 12px rgba(255, 0, 255, 0.7);
-            animation: pulseBtn 2s infinite;
-        }
-
-        #terminal {
-            height: 92px;
-            background: #000;
-            border-top: 1px solid #333;
-            padding: 6px;
-            font-size: 0.62rem;
-            overflow-y: auto;
-            color: #aaa;
-            line-height: 1.3;
-            font-family: monospace;
-        }
-
-        .log-line {
-            margin-bottom: 4px;
-            border-left: 2px solid #555;
-            padding-left: 6px;
-        }
-
-        #translationOverlay {
-            position: absolute;
-            bottom: 70px;
-            left: 50%;
-            transform: translateX(-50%);
-            text-align: center;
-            pointer-events: none;
-            z-index: 30;
-            color: var(--text);
-            background: rgba(0, 0, 0, 0.7);
-            padding: 8px 18px;
-            border: 2px solid var(--primary);
-            border-radius: 5px;
-            text-transform: uppercase;
-            font-size: 0.9rem;
-            font-weight: bold;
-        }
+        #emfBar { height:6px; background:linear-gradient(to right,#00ff88,#ffff00,#ff0000); margin-top:4px; border-radius:3px; overflow:hidden; }
+        #emfFill { height:100%; background:#ffff00; width:0%; transition:width 0.4s; }
 
         #liveTranslation {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            text-align: center;
-            pointer-events: none;
-            z-index: 30;
-            color: var(--sonar);
-            background: rgba(0, 0, 0, 0.75);
-            padding: 12px 20px;
-            border: 2px solid var(--sonar);
-            border-radius: 5px;
-            text-transform: uppercase;
-            font-size: 1.1rem;
-            font-weight: bold;
-            opacity: 0.95;
+            position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+            text-align:center; pointer-events:none; z-index:45;
+            color:var(--sonar); background:rgba(0,0,0,0.85);
+            padding:16px 26px; border:3px solid var(--sonar);
+            border-radius:8px; text-transform:uppercase; font-size:1.25rem;
+            font-weight:bold; max-width:88%; word-break:break-all;
+            box-shadow:0 0 30px var(--sonar);
+        }
+        #translationOverlay {
+            position:absolute; bottom:78px; left:50%; transform:translateX(-50%);
+            color:var(--text); background:rgba(0,0,0,0.7); padding:9px 22px;
+            border:2px solid var(--primary); border-radius:6px;
+            text-transform:uppercase; font-size:0.95rem; font-weight:bold; z-index:30;
         }
 
         #detectionAlert {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            color: var(--detect);
-            background: rgba(0, 0, 0, 0.75);
-            padding: 10px 15px;
-            border: 2px solid var(--detect);
-            border-radius: 5px;
-            text-transform: uppercase;
-            font-size: 1rem;
-            font-weight: bold;
-            display: none;
-            animation: alertPulse 1s infinite, alertGlow 2s infinite alternate;
+            position:absolute; top:25px; right:25px; color:var(--detect);
+            background:rgba(0,0,0,0.85); padding:14px 22px;
+            border:3px solid var(--detect); border-radius:6px;
+            text-transform:uppercase; font-size:1.15rem; font-weight:bold;
+            display:none; animation:alertPulse 0.9s infinite, alertGlow 1.8s infinite alternate;
+            box-shadow:0 0 40px var(--detect);
+        }
+
+        #actionGrid {
+            display:grid; grid-template-columns:repeat(auto-fit,minmax(68px,1fr));
+            gap:9px; padding:14px; background:var(--panel); border-top:2px solid #222;
+        }
+        .grid-btn {
+            background:#1a1a1a; border:2px solid #444; color:#ccc;
+            padding:10px 4px; border-radius:6px; text-align:center;
+            font-size:0.68rem; cursor:pointer; transition:all .2s;
+            display:flex; flex-direction:column; align-items:center; justify-content:center;
+        }
+        .grid-icon { font-size:1.45rem; margin-bottom:4px; }
+        .grid-btn:active { transform:scale(0.93); }
+        .grid-btn.active-state {
+            background:var(--secondary); color:#000; border-color:#000;
+            box-shadow:0 0 18px rgba(255,0,255,0.9); animation:pulseBtn 1.8s infinite;
+        }
+
+        #terminal {
+            height:88px; background:#000; border-top:1px solid #333;
+            padding:8px; font-size:0.63rem; overflow-y:auto;
+            color:#aaa; line-height:1.35; font-family:monospace;
+        }
+        .log-line { margin-bottom:5px; border-left:3px solid #555; padding-left:8px; }
+
+        #evpPanel {
+            background:var(--panel); padding:8px 12px; border-top:1px solid #333;
+            max-height:110px; overflow-y:auto; font-size:0.68rem;
+        }
+        .evp-item {
+            display:flex; justify-content:space-between; align-items:center;
+            padding:4px 8px; background:#1a1a1a; margin-bottom:4px; border-radius:4px;
+            cursor:pointer;
+        }
+        .evp-item:hover { background:#222; }
+
+        .scanline {
+            position:absolute; top:0; left:0; width:100%; height:100%;
+            background:linear-gradient(transparent,rgba(0,255,136,0.08),transparent);
+            animation:scanline 4s linear infinite; pointer-events:none; z-index:10; opacity:0.3;
         }
     </style>
 </head>
 <body>
     <header>
-        <h1>OPATATOP AI - ALERTES VOCALES</h1>
+        <h1>OPATATOP AI ULTIMATE v9.9</h1>
+        <div style="font-size:0.7rem;color:#00ccff;">PARANORMAL MAX MODE</div>
     </header>
     <main>
         <div id="visualizer">
             <canvas id="scopeCanvas"></canvas>
-            <div id="detectionAlert">ALERTE PARANORMALE</div>
+            <div class="scanline"></div>
+            <div id="detectionAlert">ENTITÉ PRÉSENTE</div>
             <div id="displayOverlay">
-                <div id="mainText">ALERTES VOCALES ACTIVÉES</div>
-                <div id="subText">TOUTES FONCTIONS ACTIVÉES</div>
+                <div id="mainText">ALERTES VOCALES + IA MAX</div>
+                <div id="subText">TOUT ACTIVÉ • MICRO LIVE • EVP • SPIRIT BOX</div>
             </div>
-            <div id="translationOverlay">TRADUCTION LIVE</div>
-            <div id="liveTranslation">--</div>
-            <div id="hud">NIVEAU: 0%<br>FRÉQ.: 0 Hz<br>DÉTECTION: 0%<br>TEMP: 0°C</div>
+            <div id="translationOverlay">TRADUCTION IA + ANALYSE PARANORMALE EN DIRECT</div>
+            <div id="liveTranslation">-- ÉCOUTE MAX ACTIVE --</div>
+            <div id="hud">
+                NIVEAU: 0%<br>
+                FRÉQ.: 0 Hz<br>
+                DÉTECTION: 0%<br>
+                TEMP: 21.4°C<br>
+                <div style="margin-top:6px;font-size:0.75rem;">EMF <span id="emfBar"><span id="emfFill"></span></span></div>
+            </div>
         </div>
     </main>
     <div id="actionGrid">
         <div class="grid-btn active-state" id="btnPower"><span class="grid-icon">⚡</span><span>POWER</span></div>
         <div class="grid-btn active-state" id="btnDetect"><span class="grid-icon">🔍</span><span>SONAR</span></div>
-        <div class="grid-btn active-state" id="btnGhost"><span class="grid-icon">👻</span><span>DETECT</span></div>
-        <div class="grid-btn active-state" id="btnVAD"><span class="grid-icon">🎤</span><span>VAD</span></div>
-        <div class="grid-btn active-state" id="btnSensors"><span class="grid-icon">📡</span><span>CAPTEURS</span></div>
-        <div class="grid-btn active-state" id="btnRecord"><span class="grid-icon">📼</span><span>ENREG.</span></div>
+        <div class="grid-btn active-state" id="btnGhost"><span class="grid-icon">👻</span><span>GHOST</span></div>
+        <div class="grid-btn active-state" id="btnVAD"><span class="grid-icon">🎤</span><span>VAD+IA</span></div>
+        <div class="grid-btn active-state" id="btnSpirit"><span class="grid-icon">📻</span><span>SPIRIT BOX</span></div>
+        <div class="grid-btn active-state" id="btnRecord"><span class="grid-icon">📼</span><span>EVP REC</span></div>
         <div class="grid-btn active-state" id="btnEMF"><span class="grid-icon">📏</span><span>EMF</span></div>
         <div class="grid-btn active-state" id="btnTemp"><span class="grid-icon">🌡️</span><span>TEMP</span></div>
     </div>
     <div id="terminal"></div>
+    <div id="evpPanel"><strong>EVP LIBRARY</strong> <span id="evpCount" style="color:#00ff88;">0 clips</span><ul id="evpList" style="list-style:none;padding:0;margin:6px 0 0 0;"></ul></div>
 
     <script>
-        // ==================== CONFIG ====================
-        const Config = {
-            colorModes: {
-                dark: {
-                    primary: '#00ff88',
-                    secondary: '#ff00ff',
-                    bg: '#000',
-                    panel: '#111',
-                    text: '#fff',
-                    sonar: '#00ffff',
-                    detect: '#ff0000',
-                    accent: '#ffff00',
-                    danger: '#ff5555',
-                    highlight: '#00ccff'
-                }
-            },
-            applyColorMode() {
-                const mode = this.colorModes.dark;
-                Object.keys(mode).forEach(key => {
-                    document.documentElement.style.setProperty(`--${key}`, mode[key]);
-                });
-            }
-        };
+        // ==================== CONFIG & ENGINES ====================
+        const Config = { apply() {
+            const m = {primary:'#00ff88',secondary:'#ff00ff',bg:'#000',panel:'#111',text:'#fff',
+                       sonar:'#00ffff',detect:'#ff0000',accent:'#ffff00',danger:'#ff5555',highlight:'#00ccff'};
+            Object.keys(m).forEach(k=>document.documentElement.style.setProperty(`--${k}`,m[k]));
+        }};
 
-        // ==================== AUDIO ENGINE ====================
         const AudioEngine = {
-            ctx: null,
-            stream: null,
-            analyser: null,
-            isInit: false,
-
+            ctx:null, stream:null, analyser:null, isInit:false,
             async init() {
                 try {
-                    const AudioContext = window.AudioContext || window.webkitAudioContext;
-                    this.ctx = new AudioContext();
-                    this.stream = await navigator.mediaDevices.getUserMedia({
-                        audio: {
-                            echoCancellation: false,
-                            noiseSuppression: false,
-                            autoGainControl: false,
-                            sampleRate: 44100
-                        }
-                    });
-                    this.analyser = this.ctx.createAnalyser();
-                    this.analyser.fftSize = 2048;
+                    const AC = window.AudioContext || window.webkitAudioContext;
+                    this.ctx = new AC();
+                    this.stream = await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false,sampleRate:44100}});
+                    this.analyser = this.ctx.createAnalyser(); this.analyser.fftSize = 2048;
                     this.ctx.createMediaStreamSource(this.stream).connect(this.analyser);
-                    this.isInit = true;
-                    return true;
-                } catch (e) {
-                    console.error("Erreur audio:", e);
-                    return false;
-                }
+                    this.isInit = true; return true;
+                } catch(e){ console.error(e); return false; }
             },
-
-            getRMS() {
-                if (!this.analyser) return 0;
-                const data = new Uint8Array(this.analyser.fftSize);
-                this.analyser.getByteTimeDomainData(data);
-                let sum = 0;
-                for (let i = 0; i < data.length; i++) {
-                    const val = (data[i] / 128) - 1;
-                    sum += val * val;
-                }
-                return Math.sqrt(sum / data.length);
-            },
-
-            getPeakFrequency() {
-                if (!this.analyser) return 0;
-                const data = new Uint8Array(this.analyser.frequencyBinCount);
-                this.analyser.getByteFrequencyData(data);
-                let maxIdx = 0, maxVal = 0;
-                for (let i = 2; i < data.length; i++) {
-                    if (data[i] > maxVal) {
-                        maxVal = data[i];
-                        maxIdx = i;
-                    }
-                }
-                const nyquist = this.ctx.sampleRate / 2;
-                return Math.round((maxIdx / data.length) * nyquist);
-            },
-
-            playClick() {
-                if (!this.ctx || !this.isInit) return;
-                const osc = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-                osc.type = 'sine';
-                osc.frequency.value = 1100;
-                gain.gain.value = 0.08;
-                osc.connect(gain);
-                gain.connect(this.ctx.destination);
-                osc.start();
-                setTimeout(() => osc.stop(), 45);
-            },
-
-            destroy() {
-                if (this.stream) this.stream.getTracks().forEach(t => t.stop());
-                if (this.ctx) this.ctx.close();
-                this.isInit = false;
-            }
+            getRMS(){ if(!this.analyser) return 0; const d=new Uint8Array(this.analyser.fftSize); this.analyser.getByteTimeDomainData(d);
+                let s=0; for(let i=0;i<d.length;i++){const v=(d[i]/128)-1; s+=v*v;} return Math.sqrt(s/d.length); },
+            getPeakFreq(){ if(!this.analyser) return 0; const d=new Uint8Array(this.analyser.frequencyBinCount); this.analyser.getByteFrequencyData(d);
+                let max=0,idx=0; for(let i=2;i<d.length;i++) if(d[i]>max){max=d[i];idx=i;}
+                return Math.round((idx/d.length)*(this.ctx.sampleRate/2)); },
+            playClick(f=1100,dur=40){ if(!this.ctx)return; const o=this.ctx.createOscillator(),g=this.ctx.createGain();
+                o.type='sine'; o.frequency.value=f; g.gain.value=0.09; o.connect(g); g.connect(this.ctx.destination);
+                o.start(); setTimeout(()=>o.stop(),dur); }
         };
 
-        // ==================== SPEECH ENGINE ====================
         const SpeechEngine = {
-            synthesis: window.speechSynthesis,
-            voice: null,
+            synth:window.speechSynthesis, voice:null,
+            init(){ const load=()=>{const v=this.synth.getVoices(); this.voice=v.find(vv=>vv.lang.startsWith('fr'))||v[0];};
+                load(); this.synth.onvoiceschanged=load; },
+            speak(t,p=1.05,r=0.96){ if(!t)return; this.synth.cancel();
+                const u=new SpeechSynthesisUtterance(t); u.lang='fr-FR'; u.pitch=p; u.rate=r;
+                if(this.voice) u.voice=this.voice; this.synth.speak(u); }
+        };
 
-            init() {
-                const loadVoices = () => {
-                    const voices = this.synthesis.getVoices();
-                    this.voice = voices.find(v => v.lang.startsWith('fr')) || voices[0];
+        // ==================== RECOGNITION + IA LIVE ====================
+        let RecognitionEngine = {
+            rec:null, active:false, resetTimeout:null,
+            init(){
+                const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+                if(!SR){ App.log("❌ Reconnaissance IA non supportée (Chrome/Edge obligatoire)"); return false; }
+                this.rec = new SR(); this.rec.continuous=true; this.rec.interimResults=true; this.rec.lang='fr-FR';
+                this.rec.onresult = e => {
+                    let txt = '';
+                    for(let i=e.resultIndex;i<e.results.length;i++) txt += e.results[i][0].transcript;
+                    if(!txt.trim()) return;
+                    const live = document.getElementById('liveTranslation');
+                    live.textContent = txt.toUpperCase();
+                    App.log(`🎤 IA: ${txt}`);
+                    SpeechEngine.speak(`Capté: ${txt}`);
+
+                    // IA ANALYSIS
+                    const analysis = this.generateIAnalysis(txt.toLowerCase());
+                    setTimeout(()=>{ live.textContent = `${txt.toUpperCase()}\nIA: ${analysis}`; },800);
+
+                    clearTimeout(this.resetTimeout);
+                    this.resetTimeout = setTimeout(()=>{ live.textContent = '-- ÉCOUTE MAX ACTIVE --'; },5200);
+
+                    if(/fantôme|esprit|aide|mort|présence|paranormal/i.test(txt)) App.triggerGhost();
                 };
-                loadVoices();
-                this.synthesis.onvoiceschanged = loadVoices;
+                this.rec.onerror = e => App.log(`IA ERREUR: ${e.error}`);
+                this.rec.onend = () => { if(this.active) this.rec.start(); };
+                return true;
             },
+            generateIAnalysis(txt){
+                if(txt.includes('aide')||txt.includes('help')) return "DEMANDE D'AIDE • PROBABILITÉ 92%";
+                if(txt.includes('fantôme')||txt.includes('esprit')) return "ENTITÉ CONFIRMÉE • 87%";
+                if(txt.includes('froid')) return "BAISSE TEMPÉRATURE • EVP FORT";
+                return `ANALYSE: ${Math.floor(65+Math.random()*30)}% PARANORMAL`;
+            },
+            start(){ if(!this.rec||this.active) return; this.rec.start(); this.active=true; App.log("✅ IA RECONNAISSANCE MAX EN DIRECT"); },
+            stop(){ if(this.rec){this.rec.stop(); this.active=false;} }
+        };
 
-            speak(text) {
-                if (!text) return;
-                this.synthesis.cancel();
-                const utterance = new SpeechSynthesisUtterance(text);
-                utterance.lang = 'fr-FR';
-                utterance.pitch = 1.05;
-                utterance.rate = 0.98;
-                if (this.voice) utterance.voice = this.voice;
-                this.synthesis.speak(utterance);
+        // ==================== RECORDER ENGINE (REAL EVP) ====================
+        const RecorderEngine = {
+            mediaRecorder: null,
+            clips: [],
+            currentStream: null,
+            isRecording: false,
+            startRecording() {
+                if(this.isRecording) return;
+                navigator.mediaDevices.getUserMedia({audio:true}).then(stream => {
+                    this.currentStream = stream;
+                    this.mediaRecorder = new MediaRecorder(stream);
+                    const chunks = [];
+                    this.mediaRecorder.ondataavailable = e => chunks.push(e.data);
+                    this.mediaRecorder.onstop = () => {
+                        const blob = new Blob(chunks, {type:'audio/webm'});
+                        const url = URL.createObjectURL(blob);
+                        this.clips.push({url, time:new Date().toLocaleTimeString('fr-FR'), name:`EVP-${this.clips.length+1}`});
+                        this.updateEVPList();
+                        App.log(`📼 EVP SAUVEGARDÉ (${this.clips.length})`);
+                        SpeechEngine.speak("Enregistrement EVP terminé");
+                    };
+                    this.mediaRecorder.start();
+                    this.isRecording = true;
+                });
+            },
+            stopRecording() {
+                if(this.mediaRecorder && this.isRecording){
+                    this.mediaRecorder.stop();
+                    this.isRecording = false;
+                    if(this.currentStream) this.currentStream.getTracks().forEach(t=>t.stop());
+                }
+            },
+            updateEVPList() {
+                const ul = document.getElementById('evpList');
+                ul.innerHTML = '';
+                this.clips.forEach((clip,i) => {
+                    const li = document.createElement('li');
+                    li.className = 'evp-item';
+                    li.innerHTML = `<span>${clip.name} • ${clip.time}</span><span style="color:var(--primary)">▶</span>`;
+                    li.onclick = () => {
+                        const a = new Audio(clip.url);
+                        a.play();
+                        SpeechEngine.speak("Lecture EVP");
+                        App.playReverb(a);
+                    };
+                    ul.appendChild(li);
+                });
+                document.getElementById('evpCount').textContent = `${this.clips.length} clips`;
             }
         };
 
-        // ==================== VISUAL ENGINE ====================
+        // ==================== SPIRIT BOX ENGINE ====================
+        const SpiritBoxEngine = {
+            active: false,
+            interval: null,
+            words: ["esprit","je suis là","aide-moi","partez","froid","mort","présence","lumières","entité","non","oui","ici","derrière toi"],
+            toggle() {
+                this.active = !this.active;
+                document.getElementById('btnSpirit').classList.toggle('active-state');
+                if(this.active){
+                    App.log("📻 SPIRIT BOX ACTIVÉE");
+                    SpeechEngine.speak("Spirit box en marche");
+                    this.interval = setInterval(()=>{
+                        const w = this.words[Math.floor(Math.random()*this.words.length)];
+                        SpeechEngine.speak(w, 0.75, 1.3); // voix basse et rapide
+                        App.log(`📻 SPIRIT: ${w.toUpperCase()}`);
+                    }, 2800 + Math.random()*3200);
+                } else {
+                    clearInterval(this.interval);
+                    App.log("📻 SPIRIT BOX DÉSACTIVÉE");
+                }
+            }
+        };
+
+        // ==================== VISUAL ENGINE (avec particules) ====================
         const VisualEngine = {
-            canvas: null,
-            ctx: null,
-            animId: null,
-            isRunning: false,
-            lastHudUpdate: 0,
-
-            init() {
+            canvas:null, ctx:null, animId:null, isRunning:false, lastHud:0,
+            particles: [],
+            init(){
                 this.canvas = document.getElementById('scopeCanvas');
-                this.ctx = this.canvas.getContext('2d', { alpha: true });
+                this.ctx = this.canvas.getContext('2d');
                 this.resize();
-                window.addEventListener('resize', () => this.resize());
+                window.addEventListener('resize',()=>this.resize());
             },
-
-            resize() {
-                if (this.canvas) {
-                    this.canvas.width = this.canvas.parentElement.clientWidth;
-                    this.canvas.height = this.canvas.parentElement.clientHeight;
+            resize(){ this.canvas.width = this.canvas.parentElement.clientWidth; this.canvas.height = this.canvas.parentElement.clientHeight; },
+            start(){ if(!this.isRunning){this.isRunning=true; this.loop();} },
+            stop(){ this.isRunning=false; cancelAnimationFrame(this.animId); },
+            spawnParticles(n){
+                for(let i=0;i<n;i++){
+                    this.particles.push({
+                        x: Math.random()*this.canvas.width,
+                        y: Math.random()*this.canvas.height*0.6,
+                        size: 3+Math.random()*5,
+                        life: 80+Math.random()*60,
+                        vx: (Math.random()-0.5)*1.2,
+                        vy: (Math.random()-0.5)*1.8
+                    });
                 }
             },
+            loop(){
+                if(!this.isRunning) return;
+                const w=this.canvas.width, h=this.canvas.height;
+                this.ctx.fillStyle='rgba(0,0,0,0.13)'; this.ctx.fillRect(0,0,w,h);
 
-            start() {
-                if (!this.isRunning) {
-                    this.isRunning = true;
-                    this.lastHudUpdate = Date.now();
-                    this.loop();
-                }
-            },
-
-            stop() {
-                this.isRunning = false;
-                if (this.animId) cancelAnimationFrame(this.animId);
-            },
-
-            updateHUD() {
-                const rms = AudioEngine.isInit ? AudioEngine.getRMS() * 100 : 0;
-                const freq = AudioEngine.isInit ? AudioEngine.getPeakFrequency() : 0;
-                const detect = Math.min(100, Math.floor(rms * 0.75 + (FeatureEngine.ghostDetection ? 35 : 0)));
-
-                document.getElementById('hud').innerHTML = `
-                    NIVEAU: ${rms.toFixed(1)}%<br>
-                    FRÉQ.: ${freq} Hz<br>
-                    DÉTECTION: ${detect}%<br>
-                    TEMP: ${(20.5 + Math.random() * 4.5).toFixed(1)}°C
-                `;
-            },
-
-            loop() {
-                if (!this.isRunning) return;
-
-                const w = this.canvas.width;
-                const h = this.canvas.height;
-                this.ctx.fillStyle = 'rgba(0, 0, 0, 0.12)';
-                this.ctx.fillRect(0, 0, w, h);
-
-                // === RADAR GRID ===
-                this.ctx.save();
-                this.ctx.translate(w / 2, h / 2);
-                this.ctx.strokeStyle = '#00ff8833';
-                this.ctx.lineWidth = 1.5;
-                const maxR = Math.min(w, h) / 2.2;
-                for (let r = 25; r <= maxR; r += 28) {
-                    this.ctx.beginPath();
-                    this.ctx.arc(0, 0, r, 0, Math.PI * 2);
-                    this.ctx.stroke();
-                }
-                for (let a = 0; a < Math.PI * 2; a += Math.PI / 12) {
-                    this.ctx.beginPath();
-                    this.ctx.moveTo(0, 0);
-                    this.ctx.lineTo(Math.cos(a) * maxR, Math.sin(a) * maxR);
-                    this.ctx.stroke();
+                // Radar + sweep + waveform (même que avant)
+                this.ctx.save(); this.ctx.translate(w/2,h/2);
+                this.ctx.strokeStyle='#00ff8833'; this.ctx.lineWidth=1.6;
+                const maxR = Math.min(w,h)/2.15;
+                for(let r=28;r<=maxR;r+=29){ this.ctx.beginPath(); this.ctx.arc(0,0,r,0,Math.PI*2); this.ctx.stroke(); }
+                for(let a=0;a<Math.PI*2;a+=Math.PI/11){
+                    this.ctx.beginPath(); this.ctx.moveTo(0,0); this.ctx.lineTo(Math.cos(a)*maxR,Math.sin(a)*maxR); this.ctx.stroke();
                 }
                 this.ctx.restore();
 
-                // === RADAR SWEEP ===
-                const angle = (Date.now() / 800) % (Math.PI * 2);
-                this.ctx.save();
-                this.ctx.translate(w / 2, h / 2);
-                this.ctx.strokeStyle = '#00ff88';
-                this.ctx.lineWidth = 3.5;
-                this.ctx.shadowBlur = 20;
-                this.ctx.shadowColor = '#00ff88';
-                this.ctx.beginPath();
-                this.ctx.moveTo(0, 0);
-                this.ctx.lineTo(Math.cos(angle) * maxR, Math.sin(angle) * maxR);
-                this.ctx.stroke();
+                const angle = (Date.now()/720)%(Math.PI*2);
+                this.ctx.save(); this.ctx.translate(w/2,h/2);
+                this.ctx.strokeStyle='#00ff88'; this.ctx.lineWidth=4; this.ctx.shadowBlur=25; this.ctx.shadowColor='#00ff88';
+                this.ctx.beginPath(); this.ctx.moveTo(0,0); this.ctx.lineTo(Math.cos(angle)*maxR,Math.sin(angle)*maxR); this.ctx.stroke();
                 this.ctx.restore();
 
-                // === WAVEFORM (oscilloscope) ===
-                if (AudioEngine.isInit) {
-                    const timeData = new Uint8Array(AudioEngine.analyser.fftSize);
-                    AudioEngine.analyser.getByteTimeDomainData(timeData);
-                    this.ctx.save();
-                    this.ctx.strokeStyle = '#00ffff';
-                    this.ctx.lineWidth = 2.5;
-                    this.ctx.shadowBlur = 15;
-                    this.ctx.shadowColor = '#00ffff';
+                // Waveform
+                if(AudioEngine.isInit){
+                    const td = new Uint8Array(AudioEngine.analyser.fftSize);
+                    AudioEngine.analyser.getByteTimeDomainData(td);
+                    this.ctx.save(); this.ctx.strokeStyle='#00ffff'; this.ctx.lineWidth=2.8; this.ctx.shadowBlur=18; this.ctx.shadowColor='#00ffff';
                     this.ctx.beginPath();
-                    const sliceWidth = w / timeData.length * 1.8;
-                    let x = 30;
-                    for (let i = 0; i < timeData.length; i += 2) {
-                        const v = timeData[i] / 128;
-                        const y = h * 0.82 + (v - 0.5) * 55;
-                        if (i === 0) this.ctx.moveTo(x, y);
-                        else this.ctx.lineTo(x, y);
-                        x += sliceWidth;
+                    const sw = w/td.length*1.9; let x=25;
+                    for(let i=0;i<td.length;i+=2){
+                        const y = h*0.78 + ((td[i]/128)-0.5)*62;
+                        i===0?this.ctx.moveTo(x,y):this.ctx.lineTo(x,y);
+                        x+=sw;
                     }
-                    this.ctx.stroke();
+                    this.ctx.stroke(); this.ctx.restore();
+                }
+
+                // Particules (orbs fantômes)
+                this.particles = this.particles.filter(p=>{
+                    p.x += p.vx; p.y += p.vy; p.life--;
+                    this.ctx.save();
+                    this.ctx.globalAlpha = p.life/120;
+                    this.ctx.fillStyle = '#00ffff';
+                    this.ctx.shadowBlur = 12; this.ctx.shadowColor = '#00ffff';
+                    this.ctx.beginPath(); this.ctx.arc(p.x,p.y,p.size,0,Math.PI*2); this.ctx.fill();
                     this.ctx.restore();
+                    return p.life > 0;
+                });
+
+                // HUD
+                if(Date.now()-this.lastHud>140){
+                    const rms = AudioEngine.isInit?AudioEngine.getRMS()*100:0;
+                    const freq = AudioEngine.isInit?AudioEngine.getPeakFreq():0;
+                    const emf = Math.min(100, Math.floor(rms*1.1 + (FeatureEngine.emfActive?35:0)));
+                    document.getElementById('hud').innerHTML = `
+                        NIVEAU: ${rms.toFixed(1)}%<br>
+                        FRÉQ.: ${freq} Hz<br>
+                        DÉTECTION: ${Math.floor(rms*0.85)}%<br>
+                        TEMP: ${(19.8 + Math.random()*6.4).toFixed(1)}°C<br>
+                        <div style="margin-top:6px;font-size:0.75rem;">EMF <span id="emfBar"><span id="emfFill" style="width:${emf}%"></span></span></div>
+                    `;
+                    this.lastHud = Date.now();
                 }
 
-                // HUD throttle
-                const now = Date.now();
-                if (now - this.lastHudUpdate > 165) {
-                    this.updateHUD();
-                    this.lastHudUpdate = now;
-                }
-
-                this.animId = requestAnimationFrame(() => this.loop());
+                this.animId = requestAnimationFrame(()=>this.loop());
             }
         };
 
         // ==================== FEATURE ENGINE ====================
         const FeatureEngine = {
-            power: true,
-            detection: true,
-            ghostDetection: true,
-            vad: true,
-            sensorsActive: true,
-            autoRecord: true,
-            emfActive: true,
-            tempActive: true,
-
-            togglePower() {
+            power:true, detection:true, ghost:true, vad:true, spirit:false, record:true, emf:true, temp:true,
+            toggle(id, stateName, msgOn, msgOff){
                 AudioEngine.playClick();
-                this.power = !this.power;
-                const btn = document.getElementById('btnPower');
-                btn.classList.toggle('active-state');
-
-                const mainText = document.getElementById('mainText');
-                const msg = this.power ? "Système activé" : "Système désactivé";
-                App.log(msg);
-                SpeechEngine.speak(msg);
-
-                if (!this.power) {
-                    mainText.textContent = "SYSTÈME DÉSACTIVÉ";
-                    mainText.style.color = 'var(--danger)';
-                } else {
-                    mainText.textContent = "ALERTES VOCALES ACTIVÉES";
-                    mainText.style.color = 'var(--primary)';
-                }
-            },
-
-            toggleDetection() {
-                AudioEngine.playClick();
-                this.detection = !this.detection;
-                document.getElementById('btnDetect').classList.toggle('active-state');
-                const msg = this.detection ? "Détection sonar activée" : "Détection sonar désactivée";
-                App.log(msg);
-                SpeechEngine.speak(msg);
-            },
-
-            toggleGhostDetection() {
-                AudioEngine.playClick();
-                this.ghostDetection = !this.ghostDetection;
-                document.getElementById('btnGhost').classList.toggle('active-state');
-                const msg = this.ghostDetection ? "Détection de fantômes activée" : "Détection de fantômes désactivée";
-                App.log(msg);
-                SpeechEngine.speak(msg);
-            },
-
-            toggleVAD() {
-                AudioEngine.playClick();
-                this.vad = !this.vad;
-                document.getElementById('btnVAD').classList.toggle('active-state');
-                const msg = this.vad ? "Détection vocale activée" : "Détection vocale désactivée";
-                App.log(msg);
-                SpeechEngine.speak(msg);
-            },
-
-            toggleSensors() {
-                AudioEngine.playClick();
-                this.sensorsActive = !this.sensorsActive;
-                document.getElementById('btnSensors').classList.toggle('active-state');
-                const msg = this.sensorsActive ? "Capteurs activés" : "Capteurs désactivés";
-                App.log(msg);
-                SpeechEngine.speak(msg);
-            },
-
-            toggleAutoRecord() {
-                AudioEngine.playClick();
-                this.autoRecord = !this.autoRecord;
-                document.getElementById('btnRecord').classList.toggle('active-state');
-                const msg = this.autoRecord ? "Enregistrement automatique activé" : "Enregistrement automatique désactivé";
-                App.log(msg);
-                SpeechEngine.speak(msg);
-            },
-
-            toggleEMF() {
-                AudioEngine.playClick();
-                this.emfActive = !this.emfActive;
-                document.getElementById('btnEMF').classList.toggle('active-state');
-                const msg = this.emfActive ? "Détection EMF activée" : "Détection EMF désactivée";
-                App.log(msg);
-                SpeechEngine.speak(msg);
-            },
-
-            toggleTemp() {
-                AudioEngine.playClick();
-                this.tempActive = !this.tempActive;
-                document.getElementById('btnTemp').classList.toggle('active-state');
-                const msg = this.tempActive ? "Détection de température activée" : "Détection de température désactivée";
-                App.log(msg);
-                SpeechEngine.speak(msg);
+                this[stateName] = !this[stateName];
+                document.getElementById(id).classList.toggle('active-state');
+                const msg = this[stateName] ? msgOn : msgOff;
+                App.log(msg); SpeechEngine.speak(msg);
             }
         };
 
         // ==================== MAIN APP ====================
         const App = {
-            isRunning: false,
-            simulateInterval: null,
-
-            log(msg) {
-                const t = document.getElementById('terminal');
-                const d = document.createElement('div');
-                d.className = 'log-line';
-                d.innerText = `[${new Date().toLocaleTimeString('fr-FR')}] ${msg}`;
-                t.appendChild(d);
-                if (t.children.length > 16) t.removeChild(t.firstChild);
-                t.scrollTop = t.scrollHeight;
-            },
-
-            triggerVAD() {
-                const messages = [
-                    "Activité vocale détectée !",
-                    "Voix humaine captée",
-                    "Signal vocal fort"
-                ];
-                const msg = messages[Math.floor(Math.random() * messages.length)];
-                App.log(`VAD → ${msg}`);
-                SpeechEngine.speak(msg);
-
-                const lt = document.getElementById('liveTranslation');
-                lt.textContent = msg.toUpperCase();
-                setTimeout(() => {
-                    if (lt.textContent === msg.toUpperCase()) lt.textContent = '--';
-                }, 3800);
-            },
-
-            triggerGhost() {
-                const messages = [
-                    "ALERTE PARANORMALE !",
-                    "Entité détectée à proximité",
-                    "Voix EVP captée",
-                    "Présence paranormale confirmée",
-                    "Champ EMF anormal détecté"
-                ];
-                const msg = messages[Math.floor(Math.random() * messages.length)];
-
-                const alertEl = document.getElementById('detectionAlert');
-                alertEl.textContent = msg;
-                alertEl.style.display = 'block';
-
-                App.log(`GHOST → ${msg}`);
-                SpeechEngine.speak(msg);
-
-                const lt = document.getElementById('liveTranslation');
-                lt.textContent = "ENTITÉ: " + msg.substring(0, 18);
-                setTimeout(() => {
-                    alertEl.style.display = 'none';
-                    if (lt.textContent.includes("ENTITÉ")) lt.textContent = '--';
-                }, 5200);
-            },
-
-            simulateEvents() {
-                if (!this.isRunning || !FeatureEngine.power || !AudioEngine.isInit) return;
-
-                const rms = AudioEngine.getRMS();
-
-                // VAD simulation
-                if (FeatureEngine.vad && rms > 0.23 && Math.random() < 0.13) {
-                    this.triggerVAD();
-                }
-
-                // Ghost detection (rare & spooky)
-                if (FeatureEngine.ghostDetection && Math.random() < 0.065) {
-                    this.triggerGhost();
-                }
-            },
-
-            async init() {
-                Config.applyColorMode();
+            isRunning:false,
+            async init(){
+                Config.apply();
                 SpeechEngine.init();
-
                 VisualEngine.init();
+                const audioOK = await AudioEngine.init();
+                if(!audioOK) this.log("⚠️ MICRO REFUSÉ – MODE DÉMO");
 
-                const audioSuccess = await AudioEngine.init();
-                if (!audioSuccess) {
-                    this.log("⚠️ ACCÈS MICRO REFUSÉ - Mode démo uniquement");
-                }
-
+                RecognitionEngine.init();
                 VisualEngine.start();
                 this.isRunning = true;
 
-                this.log("OPATATOP AI INITIALISÉ");
-                this.log("Toutes fonctions activées - Prêt pour les alertes");
+                this.log("=== OPATATOP AI ULTIMATE v9.9 ===");
+                this.log("✅ TOUT MAXIMISÉ • IA LIVE • EVP REAL • SPIRIT BOX • PARTICULES");
+                SpeechEngine.speak("Système paranormal ultime activé. Tout est maximisé.",1.1,0.95);
 
-                SpeechEngine.speak("Toutes fonctions activées. Système prêt pour les alertes paranormales.");
-
-                // Simulation loop (événements aléatoires réalistes)
-                this.simulateInterval = setInterval(() => this.simulateEvents(), 2400);
-
-                // Attach button listeners (clean code)
-                const buttons = [
-                    { id: 'btnPower', fn: () => FeatureEngine.togglePower() },
-                    { id: 'btnDetect', fn: () => FeatureEngine.toggleDetection() },
-                    { id: 'btnGhost', fn: () => FeatureEngine.toggleGhostDetection() },
-                    { id: 'btnVAD', fn: () => FeatureEngine.toggleVAD() },
-                    { id: 'btnSensors', fn: () => FeatureEngine.toggleSensors() },
-                    { id: 'btnRecord', fn: () => FeatureEngine.toggleAutoRecord() },
-                    { id: 'btnEMF', fn: () => FeatureEngine.toggleEMF() },
-                    { id: 'btnTemp', fn: () => FeatureEngine.toggleTemp() }
+                // Boutons
+                const map = [
+                    {id:'btnPower', fn:()=>{ FeatureEngine.toggle('btnPower','power',"POWER ON","POWER OFF");
+                        document.getElementById('mainText').textContent = FeatureEngine.power?"ALERTES MAX ACTIVÉES":"SYSTÈME OFF";
+                        document.getElementById('mainText').style.color = FeatureEngine.power?'var(--primary)':'var(--danger)'; }},
+                    {id:'btnDetect', fn:()=>FeatureEngine.toggle('btnDetect','detection',"SONAR ACTIF","SONAR OFF")},
+                    {id:'btnGhost', fn:()=>FeatureEngine.toggle('btnGhost','ghost',"GHOST DETECT ON","GHOST OFF")},
+                    {id:'btnVAD', fn:()=>{ FeatureEngine.toggle('btnVAD','vad',"VAD+IA ON","VAD OFF");
+                        FeatureEngine.vad ? RecognitionEngine.start() : RecognitionEngine.stop(); }},
+                    {id:'btnSpirit', fn:()=>SpiritBoxEngine.toggle()},
+                    {id:'btnRecord', fn:()=>{ FeatureEngine.toggle('btnRecord','record',"EVP REC ON","EVP OFF");
+                        FeatureEngine.record ? RecorderEngine.startRecording() : RecorderEngine.stopRecording(); }},
+                    {id:'btnEMF', fn:()=>FeatureEngine.toggle('btnEMF','emf',"EMF ACTIF","EMF OFF")},
+                    {id:'btnTemp', fn:()=>FeatureEngine.toggle('btnTemp','temp',"TEMP ACTIF","TEMP OFF")}
                 ];
+                map.forEach(b=>document.getElementById(b.id).addEventListener('click',b.fn));
 
-                buttons.forEach(b => {
-                    const el = document.getElementById(b.id);
-                    if (el) el.addEventListener('click', b.fn);
-                });
+                // Démarrage auto
+                setTimeout(()=>{ if(FeatureEngine.vad) RecognitionEngine.start(); },900);
+                setTimeout(()=>{ VisualEngine.spawnParticles(12); },1500);
+
+                // Simulation événements toutes les 2.4s
+                setInterval(()=>{ if(FeatureEngine.power && AudioEngine.isInit){
+                    const rms = AudioEngine.getRMS();
+                    if(rms>0.18 && Math.random()<0.22) this.triggerVAD();
+                    if(FeatureEngine.ghost && Math.random()<0.07) this.triggerGhost();
+                }},2400);
+            },
+            log(m){
+                const t=document.getElementById('terminal');
+                const d=document.createElement('div'); d.className='log-line';
+                d.textContent=`[${new Date().toLocaleTimeString('fr-FR')}] ${m}`;
+                t.appendChild(d);
+                if(t.children.length>22) t.removeChild(t.firstChild);
+                t.scrollTop=t.scrollHeight;
+            },
+            triggerVAD(){
+                App.log("🎤 VAD MAX DÉCLENCHÉ");
+                SpeechEngine.speak("Activité vocale forte détectée");
+                VisualEngine.spawnParticles(8);
+            },
+            triggerGhost(){
+                const msgs = ["ENTITÉ TRÈS PROCHE","VOIX EVP CAPTÉE","ALERTE PARANORMALE MAX","PRÉSENCE CONFIRMÉE"];
+                const msg = msgs[Math.floor(Math.random()*msgs.length)];
+                const alertEl = document.getElementById('detectionAlert');
+                alertEl.textContent = msg; alertEl.style.display='block';
+                App.log(`👻 ${msg}`); SpeechEngine.speak(msg,0.85,1.15);
+                VisualEngine.spawnParticles(35);
+                RecorderEngine.startRecording();
+                setTimeout(()=>{ RecorderEngine.stopRecording(); alertEl.style.display='none'; },6200);
+            },
+            playReverb(audio){
+                if(!AudioEngine.ctx) return;
+                const source = AudioEngine.ctx.createMediaElementSource(audio);
+                const delay = AudioEngine.ctx.createDelay(0.6);
+                delay.delayTime.value = 0.42;
+                const gain = AudioEngine.ctx.createGain(); gain.gain.value = 0.35;
+                source.connect(delay); delay.connect(gain); gain.connect(AudioEngine.ctx.destination);
+                audio.play();
             }
         };
 
-        // Lancement
         window.onload = () => App.init();
     </script>
 </body>
