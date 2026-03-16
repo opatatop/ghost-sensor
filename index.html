@@ -3,550 +3,517 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>J.A.R.V.I.S. AUDIO-ANALYTICS v12.0</title>
+    <title>JARVIS OCULAR SYSTEM - ENTITY SCANNER</title>
     <style>
         :root {
-            --primary: #00ffcc; /* Cyan Tech */
-            --secondary: #0088ff; /* Bleu Profond */
-            --alert: #ff3366;
-            --bg: #020204;
-            --glass: rgba(0, 20, 20, 0.85);
-            --font: 'Segoe UI', 'Roboto', 'Helvetica', monospace;
+            --bg: #050505;
+            --eye-blue: #00f2ff;
+            --eye-orange: #ff9d00;
+            --eye-red: #ff003c;
+            --demon-purple: #bc13fe;
+            --text: #e0f7fa;
+            --panel: rgba(10, 15, 20, 0.95);
         }
 
+        * { box-sizing: border-box; user-select: none; font-family: 'Courier New', monospace; }
+        
         body {
-            margin: 0; background: var(--bg); color: #fff;
-            font-family: var(--font); height: 100vh;
-            overflow: hidden; display: flex; flex-direction: column;
+            margin: 0; background: var(--bg); color: var(--text);
+            height: 100vh; overflow: hidden; display: flex; flex-direction: column;
         }
 
-        /* Background Animé */
-        .bg-grid {
-            position: absolute; width: 200vw; height: 200vh;
-            background-image: linear-gradient(var(--bg) 1px, transparent 1px),
-            linear-gradient(90deg, var(--bg) 1px, transparent 1px);
-            background-size: 40px 40px;
-            background-position: center center;
-            transform: perspective(500px) rotateX(60deg) translateY(-100px) translateZ(-200px);
-            opacity: 0.2; z-index: 0; pointer-events: none;
-            animation: gridMove 20s linear infinite;
-        }
-        @keyframes gridMove { 0% { transform: perspective(500px) rotateX(60deg) translateY(0) translateZ(-200px); } 100% { transform: perspective(500px) rotateX(60deg) translateY(40px) translateZ(-200px); } }
-
-        /* Interface Principale */
-        #interface {
-            position: relative; z-index: 10;
-            flex: 1; display: flex; flex-direction: column;
-            padding: 20px; pointer-events: none; /* Laisse passer les clics si besoin */
+        /* --- CONTENEUR PRINCIPAL (L'ŒIL) --- */
+        #eye-container {
+            flex: 1; position: relative; display: flex; justify-content: center; align-items: center;
+            background: radial-gradient(circle, #111 0%, #000 100%);
+            overflow: hidden;
         }
 
-        header {
-            display: flex; justify-content: space-between; align-items: flex-start;
-            border-bottom: 1px solid var(--primary); padding-bottom: 10px; margin-bottom: 20px;
-            pointer-events: auto;
+        /* Effet Vignette (Vision humaine) */
+        #vignette {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle, transparent 40%, #000 95%);
+            pointer-events: none; z-index: 10;
         }
-        h1 { margin: 0; font-size: 1.5rem; text-transform: uppercase; letter-spacing: 3px; color: var(--primary); text-shadow: 0 0 10px var(--primary); }
-        .status-badge { font-size: 0.7rem; background: var(--primary); color: #000; padding: 4px 8px; font-weight: bold; border-radius: 2px; }
 
-        /* Zone Visuelle Centrale */
-        .visualizer-container {
-            flex: 1; display: flex; justify-content: center; align-items: center; position: relative;
-            flex-direction: column;
+        /* Scanlines rétiniens */
+        #scanlines {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 4px, 6px 100%;
+            pointer-events: none; z-index: 11; opacity: 0.6;
+        }
+
+        canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 5; }
+
+        /* --- TEXTES & HUD --- */
+        .hud-layer { position: absolute; z-index: 20; width: 100%; pointer-events: none; text-align: center; }
+        
+        #center-readout {
+            top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 300px; text-shadow: 0 0 10px #000;
+        }
+
+        #main-status {
+            font-size: 1.8rem; font-weight: bold; letter-spacing: 2px;
+            margin-bottom: 10px; transition: color 0.3s;
         }
         
-        #waveCanvas {
-            width: 100%; height: 200px; border-bottom: 1px solid #333; border-top: 1px solid #333;
-            background: rgba(0,0,0,0.5); box-shadow: 0 0 20px rgba(0,255,204,0.1);
+        #sub-readout {
+            font-size: 0.9rem; color: #aaa; background: rgba(0,0,0,0.6);
+            padding: 5px 10px; border-radius: 4px; display: inline-block;
         }
 
-        #mainResponse {
-            margin-top: 20px; text-align: center;
-            font-size: 1.4rem; font-weight: 300; letter-spacing: 1px;
-            color: #fff; min-height: 3.5rem; text-shadow: 0 0 5px rgba(255,255,255,0.5);
-            transition: color 0.3s;
+        /* Indicateurs autour de l'œil */
+        .reticle {
+            position: absolute; border: 1px solid rgba(255,255,255,0.2); border-radius: 50%;
+            pointer-events: none; z-index: 6;
         }
-        .response-ghost { color: var(--alert) !important; text-shadow: 0 0 15px var(--alert) !important; }
-        .response-jarvis { color: var(--primary) !important; text-shadow: 0 0 15px var(--primary) !important; }
-        .response-action { color: #ffff00 !important; text-shadow: 0 0 15px #ffff00 !important; }
+        #reticle-outer { width: 60vh; height: 60vh; border-color: var(--eye-blue); border-style: dashed; animation: spin 60s linear infinite; }
+        #reticle-inner { width: 40vh; height: 40vh; border-color: var(--eye-blue); opacity: 0.5; }
 
-        /* Panneau de Contrôle Bas */
-        #controls {
-            background: var(--glass); backdrop-filter: blur(10px);
-            border-top: 1px solid #333; padding: 15px; display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: 10px;
-            pointer-events: auto;
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        /* --- PANNEAU DE CONTRÔLE (Bas) --- */
+        #control-panel {
+            height: 160px; background: var(--panel); border-top: 2px solid #333;
+            z-index: 30; padding: 15px; display: grid; grid-template-columns: 1fr 2fr 1fr; gap: 15px;
         }
+
+        .panel-section { border-right: 1px solid #333; padding-right: 10px; display: flex; flex-direction: column; justify-content: space-around; }
+        .panel-section:last-child { border: none; }
+
+        h3 { margin: 0 0 5px 0; font-size: 0.7rem; color: #666; text-transform: uppercase; }
 
         .btn {
-            background: rgba(255,255,255,0.05); border: 1px solid #444; color: #aaa;
-            padding: 12px; font-family: inherit; text-transform: uppercase; font-size: 0.7rem;
-            cursor: pointer; transition: all 0.2s; border-radius: 4px;
+            background: #111; border: 1px solid #444; color: #888;
+            padding: 8px; margin-bottom: 5px; cursor: pointer; font-size: 0.7rem;
+            text-transform: uppercase; transition: 0.2s; border-radius: 2px;
         }
-        .btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
-        .btn.active { border-color: var(--primary); color: var(--primary); box-shadow: 0 0 10px rgba(0,255,204,0.2); background: rgba(0,255,204,0.05); }
-        .btn.danger.active { border-color: var(--alert); color: var(--alert); box-shadow: 0 0 10px rgba(255,50,100,0.2); }
+        .btn:hover { background: #222; color: #fff; }
+        .btn.active { border-color: var(--eye-blue); color: var(--eye-blue); box-shadow: 0 0 10px rgba(0, 242, 255, 0.2); }
+        .btn.danger.active { border-color: var(--eye-red); color: var(--eye-red); box-shadow: 0 0 10px rgba(255, 0, 60, 0.3); }
 
-        /* Indicateurs Techniques */
-        .tech-hud {
-            position: absolute; top: 80px; right: 20px; width: 180px;
-            font-family: monospace; font-size: 0.7rem; color: var(--secondary);
-            text-align: right; line-height: 1.6; pointer-events: none;
+        .data-row { display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 4px; color: var(--eye-blue); }
+        .bar-bg { width: 100px; height: 6px; background: #222; position: relative; top: 6px; }
+        .bar-fill { height: 100%; background: var(--eye-blue); width: 0%; transition: width 0.1s; }
+
+        /* Mobile */
+        @media (max-width: 768px) {
+            #control-panel { grid-template-columns: 1fr; height: auto; overflow-y: auto; }
+            .panel-section { border-right: none; border-bottom: 1px solid #333; padding-bottom: 10px; }
+            #main-status { font-size: 1.2rem; }
         }
-        .bar-container { width: 100%; height: 4px; background: #222; margin-bottom: 5px; display: inline-block; }
-        .bar-fill { height: 100%; background: var(--secondary); width: 0%; transition: width 0.1s; }
-
-        /* Console Log */
-        #console {
-            height: 80px; overflow-y: auto; font-family: monospace; font-size: 0.7rem;
-            color: #666; padding: 10px; background: #000; border-top: 1px solid #222;
-            pointer-events: auto; display: flex; flex-direction: column-reverse;
-        }
-        .log-line { margin-bottom: 2px; border-left: 2px solid #333; padding-left: 5px; }
-        .log-sys { border-color: var(--primary); color: var(--primary); }
-        .log-audio { border-color: #ffff00; color: #ffff00; }
-        .log-ghost { border-color: var(--alert); color: var(--alert); }
-
-        /* Animation activée */
-        .pulse { animation: pulseAnim 1s infinite; }
-        @keyframes pulseAnim { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
     </style>
 </head>
 <body>
 
-    <div class="bg-grid"></div>
+<div id="eye-container">
+    <canvas id="mainCanvas"></canvas>
+    <div id="vignette"></div>
+    <div id="scanlines"></div>
+    
+    <div id="reticle-outer" class="reticle"></div>
+    <div id="reticle-inner" class="reticle"></div>
 
-    <div id="interface">
-        <header>
-            <div>
-                <h1>J.A.R.V.I.S. <span style="font-size:0.6em; color:#fff;">DEEP LISTEN</span></h1>
-                <div style="font-size:0.7rem; color:#666;">ANALYSE SPECTRALE & IA CONTEXTELLE</div>
-            </div>
-            <div class="status-badge" id="sysStatus">EN ATTENTE MICRO</div>
-        </header>
+    <div class="hud-layer" id="center-readout">
+        <div id="main-status">INITIALISATION</div>
+        <div id="sub-readout">SYSTÈME OCULAIRE HORS LIGNE</div>
+    </div>
+</div>
 
-        <div class="tech-hud">
-            <div>GAIN INPUT: <span id="valVol">0</span>%</div>
-            <div class="bar-container"><div id="barVol" class="bar-fill"></div></div>
-            
-            <div>FRÉQUENCE PIC: <span id="valFreq">0</span> Hz</div>
-            <div class="bar-container"><div id="barFreq" class="bar-fill" style="background:#ff00ff"></div></div>
+<div id="control-panel">
+    <!-- SECTION 1: ÉTAT -->
+    <div class="panel-section">
+        <h3>Diagnostic Biologique</h3>
+        <div class="data-row"><span>NIVEAU MENACE</span> <span id="threatVal">0%</span></div>
+        <div class="bar-bg"><div id="threatBar" class="bar-fill" style="background:var(--eye-red)"></div></div>
+        
+        <div class="data-row"><span>ACTIVITÉ NEURALE</span> <span id="activityVal">0%</span></div>
+        <div class="bar-bg"><div id="activityBar" class="bar-fill"></div></div>
 
-            <>DÉTECTION BRUIT: <span id="valType">SILENCE</span></div>
-            <div id="debugInfo" style="color:#444; font-size:0.6rem; margin-top:5px;">Z-Crossing: 0</div>
+        <button id="btnPower" class="btn active" onclick="togglePower()">⚡ ALIMENTER</button>
+    </div>
+
+    <!-- SECTION 2: CONTRÔLES -->
+    <div class="panel-section">
+        <h3>Protocoles Surnaturels</h3>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px;">
+            <button id="btnGhost" class="btn active" onclick="toggleMode('ghost')">👻 ESPRITS</button>
+            <button id="btnDemon" class="btn danger" onclick="toggleMode('demon')">😈 DÉMONS</button>
+            <button id="btnHumor" class="btn active" onclick="toggleMode('humor')">🗣️ HUMOUR</button>
+            <button id="btnAuto" class="btn active" onclick="toggleMode('auto')">👁️ SCAN AUTO</button>
         </div>
-
-        <div class="visualizer-container">
-            <canvas id="waveCanvas"></canvas>
-            <div id="mainResponse">Initialisation des capteurs bio-acoustiques...</div>
+        <div style="margin-top:10px; display:flex; gap:5px;">
+             <button class="btn" style="flex:1" onclick="simulate('COUGH')">TEST TOUX</button>
+             <button class="btn" style="flex:1" onclick="simulate('SPIRIT')">TEST ESPRIT</button>
         </div>
     </div>
 
-    <div id="controls">
-        <button class="btn" id="btnStart" onclick="System.init()">▶ DÉMARRER</button>
-        <button class="btn active" id="btnEar" onclick="System.toggleModule('ear')">👂 OREILLE ULTIME</button>
-        <button class="btn active" id="btnGhost" onclick="System.toggleModule('ghost')">👻 MODE GHOST</button>
-        <button class="btn" id="btnSnark" onclick="System.toggleModule('snark')">💬 HUMOUR ACTIF</button>
-        <button class="btn" onclick="Brain.triggerTest('COUGH')">🧪 TEST TOUX</button>
-        <button class="btn" onclick="Brain.triggerTest('CLAP')">🧪 TEST CLAP</button>
+    <!-- SECTION 3: LOGS -->
+    <div class="panel-section">
+        <h3>Journal d'Activité</h3>
+        <div id="log-container" style="font-size:0.65rem; color:#888; height: 80px; overflow-y:auto; display:flex; flex-direction:column-reverse;">
+            <div>> En attente...</div>
+        </div>
     </div>
+</div>
 
-    <div id="console"></div>
+<script>
+    // --- CONFIGURATION ---
+    const UI = {
+        canvas: document.getElementById('mainCanvas'),
+        ctx: document.getElementById('mainCanvas').getContext('2d'),
+        status: document.getElementById('main-status'),
+        sub: document.getElementById('sub-readout'),
+        threatBar: document.getElementById('threatBar'),
+        threatVal: document.getElementById('threatVal'),
+        actBar: document.getElementById('activityBar'),
+        actVal: document.getElementById('activityVal'),
+        logs: document.getElementById('log-container'),
+        reticleOuter: document.getElementById('reticle-outer'),
+        reticleInner: document.getElementById('reticle-inner')
+    };
 
-    <script>
-        // --- CONFIGURATION & UTILITAIRES ---
-        const $ = id => document.getElementById(id);
-        const log = (msg, type='sys') => {
-            const div = document.createElement('div');
-            div.className = `log-line log-${type}`;
-            div.innerText = `> ${msg}`;
-            $('console').prepend(div);
-            if($('console').children.length > 20) $('console').lastChild.remove();
-        };
+    const State = {
+        active: false,
+        ghost: true,
+        demon: false,
+        humor: true,
+        autoScan: true,
+        lastEvent: 0,
+        threatLevel: 0
+    };
 
-        const Speech = {
-            synth: window.speechSynthesis,
-            voice: null,
-            init() {
-                const setVoice = () => {
-                    const voices = this.synth.getVoices();
-                    // Cherche une voix française précise (Google ou Microsoft)
-                    this.voice = voices.find(v => v.lang === 'fr-FR' && v.name.includes('Google')) || 
-                                 voices.find(v => v.lang === 'fr-FR') || voices[0];
-                };
-                setVoice();
-                this.synth.onvoiceschanged = setVoice;
-            },
-            say(text, pitch = 1, rate = 1) {
-                if (this.synth.speaking) this.synth.cancel();
-                const u = new SpeechSynthesisUtterance(text);
-                u.lang = 'fr-FR';
-                u.pitch = pitch;
-                u.rate = rate;
-                if (this.voice) u.voice = this.voice;
-                this.synth.say = () => this.synth.speak(u);
-                this.synth.say();
+    let AudioSys = { ctx: null, analyser: null, source: null, buffer: null, timeData: null, freqData: null };
+
+    // --- INITIALISATION ---
+    function resize() {
+        UI.canvas.width = UI.canvas.parentElement.clientWidth;
+        UI.canvas.height = UI.canvas.parentElement.clientHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    async function togglePower() {
+        State.active = !State.active;
+        const btn = document.getElementById('btnPower');
+        
+        if (State.active) {
+            btn.classList.add('active');
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false } });
+                AudioSys.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                AudioSys.analyser = AudioSys.ctx.createAnalyser();
+                AudioSys.analyser.fftSize = 2048;
+                AudioSys.source = AudioSys.ctx.createMediaStreamSource(stream);
+                AudioSys.source.connect(AudioSys.analyser);
                 
-                UI.updateText(text, 'jarvis');
-            },
-            sayGhost(text) {
-                if (this.synth.speaking) this.synth.cancel();
-                const u = new SpeechSynthesisUtterance(text);
-                u.lang = 'fr-FR';
-                u.pitch = 0.4; // Voix grave
-                u.rate = 0.8;  // Lente
-                if (this.voice) u.voice = this.voice;
-                this.synth.speak(u);
-                UI.updateText(text, 'ghost');
-            }
-        };
+                AudioSys.freqData = new Uint8Array(AudioSys.analyser.frequencyBinCount);
+                AudioSys.timeData = new Uint8Array(AudioSys.analyser.fftSize);
+                
+                UI.status.innerText = "OCULAIRE ACTIF";
+                UI.status.style.color = "var(--eye-blue)";
+                UI.sub.innerText = "ANALYSE ENVIRONNEMENTALE EN COURS...";
+                
+                log("Système visuel connecté.", "sys");
+                speak("L'œil est ouvert. Je vois tout.");
+                
+                animate();
+                detectLoop();
+                initVoice();
 
-        // --- MOTEUR AUDIO AVANCÉ (Le "Cerveau Sonore") ---
-        const AudioEngine = {
-            ctx: null,
-            analyser: null,
-            mic: null,
-            buffer: null,
-            isReady: false,
-            dataArray: null,
+            } catch (e) {
+                log("Erreur Micro: " + e.message, "err");
+                State.active = false;
+                btn.classList.remove('active');
+            }
+        } else {
+            btn.classList.remove('active');
+            UI.status.innerText = "STANDBY";
+            UI.status.style.color = "#555";
+            UI.sub.innerText = "SYSTÈME ENDORMI";
+            log("Système mis en veille.", "sys");
+        }
+    }
+
+    // --- MOTEUR GRAPHIQUE (L'ŒIL) ---
+    let eyeAngle = 0;
+    let pupilSize = 0;
+    let eyeColor = { r:0, g:242, b:255 }; // Default Blue
+    
+    function animate() {
+        if (!State.active) return;
+        
+        const w = UI.canvas.width;
+        const h = UI.canvas.height;
+        const cx = w / 2;
+        const cy = h / 2;
+        const ctx = UI.ctx;
+
+        ctx.clearRect(0, 0, w, h);
+
+        // Analyse Audio pour la taille de la pupille
+        let avgVol = 0;
+        if(AudioSys.analyser) {
+            AudioSys.analyser.getByteFrequencyData(AudioSys.freqData);
+            for(let i=0; i<100; i++) avgVol += AudioSys.freqData[i];
+            avgVol /= 100;
+        }
+        
+        // Lissage de la pupille
+        const targetPupil = 20 + (avgVol / 255) * 60; // 20% à 80% de taille
+        pupilSize += (targetPupil - pupilSize) * 0.1;
+
+        // Couleur dynamique selon menace
+        const threatRatio = State.threatLevel / 100;
+        if (State.demon || threatRatio > 0.6) {
+            // Transition vers Rouge/Violet
+            eyeColor.r = 255; eyeColor.g = 0; eyeColor.b = 60; 
+            UI.reticleOuter.style.borderColor = "var(--eye-red)";
+            UI.reticleInner.style.borderColor = "var(--demon-purple)";
+        } else if (threatRatio > 0.3) {
+            eyeColor.r = 255; eyeColor.g = 157; eyeColor.b = 0; // Orange
+            UI.reticleOuter.style.borderColor = "var(--eye-orange)";
+            UI.reticleInner.style.borderColor = "var(--eye-orange)";
+        } else {
+            eyeColor.r = 0; eyeColor.g = 242; eyeColor.b = 255; // Bleu
+            UI.reticleOuter.style.borderColor = "var(--eye-blue)";
+            UI.reticleInner.style.borderColor = "var(--eye-blue)";
+        }
+
+        const colorStr = `rgb(${eyeColor.r},${eyeColor.g},${eyeColor.b})`;
+
+        // DESSIN DE L'ŒIL
+        ctx.save();
+        ctx.translate(cx, cy);
+
+        // Sclère (Blanc de l'œil - assombri)
+        ctx.beginPath();
+        ctx.arc(0, 0, 150, 0, Math.PI * 2);
+        ctx.fillStyle = "#1a1a1a";
+        ctx.fill();
+        ctx.strokeStyle = "#333";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Iris (Partie colorée avec texture)
+        eyeAngle += 0.005 + (avgVol/10000);
+        ctx.save();
+        ctx.rotate(eyeAngle);
+        
+        // Cercles de l'iris
+        for(let i=0; i<5; i++) {
+            ctx.beginPath();
+            ctx.arc(0, 0, 100 - (i*10), 0, Math.PI * 2);
+            ctx.strokeStyle = `rgba(${eyeColor.r},${eyeColor.g},${eyeColor.b}, ${0.3 + (i*0.1)})`;
+            ctx.lineWidth = 2;
+            ctx.setLineDash([10 + i*5, 5]);
+            ctx.stroke();
+        }
+        ctx.restore();
+
+        // Pupille (Noir, change de taille)
+        ctx.beginPath();
+        ctx.arc(0, 0, pupilSize, 0, Math.PI * 2);
+        ctx.fillStyle = "#000";
+        ctx.shadowBlur = 20;
+        ctx.shadowColor = colorStr;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        // Reflet (Lumière dans l'œil)
+        ctx.beginPath();
+        ctx.arc(-pupilSize/3, -pupilSize/3, pupilSize/4, 0, Math.PI*2);
+        ctx.fillStyle = "rgba(255,255,255,0.8)";
+        ctx.fill();
+
+        ctx.restore();
+
+        // ECG / Waveform en bas de l'œil
+        drawECG(ctx, w, h, colorStr);
+
+        requestAnimationFrame(animate);
+    }
+
+    function drawECG(ctx, w, h, color) {
+        if(!AudioSys.analyser) return;
+        AudioSys.analyser.getByteTimeDomainData(AudioSys.timeData);
+        
+        ctx.beginPath();
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2;
+        
+        const sliceWidth = w / AudioSys.timeData.length;
+        let x = 0;
+        const yBase = h - 50;
+
+        for(let i = 0; i < AudioSys.timeData.length; i++) {
+            const v = AudioSys.timeData[i] / 128.0;
+            const y = yBase + (v * 30); // Amplitude réduite
+            if(i===0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+            x += sliceWidth;
+        }
+        ctx.stroke();
+    }
+
+    // --- CERVEAU DE DÉTECTION (Fantômes, Démons, Sons) ---
+    function detectLoop() {
+        if(!State.active) return;
+
+        AudioSys.analyser.getByteTimeDomainData(AudioSys.timeData);
+        
+        // Calcul Volume (RMS)
+        let sum = 0;
+        for(let i=0; i<AudioSys.timeData.length; i++) {
+            const x = (AudioSys.timeData[i]/128.0)-1;
+            sum += x*x;
+        }
+        const rms = Math.sqrt(sum / AudioSys.timeData.length);
+        const volume = rms * 100;
+
+        // Calcul ZCR (Pour le bruit / toux)
+        let zcr = 0;
+        for(let i=1; i<AudioSys.timeData.length; i++) {
+            if((AudioSys.timeData[i]>=128 && AudioSys.timeData[i-1]<128) || 
+               (AudioSys.timeData[i]<128 && AudioSys.timeData[i-1]>=128)) zcr++;
+        }
+
+        // UI Updates
+        UI.actBar.style.width = Math.min(100, volume * 2) + "%";
+        UI.actVal.innerText = Math.round(volume) + "%";
+
+        // Gestion de la menace (décroissance lente)
+        if(State.threatLevel > 0) State.threatLevel -= 0.1;
+        UI.threatBar.style.width = State.threatLevel + "%";
+        UI.threatVal.innerText = Math.round(State.threatLevel) + "%";
+
+        const now = Date.now();
+
+        // 1. DÉTECTION TOUX / RACLEMENT (ZCR élevé)
+        if (volume > 15 && zcr > 200 && (now - State.lastEvent > 2000)) {
+            handleDetection("TOUX", "Irritation biologique détectée.");
+            if(State.humor) speak("Tiens, tu t'es raclé la gorge. Veux-tu un Ricolà ?");
+            State.lastEvent = now;
+        }
+
+        // 2. DÉTECTION CLAP / BRUIT SEC
+        if (volume > 50 && (now - State.lastEvent > 1000)) {
+            handleDetection("CHOC SONORE", "Impact physique analysé.");
+            speak("J'ai entendu ce bruit.");
+            State.lastEvent = now;
+        }
+
+        // 3. MODE DÉMON / FANTÔME (Simulations aléatoires si silence)
+        if (State.autoScan && (now - State.lastEvent > 5000)) {
+            // Chance de détection surnaturelle
+            let chance = State.demon ? 0.02 : 0.005; // Plus fréquent si mode démons
             
-            async init() {
-                try {
-                    const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
-                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-                    this.mic = this.ctx.createMediaStreamSource(stream);
-                    this.analyser = this.ctx.createAnalyser();
-                    this.analyser.fftSize = 2048; // Haute résolution
-                    this.analyser.smoothingTimeConstant = 0.85;
-                    
-                    this.mic.connect(this.analyser);
-                    this.bufferLength = this.analyser.frequencyBinCount;
-                    this.dataArray = new Uint8Array(this.bufferLength);
-                    this.timeData = new Uint8Array(this.bufferLength);
-                    
-                    this.isReady = true;
-                    $('sysStatus').textContent = "ANALYSE ACTIVE";
-                    $('sysStatus').style.background = "var(--primary)";
-                    log("Flux audio connecté. FFT Size: 2048.", "sys");
-                    Visuals.start();
-                    Brain.startLoop();
-                    
-                    // Start Speech Recognition
-                    VoiceRec.init();
-                } catch (e) {
-                    log("ERREUR: Accès micro refusé.", "ghost");
-                    $('sysStatus').textContent = "ERREUR MICRO";
-                    $('sysStatus').style.background = "red";
-                }
-            },
+            if (Math.random() < chance) {
+                triggerEntity();
+                State.lastEvent = now;
+            }
+        }
+
+        setTimeout(detectLoop, 50);
+    }
+
+    function handleDetection(type, subtext) {
+        UI.status.innerText = `DÉTECTION : ${type}`;
+        UI.status.style.color = State.demon ? "var(--eye-red)" : "var(--eye-blue)";
+        UI.sub.innerText = subtext;
+        log(`Détecté: ${type}`);
+        
+        // Flash visuel
+        UI.canvas.style.filter = "brightness(1.5)";
+        setTimeout(() => UI.canvas.style.filter = "brightness(1)", 100);
+    }
+
+    function triggerEntity() {
+        const isDemon = State.demon || Math.random() > 0.7;
+        State.threatLevel = isDemon ? 100 : 60;
+        
+        let entityMsg = isDemon 
+            ? ["PRÉSENCE DÉMONIAQUE", "ÉNERGIE NOIRE", "ENTITÉ MALVEILLANTE"][Math.floor(Math.random()*3)]
+            : ["ESPRIT DÉTECTÉ", "ÂME EN DETRESSE", "PHÉNOMÈNE PARANORMAL"][Math.floor(Math.random()*3)];
             
-            getAnalysis() {
-                if (!this.isReady) return null;
-                this.analyser.getByteFrequencyData(this.dataArray);
-                this.analyser.getByteTimeDomainData(this.timeData);
+        let speakMsg = isDemon
+            ? ["Je sens une présence maléfique... ne bougez pas.", "Un démon nous observe.", "L'obscurité grandit."][Math.floor(Math.random()*3)]
+            : ["Une âme erre près de nous.", "Je vois un esprit.", "Une entité cherche à communiquer."][Math.floor(Math.random()*3)];
+
+        UI.status.innerText = "ALERTE : " + entityMsg;
+        UI.status.style.color = isDemon ? "var(--eye-red)" : "var(--demon-purple)";
+        UI.sub.innerText = "COORDONNÉES SPIRITUELLES ACQUISES";
+        
+        log("ALERT: " + entityMsg, "err");
+        
+        // Voix modifiée pour démon
+        if(isDemon) speakDemon(speakMsg);
+        else speak(speakMsg);
+    }
+
+    // --- SYNTHÈSE VOCALE ---
+    function speak(text) {
+        window.speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(text);
+        u.lang = 'fr-FR'; u.rate = 1.0; u.pitch = 1.0;
+        window.speechSynthesis.speak(u);
+    }
+
+    function speakDemon(text) {
+        window.speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(text);
+        u.lang = 'fr-FR'; u.rate = 0.6; u.pitch = 0.3; // Voix grave et lente
+        window.speechSynthesis.speak(u);
+    }
+
+    // --- RECONNAISSANCE VOCALE (Mots) ---
+    function initVoice() {
+        const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if(!SR) return;
+        const rec = new SR();
+        rec.continuous = true; rec.interimResults = false; rec.lang = 'fr-FR';
+        
+        rec.onresult = (e) => {
+            const txt = e.results[e.results.length-1][0].transcript.trim().toLowerCase();
+            if(txt) {
+                UI.sub.innerText = `VOIX HUMAINE : "${txt.toUpperCase()}"`;
+                log("Voix: " + txt);
                 
-                // Calculs mathématiques pour l'analyse de forme d'onde
-                let sum = 0;
-                let zcr = 0; // Zero Crossing Rate (détecte le bruit vs la voix)
-                let lastZero = 0;
-                
-                for (let i = 0; i < this.bufferLength; i++) {
-                    const x = (this.timeData[i] / 128.0) - 1;
-                    sum += x * x;
-                    if ((x > 0 && lastZero < 0) || (x < 0 && lastZero > 0)) zcr++;
-                    lastZero = x;
-                }
-                
-                const rms = Math.sqrt(sum / this.bufferLength); // Volume RMS
-                const volume = Math.min(100, rms * 100 * 3); // Amplification pour l'UI
-                
-                // Fréquence dominante
-                let maxVal = -Infinity;
-                let maxIndex = -1;
-                for (let i = 0; i < this.bufferLength; i++) {
-                    if (this.dataArray[i] > maxVal) {
-                        maxVal = this.dataArray[i];
-                        maxIndex = i;
-                    }
-                }
-                const freq = maxIndex * (this.ctx.sampleRate / 2) / this.bufferLength;
-                
-                // Analyse spectrale (Basses, Médiums, Aigus)
-                const bass = this.getAvgFreq(0, 10);
-                const mid = this.getAvgFreq(10, 100);
-                const high = this.getAvgFreq(100, 400);
-                const veryHigh = this.getAvgFreq(400, 800);
-
-                return { volume, freq, zcr, bass, mid, high, veryHigh, raw: this.dataArray };
-            },
-
-            getAvgFreq(start, end) {
-                let sum = 0;
-                for(let i=start; i<end; i++) sum += this.dataArray[i];
-                return sum / (end - start);
-            }
-        };
-
-        // --- LE CERVEAU DE JARVIS (Logique de détection) ---
-        const Brain = {
-            lastEventTime: 0,
-            silenceStart: 0,
-            state: {
-                snark: true,
-                ghost: true
-            },
-
-            startLoop() {
-                const loop = () => {
-                    if (!AudioEngine.isReady) return;
-                    const data = AudioEngine.getAnalysis();
-                    const now = Date.now();
-
-                    // Mise à jour UI Rapide
-                    UI.updateHUD(data);
-                    Visuals.draw(data);
-
-                    // --- LOGIQUE DE DÉTECTION "PROFONDE" ---
-                    
-                    // 1. Détection Silence / Ennui
-                    if (data.volume < 5) {
-                        if (this.silenceStart === 0) this.silenceStart = now;
-                        if (now - this.silenceStart > 10000 && now - this.lastEventTime > 15000 && this.state.snark) {
-                            Speech.say("Dites quelque chose. Le silence m'ennuie.", 1.1, 1.1);
-                            this.lastEventTime = now;
-                            this.silenceStart = 0;
-                        }
-                    } else {
-                        this.silenceStart = 0;
-                    }
-
-                    // 2. Détection Transiente (Claquement de mains / Coup sec)
-                    // Caractéristique: Montée très brutale du volume + High freq
-                    if (data.volume > 45 && data.bass > 100 && now - this.lastEventTime > 1000) {
-                        // On vérifie si c'est vraiment un "pic" soudain en comparant avec le frame précédent serait idéal, 
-                        // mais ici on utilise la signature spectrale (beaucoup de basses/médiums soudains)
-                        this.trigger('CLAP');
-                        this.lastEventTime = now;
-                    }
-
-                    // 3. Détection "Toux / Raclement de gorge"
-                    // Caractéristique: Volume moyen-élevé + Très fort ZCR (Zero Crossing Rate = bruit blanc/chaotique) + High Freq energy
-                    // Une voix chantée a un ZCR bas. Une toux a un ZCR très haut.
-                    if (data.volume > 20 && data.zcr > 150 && data.veryHigh > 30 && now - this.lastEventTime > 2000) {
-                        this.trigger('COUGH');
-                        this.lastEventTime = now;
-                    }
-
-                    // 4. Détection Sifflement
-                    if (data.veryHigh > 80 && data.mid < 40 && data.volume > 15 && now - this.lastEventTime > 3000) {
-                        Speech.say("J'entends ce sifflement. C'est vous ou les esprits ?", 1.0, 1.0);
-                        this.lastEventTime = now;
-                    }
-
-                    requestAnimationFrame(loop);
-                };
-                loop();
-            },
-
-            trigger(type) {
-                log(`SIGNAL DÉTECTÉ: ${type} (ZCR: ${AudioEngine.getAnalysis().zcr})`, "audio");
-                
-                if (type === 'CLAP') {
-                    const responses = [
-                        "Vous avez frappé dans vos mains. Applaudissements ou appel de détresse ?",
-                        "Clap détecté. Je suis là, pas besoin de crier.",
-                        "Signal transitoire reçu. Vous avez mesuré mon temps de réaction ?"
-                    ];
-                    const r = responses[Math.floor(Math.random() * responses.length)];
-                    Speech.say(r, 1.0, 1.1);
-                    UI.updateText("CLAP DÉTECTÉ", "action");
-                } 
-                else if (type === 'COUGH') {
-                    // La fonctionnalité demandée spécifiquement
-                    if (this.state.snark) {
-                        const r = Math.random();
-                        if (r > 0.5) {
-                            Speech.say("Tiens, tu t'es raclé la gorge. Veux-tu un Ricolà ?", 1.05, 1.05);
-                        } else {
-                            Speech.say("Cette toux semble inquiétante. Voulez-vous que j'appelle les urgences ou un exorciste ?", 0.9, 1.0);
-                        }
-                    } else {
-                         Speech.say("Toux détectée.", 1.0, 1.0);
-                    }
-                    UI.updateText("TOUX / GORGE IRRITÉE", "action");
-                    
-                    // Si mode Ghost actif, petite chance de réponse fantôme
-                    if (this.state.ghost && Math.random() > 0.7) {
-                        setTimeout(() => {
-                            const ghosts = ["...c'est froid ici...", "arrête de faire ce bruit...", "je suis aussi malade..."];
-                            Speech.sayGhost(ghosts[Math.floor(Math.random() * ghosts.length)]);
-                        }, 2000);
-                    }
-                }
-            },
-
-            triggerTest(type) {
-                this.trigger(type);
-            }
-        };
-
-        // --- RECONNAISSANCE VOCALE (Mots) ---
-        const VoiceRec = {
-            rec: null,
-            init() {
-                const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-                if (!SR) return log("Reconnaissance vocale non supportée.", "ghost");
-                
-                this.rec = new SR();
-                this.rec.continuous = true;
-                this.rec.interimResults = false; // On veut des résultats finis
-                this.rec.lang = 'fr-FR';
-
-                this.rec.onresult = (e) => {
-                    const txt = e.results[e.results.length - 1][0].transcript.trim().toLowerCase();
-                    log(`PAROLE: "${txt}"`, "audio");
-                    Brain.lastEventTime = Date.now(); // Reset le timer d'ennui
-                    
-                    UI.updateText(`TOI: "${txt.toUpperCase()}"`, "jarvis");
-
-                    // Logique de réponse simple
-                    if (txt.includes("jarvis")) {
-                        Speech.say("Oui, je vous écoute. Analyse en cours.");
-                    } else if (txt.includes("merci")) {
-                        Speech.say("Je suis là pour servir.");
-                    } else if (txt.includes("fantôme") || txt.includes("esprit")) {
-                        if (Brain.state.ghost) {
-                            Speech.say("Les capteurs paranormaux sont actifs. Soyez prudent.");
-                            setTimeout(() => Speech.sayGhost("Je vois ton âme..."), 3000);
-                        } else {
-                            Speech.say("Mode fantôme désactivé. Tout est rationnel.");
-                        }
-                    }
-                };
-
-                this.rec.onerror = (e) => { if(e.error !== 'no-speech') console.error(e); };
-                this.rec.onend = () => { this.rec.start(); }; // Redémarrage auto
-                this.rec.start();
-                log("Reconnaissance vocale activée.", "sys");
-            }
-        };
-
-        // --- VISUELS & UI ---
-        const UI = {
-            updateText(text, type) {
-                const el = $('mainResponse');
-                el.innerText = text;
-                el.className = ''; // Reset classes
-                if (type === 'ghost') el.classList.add('response-ghost');
-                else if (type === 'action') el.classList.add('response-action');
-                else el.classList.add('response-jarvis');
-                
-                // Reset couleur après un moment
-                setTimeout(() => { if(el.innerText === text) el.className = ''; }, 4000);
-            },
-            updateHUD(data) {
-                if(!data) return;
-                $('valVol').innerText = Math.round(data.volume);
-                $('barVol').style.width = Math.min(100, data.volume * 2) + '%';
-                
-                $('valFreq').innerText = Math.round(data.freq);
-                // Fréquence log (20Hz-2000Hz -> 0-100%)
-                let freqPct = Math.min(100, Math.max(0, (Math.log10(data.freq + 1) / Math.log10(2000)) * 100));
-                $('barFreq').style.width = freqPct + '%';
-                
-                $('debugInfo').innerText = `Z-Crossing: ${Math.round(data.zcr)} | Noise: ${Math.round(data.veryHigh)}`;
-
-                let typeTxt = "SILENCE";
-                if (data.volume > 5) typeTxt = "PAROLE/SON";
-                if (data.zcr > 100 && data.volume > 15) typeTxt = "BRUIT/TOUX";
-                if (data.veryHigh > 60 && data.volume < 20) typeTxt = "SIFFLEMENT";
-                
-                $('valType').innerText = typeTxt;
-            }
-        };
-
-        const Visuals = {
-            canvas: $('waveCanvas'),
-            ctx: $('waveCanvas').getContext('2d'),
-            animId: null,
-            start() {
-                this.canvas.width = this.canvas.clientWidth;
-                this.canvas.height = this.canvas.clientHeight;
-            },
-            draw(data) {
-                const w = this.canvas.width;
-                const h = this.canvas.height;
-                const ctx = this.ctx;
-
-                ctx.clearRect(0, 0, w, h);
-                if(!data) return;
-
-                // Dessin spectral (Barres)
-                const barWidth = (w / data.raw.length) * 2.5;
-                let x = 0;
-                
-                for(let i = 0; i < data.raw.length; i++) {
-                    const barHeight = (data.raw[i] / 255) * h;
-                    
-                    // Couleur dynamique basée sur la hauteur
-                    let r = 0, g = 255, b = 204;
-                    if (data.veryHigh > 40 && i > 400) { r = 255; g = 50; b = 50; } // Rouge si bruit aigu
-
-                    ctx.fillStyle = `rgb(${r},${g},${b})`;
-                    ctx.fillRect(x, h - barHeight, barWidth, barHeight);
-                    x += barWidth + 1;
-                }
-
-                // Ligne de forme d'onde
-                ctx.lineWidth = 2;
-                ctx.strokeStyle = '#fff';
-                ctx.beginPath();
-                const sliceWidth = w * 1.0 / AudioEngine.bufferLength;
-                let waveX = 0;
-                
-                // On utilise timeData pour la forme d'onde
-                for(let i = 0; i < AudioEngine.bufferLength; i++) {
-                    const v = AudioEngine.timeData[i] / 128.0;
-                    const y = v * h / 2;
-                    if(i === 0) ctx.moveTo(waveX, y);
-                    else ctx.lineTo(waveX, y);
-                    waveX += sliceWidth;
-                }
-                ctx.stroke();
-            }
-        };
-
-        const System = {
-            modules: { ear: true, ghost: true, snark: true },
-            async init() {
-                if (AudioEngine.isReady) return;
-                Speech.init();
-                $('btnStart').classList.add('active');
-                $('btnStart').innerText = "ACTIF";
-                await AudioEngine.init();
-                Speech.say("Système en ligne. J'écoute vos moindres sons.", 1.0, 1.0);
-            },
-            toggleModule(mod) {
-                this.modules[mod] = !this.modules[mod];
-                if(mod === 'ghost') {
-                    Brain.state.ghost = this.modules[mod];
-                    $(`btn${mod.charAt(0).toUpperCase() + mod.slice(1)}`).classList.toggle('active');
-                    Speech.say(`Mode Paranormal: ${this.modules[mod] ? 'ACTIVÉ' : 'DÉSACTIVÉ'}.`);
-                }
-                if(mod === 'snark') {
-                    Brain.state.snark = this.modules[mod];
-                    $(`btn${mod.charAt(0).toUpperCase() + mod.slice(1)}`).classList.toggle('active');
-                    Speech.say(`Humour IA: ${this.modules[mod] ? 'ACTIVÉ' : 'DÉSACTIVÉ'}.`);
-                }
-                if(mod === 'ear') {
-                    // Pas vraiment désactivable pour la démo, mais on peut simuler
-                    Speech.say("Mes oreilles sont toujours ouvertes. Je ne peux pas m'éteindre.");
+                if(txt.includes('démon') || txt.includes('peur')) {
+                    speak("Ne craignez rien, je vous protège.");
+                } else if(txt.includes('jarvis')) {
+                    speak("Je vous écoute.");
                 }
             }
         };
+        rec.start();
+    }
 
-        // Init au chargement (mais attend le clic pour l'audio)
-        log("JARVIS v12.0 Prêt. Cliquez sur DÉMARRER.", "sys");
+    // --- UTILITAIRES ---
+    function toggleMode(mode) {
+        State[mode] = !State[mode];
+        document.getElementById('btn' + mode.charAt(0).toUpperCase() + mode.slice(1)).classList.toggle('active');
+        speak(`Mode ${mode} ${State[mode] ? 'activé' : 'désactivé'}.`);
+    }
 
-    </script>
+    function simulate(type) {
+        if(type === 'COUGH') {
+            UI.status.innerText = "TEST : TOUX";
+            UI.status.style.color = "var(--eye-orange)";
+            if(State.humor) speak("Simulation : Veux-tu un Ricolà ?");
+        } else if (type === 'SPIRIT') {
+            triggerEntity();
+        }
+    }
+
+    function log(msg, type="sys") {
+        const div = document.createElement('div');
+        div.style.color = type === 'err' ? 'var(--eye-red)' : '#888';
+        div.innerText = `> ${msg}`;
+        UI.logs.prepend(div);
+    }
+</script>
 </body>
 </html>
