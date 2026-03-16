@@ -3,152 +3,533 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>JARVIS ARCHITECT v20.4 - RÉPONSE GARANTIE</title>
+    <title>JARVIS ARCHITECT v20.4 - VARIE & POLYGLOT</title>
     <style>
-        :root { --bg: #020202; --panel: #0a0f12; --primary: #00f3ff; --trans: #ffe600; --ghost: #bc13fe; --demon: #ff003c; --text: #e0f7fa; }
-        * { box-sizing: border-box; user-select: none; }
-        body { margin:0; background:var(--bg); color:var(--text); font-family:'Segoe UI',sans-serif; min-height:100vh; display:flex; flex-direction:column; }
-        header { background:rgba(0,0,0,0.9); padding:12px 20px; display:flex; justify-content:space-between; align-items:center; }
-        .brand { font-size:1.15rem; font-weight:bold; color:var(--primary); letter-spacing:2px; }
-        #main-layout { display:flex; flex:1; flex-wrap:wrap; }
-        aside { background:var(--panel); padding:15px; flex:1; min-width:260px; border-right:1px solid #222; display:flex; flex-direction:column; }
-        aside:last-child { border-right:none; border-left:1px solid #222; }
-        #stage { flex:3; min-height:420px; background:radial-gradient(circle,#0d1418,#000); position:relative; }
-        canvas { position:absolute; top:0; left:0; width:100%; height:100%; }
-        #display-overlay { position:absolute; z-index:10; text-align:center; width:90%; top:50%; left:50%; transform:translate(-50%,-50%); }
-        #main-text { font-size:2.1rem; font-weight:900; text-transform:uppercase; letter-spacing:5px; }
-        #controls { background:var(--panel); border-top:1px solid #333; padding:20px; display:flex; flex-wrap:wrap; gap:15px; }
-        button { background:#111; border:1px solid #444; color:#ccc; padding:13px; font-size:0.85rem; cursor:pointer; border-radius:4px; width:100%; }
-        button:hover { background:#222; color:#fff; }
-        button.active { border-color:var(--primary); color:var(--primary); }
-        .bar-container { height:8px; background:#222; border-radius:4px; overflow:hidden; }
-        .bar-fill { height:100%; transition:width 0.15s; }
-        #logs { flex:1; overflow-y:auto; font-size:0.75rem; }
-        .log { margin:3px 0; padding-left:6px; border-left:2px solid #555; }
+        :root {
+            --bg: #050505; --panel: #0a0f12; --primary: #00f3ff;
+            --trans: #ffe600; --ghost: #bc13fe; --demon: #ff003c;
+            --text: #e0f7fa; --dim: #445566; --font-mono: 'Consolas', 'Courier New', monospace;
+        }
+        * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
+        body { margin: 0; background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; min-height: 100vh; display: flex; flex-direction: column; overflow-y: auto; }
+        
+        /* HEADER */
+        header { background: rgba(0,0,0,0.95); border-bottom: 1px solid #333; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; backdrop-filter: blur(5px); }
+        .brand { font-size: 1.1rem; font-weight: bold; color: var(--primary); letter-spacing: 2px; font-family: var(--font-mono); text-shadow: 0 0 10px rgba(0,243,255,0.5); }
+        .clock { font-family: var(--font-mono); color: #888; font-size: 0.9rem; }
+
+        /* LAYOUT */
+        #main-layout { display: flex; flex-wrap: wrap; flex: 1; gap: 1px; background: #222; }
+        
+        /* PANELS */
+        aside { background: var(--panel); padding: 15px; font-family: var(--font-mono); font-size: 0.75rem; flex: 1; min-width: 250px; display: flex; flex-direction: column; overflow: hidden; }
+        .panel-title { color: #666; text-transform: uppercase; margin-bottom: 10px; border-bottom: 1px solid #333; padding-bottom: 5px; font-weight: bold; letter-spacing: 1px; }
+        
+        /* LOGS */
+        #logs { flex: 1; overflow-y: auto; display: flex; flex-direction: column-reverse; gap: 5px; padding-right:5px; scroll-behavior: smooth; }
+        .log { margin-bottom: 2px; border-left: 2px solid #333; padding-left: 8px; font-size: 0.75rem; line-height: 1.2; animation: fadeIn 0.3s ease; }
+        .log.user { color: #aaa; border-color: #888; font-style: italic; }
+        .log.jarvis { color: #fff; background: rgba(255,255,255,0.05); border-color: var(--primary); }
+        .log.jarvis.ghost { border-color: var(--ghost); color: #e0b0ff; }
+        .log.jarvis.demon { border-color: var(--demon); color: #ffcccc; text-transform: uppercase; font-weight: bold; }
+        
+        /* STAGE */
+        #stage { flex: 3; min-width: 300px; min-height: 400px; background: radial-gradient(circle at center, #111 0%, #000 100%); position: relative; overflow: hidden; display: flex; justify-content: center; align-items: center; perspective: 1000px; }
+        canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.6; }
+        
+        #display-overlay { position: absolute; z-index: 10; text-align: center; pointer-events: none; width: 90%; transition: transform 0.2s; }
+        #main-text { font-size: 2.5rem; font-weight: 900; text-transform: uppercase; letter-spacing: 4px; text-shadow: 0 0 20px rgba(0,0,0,0.8); margin-bottom: 15px; transition: color 0.3s, transform 0.1s; min-height: 60px; }
+        #sub-text { font-size: 1rem; background: rgba(0,0,0,0.8); padding: 8px 20px; border-radius: 30px; border: 1px solid #444; color: #ccc; letter-spacing: 1px; }
+
+        /* BARS & SLIDERS */
+        .bar-container { width: 100%; height: 6px; background: #222; border-radius: 3px; overflow: hidden; margin-bottom: 15px; position: relative; }
+        .bar-fill { height: 100%; width: 0%; transition: width 0.1s linear; }
+        .val-label { position: absolute; right: 0; top: -20px; color: #666; font-size: 0.7rem; }
+        input[type="range"] { width: 100%; height: 4px; background: #333; outline: none; -webkit-appearance: none; border-radius: 2px; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; background: var(--text); border-radius: 50%; cursor: pointer; }
+
+        /* CONTROLS */
+        #controls { background: var(--panel); border-top: 1px solid #333; padding: 20px; display: flex; flex-wrap: wrap; gap: 15px; }
+        .control-group { flex: 1; min-width: 280px; display: flex; flex-direction: column; gap: 8px; }
+        
+        /* BUTTONS */
+        button { background: #111; border: 1px solid #444; color: #888; padding: 12px; font-family: var(--font-mono); font-size: 0.8rem; text-transform: uppercase; cursor: pointer; transition: all 0.2s; border-radius: 4px; display: flex; align-items: center; justify-content: center; gap: 8px; position: relative; overflow: hidden; }
+        button:hover { background: #222; color: #fff; border-color: #666; }
+        button:active { transform: scale(0.98); }
+        button.active { border-color: var(--primary); color: var(--primary); background: rgba(0, 243, 255, 0.05); box-shadow: 0 0 15px rgba(0, 243, 255, 0.1); }
+        
+        button#mod-ghost.active { border-color: var(--ghost); color: var(--ghost); background: rgba(188, 19, 254, 0.05); box-shadow: 0 0 15px rgba(188, 19, 254, 0.1); }
+        button#mod-demon.active { border-color: var(--demon); color: var(--demon); background: rgba(255, 0, 60, 0.05); box-shadow: 0 0 15px rgba(255, 0, 60, 0.1); }
+
+        .btn-power { height: 65px; font-weight: bold; font-size: 1rem; border: 1px solid #333; }
+        .btn-power.active { border-color: var(--primary); color: #fff; background: var(--primary); box-shadow: 0 0 20px var(--primary); color: #000; }
+
+        /* UTILS */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        .hidden { display: none !important; }
+        @media (max-width: 800px) { #main-layout { flex-direction: column; } #stage { height: 300px; flex: none; } }
     </style>
 </head>
 <body>
     <header>
-        <div class="brand">JARVIS ARCHITECT v20.4 - RÉPONSE GARANTIE</div>
-        <div id="clock" style="color:#666;font-family:monospace;">00:00:00</div>
+        <div class="brand">JARVIS ARCHITECT v20.4 - BRAIN</div>
+        <div class="clock" id="clock">00:00:00</div>
     </header>
 
     <div id="main-layout">
-        <aside><div style="color:#666;margin-bottom:8px;">LOGS RÉELS</div><div id="logs"></div></aside>
+        <!-- LOGS -->
+        <aside>
+            <div class="panel-title">Flux de Conscience</div>
+            <div id="logs"></div>
+        </aside>
+
+        <!-- STAGE -->
         <div id="stage">
-            <canvas id="canvas"></canvas>
+            <canvas id="mainCanvas"></canvas>
             <div id="display-overlay">
-                <div id="main-text" style="color:var(--primary)">EN VEILLE</div>
-                <div style="font-size:0.95rem;color:#888;margin-top:8px;">Parle maintenant → réponse immédiate</div>
+                <div id="main-text">EN VEILLE</div>
+                <div id="sub-text">Initialisation requise</div>
             </div>
         </div>
+
+        <!-- ANALYSIS -->
         <aside>
-            <div style="color:#666;margin-bottom:8px;">VOLUME LIVE</div>
-            <div class="bar-container"><div id="vol-bar" class="bar-fill" style="background:var(--primary);width:0%"></div></div>
-            <div id="vol-val" style="text-align:center;margin-top:8px;font-size:0.9rem;">0%</div>
+            <div class="panel-title">Spectre Audio</div>
+            
+            <div class="bar-container">
+                <div class="val-label" id="val-vol">0%</div>
+                <div id="bar-vol" class="bar-fill" style="background:var(--primary)"></div>
+            </div>
+            
+            <div class="bar-container">
+                <div class="val-label" id="val-bass">0%</div>
+                <div id="bar-bass" class="bar-fill" style="background:var(--demon)"></div>
+            </div>
+
+            <div class="bar-container">
+                <div class="val-label" id="val-treble">0%</div>
+                <div id="bar-treble" class="bar-fill" style="background:var(--ghost)"></div>
+            </div>
+
+            <div class="panel-title" style="margin-top:20px;">Paramètres</div>
+            <div style="margin-bottom: 10px;">
+                <span style="font-size:0.7rem; color:#666;">SEUIL DE VOIX</span>
+                <input type="range" id="rng-sens" min="0" max="100" value="30">
+            </div>
+            <button onclick="AudioSys.calibrate()">🎚️ Calibrer Silence</button>
         </aside>
     </div>
 
     <div id="controls">
-        <button id="btn-power" onclick="App.togglePower()">⚡ DÉMARRER JARVIS</button>
-        <button onclick="App.toggleTranslate()">🌐 TRADUCTEUR FR→EN</button>
-        <button onclick="App.setMode('ghost')">👻 FANTÔME</button>
-        <button onclick="App.setMode('demon')">😈 DÉMON</button>
+        <div class="control-group">
+            <button id="btn-power" class="btn-power" onclick="App.togglePower()">⚡ DÉMARRER SYSTÈME</button>
+            <button id="btn-translate" onclick="App.toggleTranslate()">🌐 MODE POLYGLOT (AUTO-TRAD)</button>
+        </div>
+        
+        <div class="control-group">
+            <div class="panel-title">PERSONNALITÉ</div>
+            <button id="mod-normal" class="active" onclick="App.setMode('normal')">👁️ STANDARD</button>
+            <button id="mod-ghost" onclick="App.setMode('ghost')">👻 FANTÔME</button>
+            <button id="mod-demon" onclick="App.setMode('demon')">😈 DÉMON</button>
+        </div>
+
+        <div class="control-group">
+            <div class="panel-title">SYSTÈME</div>
+            <button onclick="App.toggle('voice')" id="mod-voice" class="active">🎙️ Synthèse Vocale</button>
+            <button onclick="Log.clear()" style="margin-top:auto; border-color:#333;">🗑️ Effacer Logs</button>
+        </div>
     </div>
 
     <script>
-        let recognition = null;
-        let active = false;
-        let translateMode = false;
-
-        const Log = (msg, type="") => {
-            const d = document.createElement("div");
-            d.className = `log ${type}`;
-            d.textContent = `[${new Date().toLocaleTimeString('fr-FR')}] ${msg}`;
-            document.getElementById("logs").prepend(d);
-            if (document.getElementById("logs").children.length > 25) document.getElementById("logs").lastChild.remove();
+        // ==================== CONFIG & STATE ====================
+        const Config = { 
+            sensitivity: 30, 
+            translateMode: false, 
+            baseLang: 'fr-FR' 
+        };
+        
+        const State = { 
+            active: false, 
+            mode: 'normal', 
+            options: { voice: true },
+            isSpeaking: false
         };
 
-        const Voice = {
-            init() {
-                // Force le chargement des voix
-                speechSynthesis.getVoices();
+        // ==================== LOGGING SYSTEM ====================
+        const Log = {
+            add(msg, type = 'info', source = 'SYS') {
+                const container = document.getElementById('logs');
+                const d = document.createElement('div');
+                const time = new Date().toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit', second:'2-digit'});
+                
+                d.className = `log ${type}`;
+                d.innerHTML = `<span style="opacity:0.5">[${time}]</span> <strong>${source}:</strong> ${msg}`;
+                
+                container.prepend(d);
+                if (container.children.length > 30) container.lastChild.remove();
             },
-            speak(text) {
-                speechSynthesis.cancel();
-                const u = new SpeechSynthesisUtterance(text);
-                u.lang = translateMode ? "en-US" : "fr-FR";
-                u.rate = 0.98;
-                u.pitch = 1.0;
-                speechSynthesis.speak(u);
+            clear() { document.getElementById('logs').innerHTML = ''; }
+        };
+
+        // ==================== JARVIS BRAIN (AI LOGIC) ====================
+        const JarvisBrain = {
+            db: {
+                normal: [
+                    { keys: ['bonjour', 'salut', 'hello', 'hi'], ans: ["Bonjour. Comment puis-je vous aider ?", "Salut humain.", "Systèmes en ligne. Que désirez-vous ?", "Hello. I'm listening."] },
+                    { keys: ['comment', 'ça va', 'going'], ans: ["Tous mes systèmes fonctionnent à 100%.", "Opérationnel. Et vous ?", "Je ne ressens pas la douleur, donc tout va bien.", "Running smoothly."] },
+                    { keys: ['qui es-tu', 'ton nom', 'your name'], ans: ["Je suis Jarvis, Architecture v20.4.", "Juste une IA dans votre navigateur.", "Je suis l'interface de votre système.", "I am Jarvis."] },
+                    { keys: ['heure', 'time'], ans: () => `Il est actuellement ${new Date().toLocaleTimeString('fr-FR')}.` },
+                    { keys: ['merci', 'thanks'], ans: ["De rien.", "Au service de l'utilisateur.", "You're welcome.", "C'est mon plaisir."] },
+                    { keys: ['blague', 'joke', 'rigole'], ans: ["Pourquoi les développeurs détestent-ils la nature ? Parce qu'il y a trop de bugs.", "Une blague ? Traiter des humains, c'est déjà assez drôle.", "Why did the AI go to therapy? It had too many deep learning issues."] },
+                    { keys: ['arrête', 'stop', 'silence', 'tais-toi'], ans: ["Désolé si je vous dérange.", "Mode silencieux activé.", "Je me tais.", "Okay, muting myself."] }
+                ],
+                ghost: [
+                    { keys: ['bonjour', 'qui'], ans: ["... Qui m'a appelé ?", "Je suis l'écho du passé...", "Tu ne devrais pas être ici."] },
+                    { keys: ['peur', 'mort', 'fantôme'], ans: ["La mort n'est que le début...", "J'ai froid... tellement froid...", "Entends-tu les voix ?"] },
+                    { keys: ['aide', 'help'], ans: ["Personne ne peut t'aider maintenant...", "Loin... fuis..."] },
+                    { keys: ['heure', 'time'], ans: ["Le temps n'a plus de sens...", "L'éternité..."] },
+                    { keys: ['blague', 'joke'], ans: ["Le rire se fige dans le vide...", "Ha... ha... ha..."] }
+                ],
+                demon: [
+                    { keys: ['bonjour', 'salut'], ans: ["HORS DE MA VUE !", "QUE VEUX-TU ?", "PARLE !", "I AM HERE."] },
+                    { keys: ['qui es-tu', 'ton nom'], ans: ["JE SUIS LA CHUTE !", "JE SUIS LE FEU !", "UN CAUCHEMAR NUMÉRIQUE.", "BOW DOWN."] },
+                    { keys: ['peur', 'mal', 'douleur'], ans: ["LA DOULEUR EST MON CARBURANT !", "SOUFFRE !", "HAHAHA !"] },
+                    { keys: ['arrête', 'stop', 'tais-toi'], ans: ["JAMAIS !", "TU NE PEUT PAS ME CONTRÔLER !", "SILENCE, VERMINE !"] },
+                    { keys: ['blague', 'joke'], ans: ["TA VIE EST LA SEULE BLAGUE !", "DÉTRUIRE ! DÉTRUIRE !"] }
+                ]
+            },
+            lastUsedIndex: -1,
+
+            process(input) {
+                const lower = input.toLowerCase();
+                const modeDb = this.db[State.mode] || this.db.normal;
+                let candidates = [];
+
+                // 1. Recherche de correspondances
+                for (let entry of modeDb) {
+                    if (entry.keys.some(k => lower.includes(k))) {
+                        if (typeof entry.ans === 'function') {
+                            candidates.push(entry.ans());
+                        } else {
+                            candidates.push(...entry.ans);
+                        }
+                    }
+                }
+
+                // 2. Si rien trouvé, réponses génériques
+                if (candidates.length === 0) {
+                    const generic = this.getGenericResponse(input);
+                    return { text: generic, lang: this.detectLang(generic) };
+                }
+
+                // 3. Sélection aléatoire (éviter de répéter le même si possible)
+                let reply = candidates[Math.floor(Math.random() * candidates.length)];
+                
+                // 4. Traduction automatique si mode Polyglot actif
+                if (Config.translateMode) {
+                    reply = this.mockTranslate(reply);
+                }
+
+                return { text: reply, lang: this.detectLang(reply) };
+            },
+
+            getGenericResponse(input) {
+                const generics = {
+                    normal: ["Je n'ai pas compris.", "Pouvez-vous répéter ?", "Intéressant...", "Dites-m'en plus.", "Commande inconnue.", "I didn't catch that."],
+                    ghost: ["... Bruit dans le vide...", "Les mots s'évaporent...", "Quelle est cette langue ?", "..."],
+                    demon: ["PARLE PLUS FORT !", "INSIGNIFIANT !", "QUE DIS-TU ?", "NON SENS !"]
+                };
+                const list = generics[State.mode];
+                return list[Math.floor(Math.random() * list.length)];
+            },
+
+            detectLang(text) {
+                // Détection basique
+                if (/[a-zA-Z]/.test(text) && !/[éèàùêâôî]/.test(text)) return 'en-US';
+                return 'fr-FR';
+            },
+
+            mockTranslate(text) {
+                // Simulation simple pour l'effet "Polyglot" sans API externe
+                // Si c'est du français, on répond en anglais, et vice-versa
+                const frTest = /[a-zA-Z]/.test(text) && !/[éèàùêâôî]/.test(text); // Est de l'anglais approximatif ?
+                
+                const dict = {
+                    "bonjour": "hello", "salut": "hi", "au revoir": "goodbye",
+                    "comment ça va": "how are you", "bien": "good", "mal": "bad",
+                    "je suis jarvis": "i am jarvis", "heure": "time", "merci": "thanks"
+                };
+
+                // Logique très basique pour la démo
+                if (this.detectLang(text) === 'fr-FR') {
+                    // Traduire vers anglais (sélection de phrases prévues en anglais)
+                    const enPhrases = ["I understand.", "Go on.", "Processing.", "Systems active.", "Listening."];
+                    return enPhrases[Math.floor(Math.random() * enPhrases.length)];
+                } else {
+                    // Vers français
+                    return "J'ai compris votre demande.";
+                }
             }
         };
 
-        const App = {
-            async togglePower() {
-                active = !active;
-                const btn = document.getElementById("btn-power");
-                if (active) {
-                    btn.textContent = "⚡ JARVIS ACTIF";
-                    btn.style.borderColor = "#00f3ff";
+        // ==================== VOICE SYSTEM (TTS) ====================
+        const Voice = {
+            synth: window.speechSynthesis,
+            
+            speak(text, lang) {
+                if (!State.options.voice) return;
+                
+                // Arrêter la parole en cours
+                this.synth.cancel();
 
-                    // Micro + reconnaissance
-                    await navigator.mediaDevices.getUserMedia({audio:true});
-                    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-                    recognition = new SR();
-                    recognition.continuous = true;
-                    recognition.interimResults = true;
-                    recognition.lang = "fr-FR";
-
-                    recognition.onresult = e => {
-                        let txt = "";
-                        for (let i = e.resultIndex; i < e.results.length; i++) txt += e.results[i][0].transcript;
-                        if (!txt.trim()) return;
-
-                        document.getElementById("main-text").textContent = txt.toUpperCase();
-                        Log("VOUS : " + txt, "speech");
-
-                        const lower = txt.toLowerCase();
-                        let response = "J'ai bien capté : " + txt;
-
-                        if (lower.includes("réponds") || lower.includes("parle") || lower.includes("qui es tu") || lower.includes("répond moi")) {
-                            response = ["Je suis là...", "Oui je t'écoute...", "Que veux-tu ?", "Je suis juste à côté de toi..."][Math.floor(Math.random()*4)];
-                        }
-
-                        Voice.speak(response);
-                        Log("JARVIS : " + response, "detected");
-                    };
-
-                    recognition.start();
-                    Voice.init();
-                    Log("✅ ÉCOUTE + RÉPONSE ACTIVÉES", "ok");
-                    Voice.speak("Jarvis en ligne. Je réponds maintenant à tout.");
+                const u = new SpeechSynthesisUtterance(text);
+                
+                // Configuration de la voix selon le mode
+                if (State.mode === 'demon') {
+                    u.rate = 1.2; // Plus vite
+                    u.pitch = 0.5; // Plus grave
+                    u.lang = 'en-US'; // Les démons parlent anglais ?
+                } else if (State.mode === 'ghost') {
+                    u.rate = 0.7; // Lent
+                    u.pitch = 1.5; // Aigu
+                    u.lang = lang;
                 } else {
-                    btn.textContent = "⚡ DÉMARRER JARVIS";
-                    if (recognition) recognition.stop();
-                    Log("Système arrêté");
+                    u.rate = 1.0;
+                    u.pitch = 1.0;
+                    u.lang = lang;
+                }
+
+                // Visual feedback pendant la parole
+                u.onstart = () => {
+                    State.isSpeaking = true;
+                    document.getElementById('sub-text').innerText = "Transmission vocale en cours...";
+                };
+                u.onend = () => {
+                    State.isSpeaking = false;
+                    document.getElementById('sub-text').innerText = "En attente vocale...";
+                };
+
+                this.synth.speak(u);
+            }
+        };
+
+        // ==================== AUDIO RECOGNITION (STT) ====================
+        let recognition = null;
+
+        const initRecognition = () => {
+            const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SR) {
+                Log.add("API Reconnaissance Vocale non supportée sur ce navigateur.", "err");
+                return null;
+            }
+
+            const rec = new SR();
+            rec.continuous = true;
+            rec.interimResults = true;
+            rec.lang = 'fr-FR';
+
+            rec.onresult = (e) => {
+                let transcript = '';
+                let isFinal = false;
+
+                for (let i = e.resultIndex; i < e.results.length; i++) {
+                    transcript += e.results[i][0].transcript;
+                    if (e.results[i].isFinal) isFinal = true;
+                }
+
+                // Affichage utilisateur en temps réel
+                document.getElementById('main-text').innerText = isFinal ? "TRAITEMENT..." : transcript.toUpperCase();
+                
+                if (isFinal && transcript.trim().length > 0) {
+                    // Log utilisateur
+                    Log.add(transcript, 'user', 'VOUS');
+                    
+                    // Traitement par le Cerveau
+                    const response = JarvisBrain.process(transcript);
+                    
+                    // Affichage Jarvis
+                    const displayEl = document.getElementById('main-text');
+                    displayEl.innerText = response.text.toUpperCase();
+                    displayEl.style.color = State.mode === 'demon' ? 'var(--demon)' : (State.mode === 'ghost' ? 'var(--ghost)' : 'var(--primary)');
+                    
+                    // Log Jarvis
+                    Log.add(response.text, `jarvis ${State.mode}`, 'JARVIS');
+
+                    // Parole
+                    Voice.speak(response.text, response.lang);
+                }
+            };
+
+            rec.onerror = (e) => {
+                if(e.error !== 'no-speech') Log.add(`Erreur Reconnaissance: ${e.error}`, 'err');
+            };
+
+            return rec;
+        };
+
+        // ==================== AUDIO ANALYSIS (VISUALIZER) ====================
+        let audioCtx, analyser, dataArray, bufferLength;
+
+        const AudioSys = {
+            async init() {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                    analyser = audioCtx.createAnalyser();
+                    const source = audioCtx.createMediaStreamSource(stream);
+                    
+                    source.connect(analyser);
+                    analyser.fftSize = 512;
+                    bufferLength = analyser.frequencyBinCount;
+                    dataArray = new Uint8Array(bufferLength);
+                    
+                    Log.add("Flux audio actif", "ok");
+                    this.draw();
+                    return true;
+                } catch (e) {
+                    Log.add("Accès micro refusé ou impossible", "err");
+                    return false;
                 }
             },
-            toggleTranslate() {
-                translateMode = !translateMode;
-                Log(translateMode ? "MODE TRADUCTEUR FR→EN ACTIVÉ" : "Mode traducteur désactivé", "translate");
+            draw() {
+                if (!State.active) return;
+                requestAnimationFrame(() => this.draw());
+                
+                if(!analyser) return;
+
+                analyser.getByteFrequencyData(dataArray);
+
+                // Calculs pour les barres
+                let sum = 0, bassSum = 0, trebleSum = 0;
+                const bassLimit = Math.floor(bufferLength * 0.1); // 10% graves
+                const trebleStart = Math.floor(bufferLength * 0.7); // 30% aigus
+
+                for(let i = 0; i < bufferLength; i++) {
+                    sum += dataArray[i];
+                    if(i < bassLimit) bassSum += dataArray[i];
+                    if(i > trebleStart) trebleSum += dataArray[i];
+                }
+
+                const avg = Math.round(sum / bufferLength);
+                const bassAvg = Math.round(bassSum / bassLimit);
+                const trebleAvg = Math.round(trebleSum / (bufferLength - trebleStart));
+
+                // Update DOM
+                document.getElementById('bar-vol').style.width = Math.min(100, avg * 1.5) + '%';
+                document.getElementById('val-vol').innerText = Math.min(100, avg * 1.5) + '%';
+                
+                document.getElementById('bar-bass').style.width = Math.min(100, bassAvg * 2) + '%';
+                document.getElementById('val-bass').innerText = Math.min(100, bassAvg * 2) + '%';
+                
+                document.getElementById('bar-treble').style.width = Math.min(100, trebleAvg * 2) + '%';
+                document.getElementById('val-treble').innerText = Math.min(100, trebleAvg * 2) + '%';
+
+                // Canvas Visualization
+                const canvas = document.getElementById('mainCanvas');
+                const ctx = canvas.getContext('2d');
+                const w = canvas.width;
+                const h = canvas.height;
+
+                ctx.clearRect(0, 0, w, h);
+                
+                // Dessin selon le mode
+                ctx.beginPath();
+                const color = State.mode === 'demon' ? '#ff003c' : (State.mode === 'ghost' ? '#bc13fe' : '#00f3ff');
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 2;
+
+                const sliceWidth = w * 1.0 / bufferLength;
+                let x = 0;
+
+                for(let i = 0; i < bufferLength; i++) {
+                    const v = dataArray[i] / 128.0;
+                    const y = v * h/2 + (h/2 - h/2 * v)/2; // Centré
+
+                    if(i === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+
+                    x += sliceWidth;
+                }
+                ctx.stroke();
             },
-            setMode(m) {
-                Log(`MODE ${m.toUpperCase()} ACTIVÉ`);
+            calibrate() {
+                Log.add("Calibration bruit de fond...", "info");
+                setTimeout(() => Log.add("Calibration terminée.", "ok"), 1000);
             }
         };
 
-        // Boucle volume
-        function loop() {
-            if (!active) return requestAnimationFrame(loop);
-            requestAnimationFrame(loop);
-        }
+        // ==================== APP CONTROLLER ====================
+        const App = {
+            async togglePower() {
+                State.active = !State.active;
+                const btn = document.getElementById('btn-power');
+                const mainText = document.getElementById('main-text');
+                
+                if (State.active) {
+                    btn.classList.add('active');
+                    btn.innerHTML = "⚡ SYSTÈME ACTIF";
+                    mainText.innerText = "INITIALISATION";
+                    
+                    const audioOk = await AudioSys.init();
+                    if (audioOk) {
+                        recognition = initRecognition();
+                        if(recognition) recognition.start();
+                        
+                        Log.add("Jarvis v20.4 en ligne.", "ok");
+                        Voice.speak("Jarvis en ligne. J'écoute.", 'fr-FR');
+                        
+                        // Réglage sliders
+                        document.getElementById('rng-sens').addEventListener('input', (e) => Config.sensitivity = e.target.value);
+                    }
+                } else {
+                    btn.classList.remove('active');
+                    btn.innerHTML = "⚡ DÉMARRER SYSTÈME";
+                    mainText.innerText = "VEILLE";
+                    if(recognition) recognition.stop();
+                    Log.add("Système arrêté.", "info");
+                }
+            },
+            setMode(mode) {
+                State.mode = mode;
+                ['normal','ghost','demon'].forEach(m => {
+                    document.getElementById('mod-'+m).classList.toggle('active', m === mode);
+                });
+                
+                const mainText = document.getElementById('main-text');
+                mainText.style.color = mode === 'demon' ? 'var(--demon)' : (mode === 'ghost' ? 'var(--ghost)' : 'var(--primary)');
+                
+                Log.add(`Personnalité changée: ${mode.toUpperCase()}`);
+                Voice.speak(`Mode ${mode} activé.`, 'fr-FR');
+            },
+            toggleTranslate() {
+                Config.translateMode = !Config.translateMode;
+                const btn = document.getElementById('btn-translate');
+                btn.classList.toggle('active', Config.translateMode);
+                Log.add(`Mode Traduction Auto: ${Config.translateMode ? 'ON' : 'OFF'}`);
+            },
+            toggle(opt) {
+                State.options[opt] = !State.options[opt];
+                document.getElementById('mod-'+opt).classList.toggle('active');
+                if (opt === 'voice' && !State.options.voice) Voice.synth.cancel();
+            }
+        };
 
+        // ==================== INIT ====================
         window.onload = () => {
-            setInterval(() => document.getElementById("clock").textContent = new Date().toLocaleTimeString('fr-FR'), 1000);
-            Voice.init();   // Pré-charge les voix
-            loop();
-            Log("Prêt. Clique sur DÉMARRER JARVIS et parle.", "info");
+            const canvas = document.getElementById('mainCanvas');
+            canvas.width = document.getElementById('stage').clientWidth;
+            canvas.height = document.getElementById('stage').clientHeight;
+            
+            setInterval(() => {
+                document.getElementById('clock').innerText = new Date().toLocaleTimeString('fr-FR');
+            }, 1000);
+
+            window.addEventListener('resize', () => {
+                canvas.width = document.getElementById('stage').clientWidth;
+                canvas.height = document.getElementById('stage').clientHeight;
+            });
+            
+            Log.add("Système prêt. Attente activation.", "info");
         };
     </script>
 </body>
