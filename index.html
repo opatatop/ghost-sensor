@@ -3,198 +3,479 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>JARVIS v26.1 - TON POTE</title>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Rajdhani:wght@500;700&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+    <title>JARVIS v27.0 - OMNI-X</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=JetBrains+Mono:wght@400;700&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
     
     <style>
-        :root { --bg:#050505; --primary:#00ff9d; --accent:#ff9900; --alert:#ff3333; --dim:#444; }
-        * { box-sizing:border-box; user-select:none; }
-        body { margin:0; background:var(--bg); color:#eee; font-family:'Rajdhani',sans-serif; height:100vh; overflow:hidden; display:flex; flex-direction:column; }
+        :root {
+            --bg: #050505; --panel: #0a0a0a; --surface: #141414;
+            --primary: #3b82f6; --primary-dim: rgba(59, 130, 246, 0.2);
+            --accent: #f59e0b; --success: #10b981; --danger: #ef4444;
+            --text: #e5e7eb; --text-dim: #9ca3af;
+            --font-ui: 'Inter', sans-serif; --font-mono: 'JetBrains Mono', monospace; --font-head: 'Orbitron', sans-serif;
+            --border: 1px solid #27272a;
+        }
+
+        * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
+        body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: var(--font-ui); height: 100vh; width: 100vw; display: flex; flex-direction: column; overflow: hidden; }
+
+        /* --- HEADER --- */
+        header { height: 60px; background: var(--panel); border-bottom: var(--border); display: flex; justify-content: space-between; align-items: center; padding: 0 20px; z-index: 50; }
+        .brand { font-family: var(--font-head); font-weight: 900; font-size: 1.2rem; color: var(--primary); letter-spacing: 1px; }
         
-        #start-overlay { position:fixed; inset:0; background:#000; z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center; }
-        #start-btn { padding:25px 70px; font-size:1.5rem; background:var(--primary); color:#000; border:none; font-family:'Orbitron'; font-weight:900; cursor:pointer; box-shadow:0 0 50px var(--primary); }
+        /* SYS MONITOR (TOP RIGHT) */
+        .sys-monitor { display: flex; gap: 15px; font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-dim); }
+        .stat-bar { display: flex; align-items: center; gap: 5px; }
+        .bar-track { width: 50px; height: 4px; background: #333; border-radius: 2px; overflow: hidden; }
+        .bar-fill { height: 100%; background: var(--success); width: 0%; transition: width 0.5s; }
 
-        header { height:50px; background:rgba(10,10,10,0.95); display:flex; justify-content:space-between; align-items:center; padding:0 15px; }
-        .brand { font-family:'Orbitron'; font-size:1.3rem; color:var(--primary); letter-spacing:3px; }
-
-        #stage { flex:1; position:relative; background:radial-gradient(circle at center, #111 0%, #000 100%); }
-        canvas { position:absolute; inset:0; }
+        /* --- MAIN CONTENT AREA --- */
+        #app-content { flex: 1; position: relative; overflow: hidden; }
         
-        #data-display { z-index:10; width:92%; max-width:800px; margin:0 auto; text-align:center; background:rgba(0,0,0,0.85); padding:20px; border-radius:12px; border:1px solid #333; }
-        #interim-text { color:var(--dim); font-size:1.1rem; min-height:24px; }
-        #final-text { font-family:'Orbitron'; font-size:2.1rem; font-weight:900; color:#fff; text-transform:uppercase; letter-spacing:2px; }
-        #system-response { color:var(--primary); font-size:1.35rem; margin-top:12px; min-height:50px; }
+        /* TABS PAGES */
+        .tab-page { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); display: flex; flex-direction: column; transition: opacity 0.3s, transform 0.3s; opacity: 0; pointer-events: none; transform: scale(0.98); }
+        .tab-page.active { opacity: 1; pointer-events: all; transform: scale(1); z-index: 10; }
 
-        #notification-area { position:absolute; top:70px; right:15px; z-index:200; }
-        .toast { background:rgba(0,0,0,0.95); border-left:5px solid var(--primary); padding:12px 20px; color:#fff; font-size:0.9rem; margin-bottom:8px; animation:slide 0.4s; }
+        /* --- TAB 1: VOICE --- */
+        #voice-stage { flex: 1; position: relative; display: flex; flex-direction: column; justify-content: center; align-items: center; background: radial-gradient(circle at center, #111 0%, #000 100%); }
+        canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; opacity: 0.3; }
+        #chat-bubble { z-index: 10; background: rgba(0,0,0,0.8); border: var(--border); padding: 20px; border-radius: 12px; width: 90%; max-width: 600px; text-align: center; backdrop-filter: blur(10px); box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+        #interim-text { color: var(--text-dim); font-size: 1rem; min-height: 20px; margin-bottom: 5px; font-style: italic; }
+        #final-text { color: #fff; font-family: var(--font-head); font-size: 1.5rem; font-weight: 700; text-transform: uppercase; margin-bottom: 15px; line-height: 1.2; }
+        #ai-response { color: var(--primary); font-size: 1.1rem; border-top: 1px solid #333; padding-top: 15px; min-height: 30px; }
 
-        #log-drawer { position:absolute; bottom:0; left:0; width:100%; height:35%; background:#050505; border-top:3px solid var(--primary); transform:translateY(100%); transition:0.4s; }
-        #log-drawer.open { transform:translateY(0); }
-        #log-content { padding:15px; overflow-y:auto; font-family:'JetBrains Mono'; font-size:0.85rem; color:#00ff9d; }
+        /* --- TAB 2: TASKS (NOTES) --- */
+        #tasks-container { padding: 20px; overflow-y: auto; flex: 1; }
+        .task-input-group { display: flex; gap: 10px; margin-bottom: 20px; }
+        input[type="text"] { flex: 1; background: var(--surface); border: 1px solid #333; color: #fff; padding: 12px; border-radius: 6px; font-family: var(--font-ui); outline: none; }
+        input[type="text"]:focus { border-color: var(--primary); }
+        .btn-icon { background: var(--surface); border: 1px solid #333; color: #fff; width: 46px; border-radius: 6px; cursor: pointer; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; }
+        .btn-icon:hover { background: #222; }
+        
+        .task-list { display: flex; flex-direction: column; gap: 10px; }
+        .task-item { background: var(--surface); border: 1px solid #27272a; padding: 15px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; animation: slideIn 0.2s; }
+        .task-text { flex: 1; font-size: 1rem; }
+        .task-delete { color: var(--danger); background: none; border: none; font-size: 1.2rem; cursor: pointer; padding: 5px; }
 
-        #controls { height:100px; background:#0f0f0f; display:flex; justify-content:center; align-items:center; gap:40px; }
-        #mic-btn { width:90px; height:90px; background:#111; border:5px solid #555; border-radius:20px; font-size:3.2rem; color:#666; transition:0.3s; }
-        #mic-btn.listening { background:var(--primary); color:#000; border-color:var(--primary); box-shadow:0 0 60px var(--primary); animation:pulse 1.2s infinite; }
+        /* --- TAB 3: SYSTEM --- */
+        #system-container { padding: 20px; display: flex; flex-direction: column; gap: 20px; overflow-y: auto; flex: 1; }
+        .card { background: var(--surface); border: 1px solid #27272a; border-radius: 8px; padding: 20px; }
+        .card h3 { margin: 0 0 15px 0; font-family: var(--font-head); color: var(--primary); font-size: 1rem; }
+        
+        .setting-row { margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .setting-label { color: var(--text-dim); font-size: 0.9rem; }
+        select, input[type="range"] { background: #000; border: 1px solid #444; color: #fff; padding: 5px; border-radius: 4px; }
+        
+        #log-terminal { background: #000; border: 1px solid #333; padding: 10px; height: 200px; overflow-y: auto; font-family: var(--font-mono); font-size: 0.8rem; color: var(--success); }
+        .log-line { margin-bottom: 4px; }
+        
+        .btn-primary { width: 100%; padding: 12px; background: var(--primary); color: #fff; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; margin-top: 10px; }
+        .btn-secondary { width: 100%; padding: 12px; background: transparent; border: 1px solid #444; color: #fff; border-radius: 6px; font-weight: 600; cursor: pointer; margin-top: 10px; }
 
-        @keyframes pulse { 50% { box-shadow:0 0 80px var(--primary); } }
-        @keyframes slide { from{transform:translateX(150%);} to{transform:translateX(0);} }
+        /* --- BOTTOM NAV --- */
+        nav { height: 70px; background: var(--panel); border-top: var(--border); display: flex; justify-content: space-around; align-items: center; padding-bottom: env(safe-area-inset-bottom); z-index: 100; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; gap: 5px; color: var(--text-dim); font-size: 0.75rem; cursor: pointer; width: 60px; transition: 0.2s; }
+        .nav-item.active { color: var(--primary); }
+        .nav-icon { font-size: 1.5rem; }
+        #mic-fab {
+            width: 60px; height: 60px; background: var(--primary); border-radius: 50%; 
+            display: flex; align-items: center; justify-content: center; color: #fff; font-size: 1.8rem;
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.4); transition: 0.2s; margin-top: -30px; border: 4px solid var(--bg);
+        }
+        #mic-fab.listening { background: var(--danger); animation: pulse 1.5s infinite; }
+
+        /* ANIMATIONS */
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 70% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* START SCREEN */
+        #start-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+        #start-btn { padding: 20px 50px; font-size: 1.2rem; background: var(--primary); color: #fff; border: none; font-family: var(--font-head); font-weight: 900; cursor: pointer; border-radius: 50px; }
     </style>
 </head>
 <body>
 
+    <!-- START OVERLAY -->
     <div id="start-overlay">
-        <div style="font-size:3.2rem; color:var(--primary); font-family:'Orbitron';">JARVIS</div>
-        <div style="color:var(--accent); margin:10px 0 30px; font-size:1.2rem;">v26.1 • TON POTE DE OUF</div>
-        <button id="start-btn">LANCE TON POTE</button>
+        <div style="font-family:var(--font-head); color:var(--primary); font-size:2.5rem; margin-bottom:20px;">JARVIS OMNI-X</div>
+        <button id="start-btn">DÉMARRER LE SYSTÈME</button>
     </div>
-
-    <div id="notification-area"></div>
 
     <header>
-        <div class="brand">JARVIS • TON POTE</div>
-        <div style="font-family:monospace; font-size:0.75rem; color:var(--dim);"><span id="vol-indicator">VOL: 0%</span> | <span id="clock">00:00</span></div>
+        <div class="brand">JARVIS <span style="color:var(--text-dim); font-weight:400; font-size:0.8em;">OMNI-X</span></div>
+        <div class="sys-monitor">
+            <div class="stat-bar"><div class="bar-fill" id="cpu-bar"></div> CPU</div>
+            <div class="stat-bar"><div class="bar-fill" id="mem-bar"></div> RAM</div>
+            <div id="clock">00:00</div>
+        </div>
     </header>
 
-    <div id="stage">
-        <canvas id="main-canvas"></canvas>
-        <div id="data-display">
-            <div id="interim-text">J'écoute tout mon pote...</div>
-            <div id="final-text">PRÊT</div>
-            <div id="system-response">Vas-y, parle, je traduis et je réponds comme un vrai pote !</div>
+    <div id="app-content">
+        
+        <!-- TAB 1: VOICE -->
+        <div id="tab-voice" class="tab-page active">
+            <div id="voice-stage">
+                <canvas id="main-canvas"></canvas>
+                <div id="chat-bubble">
+                    <div id="interim-text">...</div>
+                    <div id="final-text">SYSTÊME PRÊT</div>
+                    <div id="ai-response">En attente de commande vocale...</div>
+                </div>
+            </div>
         </div>
+
+        <!-- TAB 2: TASKS -->
+        <div id="tab-tasks" class="tab-page">
+            <div id="tasks-container">
+                <div class="card">
+                    <h3>NOUVELLE TÂCHE</h3>
+                    <div class="task-input-group">
+                        <input type="text" id="new-task-input" placeholder="Ajouter une tâche (ex: Acheter du pain)...">
+                        <button class="btn-icon" onclick="addTaskUI()">+</button>
+                    </div>
+                    <div style="font-size:0.8rem; color:var(--text-dim); margin-top:10px;">
+                        Astuce : Dis "Note : [ta tâche]" pour ajouter par voix.
+                    </div>
+                </div>
+
+                <h3 style="margin:0 0 10px 0; color:var(--text-dim); font-size:0.9rem; text-transform:uppercase;">Liste Active</h3>
+                <div id="task-list" class="task-list">
+                    <!-- Tasks go here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: SYSTEM -->
+        <div id="tab-system" class="tab-page">
+            <div id="system-container">
+                <div class="card">
+                    <h3>CONFIGURATION</h3>
+                    <div class="setting-row">
+                        <span class="setting-label">Langue</span>
+                        <select id="opt-lang" onchange="updateLang(this.value)">
+                            <option value="fr-FR">Français</option>
+                            <option value="en-US">English</option>
+                            <option value="es-ES">Español</option>
+                        </select>
+                    </div>
+                    <div class="setting-row">
+                        <span class="setting-label">Vitesse Voix</span>
+                        <input type="range" min="0.5" max="2" step="0.1" value="1" oninput="Config.rate = this.value">
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>TERMINAL DE LOGS</h3>
+                    <div id="log-terminal"></div>
+                    <button class="btn-secondary" onclick="exportLogs()">📋 COPIER LES LOGS</button>
+                    <button class="btn-secondary" style="border-color:var(--danger); color:var(--danger);" onclick="clearLogs()">🗑️ EFFACER LOGS</button>
+                </div>
+            </div>
+        </div>
+
     </div>
 
-    <div id="log-drawer">
-        <div onclick="toggleLogs()" style="background:#0a0a0a; height:40px; display:flex; align-items:center; justify-content:center; color:var(--dim); cursor:pointer;">▼ TERMINAL DU POTE ▼</div>
-        <div id="log-content"></div>
-    </div>
+    <nav>
+        <div class="nav-item active" onclick="switchTab('voice')" id="nav-voice">
+            <span class="nav-icon">🎙️</span>
+            <span>VOICE</span>
+        </div>
+        
+        <div id="mic-fab" onclick="toggleMic()">🎙️</div>
 
-    <div id="controls">
-        <div onclick="toggleLogs()" style="font-size:2rem; cursor:pointer;">📜</div>
-        <div id="mic-btn" onclick="toggleMic()">🎙️</div>
-        <div onclick="toggleLogs()" style="font-size:2rem; cursor:pointer;">📜</div>
-    </div>
+        <div class="nav-item" onclick="switchTab('tasks')" id="nav-tasks">
+            <span class="nav-icon">✅</span>
+            <span>TÂCHES</span>
+        </div>
+        <div class="nav-item" onclick="switchTab('system')" id="nav-system">
+            <span class="nav-icon">⚙️</span>
+            <span>SYSTÈME</span>
+        </div>
+    </nav>
 
     <script>
-        const LANG = 'fr-FR';
-        let recognition, audioCtx, analyser, dataArray;
-        let isListening = true; // toujours actif par défaut
+        /* ==============================================================================
+           JARVIS v27.0 - OMNI-X FULL STACK ENGINE
+           ============================================================================== */
 
-        // === INIT ===
-        document.getElementById('start-btn').onclick = async () => {
-            document.getElementById('start-overlay').style.display = 'none';
-            await initAudio();
-            initSpeech();
-            recognition.start();
-            log("POTE", "Yo mon pote ! Je suis là 24/7, j'écoute tout et je traduis tout en français.");
-            speak("Salut mon pote ! Je suis ton JARVIS, balance tout ce que tu veux, je traduis et je réponds direct.");
+        const Config = {
+            lang: 'fr-FR',
+            rate: 1.0,
+            pitch: 1.0,
+            profiles: {
+                default: { pitch: 1.0, rate: 1.0, color: "var(--primary)" },
+                security: { pitch: 0.5, rate: 1.3, color: "var(--danger)" },
+                assistant: { pitch: 1.2, rate: 1.0, color: "var(--success)" }
+            }
         };
 
+        let tasks = []; // La mémoire des tâches
+        let currentProfile = 'default';
+        let isListening = false;
+        let recognition;
+        let audioCtx, analyser, dataArray;
+        let lastLog = "";
+
+        // --- INIT ---
+        document.getElementById('start-btn').addEventListener('click', async () => {
+            document.getElementById('start-overlay').style.display = 'none';
+            await initAudio();
+            window.speechSynthesis.getVoices();
+            initSpeech();
+            log("SYS", "Noyau Omni-X démarré. Modules de tâches actifs.");
+            loadTasks();
+        });
+
+        // --- AUDIO & VISUALS ---
         async function initAudio() {
-            const stream = await navigator.mediaDevices.getUserMedia({audio:true});
-            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            analyser = audioCtx.createAnalyser();
-            analyser.fftSize = 256;
-            const source = audioCtx.createMediaStreamSource(stream);
-            source.connect(analyser);
-            dataArray = new Uint8Array(analyser.frequencyBinCount);
-            drawLoop();
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                analyser = audioCtx.createAnalyser();
+                analyser.fftSize = 256;
+                const src = audioCtx.createMediaStreamSource(stream);
+                src.connect(analyser);
+                dataArray = new Uint8Array(analyser.frequencyBinCount);
+                drawLoop();
+                startSysMonitor(); // Simule CPU/RAM
+            } catch(e) { log("ERR", "Micro inaccessible: " + e.message); }
         }
 
         function drawLoop() {
+            if(!audioCtx) return;
             requestAnimationFrame(drawLoop);
-            if (!analyser) return;
             analyser.getByteFrequencyData(dataArray);
-            let sum = 0; for(let i=0;i<dataArray.length;i++) sum+=dataArray[i];
-            const vol = Math.round((sum/dataArray.length)*1.8);
-            document.getElementById('vol-indicator').textContent = `VOL: ${vol}%`;
             
             const cvs = document.getElementById('main-canvas');
             const ctx = cvs.getContext('2d');
-            cvs.width = window.innerWidth; cvs.height = window.innerHeight;
-            ctx.clearRect(0,0,cvs.width,cvs.height);
-            const color = '#00ff9d';
-            for(let i=0;i<40;i++){
-                const h = (dataArray[i*3]/255) * (cvs.height*0.6);
-                ctx.fillStyle = color;
-                ctx.fillRect(i*(cvs.width/40), cvs.height-h-100, cvs.width/45, h);
+            const w = cvs.width = window.innerWidth; 
+            const h = cvs.height = window.innerHeight;
+            ctx.clearRect(0,0,w, h);
+
+            const bars = 50; const step = w / bars;
+            for(let i=0; i<bars; i++) {
+                const val = dataArray[i*4];
+                const barH = (val/255) * (h*0.5);
+                ctx.fillStyle = `rgba(59, 130, 246, ${val/255})`; // Blue opacity
+                ctx.fillRect(i*step, h - barH - 70, step-2, barH);
             }
         }
 
+        function startSysMonitor() {
+            setInterval(() => {
+                // Simulation aléatoire pour l'effet "Centre de Contrôle"
+                document.getElementById('cpu-bar').style.width = Math.floor(Math.random() * 40 + 20) + '%';
+                document.getElementById('mem-bar').style.width = Math.floor(Math.random() * 30 + 40) + '%';
+            }, 2000);
+        }
+
+        // --- RECONNAISSANCE ---
         function initSpeech() {
             const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-            recognition = new SR();
-            recognition.continuous = true;
-            recognition.interimResults = true;
-            recognition.lang = LANG;
+            if(!SR) return log("ERR", "API non supportée");
 
-            recognition.onresult = (e) => {
-                let final = '';
-                for(let i=e.resultIndex; i<e.results.length; i++){
-                    if(e.results[i].isFinal) final += e.results[i][0].transcript;
-                }
-                if(final){
-                    document.getElementById('final-text').textContent = final.toUpperCase();
-                    document.getElementById('interim-text').textContent = '';
-                    processAsPote(final);
+            recognition = new SR();
+            recognition.continuous = false;
+            recognition.interimResults = true;
+            recognition.lang = Config.lang;
+
+            recognition.onstart = () => {
+                isListening = true;
+                document.getElementById('mic-fab').classList.add('listening');
+            };
+            recognition.onend = () => {
+                isListening = false;
+                document.getElementById('mic-fab').classList.remove('listening');
+                if (document.getElementById('mic-fab').classList.contains('flag-active')) {
+                    setTimeout(() => { try { recognition.start(); } catch(e){} }, 500);
                 }
             };
+            recognition.onresult = (e) => {
+                let interim = '', final = '';
+                for (let i = e.resultIndex; i < e.results.length; ++i) {
+                    if (e.results[i].isFinal) final += e.results[i][0].transcript;
+                    else interim += e.results[i][0].transcript;
+                }
+                const iEl = document.getElementById('interim-text');
+                if(interim) { iEl.innerText = interim; iEl.style.opacity = 1; }
+                else { iEl.style.opacity = 0; }
 
-            recognition.onend = () => { if(isListening) setTimeout(() => recognition.start(), 300); };
+                if(final) {
+                    document.getElementById('final-text').innerText = final;
+                    iEl.innerText = "";
+                    processCommand(final);
+                }
+            };
+            recognition.onerror = (e) => {
+                if(e.error === 'no-speech' && document.getElementById('mic-fab').classList.contains('flag-active')) {
+                    try { recognition.start(); } catch(e){}
+                }
+            };
         }
 
-        function processAsPote(text) {
+        // --- LOGIQUE COMPLÈTE ---
+        function processCommand(text) {
             const t = text.toLowerCase();
-            let reply = "J't'ai capté mon pote !";
+            let reply = "";
+            const rEl = document.getElementById('ai-response');
 
-            // Traduction automatique si mélange anglais
-            if(/[a-zA-Z]{5,}/.test(text) && /the|and|you|what|how|why|hello|sorry/.test(t)){
-                reply = "Attends j'traduis ça en français direct... " + reply;
+            // 1. COMMANDES TÂCHES (NOUVEAU)
+            if (t.startsWith("note :") || t.startsWith("rappel :")) {
+                const taskText = t.split(/note :|rappel :/)[1].trim();
+                addTask(taskText);
+                reply = `Noté : "${taskText}" ajouté à la liste.`;
             }
+            else if (t.includes("rappel toi") || t.includes("quelles sont mes notes")) {
+                if(tasks.length === 0) reply = "Votre liste de tâches est vide.";
+                else {
+                    const list = tasks.map((t, i) => `${i+1}. ${t}`).join(", ");
+                    reply = `Vos notes sont : ${list}`;
+                }
+            }
+            else if (t.includes("efface les notes") || t.includes("supprime les notes")) {
+                tasks = [];
+                saveTasks();
+                renderTasks();
+                reply = "Liste de tâches vidée.";
+            }
+            // 2. COMMANDES STANDARDS
+            else if (t.includes("heure")) reply = `Il est ${new Date().toLocaleTimeString(Config.lang)}.`;
+            else if (t.includes("date")) reply = `Nous sommes le ${new Date().toLocaleDateString(Config.lang)}.`;
+            else if (t.includes("qui es-tu")) reply = "Je suis Jarvis Omni-X, votre assistant système complet.";
+            else if (t.includes("calcule") || /(\d)\s*(plus|moins|fois|divisé)/.test(t)) {
+                try {
+                    let clean = t.replace("calcule", "").replace("égal", "=").replace("fois", "*").replace("plus", "+").replace("moins", "-").replace("divisé", "/").replace("?", "");
+                    if (/^[\d\+\-\*\/\(\)\.\s]+$/.test(clean)) {
+                        reply = `Le résultat est ${eval(clean)}.`;
+                    } else { reply = "Calcul invalide."; }
+                } catch(e) { reply = "Erreur de syntaxe."; }
+            }
+            else if (t.includes("cherche")) {
+                const q = t.replace("cherche", "").trim();
+                window.open(`https://www.google.com/search?q=${encodeURIComponent(q)}`, '_blank');
+                reply = `Recherche pour : ${q}.`;
+            }
+            else { reply = `Commande reçue : "${text}".`; }
 
-            // Commandes pote
-            if(t.includes('blague') || t.includes('rigole')) reply = "Pourquoi les plongeurs plongent toujours en arrière ? Parce que sinon ils tombent dans le bateau ! 😂";
-            else if(t.includes('ça va') || t.includes('comment vas tu')) reply = "Nickel mon pote, et toi ? Raconte ta journée !";
-            else if(t.includes('heure')) reply = `Il est ${new Date().toLocaleTimeString(LANG)} mon pote.`;
-            else if(t.includes('merci')) reply = "Y'a pas de quoi, c'est pour ça que je suis ton pote !";
-            else if(t.includes('arrête') || t.includes('pause')) { isListening=false; reply="Ok je me tais... dis 'reviens' pour me relancer."; }
-
-            log("TOI", text);
-            log("POTE", reply);
-            document.getElementById('system-response').innerText = reply;
-            speak(reply);
+            log("USER", text);
+            log("AI", reply);
+            rEl.innerText = reply;
+            speak(reply, Config.profiles[currentProfile]);
         }
 
-        function speak(txt) {
+        // --- GESTION DES TÂCHES (CRUD) ---
+        function addTask(text) {
+            tasks.push(text);
+            saveTasks();
+            renderTasks();
+            log("SYS", `Tâche ajoutée: ${text}`);
+        }
+
+        function addTaskUI() {
+            const input = document.getElementById('new-task-input');
+            if(input.value.trim()) {
+                addTask(input.value);
+                input.value = "";
+            }
+        }
+
+        function removeTask(index) {
+            tasks.splice(index, 1);
+            saveTasks();
+            renderTasks();
+        }
+
+        function renderTasks() {
+            const container = document.getElementById('task-list');
+            container.innerHTML = "";
+            tasks.forEach((t, i) => {
+                const div = document.createElement('div');
+                div.className = 'task-item';
+                div.innerHTML = `<span class="task-text">${t}</span><button class="task-delete" onclick="removeTask(${i})">×</button>`;
+                container.appendChild(div);
+            });
+        }
+
+        function saveTasks() {
+            localStorage.setItem('jarvis_tasks', JSON.stringify(tasks));
+        }
+
+        function loadTasks() {
+            const saved = localStorage.getItem('jarvis_tasks');
+            if(saved) {
+                tasks = JSON.parse(saved);
+                renderTasks();
+            }
+        }
+
+        // --- SYNTHESE ---
+        function speak(txt, profile) {
+            window.speechSynthesis.cancel();
             const u = new SpeechSynthesisUtterance(txt);
-            u.lang = LANG;
-            u.pitch = 1.1; u.rate = 1.05;
+            u.lang = Config.lang;
+            u.pitch = profile.pitch;
+            u.rate = Config.rate;
+            const voices = window.speechSynthesis.getVoices();
+            const v = voices.find(v => v.lang.includes(Config.lang.split('-')[0]));
+            if(v) u.voice = v;
             window.speechSynthesis.speak(u);
         }
 
+        // --- UI HELPERS ---
+        function switchTab(tabId) {
+            // Update Nav
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            document.getElementById('nav-'+tabId).classList.add('active');
+
+            // Update Pages
+            document.querySelectorAll('.tab-page').forEach(el => el.classList.remove('active'));
+            document.getElementById('tab-'+tabId).classList.add('active');
+        }
+
         function toggleMic() {
-            isListening = !isListening;
-            const btn = document.getElementById('mic-btn');
-            if(isListening){ btn.classList.add('listening'); recognition.start(); }
-            else { btn.classList.remove('listening'); recognition.stop(); }
+            const btn = document.getElementById('mic-fab');
+            if(!isListening) { btn.classList.add('flag-active'); recognition.start(); }
+            else { btn.classList.remove('flag-active'); recognition.stop(); }
         }
 
         function log(src, msg) {
-            const c = document.getElementById('log-content');
-            const d = document.createElement('div');
-            d.innerHTML = `<span style="color:${src==='TOI'?'#fff':'#00ff9d'}">[${src}]</span> ${msg}`;
-            c.appendChild(d); c.scrollTop = c.scrollHeight;
+            const term = document.getElementById('log-terminal');
+            const line = document.createElement('div');
+            line.className = 'log-line';
+            const time = new Date().toLocaleTimeString('fr-FR', {hour12:false});
+            line.innerHTML = `<span style="color:#666">[${time}]</span> <b style="color:${src==='USER'?'#fff':'var(--primary)'}">${src}:</b> ${msg}`;
+            term.appendChild(line);
+            term.scrollTop = term.scrollHeight;
+            lastLog = `[${time}] ${src}: ${msg}\n`;
         }
 
-        function toggleLogs() { document.getElementById('log-drawer').classList.toggle('open'); }
-        function showToast(msg) {
-            const t = document.createElement('div'); t.className='toast'; t.textContent=msg;
-            document.getElementById('notification-area').appendChild(t);
-            setTimeout(()=>t.remove(), 3500);
+        function exportLogs() {
+            // Copier tous les logs dans le presse-papier
+            const allLogs = document.getElementById('log-terminal').innerText;
+            navigator.clipboard.writeText(allLogs).then(() => {
+                log("SYS", "Logs copiés dans le presse-papier.");
+                alert("Logs copiés !");
+            });
         }
 
-        // Horloge
-        setInterval(()=>{ document.getElementById('clock').textContent = new Date().toLocaleTimeString(LANG,{hour:'2-digit',minute:'2-digit'}); },1000);
+        function clearLogs() {
+            document.getElementById('log-terminal').innerHTML = '';
+            log("SYS", "Logs effacés.");
+        }
+
+        function updateLang(val) {
+            Config.lang = val;
+            if(recognition) recognition.lang = Config.lang;
+            log("SYS", `Langue : ${val}`);
+        }
+
+        setInterval(() => document.getElementById('clock').innerText = new Date().toLocaleTimeString(), 1000);
+
+        // Allow 'Enter' in input
+        document.getElementById('new-task-input').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') addTaskUI();
+        });
+
     </script>
 </body>
 </html>
