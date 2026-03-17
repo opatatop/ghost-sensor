@@ -3,19 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JARVIS v23.1 - PARANORMAL INTERFACE</title>
-    <link href="https://fonts.googleapis.com/css2?family=Creepster&family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <title>JARVIS v24.0 - NEXUS PARANORMAL</title>
+    <!-- Polices Cinématiques -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&family=Creepster&display=swap" rel="stylesheet">
     
     <style>
         :root {
-            --bg: #050000; 
-            --neon-human: #00ff41; 
-            --neon-ghost: #d500f9; 
-            --neon-demon: #ff0000; 
-            --neon-spirit: #ffffff;
-            --panel: #0a0505; 
-            --border: 1px solid rgba(255,255,255,0.1);
-            --font-ui: 'Share Tech Mono', monospace;
+            --bg-deep: #030305;
+            --neon-cyan: #00f3ff;
+            --neon-purple: #bc13fe;
+            --neon-red: #ff003c;
+            --neon-green: #0aff0a;
+            --glass: rgba(10, 15, 20, 0.6);
+            --border: 1px solid rgba(255, 255, 255, 0.1);
+            --font-tech: 'Rajdhani', sans-serif;
             --font-head: 'Orbitron', sans-serif;
             --font-spooky: 'Creepster', cursive;
         }
@@ -23,316 +24,453 @@
         * { box-sizing: border-box; user-select: none; }
         
         body { 
-            margin: 0; padding: 0; background: var(--bg); color: #ccc; font-family: var(--font-ui); 
+            margin: 0; padding: 0; background: var(--bg-deep); color: #fff; font-family: var(--font-tech); 
             height: 100vh; width: 100vw; overflow: hidden; display: flex; flex-direction: column;
+        }
+
+        /* --- EFFETS CINÉMATIQUES --- */
+        .scanlines {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 999;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 2px, 3px 100%;
+        }
+        .vignette {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 998;
+            background: radial-gradient(circle, rgba(0,0,0,0) 60%, rgba(0,0,0,0.8) 100%);
         }
 
         /* --- HEADER --- */
         header {
-            height: 60px; background: #000; border-bottom: 1px solid #333; display: flex; 
-            justify-content: space-between; align-items: center; padding: 0 20px;
+            height: 50px; background: rgba(0,0,0,0.8); border-bottom: 1px solid #333; display: flex; 
+            justify-content: space-between; align-items: center; padding: 0 30px; backdrop-filter: blur(5px); z-index: 100;
         }
-        .brand { font-family: var(--font-head); font-weight: 700; letter-spacing: 2px; color: #666; }
-        .brand span { color: var(--neon-demon); }
+        .brand { font-family: var(--font-head); font-weight: 900; letter-spacing: 3px; font-size: 1.1rem; }
+        .brand span { color: var(--neon-red); }
+        .sys-status { font-size: 0.8rem; color: var(--neon-cyan); letter-spacing: 1px; }
 
         /* --- MAIN GRID --- */
-        #interface {
+        #nexus-grid {
             flex: 1; display: grid; 
-            grid-template-columns: 300px 1fr 300px; 
-            grid-template-rows: 1fr 100px; 
-            gap: 1px; background: #222;
+            grid-template-columns: 280px 1fr 320px; 
+            grid-template-rows: 1fr 140px; 
+            gap: 2px; background: #1a1a1a;
         }
 
-        /* --- ZONES --- */
-        .panel { background: var(--panel); padding: 20px; display: flex; flex-direction: column; position: relative; }
-        .panel-header { font-size: 0.8rem; color: #555; text-transform: uppercase; margin-bottom: 15px; border-bottom: 1px solid #222; padding-bottom: 5px; letter-spacing: 1px; }
-
-        /* 1. ENTITY SELECTOR (Left) */
-        #zone-entities { grid-row: 1 / 3; border-right: var(--border); }
-
-        .entity-btn {
-            background: #111; border: 1px solid #333; color: #888; padding: 15px; margin-bottom: 10px;
-            cursor: pointer; font-family: var(--font-head); text-transform: uppercase; transition: all 0.3s;
-            display: flex; justify-content: space-between; align-items: center;
+        .panel { background: rgba(5,5,5,0.9); position: relative; overflow: hidden; border: 1px solid rgba(255,255,255,0.05); }
+        .panel::before { /* Corner accents */
+            content:''; position: absolute; top:0; left:0; width: 10px; height: 10px; 
+            border-top: 2px solid var(--neon-cyan); border-left: 2px solid var(--neon-cyan);
         }
-        .entity-btn:hover { background: #1a1a1a; color: #fff; }
+        .panel::after {
+            content:''; position: absolute; bottom:0; right:0; width: 10px; height: 10px; 
+            border-bottom: 2px solid var(--neon-cyan); border-right: 2px solid var(--neon-cyan);
+        }
+
+        .panel-title {
+            position: absolute; top: 10px; left: 20px; font-family: var(--font-head); font-size: 0.7rem; 
+            color: rgba(255,255,255,0.3); text-transform: uppercase; letter-spacing: 2px; z-index: 10;
+        }
+
+        /* --- ZONE 1: ENTITY CONTROL (Left) --- */
+        #zone-entities { grid-row: 1 / 3; display: flex; flex-direction: column; padding: 40px 20px 20px 20px; z-index: 20; background: linear-gradient(180deg, rgba(0,0,0,0.9), rgba(10,5,10,0.9)); }
         
-        .entity-btn.active { border-width: 2px; box-shadow: 0 0 15px currentColor; }
-        .ent-human.active { color: var(--neon-human); border-color: var(--neon-human); background: rgba(0,255,65,0.05); }
-        .ent-ghost.active { color: var(--neon-ghost); border-color: var(--neon-ghost); background: rgba(213,0,249,0.05); font-family: var(--font-spooky); letter-spacing: 2px;}
-        .ent-demon.active { color: var(--neon-demon); border-color: var(--neon-demon); background: rgba(255,0,0,0.05); }
-        .ent-spirit.active { color: var(--neon-spirit); border-color: var(--neon-spirit); background: rgba(255,255,255,0.05); }
-
-        /* 2. RADAR / MAIN VISUAL (Center) */
-        #zone-radar { grid-column: 2; grid-row: 1; background: #000; position: relative; overflow: hidden; display: flex; justify-content: center; align-items: center; }
+        .entity-card {
+            background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); padding: 15px; margin-bottom: 15px;
+            cursor: pointer; transition: all 0.3s; position: relative; overflow: hidden;
+        }
+        .entity-card h3 { margin: 0; font-family: var(--font-head); font-size: 0.9rem; letter-spacing: 1px; color: #888; }
+        .entity-card p { margin: 5px 0 0 0; font-size: 0.7rem; color: #555; }
         
-        #radar-canvas { position: absolute; z-index: 1; }
-        #noise-overlay { position: absolute; top:0; left:0; width:100%; height:100%; opacity:0.1; background: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIj48ZmlsdGVyIGlkPSJnoiPjxmZVR1cmJ1bGVuY2UgdHlwZT0iZnJhY3RhbE5vaXNlIiBiYXNlRnJlcXVlbmN5PSIwLjY1IiBudW1PY3RhdmVzPSIzIiBzdGl0Y2hUaWxlcz0ic3RpdGNoIi8+PC9maWx0ZXI+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsdGVyPSJ1cmwoI2cpIiBvcGFjaXR5PSIwLjUiLz48L3N2Zz4='); pointer-events:none; }
-
-        #entity-status {
-            z-index: 10; text-align: center; pointer-events: none;
-        }
-        #current-entity-name { font-family: var(--font-spooky); font-size: 2.5rem; text-shadow: 0 0 20px currentColor; margin-bottom: 10px; }
-        #translation-output { font-size: 1.2rem; min-height: 40px; color: #fff; background: rgba(0,0,0,0.7); padding: 10px 20px; border: 1px solid #333; display: inline-block; }
-
-        /* 3. LOGS (Right) */
-        #zone-logs { grid-column: 3; grid-row: 1 / 3; border-left: var(--border); }
-        #log-feed { flex: 1; overflow-y: auto; font-size: 0.8rem; display: flex; flex-direction: column-reverse; gap: 8px; padding-right:5px; }
-        .log-entry { border-left: 2px solid #333; padding-left: 8px; opacity: 0.8; }
-        .log-entry.detection { color: var(--neon-demon); border-color: var(--neon-demon); font-weight: bold; }
-        .log-entry.translation { color: var(--neon-ghost); border-color: var(--neon-ghost); }
-
-        /* 4. EMF METER (Bottom Center) */
-        #zone-emf { grid-column: 2; grid-row: 2; border-top: var(--border); display: flex; align-items: center; justify-content: center; padding: 10px; gap: 20px; }
+        .entity-card.active { border-color: currentColor; background: linear-gradient(90deg, rgba(255,255,255,0.05), transparent); }
+        .entity-card.active h3 { color: #fff; text-shadow: 0 0 10px currentColor; }
+        .entity-card.active p { color: #ccc; }
         
-        .emf-display {
-            width: 200px; height: 20px; background: #111; border: 1px solid #333; position: relative;
-        }
-        .emf-bar {
-            height: 100%; width: 0%; background: linear-gradient(90deg, green, yellow, red); transition: width 0.1s;
-        }
-        .emf-readout { font-family: var(--font-head); font-size: 1.2rem; }
+        .ent-human { --ent-color: var(--neon-green); }
+        .ent-ghost { --ent-color: var(--neon-purple); font-family: var(--font-spooky); }
+        .ent-demon { --ent-color: var(--neon-red); }
+        .ent-spirit { --ent-color: var(--neon-cyan); }
+        
+        .entity-card.active { box-shadow: 0 0 15px var(--ent-color), inset 0 0 10px rgba(0,0,0,0.5); }
 
-        /* --- MICRO BTN --- */
+        /* --- ZONE 2: RADAR (Center Top) --- */
+        #zone-radar { grid-column: 2; grid-row: 1; position: relative; background: #000; display: flex; justify-content: center; align-items: center; }
+        
+        #radar-canvas { z-index: 1; }
+        #particles-canvas { position: absolute; top:0; left:0; width:100%; height:100%; z-index: 0; opacity: 0.3; }
+
+        #central-hud {
+            position: absolute; z-index: 10; text-align: center; pointer-events: none; width: 80%;
+        }
+        #scan-line-text {
+            font-family: var(--font-head); font-size: 2.5rem; font-weight: 900; text-transform: uppercase;
+            letter-spacing: 4px; text-shadow: 0 0 20px rgba(0,0,0,0.8); margin-bottom: 10px;
+            transition: color 0.3s;
+        }
+        #translation-box {
+            background: rgba(0,0,0,0.7); border: 1px solid rgba(255,255,255,0.2); padding: 15px;
+            font-size: 1.2rem; color: #fff; min-height: 50px; display: inline-block;
+            backdrop-filter: blur(10px); box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            max-width: 90%; margin: 0 auto;
+        }
+
+        /* --- ZONE 3: LOGS (Right) --- */
+        #zone-logs { grid-column: 3; grid-row: 1 / 3; background: rgba(0,0,0,0.95); border-left: 1px solid #222; }
+        #log-feed { 
+            height: 100%; overflow-y: auto; padding: 50px 15px 15px 15px; font-family: monospace; font-size: 0.8rem; 
+            display: flex; flex-direction: column-reverse; gap: 8px;
+        }
+        .log-entry { padding-left: 10px; border-left: 2px solid #333; animation: fadeIn 0.3s ease-out; }
+        .log-entry.detected { color: var(--neon-red); border-color: var(--neon-red); text-shadow: 0 0 5px var(--neon-red); }
+        .log-entry.trans { color: var(--neon-purple); border-color: var(--neon-purple); }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateX(10px); } to { opacity: 1; transform: translateX(0); } }
+
+        /* --- ZONE 4: SPECTRUM (Bottom) --- */
+        #zone-spectrum { grid-column: 2; grid-row: 2; position: relative; background: #050505; display: flex; flex-direction: column; }
+        #spectrum-canvas { width: 100%; height: 100%; }
+
+        /* --- MIC TRIGGER --- */
         #mic-trigger {
-            position: absolute; bottom: 120px; right: 320px; width: 70px; height: 70px;
-            border-radius: 50%; background: rgba(0,0,0,0.8); border: 2px solid #555;
-            color: #fff; font-size: 1.5rem; display: flex; align-items: center; justify-content: center;
-            cursor: pointer; z-index: 100; box-shadow: 0 0 10px #000; transition: 0.3s;
+            position: absolute; bottom: 160px; right: 340px; width: 80px; height: 80px;
+            border-radius: 50%; background: rgba(0,0,0,0.8); border: 2px solid #333;
+            display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 100;
+            transition: 0.3s; box-shadow: 0 0 20px rgba(0,0,0,0.8);
         }
-        #mic-trigger:hover { border-color: #fff; transform: scale(1.1); }
-        #mic-trigger.listening { border-color: var(--neon-demon); box-shadow: 0 0 20px var(--neon-demon); animation: pulse-demon 1s infinite; }
+        #mic-trigger::after { content:'🎙️'; font-size: 2rem; }
         
-        @keyframes pulse-demon { 0% { box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.4); } 70% { box-shadow: 0 0 0 20px rgba(255, 0, 0, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 0, 0, 0); } }
+        #mic-trigger.active { border-color: var(--neon-cyan); box-shadow: 0 0 30px var(--neon-cyan), inset 0 0 10px var(--neon-cyan); animation: spin-slow 10s linear infinite; }
+        
+        @keyframes spin-slow { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         /* SCROLLBAR */
-        ::-webkit-scrollbar { width: 5px; }
-        ::-webkit-scrollbar-thumb { background: #333; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #000; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--neon-cyan); }
+
     </style>
 </head>
 <body>
 
+    <div class="scanlines"></div>
+    <div class="vignette"></div>
+
     <header>
-        <div class="brand">JARVIS <span>// PARANORMAL LINK</span></div>
-        <div style="font-size:0.8rem; color:#444;">SPIRIT TRANSLATION PROTOCOL</div>
+        <div class="brand">JARVIS <span>NEXUS</span> // v24.0</div>
+        <div class="sys-status">SYSTEM: <span id="sys-state">ONLINE</span> | FREQ: <span id="freq-val">0</span>Hz</div>
     </header>
 
-    <div id="interface">
-        <!-- LEFT: ENTITIES -->
+    <div id="nexus-grid">
+        <!-- 1. ENTITIES -->
         <aside id="zone-entities" class="panel">
-            <div class="panel-header">Select Entity (Channel)</div>
+            <div class="panel-title">Entity Channels</div>
             
-            <div class="entity-btn ent-human active" onclick="setEntity('human')">
-                <span>HUMAIN</span> <span>🔹</span>
+            <div class="entity-card ent-human active" onclick="setEntity('human')" id="card-human">
+                <h3>HUMAN</h3>
+                <p>Standard Protocol. Neutral.</p>
             </div>
-            <div class="entity-btn ent-ghost" onclick="setEntity('ghost')">
-                <span>FANTÔME</span> <span>👻</span>
+            <div class="entity-card ent-ghost" onclick="setEntity('ghost')" id="card-ghost">
+                <h3>GHOST</h3>
+                <p>Whisper Mode. High Pitch.</p>
             </div>
-            <div class="entity-btn ent-demon" onclick="setEntity('demon')">
-                <span>DÉMON</span> <span>😈</span>
+            <div class="entity-card ent-demon" onclick="setEntity('demon')" id="card-demon">
+                <h3>DEMON</h3>
+                <p>Aggression. Low Pitch.</p>
             </div>
-            <div class="entity-btn ent-spirit" onclick="setEntity('spirit')">
-                <span>ESPRIT</span> <span>👁️</span>
+            <div class="entity-card ent-spirit" onclick="setEntity('spirit')" id="card-spirit">
+                <h3>SPIRIT</h3>
+                <p>Mystical. Ethereal.</p>
             </div>
 
-            <div class="panel-header" style="margin-top:30px;">Entity Stats</div>
-            <div style="font-size:0.8rem; color:#666;">
-                Pitch Level: <span id="stat-pitch" style="color:#fff">Normal</span><br>
-                Aggression: <span id="stat-aggro" style="color:#fff">0%</span><br>
-                Language: <span style="color:var(--neon-ghost)">FRENCH OUTPUT</span>
+            <div style="margin-top:auto; padding:10px; border-top:1px solid #333; font-size:0.7rem; color:#444;">
+                AUTO-DETECT: <span id="auto-detect-status" style="color:#666">SCANNING...</span>
             </div>
         </aside>
 
-        <!-- CENTER: RADAR -->
-        <main id="zone-radar">
+        <!-- 2. RADAR -->
+        <main id="zone-radar" class="panel">
+            <canvas id="particles-canvas"></canvas>
             <canvas id="radar-canvas"></canvas>
-            <div id="noise-overlay"></div>
             
-            <div id="entity-status">
-                <div id="current-entity-name" style="color:var(--neon-human)">HUMAIN</div>
-                <div id="translation-output">En attente de liaison...</div>
+            <div id="central-hud">
+                <div id="scan-line-text" style="color:var(--neon-green)">STANDBY</div>
+                <div id="translation-box">Initializing Nexus Core...</div>
             </div>
         </main>
 
-        <!-- RIGHT: LOGS -->
+        <!-- 3. LOGS -->
         <aside id="zone-logs" class="panel">
-            <div class="panel-header">Paranormal Log</div>
+            <div class="panel-title">Comm Log</div>
             <div id="log-feed">
-                <div class="log-entry sys">> Interface Paranormale initialisée.</div>
-                <div class="log-entry sys">> En attente de sélection de canal...</div>
+                <div class="log-entry">> Nexus Core v24.0 Initialized.</div>
+                <div class="log-entry">> Audio Sensors Calibrated.</div>
+                <div class="log-entry">> Waiting for Entity input...</div>
             </div>
         </aside>
 
-        <!-- BOTTOM: EMF METER -->
-        <section id="zone-emf">
-            <div style="text-align:right; color:#666; font-size:0.7rem;">EMF DETECTOR</div>
-            <div class="emf-display">
-                <div id="emf-fill" class="emf-bar"></div>
-            </div>
-            <div class="emf-readout" id="emf-val">0.0 mG</div>
+        <!-- 4. SPECTRUM -->
+        <section id="zone-spectrum" class="panel">
+            <div class="panel-title">Spectral Analysis</div>
+            <canvas id="spectrum-canvas"></canvas>
         </section>
     </div>
 
-    <div id="mic-trigger" onclick="toggleMic()">🎙️</div>
+    <div id="mic-trigger" onclick="toggleMic()"></div>
 
     <script>
         /* ==============================================================================
-           JARVIS v23.1 - PARANORMAL ENGINE
+           JARVIS v24.0 - NEXUS PARANORMAL ENGINE
            ============================================================================== */
 
-        // --- CONFIGURATION ENTITÉS ---
+        // --- CONFIGURATION ---
         const Entities = {
-            human: { name: "HUMAIN", color: "var(--neon-human)", pitch: 1.0, rate: 1.0, style: "normal" },
-            ghost: { name: "FANTÔME", color: "var(--neon-ghost)", pitch: 1.6, rate: 0.7, style: "whisper" }, // Haut, lent
-            demon: { name: "DÉMON", color: "var(--neon-demon)", pitch: 0.4, rate: 1.4, style: "aggressive" }, // Bas, rapide
-            spirit: { name: "ESPRIT", color: "var(--neon-spirit)", pitch: 1.0, rate: 0.9, style: "mystical" }
+            human: { color: "var(--neon-green)", pitch: 1.0, rate: 1.0, name: "HUMAN" },
+            ghost: { color: "var(--neon-purple)", pitch: 1.7, rate: 0.6, name: "GHOST" },
+            demon: { color: "var(--neon-red)", pitch: 0.3, rate: 1.5, name: "DEMON" },
+            spirit: { color: "var(--neon-cyan)", pitch: 1.1, rate: 0.9, name: "SPIRIT" }
         };
 
         let currentEntity = 'human';
-        let audioCtx, analyser, dataArray;
+        let audioCtx, analyser, dataArray, waveArray;
+        let radarCtx, spectrumCtx, particleCtx;
         let recognition;
+        let isListening = false;
 
-        // --- AUDIO & RADAR ---
-        async function initAudio() {
+        // --- AUDIO & PARTICLES INIT ---
+        async function initNexus() {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 analyser = audioCtx.createAnalyser();
-                analyser.fftSize = 512;
+                analyser.fftSize = 2048;
+                
                 const src = audioCtx.createMediaStreamSource(stream);
                 src.connect(analyser);
-                dataArray = new Uint8Array(analyser.frequencyBinCount);
-                drawRadar();
+                
+                const bufferLength = analyser.frequencyBinCount;
+                dataArray = new Uint8Array(bufferLength);
+                waveArray = new Uint8Array(bufferLength);
+
+                // Init Canvases
+                radarCtx = document.getElementById('radar-canvas').getContext('2d');
+                spectrumCtx = document.getElementById('spectrum-canvas').getContext('2d');
+                particleCtx = document.getElementById('particles-canvas').getContext('2d');
+
+                initParticles();
+                loop();
                 return true;
             } catch(e) { return false; }
         }
 
-        function drawRadar() {
-            if (!audioCtx) return;
-            requestAnimationFrame(drawRadar);
-            analyser.getByteFrequencyData(dataArray);
-
-            // 1. Analyse pour EMF (Simulation)
-            let sum = 0;
-            let bass = 0; let treble = 0;
-            for(let i=0; i<dataArray.length; i++) {
-                sum += dataArray[i];
-                if(i<20) bass += dataArray[i]; // Basses
-                if(i>100) treble += dataArray[i]; // Aigus
+        // --- PARTICLE SYSTEM ---
+        const particles = [];
+        function initParticles() {
+            for(let i=0; i<50; i++) {
+                particles.push({
+                    x: Math.random() * window.innerWidth,
+                    y: Math.random() * window.innerHeight,
+                    size: Math.random() * 2,
+                    speedY: Math.random() * -0.5 - 0.1
+                });
             }
-            const avg = sum / dataArray.length;
+        }
+        function drawParticles() {
+            const cvs = document.getElementById('particles-canvas');
+            cvs.width = cvs.parentElement.clientWidth; cvs.height = cvs.parentElement.clientHeight;
+            particleCtx.clearRect(0,0,cvs.width, cvs.height);
+            particleCtx.fillStyle = "rgba(255,255,255,0.2)";
             
-            // Affichage EMF
-            const emfVal = (avg / 255) * 100;
-            document.getElementById('emf-fill').style.width = emfVal + '%';
-            document.getElementById('emf-val').innerText = (emfVal * 0.5).toFixed(1) + " mG";
-            document.getElementById('emf-val').style.color = emfVal > 80 ? 'var(--neon-demon)' : '#fff';
+            particles.forEach(p => {
+                p.y += p.speedY;
+                if(p.y < 0) p.y = cvs.height;
+                particleCtx.beginPath();
+                particleCtx.arc(p.x, p.y, p.size, 0, Math.PI*2);
+                particleCtx.fill();
+            });
+        }
 
-            // 2. Dessin Radar (Cercle qui tourne)
+        // --- MAIN RENDER LOOP ---
+        function loop() {
+            requestAnimationFrame(loop);
+            analyser.getByteFrequencyData(dataArray); // Spectrum
+            analyser.getByteTimeDomainData(waveArray); // Wave
+
+            // 1. Draw Radar
+            drawRadar(dataArray);
+            
+            // 2. Draw Spectrum
+            drawSpectrum(dataArray);
+
+            // 3. Auto-Detect Logic
+            autoDetectEntity(dataArray);
+        }
+
+        function drawRadar(data) {
             const cvs = document.getElementById('radar-canvas');
-            const ctx = cvs.getContext('2d');
             const w = cvs.width = cvs.parentElement.clientWidth;
             const h = cvs.height = cvs.parentElement.clientHeight;
-            const cx = w/2, cy = h/2;
+            const cx = w/2, cy = h/2, radius = Math.min(w,h)/2.5;
 
-            ctx.clearRect(0,0,w,h);
+            radarCtx.clearRect(0,0,w,h);
             
-            // Grille
-            ctx.strokeStyle = 'rgba(255,255,255,0.1)';
-            ctx.beginPath(); ctx.arc(cx,cy, 100, 0, Math.PI*2); ctx.stroke();
-            ctx.beginPath(); ctx.arc(cx,cy, 50, 0, Math.PI*2); ctx.stroke();
+            // Grid
+            radarCtx.strokeStyle = "rgba(0, 255, 255, 0.1)";
+            radarCtx.lineWidth = 1;
+            radarCtx.beginPath(); radarCtx.arc(cx,cy,radius,0,Math.PI*2); radarCtx.stroke();
+            radarCtx.beginPath(); radarCtx.arc(cx,cy,radius/2,0,Math.PI*2); radarCtx.stroke();
             
-            // Ligne de scan
+            // Crosshair
+            radarCtx.beginPath(); radarCtx.moveTo(cx, cy-radius); radarCtx.lineTo(cx, cy+radius); radarCtx.stroke();
+            radarCtx.beginPath(); radarCtx.moveTo(cx-radius, cy); radarCtx.lineTo(cx+radius, cy); radarCtx.stroke();
+
+            // Sweep Line
             const time = Date.now() / 1000;
-            const angle = time * 2; // Vitesse rotation
+            const angle = time; 
             
-            ctx.save();
-            ctx.translate(cx, cy);
-            ctx.rotate(angle);
+            radarCtx.save();
+            radarCtx.translate(cx, cy);
+            radarCtx.rotate(angle);
             
-            // Gradient de la ligne
-            const grad = ctx.createLinearGradient(0,0,150,0);
-            grad.addColorStop(0, 'rgba(0,0,0,0)');
+            // Sweep Gradient
+            const grad = radarCtx.createLinearGradient(0,0, radius, 0);
+            grad.addColorStop(0, "rgba(0, 255, 255, 0)");
             grad.addColorStop(1, Entities[currentEntity].color);
             
-            ctx.fillStyle = grad;
-            ctx.beginPath();
-            ctx.moveTo(0,0);
-            ctx.arc(0,0, 150, -0.1, 0.1); // Secteur fin
-            ctx.fill();
-            ctx.restore();
+            radarCtx.fillStyle = grad;
+            radarCtx.beginPath();
+            radarCtx.moveTo(0,0);
+            radarCtx.arc(0,0, radius, -0.1, 0.1); // Sector
+            radarCtx.fill();
+            radarCtx.restore();
 
-            // Blips (Points si son détecté dans le secteur actuel)
-            // Simplification: On dessine juste des points aléatoires si le son est fort
-            if (avg > 30) {
-                for(let k=0; k<3; k++) {
-                    const r = Math.random() * 120 + 20;
-                    const a = Math.random() * Math.PI * 2;
-                    ctx.fillStyle = '#fff';
-                    ctx.beginPath();
-                    ctx.arc(cx + Math.cos(a)*r, cy + Math.sin(a)*r, 2, 0, Math.PI*2);
-                    ctx.fill();
+            // Blips (Points if sound is loud)
+            let sum = 0;
+            for(let i=0; i<data.length; i++) sum += data[i];
+            const vol = sum / data.length;
+
+            if (vol > 40) {
+                const randomAngle = Math.random() * Math.PI * 2;
+                const r = Math.random() * radius * 0.9;
+                radarCtx.fillStyle = "#fff";
+                radarCtx.beginPath();
+                radarCtx.arc(cx + Math.cos(randomAngle)*r, cy + Math.sin(randomAngle)*r, 3, 0, Math.PI*2);
+                radarCtx.fill();
+                
+                // Flash effect on screen if very loud
+                if(vol > 100) {
+                    document.body.style.boxShadow = "inset 0 0 50px rgba(255,0,0,0.2)";
+                    setTimeout(() => document.body.style.boxShadow = "none", 50);
                 }
             }
         }
 
-        // --- RECONNAISSANCE & TRADUCTION ---
+        function drawSpectrum(data) {
+            const cvs = document.getElementById('spectrum-canvas');
+            const w = cvs.width = cvs.parentElement.clientWidth;
+            const h = cvs.height = cvs.parentElement.clientHeight;
+            
+            spectrumCtx.clearRect(0,0,w,h);
+            const barW = w / 128; // Moins de barres pour style
+            
+            for(let i=0; i<128; i++) {
+                const val = data[i * 4];
+                const barH = (val / 255) * h;
+                
+                // Couleur dynamique basée sur l'entité
+                spectrumCtx.fillStyle = Entities[currentEntity].color;
+                spectrumCtx.globalAlpha = 0.6;
+                spectrumCtx.fillRect(i * barW, h - barH, barW - 2, barH);
+            }
+            spectrumCtx.globalAlpha = 1.0;
+        }
+
+        // --- AUTO DETECTION LOGIC ---
+        function autoDetectEntity(data) {
+            let bass = 0, mid = 0, treble = 0;
+            const len = data.length;
+            
+            for(let i=0; i<len; i++) {
+                if(i < len * 0.1) bass += data[i];
+                else if(i < len * 0.5) mid += data[i];
+                else treble += data[i];
+            }
+
+            const maxVal = Math.max(bass, mid, treble);
+            let detected = 'human';
+            
+            if (maxVal === treble && treble > 50) detected = 'ghost';
+            else if (maxVal === bass && bass > 100) detected = 'demon';
+            else if (maxVal === mid && mid > 50) detected = 'spirit';
+
+            // Auto-highlight card without changing mode immediately (or change mode? let's change mode for impact)
+            const status = document.getElementById('auto-detect-status');
+            if(detected !== currentEntity) {
+                status.innerText = `DETECTED: ${Entities[detected].name}`;
+                status.style.color = Entities[detected].color;
+                
+                // Auto switch option (optional, but cool for "Summum")
+                // setEntity(detected); 
+            } else {
+                status.innerText = "STABLE";
+                status.style.color = "#666";
+            }
+
+            // Pitch Display
+            document.getElementById('freq-val').innerText = Math.round(maxVal);
+        }
+
+        // --- RECOGNITION & TRANSLATION ---
         function initSpeech() {
             const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if(!SR) return log("Navigateur incompatible", "sys");
+            if(!SR) return log("No Speech API", "sys");
 
             recognition = new SR();
             recognition.continuous = true;
             recognition.interimResults = false;
-            recognition.lang = 'fr-FR'; // On écoute tout en français (ou auto)
+            recognition.lang = 'fr-FR';
 
             recognition.onresult = (e) => {
                 const text = e.results[e.results.length-1][0].transcript;
-                processParanormalInput(text);
+                processNexusInput(text);
             };
-            recognition.onend = () => { if(recognition) recognition.start(); };
+            recognition.onend = () => { if(isListening) recognition.start(); };
         }
 
-        // --- LE CERVEAU PARANORMAL ---
-        function processParanormalInput(text) {
+        function processNexusInput(text) {
             const ent = Entities[currentEntity];
-            
-            // 1. Affichage Input
-            log(`Détecté: "${text}"`, "sys");
+            log(`Input: "${text}"`, "sys");
 
-            // 2. Traduction & Transformation selon l'Entité
             let finalText = "";
+            const scanText = document.getElementById('scan-line-text');
+            const transBox = document.getElementById('translation-box');
+
+            scanText.innerText = ent.name;
 
             if (currentEntity === 'human') {
-                finalText = `J'ai compris : ${text}.`;
-            } 
-            else if (currentEntity === 'ghost') {
-                // Logique Fantôme: Mots coupés, points de suspension, mystère
-                const words = text.split(' ');
-                const transformed = words.map(w => Math.random() > 0.7 ? "..." : w).join(' ');
-                finalText = `...${transformed}... qui es-tu...`;
-            } 
-            else if (currentEntity === 'demon') {
-                // Logique Démon: Majuscules, agressif
-                finalText = `TU AS DIT "${text.toUpperCase()}". JE SUIS ICI.`;
-            } 
-            else if (currentEntity === 'spirit') {
-                // Logique Esprit: Mystique, calme
-                finalText = `L'esprit a perçu "${text}". La voix résonne dans le vide.`;
+                finalText = `Nexus interprète : ${text}.`;
+            } else if (currentEntity === 'ghost') {
+                // Effet paranormal
+                finalText = text.split('').join('. ') + "... (L'esprit parle)";
+                scanText.style.fontFamily = "var(--font-spooky)";
+            } else if (currentEntity === 'demon') {
+                finalText = `JE SENS TA PEUR. TU AS DIT "${text.toUpperCase()}".`;
+                scanText.style.fontFamily = "var(--font-head)";
+            } else {
+                finalText = `L'éther murmure : "${text}".`;
+                scanText.style.fontFamily = "var(--font-tech)";
             }
 
-            // 3. Affichage & Parole
-            document.getElementById('translation-output').innerText = finalText;
-            document.getElementById('translation-output').style.color = ent.color;
-            
+            transBox.innerText = finalText;
+            scanText.style.color = ent.color;
+            log(`Output: ${finalText}`, "trans");
+
             speak(finalText, ent);
-            log(`Traduction [${ent.name}]: ${finalText}`, "translation");
         }
 
         function speak(txt, ent) {
             window.speechSynthesis.cancel();
             const u = new SpeechSynthesisUtterance(txt);
-            u.lang = 'fr-FR'; // On parle toujours en Français (demande utilisateur)
+            u.lang = 'fr-FR';
             u.pitch = ent.pitch;
             u.rate = ent.rate;
             window.speechSynthesis.speak(u);
@@ -343,31 +481,33 @@
             currentEntity = type;
             const ent = Entities[type];
             
-            // Update UI Boutons
-            document.querySelectorAll('.entity-btn').forEach(b => b.classList.remove('active'));
-            document.querySelector(`.ent-${type}`).classList.add('active');
+            // UI Update
+            document.querySelectorAll('.entity-card').forEach(c => c.classList.remove('active'));
+            document.getElementById(`card-${type}`).classList.add('active');
             
-            // Update UI Center
-            const nameEl = document.getElementById('current-entity-name');
-            nameEl.innerText = ent.name;
-            nameEl.style.color = ent.color;
-            
-            // Update Stats
-            document.getElementById('stat-pitch').innerText = ent.pitch + "x";
-            document.getElementById('stat-aggro').innerText = type === 'demon' ? "100%" : (type === 'ghost' ? "10%" : "0%");
-            
-            log(`Canal changé : ${ent.name}`, "detection");
+            document.getElementById('scan-line-text').style.color = ent.color;
+            log(`Channel switched to ${ent.name}`, "sys");
         }
 
         async function toggleMic() {
-            if(!audioCtx) await initAudio();
+            if(!audioCtx) await initNexus();
             if(!recognition) initSpeech();
             
+            isListening = !isListening;
             const btn = document.getElementById('mic-trigger');
-            btn.classList.toggle('listening');
+            const sysState = document.getElementById('sys-state');
             
-            // Restart recognition logic is handled in onend
-            try { recognition.start(); } catch(e) {}
+            if(isListening) {
+                btn.classList.add('active');
+                sysState.innerText = "LISTENING";
+                sysState.style.color = "var(--neon-red)";
+                recognition.start();
+            } else {
+                btn.classList.remove('active');
+                sysState.innerText = "STANDBY";
+                sysState.style.color = "#fff";
+                recognition.stop();
+            }
         }
 
         function log(msg, type) {
@@ -376,8 +516,12 @@
             d.className = `log-entry ${type}`;
             d.innerText = `> ${msg}`;
             c.prepend(d);
-            if(c.children.length > 30) c.lastChild.remove();
         }
+
+        // Resize handler
+        window.addEventListener('resize', () => {
+             // Redraw handled in loop
+        });
 
     </script>
 </body>
