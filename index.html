@@ -13,50 +13,238 @@
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono:wght@400;700&display=swap" rel="stylesheet">
 
     <style>
-        :root { --ghost: #00ff85; --cold: #00ffff; --red: #ff0000; --dark: #1a0033; }
-        * { margin:0; padding:0; box-sizing:border-box; user-select:none; }
+        :root {
+            --ghost: #00ff85;
+            --cold: #00ffff;
+            --red: #ff0000;
+            --dark: #1a0033;
+            --background: #000;
+            --text: #ccc;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
         body {
-            background:#000; color:#ccc; font-family:'Rajdhani',sans-serif; height:100vh; overflow:hidden;
+            background: var(--background);
+            color: var(--text);
+            font-family: 'Rajdhani', sans-serif;
+            height: 100vh;
+            overflow: hidden;
             background: radial-gradient(circle at 50% 15%, var(--dark) 0%, #000 85%);
         }
+
         /* FLICKER PARANORMAL */
         @keyframes flicker {
-            0%,100% { opacity:1; }
-            50% { opacity:0.4; }
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
         }
         .flicker { animation: flicker 0.15s infinite alternate; }
 
-        header { height:65px; background:#000; border-bottom:5px solid var(--ghost); display:flex; justify-content:space-between; align-items:center; padding:0 25px; box-shadow:0 0 40px rgba(0,255,133,0.6); }
-        .brand { font-family:'Orbitron',sans-serif; font-size:2.15rem; font-weight:900; letter-spacing:8px; color:var(--ghost); text-shadow:0 0 30px var(--ghost); }
+        /* PULSE ANIMATION */
+        @keyframes pulse {
+            50% { transform: scale(1.2); }
+        }
 
-        #display { flex:1; padding:25px; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; }
-        #input-text { font-family:'Orbitron',sans-serif; font-size:2.7rem; color:#ffd700; text-shadow:0 0 25px #ffd700; margin-bottom:15px; }
-        #output-text { font-family:'Share Tech Mono',monospace; font-size:1.38rem; color:#ddd; line-height:1.5; min-height:180px; text-shadow:0 0 18px var(--cold); }
+        /* SPIN ANIMATION */
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
 
-        #viz { padding:18px; background:rgba(0,0,0,0.95); }
-        .bar { height:16px; background:#111; margin:12px 0; border-radius:8px; overflow:hidden; }
-        .fill { height:100%; width:0%; transition:width 0.2s linear; }
+        header {
+            height: 65px;
+            background: #000;
+            border-bottom: 5px solid var(--ghost);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 25px;
+            box-shadow: 0 0 40px rgba(0, 255, 133, 0.6);
+        }
 
-        #console { height:140px; background:#000; font-family:'Share Tech Mono',monospace; font-size:0.86rem; color:var(--ghost); padding:12px; overflow-y:auto; line-height:1.4; }
+        .brand {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.15rem;
+            font-weight: 900;
+            letter-spacing: 8px;
+            color: var(--ghost);
+            text-shadow: 0 0 30px var(--ghost);
+        }
 
-        footer { height:170px; background:#000; display:flex; flex-direction:column; align-items:center; gap:10px; border-top:5px solid var(--red); padding:15px; }
-        #mic { width:118px; height:118px; border-radius:50%; background:var(--ghost); border:8px solid #222; color:#000; font-size:3.4rem; display:flex; align-items:center; justify-content:center; box-shadow:0 0 60px rgba(0,255,133,0.95); cursor:pointer; }
-        #mic.active { background:var(--red); animation:pulse 1.1s infinite, spin 4s linear infinite; }
-        .force-btn { padding:13px 35px; background:#3a0a5e; color:var(--ghost); border:3px solid var(--ghost); border-radius:12px; font-size:1.05rem; font-weight:bold; width:85%; }
+        #display {
+            flex: 1;
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
 
-        @keyframes pulse { 50% { transform:scale(1.2); } }
-        @keyframes spin { from { transform:rotate(0deg); } to { transform:rotate(360deg); } }
+        #input-text {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.7rem;
+            color: #ffd700;
+            text-shadow: 0 0 25px #ffd700;
+            margin-bottom: 15px;
+        }
 
-        /* Nouveaux styles pour les nouvelles fonctionnalités */
-        #emf-meter { margin-top: 20px; text-align: center; }
-        #emf-value { font-family:'Share Tech Mono', monospace; font-size:1.5rem; color: var(--ghost); }
-        #temperature { margin-top: 20px; text-align: center; }
-        #temperature-value { font-family:'Share Tech Mono', monospace; font-size:1.5rem; color: var(--cold); }
-        #light-level { margin-top: 20px; text-align: center; }
-        #light-value { font-family:'Share Tech Mono', monospace; font-size:1.5rem; color: #ffff00; }
-        #session-log { margin-top: 20px; text-align: center; }
-        #session-log button { background: #3a0a5e; color: var(--ghost); border: none; padding: 10px 20px; margin: 5px; border-radius: 5px; cursor: pointer; }
-        #session-log input { background: #3a0a5e; color: var(--ghost); border: none; padding: 10px 20px; margin: 5px; border-radius: 5px; }
+        #output-text {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 1.38rem;
+            color: #ddd;
+            line-height: 1.5;
+            min-height: 180px;
+            text-shadow: 0 0 18px var(--cold);
+        }
+
+        #viz {
+            padding: 18px;
+            background: rgba(0, 0, 0, 0.95);
+        }
+
+        .bar {
+            height: 16px;
+            background: #111;
+            margin: 12px 0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .fill {
+            height: 100%;
+            width: 0%;
+            transition: width 0.2s linear;
+        }
+
+        #console {
+            height: 140px;
+            background: #000;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.86rem;
+            color: var(--ghost);
+            padding: 12px;
+            overflow-y: auto;
+            line-height: 1.4;
+        }
+
+        footer {
+            height: 170px;
+            background: #000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            border-top: 5px solid var(--red);
+            padding: 15px;
+        }
+
+        #mic {
+            width: 118px;
+            height: 118px;
+            border-radius: 50%;
+            background: var(--ghost);
+            border: 8px solid #222;
+            color: #000;
+            font-size: 3.4rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 60px rgba(0, 255, 133, 0.95);
+            cursor: pointer;
+        }
+
+        #mic.active {
+            background: var(--red);
+            animation: pulse 1.1s infinite, spin 4s linear infinite;
+        }
+
+        .force-btn {
+            padding: 13px 35px;
+            background: #3a0a5e;
+            color: var(--ghost);
+            border: 3px solid var(--ghost);
+            border-radius: 12px;
+            font-size: 1.05rem;
+            font-weight: bold;
+            width: 85%;
+            cursor: pointer;
+        }
+
+        .force-btn:hover {
+            background: #2a0a4a;
+        }
+
+        /* Styles pour les nouveaux éléments */
+        #sensor-readings {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .sensor-reading {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 5px;
+        }
+
+        .sensor-label {
+            font-family: 'Share Tech Mono', monospace;
+            color: var(--ghost);
+        }
+
+        .sensor-value {
+            font-family: 'Share Tech Mono', monospace;
+            color: #fff;
+            font-weight: bold;
+        }
+
+        #session-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        #session-controls button {
+            padding: 10px;
+            background: #3a0a5e;
+            color: var(--ghost);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #session-controls button:hover {
+            background: #2a0a4a;
+        }
+
+        #session-controls input {
+            padding: 10px;
+            background: #3a0a5e;
+            color: var(--ghost);
+            border: none;
+            border-radius: 5px;
+        }
+
+        /* Animations supplémentaires */
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .float {
+            animation: float 3s ease-in-out infinite;
+        }
     </style>
 </head>
 <body>
@@ -78,26 +266,19 @@
     <div class="bar"><div id="aggro-fill" class="fill" style="background:var(--ghost)"></div></div>
     <div style="display:flex;justify-content:space-between;color:var(--ghost);font-size:0.88rem;"><span>FORCE PARANORMALE</span><span id="aggro">0%</span></div>
 
-    <!-- Nouveaux éléments pour les fonctionnalités supplémentaires -->
-    <div id="emf-meter">
-        <div class="bar"><div id="emf-fill" class="fill" style="background:#00ff00"></div></div>
-        <div style="display:flex;justify-content:space-between;color:#00ff00;font-size:0.88rem;"><span>EMF METER</span><span id="emf">0 mG</span></div>
-    </div>
+    <div class="bar"><div id="emf-fill" class="fill" style="background:#00ff00"></div></div>
+    <div style="display:flex;justify-content:space-between;color:#00ff00;font-size:0.88rem;"><span>EMF METER</span><span id="emf">0 mG</span></div>
 
-    <div id="temperature">
-        <div class="bar"><div id="temp-fill" class="fill" style="background:var(--cold)"></div></div>
-        <div style="display:flex;justify-content:space-between;color:var(--cold);font-size:0.88rem;"><span>TEMPÉRATURE</span><span id="temp">0°C</span></div>
-    </div>
+    <div class="bar"><div id="temp-fill" class="fill" style="background:var(--cold)"></div></div>
+    <div style="display:flex;justify-content:space-between;color:var(--cold);font-size:0.88rem;"><span>TEMPÉRATURE</span><span id="temp">0°C</span></div>
 
-    <div id="light-level">
-        <div class="bar"><div id="light-fill" class="fill" style="background:#ffff00"></div></div>
-        <div style="display:flex;justify-content:space-between;color:#ffff00;font-size:0.88rem;"><span>LUMIÈRE</span><span id="light">0 lux</span></div>
-    </div>
+    <div class="bar"><div id="light-fill" class="fill" style="background:#ffff00"></div></div>
+    <div style="display:flex;justify-content:space-between;color:#ffff00;font-size:0.88rem;"><span>LUMIÈRE</span><span id="light">0 lux</span></div>
 </div>
 
 <div id="console"></div>
 
-<div id="session-log">
+<div id="session-controls">
     <button onclick="startSession()">Démarrer la Session</button>
     <button onclick="endSession()">Terminer la Session</button>
     <input type="text" id="session-name" placeholder="Nom de la session">
@@ -107,7 +288,7 @@
 
 <footer>
     <div id="mic" onclick="toggleMic()"></div>
-    <button class="force-btn" onclick="forceSpeak()"> RE-PARLER MAINTENANT</button>
+    <button class="force-btn" onclick="forceSpeak()">RE-PARLER MAINTENANT</button>
     <button class="force-btn" onclick="testVoice()">TEST VOIX FANTÔME</button>
     <button class="force-btn" onclick="evpMode()">MODE EVP (Entité parle seule)</button>
     <button class="force-btn" onclick="toggleFlashlight()">ACTIVER LA LAMPE TORCHE</button>
@@ -138,6 +319,7 @@
     let lightLevel = 0;
     let sessionActive = false;
     let sessionData = [];
+    let flashlightActive = false;
 
     // Fonction pour logger des messages dans la console
     const consoleLog = (msg, type = 'entity') => {
@@ -299,18 +481,19 @@
                 const imageCapture = new ImageCapture(track);
                 const photoCapabilities = imageCapture.getPhotoCapabilities().then(() => {
                     // Simuler l'activation de la lampe torche
+                    flashlightActive = !flashlightActive;
                     const flashlightStatus = document.getElementById('flashlight-status');
                     if (!flashlightStatus) {
                         const status = document.createElement('div');
                         status.id = 'flashlight-status';
                         status.style.color = '#00ff85';
                         status.style.marginTop = '10px';
-                        status.textContent = 'Lampe torche activée';
+                        status.textContent = flashlightActive ? 'Lampe torche activée' : 'Lampe torche désactivée';
                         document.getElementById('display').appendChild(status);
                     } else {
-                        flashlightStatus.textContent = flashlightStatus.textContent.includes('activée') ? 'Lampe torche désactivée' : 'Lampe torche activée';
+                        flashlightStatus.textContent = flashlightActive ? 'Lampe torche activée' : 'Lampe torche désactivée';
                     }
-                    consoleLog("Lampe torche basculée", "entity");
+                    consoleLog(flashlightActive ? "Lampe torche activée" : "Lampe torche désactivée", "entity");
                 });
             }, function(err) {
                 consoleLog("Erreur lors de l'accès à la caméra: " + err.message, "entity");
@@ -336,6 +519,7 @@
         "lumière": "Le niveau de lumière est à " + lightLevel + " lux. Les entités aiment les endroits sombres.",
         "session": "Session en cours. Tous les événements sont enregistrés.",
         "batterie": "La batterie est à " + batteryLevel + "%. Les entités peuvent drainer l'énergie.",
+        "flashlight": flashlightActive ? "La lampe torche est activée. Les entités n'aiment pas la lumière." : "La lampe torche est désactivée. Les entités préfèrent l'obscurité.",
         // Ajouter plus de réponses ici pour atteindre 80+
     };
 
@@ -361,6 +545,7 @@
         else if (lower.includes("lumière") || lower.includes("light")) reply = paranormalResponses["lumière"];
         else if (lower.includes("session") || lower.includes("enregistrement")) reply = paranormalResponses["session"];
         else if (lower.includes("batterie") || lower.includes("battery")) reply = paranormalResponses["batterie"];
+        else if (lower.includes("lampe torche") || lower.includes("flashlight")) reply = paranormalResponses["flashlight"];
         // Ajouter plus de conditions ici pour gérer 80+ cas
 
         outputEl.textContent = reply;
