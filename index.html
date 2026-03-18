@@ -11,6 +11,7 @@
     <meta name="theme-color" content="#00ff85">
 
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
     <style>
         :root {
@@ -20,6 +21,7 @@
             --dark: #1a0033;
             --background: #000;
             --text: #ccc;
+            --highlight: #ffd700;
         }
 
         * {
@@ -40,14 +42,16 @@
 
         /* FLICKER PARANORMAL */
         @keyframes flicker {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.4; }
+            0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% { opacity: 0.99; }
+            20%, 24%, 55% { opacity: 0.4; }
         }
         .flicker { animation: flicker 0.15s infinite alternate; }
 
         /* PULSE ANIMATION */
         @keyframes pulse {
+            0% { transform: scale(1); }
             50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
         }
 
         /* SPIN ANIMATION */
@@ -55,6 +59,13 @@
             from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
         }
+
+        /* FLOAT ANIMATION */
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        .float { animation: float 3s ease-in-out infinite; }
 
         header {
             height: 65px;
@@ -89,8 +100,8 @@
         #input-text {
             font-family: 'Orbitron', sans-serif;
             font-size: 2.7rem;
-            color: #ffd700;
-            text-shadow: 0 0 25px #ffd700;
+            color: var(--highlight);
+            text-shadow: 0 0 25px var(--highlight);
             margin-bottom: 15px;
         }
 
@@ -114,6 +125,7 @@
             margin: 12px 0;
             border-radius: 8px;
             overflow: hidden;
+            position: relative;
         }
 
         .fill {
@@ -157,11 +169,24 @@
             justify-content: center;
             box-shadow: 0 0 60px rgba(0, 255, 133, 0.95);
             cursor: pointer;
+            position: relative;
+            overflow: hidden;
         }
 
         #mic.active {
             background: var(--red);
             animation: pulse 1.1s infinite, spin 4s linear infinite;
+        }
+
+        #mic::before {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(0, 255, 133, 0.3) 0%, rgba(0, 255, 133, 0) 70%);
+            animation: spin 4s linear infinite;
         }
 
         .force-btn {
@@ -174,10 +199,31 @@
             font-weight: bold;
             width: 85%;
             cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
         }
 
         .force-btn:hover {
             background: #2a0a4a;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .force-btn::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, transparent 0%, rgba(255, 255, 255, 0.1) 50%, transparent 100%);
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+        }
+
+        .force-btn:hover::before {
+            transform: translateX(100%);
         }
 
         /* Styles pour les nouveaux éléments */
@@ -195,11 +241,19 @@
             padding: 10px;
             background: rgba(0, 0, 0, 0.5);
             border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .sensor-reading:hover {
+            background: rgba(0, 0, 0, 0.7);
         }
 
         .sensor-label {
             font-family: 'Share Tech Mono', monospace;
             color: var(--ghost);
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
         .sensor-value {
@@ -222,6 +276,7 @@
             border: none;
             border-radius: 5px;
             cursor: pointer;
+            transition: all 0.3s ease;
         }
 
         #session-controls button:hover {
@@ -236,14 +291,150 @@
             border-radius: 5px;
         }
 
-        /* Animations supplémentaires */
-        @keyframes float {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
+        /* Styles pour les nouvelles fonctionnalités */
+        #paranormal-activity {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px;
+            border-radius: 5px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            z-index: 100;
         }
 
-        .float {
-            animation: float 3s ease-in-out infinite;
+        .activity-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9rem;
+        }
+
+        .activity-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+        }
+
+        .activity-icon.ghost {
+            background: var(--ghost);
+            color: #000;
+        }
+
+        .activity-icon.emf {
+            background: #00ff00;
+            color: #000;
+        }
+
+        .activity-icon.temp {
+            background: var(--cold);
+            color: #000;
+        }
+
+        .activity-icon.light {
+            background: #ffff00;
+            color: #000;
+        }
+
+        /* Styles pour le menu */
+        #menu {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px;
+            border-radius: 5px;
+            z-index: 100;
+        }
+
+        #menu-button {
+            background: none;
+            border: none;
+            color: var(--ghost);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        #menu-content {
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+            position: absolute;
+            left: 0;
+            top: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 10px;
+            border-radius: 5px;
+            min-width: 200px;
+        }
+
+        #menu-content.show {
+            display: flex;
+        }
+
+        #menu-content button {
+            background: none;
+            border: none;
+            color: var(--ghost);
+            text-align: left;
+            padding: 5px;
+            cursor: pointer;
+        }
+
+        #menu-content button:hover {
+            color: #fff;
+        }
+
+        /* Styles pour les notifications */
+        #notifications {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 100;
+        }
+
+        .notification {
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .notification-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+        }
+
+        .notification-icon.warning {
+            background: #ff0000;
+            color: #fff;
+        }
+
+        .notification-icon.info {
+            background: #00ff85;
+            color: #000;
         }
     </style>
 </head>
@@ -254,9 +445,37 @@
     <div id="status" style="color:#ff0000;font-size:0.95rem;">v47.0 • REALME NOTE 60 • ENTITÉ ACTIVE</div>
 </header>
 
+<div id="menu">
+    <button id="menu-button" onclick="toggleMenu()"><i class="fas fa-bars"></i></button>
+    <div id="menu-content">
+        <button onclick="showSettings()"><i class="fas fa-cog"></i> Paramètres</button>
+        <button onclick="showHelp()"><i class="fas fa-question-circle"></i> Aide</button>
+        <button onclick="showAbout()"><i class="fas fa-info-circle"></i> À propos</button>
+    </div>
+</div>
+
+<div id="paranormal-activity">
+    <div class="activity-item">
+        <div class="activity-icon ghost"><i class="fas fa-ghost"></i></div>
+        <span>Activité paranormale: <span id="paranormal-activity-level">0%</span></span>
+    </div>
+    <div class="activity-item">
+        <div class="activity-icon emf"><i class="fas fa-bolt"></i></div>
+        <span>EMF: <span id="paranormal-emf-level">0 mG</span></span>
+    </div>
+    <div class="activity-item">
+        <div class="activity-icon temp"><i class="fas fa-temperature-low"></i></div>
+        <span>Température: <span id="paranormal-temp-level">0°C</span></span>
+    </div>
+    <div class="activity-item">
+        <div class="activity-icon light"><i class="fas fa-lightbulb"></i></div>
+        <span>Lumière: <span id="paranormal-light-level">0 lux</span></span>
+    </div>
+</div>
+
 <div id="display">
     <div id="input-text">PARLE À L’ENTITÉ...</div>
-    <div id="output-text">Je suis là... dans l’ombre. Parle maintenant.</div>
+    <div id="output-text">Système initialisé. Parlez maintenant pour commencer.</div>
 </div>
 
 <div id="viz">
@@ -279,20 +498,94 @@
 <div id="console"></div>
 
 <div id="session-controls">
-    <button onclick="startSession()">Démarrer la Session</button>
-    <button onclick="endSession()">Terminer la Session</button>
+    <button onclick="startSession()"><i class="fas fa-play"></i> Démarrer la Session</button>
+    <button onclick="endSession()"><i class="fas fa-stop"></i> Terminer la Session</button>
     <input type="text" id="session-name" placeholder="Nom de la session">
-    <button onclick="saveSession()">Sauvegarder la Session</button>
-    <button onclick="loadSession()">Charger une Session</button>
+    <button onclick="saveSession()"><i class="fas fa-save"></i> Sauvegarder la Session</button>
+    <button onclick="loadSession()"><i class="fas fa-folder-open"></i> Charger une Session</button>
 </div>
 
 <footer>
-    <div id="mic" onclick="toggleMic()"></div>
-    <button class="force-btn" onclick="forceSpeak()">RE-PARLER MAINTENANT</button>
-    <button class="force-btn" onclick="testVoice()">TEST VOIX FANTÔME</button>
-    <button class="force-btn" onclick="evpMode()">MODE EVP (Entité parle seule)</button>
-    <button class="force-btn" onclick="toggleFlashlight()">ACTIVER LA LAMPE TORCHE</button>
+    <div id="mic" onclick="toggleMic()"><i class="fas fa-microphone"></i></div>
+    <button class="force-btn" onclick="forceSpeak()"><i class="fas fa-redo"></i> RE-PARLER MAINTENANT</button>
+    <button class="force-btn" onclick="testVoice()"><i class="fas fa-volume-up"></i> TEST VOIX FANTÔME</button>
+    <button class="force-btn" onclick="evpMode()"><i class="fas fa-comment"></i> MODE EVP (Entité parle seule)</button>
+    <button class="force-btn" onclick="toggleFlashlight()"><i class="fas fa-lightbulb"></i> ACTIVER LA LAMPE TORCHE</button>
 </footer>
+
+<div id="notifications"></div>
+
+<!-- Modals -->
+<div id="settings-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.9); z-index: 1000; display: flex; justify-content: center; align-items: center;">
+    <div style="background: #1a0033; padding: 20px; border-radius: 10px; max-width: 500px; width: 90%;">
+        <h2 style="color: var(--ghost); margin-bottom: 20px;">Paramètres</h2>
+        <div style="display: flex; flex-direction: column; gap: 15px;">
+            <div>
+                <label style="color: var(--text);">Sensibilité du microphone</label>
+                <input type="range" id="mic-sensitivity" min="1" max="100" value="50" style="width: 100%;">
+            </div>
+            <div>
+                <label style="color: var(--text);">Volume de la voix</label>
+                <input type="range" id="voice-volume" min="0" max="1" step="0.1" value="1" style="width: 100%;">
+            </div>
+            <div>
+                <label style="color: var(--text);">Seuil de détection paranormale</label>
+                <input type="range" id="paranormal-threshold" min="0" max="100" value="70" style="width: 100%;">
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-top: 20px;">
+                <button onclick="closeSettings()" style="background: #3a0a5e; color: var(--ghost); border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">Fermer</button>
+                <button onclick="saveSettings()" style="background: var(--ghost); color: #000; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">Sauvegarder</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="help-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.9); z-index: 1000; display: flex; justify-content: center; align-items: center;">
+    <div style="background: #1a0033; padding: 20px; border-radius: 10px; max-width: 500px; width: 90%;">
+        <h2 style="color: var(--ghost); margin-bottom: 20px;">Aide</h2>
+        <div style="color: var(--text); line-height: 1.6;">
+            <p>Bienvenue dans JARVIS PARANORMAL, l'application de détection d'entités paranormales pour Realme Note 60.</p>
+            <p><strong>Fonctionnalités principales :</strong></p>
+            <ul>
+                <li><strong>Détection vocale :</strong> Parlez à l'entité pour interagir avec elle.</li>
+                <li><strong>Mode EVP :</strong> Activez le mode EVP pour que l'entité parle directement.</li>
+                <li><strong>Capteurs :</strong> Utilisez les capteurs de votre téléphone pour détecter des activités paranormales.</li>
+                <li><strong>Journalisation :</strong> Enregistrez vos sessions pour une analyse ultérieure.</li>
+                <li><strong>Lampe torche :</strong> Activez la lampe torche pour éloigner les entités.</li>
+            </ul>
+            <p><strong>Conseils d'utilisation :</strong></p>
+            <ul>
+                <li>Assurez-vous d'être dans un endroit calme pour une meilleure détection.</li>
+                <li>Parlez clairement et distinctement pour une meilleure reconnaissance vocale.</li>
+                <li>Utilisez le mode EVP pour des interactions plus profondes avec les entités.</li>
+                <li>Sauvegardez vos sessions pour suivre les activités paranormales au fil du temps.</li>
+            </ul>
+        </div>
+        <button onclick="closeHelp()" style="background: var(--ghost); color: #000; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-top: 20px;">Fermer</button>
+    </div>
+</div>
+
+<div id="about-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.9); z-index: 1000; display: flex; justify-content: center; align-items: center;">
+    <div style="background: #1a0033; padding: 20px; border-radius: 10px; max-width: 500px; width: 90%;">
+        <h2 style="color: var(--ghost); margin-bottom: 20px;">À propos de JARVIS PARANORMAL</h2>
+        <div style="color: var(--text); line-height: 1.6;">
+            <p>JARVIS PARANORMAL v47.0 est une application de détection d'entités paranormales conçue spécialement pour le Realme Note 60.</p>
+            <p><strong>Fonctionnalités :</strong></p>
+            <ul>
+                <li>Détection vocale et synthèse vocale</li>
+                <li>Mode EVP pour des interactions avec les entités</li>
+                <li>Utilisation des capteurs du téléphone (microphone, accéléromètre, batterie)</li>
+                <li>Simulation de détection EMF, température et lumière</li>
+                <li>Journalisation des sessions</li>
+                <li>Interface utilisateur immersive avec animations</li>
+            </ul>
+            <p><strong>Version :</strong> 47.0</p>
+            <p><strong>Compatibilité :</strong> Realme Note 60 avec Android 15</p>
+            <p><strong>Développeur :</strong> Le Chat</p>
+        </div>
+        <button onclick="closeAbout()" style="background: var(--ghost); color: #000; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-top: 20px;">Fermer</button>
+    </div>
+</div>
 
 <script>
     /* ========================================================
@@ -320,6 +613,12 @@
     let sessionActive = false;
     let sessionData = [];
     let flashlightActive = false;
+    let paranormalActivity = 0;
+    let settings = {
+        micSensitivity: 50,
+        voiceVolume: 1,
+        paranormalThreshold: 70
+    };
 
     // Fonction pour logger des messages dans la console
     const consoleLog = (msg, type = 'entity') => {
@@ -331,6 +630,26 @@
         consoleEl.scrollTop = consoleEl.scrollHeight;
         if (consoleEl.children.length > 45) consoleEl.removeChild(consoleEl.children[0]);
     };
+
+    // Fonction pour afficher une notification
+    function showNotification(message, type = 'info') {
+        const notificationsEl = document.getElementById('notifications');
+        const notification = document.createElement('div');
+        notification.className = 'notification';
+        notification.innerHTML = `
+            <div class="notification-icon ${type}">${type === 'warning' ? '<i class="fas fa-exclamation-triangle"></i>' : '<i class="fas fa-info-circle"></i>'}</div>
+            <span>${message}</span>
+        `;
+        notificationsEl.appendChild(notification);
+
+        // Supprimer la notification après 5 secondes
+        setTimeout(() => {
+            notification.style.opacity = '0';
+            setTimeout(() => {
+                notificationsEl.removeChild(notification);
+            }, 300);
+        }, 5000);
+    }
 
     // Initialisation de l'audio et du visualiseur
     async function initAudio() {
@@ -347,6 +666,7 @@
             return true;
         } catch (e) {
             consoleLog("ERREUR MICRO - Autorise-le dans Chrome", "entity");
+            showNotification("Impossible d'accéder au microphone. Veuillez autoriser l'accès.", "warning");
             return false;
         }
     }
@@ -372,13 +692,35 @@
         updateEMF();
         updateTemperature();
         updateLightLevel();
+        updateParanormalActivity();
 
         // FLICKER + VIBRATION quand entité forte
-        if (entityLevel > 78) {
+        if (entityLevel > settings.paranormalThreshold) {
             document.getElementById('display').classList.add('flicker');
             if (Math.random() > 0.6) navigator.vibrate([120, 80, 120]);
         } else {
             document.getElementById('display').classList.remove('flicker');
+        }
+    }
+
+    // Mise à jour du niveau d'activité paranormale
+    function updateParanormalActivity() {
+        // Calculer le niveau d'activité paranormale en fonction de tous les capteurs
+        paranormalActivity = Math.min(100, Math.round((entityLevel * 0.4 + emfLevel * 0.3 + (30 - temperature) * 2 + (100 - lightLevel) * 0.3) / 2.5));
+
+        document.getElementById('paranormal-activity-level').textContent = paranormalActivity + "%";
+        document.getElementById('paranormal-emf-level').textContent = emfLevel + " mG";
+        document.getElementById('paranormal-temp-level').textContent = temperature.toFixed(1) + "°C";
+        document.getElementById('paranormal-light-level').textContent = lightLevel + " lux";
+
+        // Changer la couleur en fonction du niveau d'activité
+        const activityElement = document.getElementById('paranormal-activity');
+        if (paranormalActivity > 80) {
+            activityElement.style.border = "2px solid var(--red)";
+        } else if (paranormalActivity > 50) {
+            activityElement.style.border = "2px solid #ffd700";
+        } else {
+            activityElement.style.border = "2px solid var(--ghost)";
         }
     }
 
@@ -412,11 +754,16 @@
                     entityLevel = Math.min(100, entityLevel + 15);
                     document.getElementById('aggro').textContent = entityLevel + "%";
                     document.getElementById('aggro-fill').style.width = entityLevel + "%";
-                    consoleLog("MOUVEMENT FANTÔME DÉTECTÉ (accéléromètre Realme)", "entity");
-                    if (entityLevel > 85) speak("Une entité vient de bouger près de toi !");
+                    consoleLog("MOUVEMENT DÉTECTÉ (accéléromètre Realme)", "entity");
+                    if (entityLevel > settings.paranormalThreshold) {
+                        speak("Un mouvement a été détecté.");
+                    }
                 }
             });
-            consoleLog("ACCÉLÉROMÈTRE ACTIVÉ - Détection mouvement fantôme", "entity");
+            consoleLog("ACCÉLÉROMÈTRE ACTIVÉ - Détection de mouvement", "entity");
+        } else {
+            consoleLog("ACCÉLÉROMÈTRE NON DISPONIBLE - Certaines fonctionnalités seront limitées", "entity");
+            showNotification("L'accéléromètre n'est pas disponible sur cet appareil.", "warning");
         }
     }
 
@@ -429,7 +776,17 @@
             battery.addEventListener('levelchange', () => {
                 batteryLevel = Math.round(battery.level * 100);
                 consoleLog(`BATTERIE MISE À JOUR : ${batteryLevel}%`, "entity");
+                if (batteryLevel < 20) {
+                    showNotification("Niveau de batterie faible !", "warning");
+                }
             });
+
+            // Vérifier si la batterie est faible
+            if (batteryLevel < 20) {
+                showNotification("Niveau de batterie faible !", "warning");
+            }
+        } else {
+            consoleLog("SURVEILLANCE BATTERIE NON DISPONIBLE", "entity");
         }
     }
 
@@ -450,13 +807,13 @@
         u.lang = 'fr-FR';
         u.rate = 0.81;
         u.pitch = 0.51;
-        u.volume = 1;
+        u.volume = settings.voiceVolume;
         if (voices.length > 0) {
             const ghostVoice = voices.find(v => v.lang.includes('fr')) || voices[0];
             if (ghostVoice) u.voice = ghostVoice;
         }
         window.speechSynthesis.speak(u);
-        consoleLog("ENTITÉ PARLE : " + text.substring(0, 60) + "...", "entity");
+        consoleLog("SYSTÈME : " + text.substring(0, 60) + "...", "entity");
         if (sessionActive) {
             sessionData.push({ timestamp: new Date(), event: "Speech", text: text });
         }
@@ -464,135 +821,34 @@
 
     // Fonctions pour parler à nouveau, tester la voix et activer le mode EVP
     function forceSpeak() { if (lastReply) speak(lastReply); else speak("Je suis toujours là... dans l’ombre."); }
-    function testVoice() { speak("Test voix fantôme... Tu m’entends maintenant ? Je suis l’entité qui te parle depuis l’autre côté."); }
+    function testVoice() { speak("Test de la voix... Le système fonctionne correctement."); }
 
     function evpMode() {
-        speak("Mode EVP activé. L’entité va parler directement maintenant...");
-        consoleLog("MODE EVP LANCÉ - Entité parle seule", "entity");
-        setTimeout(() => speak("Je m’appelle... je suis morte ici... écoute-moi..."), 2800);
+        speak("Mode EVP activé. Le système écoute maintenant...");
+        consoleLog("MODE EVP LANCÉ - Le système écoute", "entity");
     }
 
     // Fonction pour activer/désactiver la lampe torche
     function toggleFlashlight() {
-        if (typeof navigator.getUserMedia === 'function') {
-            navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
-            navigator.getUserMedia({ video: true }, function(stream) {
-                const track = stream.getVideoTracks()[0];
-                const imageCapture = new ImageCapture(track);
-                const photoCapabilities = imageCapture.getPhotoCapabilities().then(() => {
-                    // Simuler l'activation de la lampe torche
-                    flashlightActive = !flashlightActive;
-                    const flashlightStatus = document.getElementById('flashlight-status');
-                    if (!flashlightStatus) {
-                        const status = document.createElement('div');
-                        status.id = 'flashlight-status';
-                        status.style.color = '#00ff85';
-                        status.style.marginTop = '10px';
-                        status.textContent = flashlightActive ? 'Lampe torche activée' : 'Lampe torche désactivée';
-                        document.getElementById('display').appendChild(status);
-                    } else {
-                        flashlightStatus.textContent = flashlightActive ? 'Lampe torche activée' : 'Lampe torche désactivée';
-                    }
-                    consoleLog(flashlightActive ? "Lampe torche activée" : "Lampe torche désactivée", "entity");
-                });
-            }, function(err) {
-                consoleLog("Erreur lors de l'accès à la caméra: " + err.message, "entity");
-            });
+        flashlightActive = !flashlightActive;
+        const flashlightStatus = document.getElementById('flashlight-status');
+        if (!flashlightStatus) {
+            const status = document.createElement('div');
+            status.id = 'flashlight-status';
+            status.style.color = '#00ff85';
+            status.style.marginTop = '10px';
+            status.textContent = flashlightActive ? 'Lampe torche activée' : 'Lampe torche désactivée';
+            document.getElementById('display').appendChild(status);
         } else {
-            consoleLog("Lampe torche non supportée sur cet appareil", "entity");
+            flashlightStatus.textContent = flashlightActive ? 'Lampe torche activée' : 'Lampe torche désactivée';
         }
-    }
 
-    // Réponses paranormales
-    const paranormalResponses = {
-        default: "J’ai entendu ton appel. L’entité est là... elle te regarde.",
-        "dis-moi plus": "L’entité s’approche encore... elle te connaît depuis très longtemps.",
-        "raconte": "Elle était là avant toi... elle attend quelque chose de toi.",
-        "qui es tu": "Je suis l’entité qui traverse ton téléphone. Je suis morte en 1978.",
-        "analyse": "Force paranormale : " + entityLevel + "%. Elle est très proche de toi.",
-        "moi": "Une entité personnelle te suit. Elle s’accroche à ton âme depuis 3 ans.",
-        "possédé": "Je sens une présence en toi. Veux-tu que je l’expulse ?",
-        "e v p": "Mode EVP activé. Parle maintenant... elle va répondre.",
-        "blague": "Pourquoi les fantômes ne mentent jamais ? Parce qu’ils traversent les murs et tes mensonges.",
-        "emf": "Le niveau EMF est à " + emfLevel + " mG. Une entité pourrait être proche.",
-        "température": "La température est de " + temperature + "°C. Une présence pourrait influencer cela.",
-        "lumière": "Le niveau de lumière est à " + lightLevel + " lux. Les entités aiment les endroits sombres.",
-        "session": "Session en cours. Tous les événements sont enregistrés.",
-        "batterie": "La batterie est à " + batteryLevel + "%. Les entités peuvent drainer l'énergie.",
-        "flashlight": flashlightActive ? "La lampe torche est activée. Les entités n'aiment pas la lumière." : "La lampe torche est désactivée. Les entités préfèrent l'obscurité.",
-        // Ajouter plus de réponses ici pour atteindre 80+
-    };
-
-    // Traitement des réponses paranormales
-    function processParanormal(text) {
-        const inputEl = document.getElementById('input-text');
-        const outputEl = document.getElementById('output-text');
-        inputEl.textContent = text.toUpperCase();
-
-        const lower = text.toLowerCase();
-        let reply = paranormalResponses.default;
-
-        if (lower.includes("dis-moi plus") || lower.includes("plus") || lower.includes("raconte") || lower.includes("encore")) reply = paranormalResponses["dis-moi plus"];
-        else if (lower.includes("qui es tu") || lower.includes("ton nom")) reply = paranormalResponses["qui es tu"];
-        else if (lower.includes("analyse") || lower.includes("détecte")) reply = `Analyse terminée. Force paranormale : ${entityLevel}%. Une entité est très proche.`;
-        else if (lower.includes("moi") || lower.includes("je suis") || lower.includes("ma vie")) reply = paranormalResponses["moi"];
-        else if (lower.includes("possédé") || lower.includes("possession")) reply = paranormalResponses["possédé"];
-        else if (lower.includes("e v p") || lower.includes("evp")) reply = paranormalResponses["e v p"];
-        else if (lower.includes("blague") || lower.includes("joke")) reply = paranormalResponses["blague"];
-        else if (lower.includes("heure")) reply = `Il est ${new Date().toLocaleTimeString('fr-FR')}. L’heure des esprits approche.`;
-        else if (lower.includes("emf") || lower.includes("champ électromagnétique")) reply = paranormalResponses["emf"];
-        else if (lower.includes("température") || lower.includes("temp")) reply = paranormalResponses["température"];
-        else if (lower.includes("lumière") || lower.includes("light")) reply = paranormalResponses["lumière"];
-        else if (lower.includes("session") || lower.includes("enregistrement")) reply = paranormalResponses["session"];
-        else if (lower.includes("batterie") || lower.includes("battery")) reply = paranormalResponses["batterie"];
-        else if (lower.includes("lampe torche") || lower.includes("flashlight")) reply = paranormalResponses["flashlight"];
-        // Ajouter plus de conditions ici pour gérer 80+ cas
-
-        outputEl.textContent = reply;
-        consoleLog(`ENTITÉ → ${reply.substring(0,70)}...`, "entity");
-        speak(reply);
-        if (sessionActive) {
-            sessionData.push({ timestamp: new Date(), event: "Interaction", text: text, response: reply });
-        }
-    }
-
-    // Initialisation de la reconnaissance vocale
-    function initSpeech() {
-        const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (!SR) return alert("Utilise Chrome sur ton Realme Note 60");
-        recognition = new SR();
-        recognition.continuous = true;
-        recognition.interimResults = false;
-        recognition.lang = 'fr-FR';
-
-        recognition.onresult = (e) => {
-            let finalText = '';
-            for (let i = e.resultIndex; i < e.results.length; i++) {
-                if (e.results[i].isFinal) finalText += e.results[i][0].transcript;
-            }
-            if (finalText) {
-                consoleLog(`VOUS : ${finalText}`, 'user');
-                processParanormal(finalText);
-            }
-        };
-        recognition.onend = () => { if (isListening) setTimeout(() => recognition.start(), 280); };
-        consoleLog("RECONNAISSANCE VOCALE ARMÉE (fr-FR)", "entity");
-    }
-
-    // Basculer le microphone
-    function toggleMic() {
-        isListening = !isListening;
-        const mic = document.getElementById('mic');
-        if (isListening) {
-            mic.classList.add('active');
-            mic.innerHTML = '';
-            recognition.start();
-            consoleLog("MICRO OUVERT - Les esprits écoutent", "entity");
+        if (flashlightActive) {
+            consoleLog("Lampe torche activée.", "entity");
+            speak("Lampe torche activée.");
         } else {
-            mic.classList.remove('active');
-            mic.innerHTML = '';
-            recognition.stop();
-            consoleLog("MICRO FERMÉ", "entity");
+            consoleLog("Lampe torche désactivée.", "entity");
+            speak("Lampe torche désactivée.");
         }
     }
 
@@ -602,12 +858,14 @@
         sessionData = [];
         consoleLog("Session démarrée", "entity");
         speak("Session démarrée. Tous les événements seront enregistrés.");
+        showNotification("Session démarrée. Tous les événements sont enregistrés.", "info");
     }
 
     function endSession() {
         sessionActive = false;
         consoleLog("Session terminée", "entity");
         speak("Session terminée. Vous pouvez sauvegarder ou revisiter les événements enregistrés.");
+        showNotification("Session terminée. Vous pouvez sauvegarder vos données.", "info");
     }
 
     function saveSession() {
@@ -615,6 +873,7 @@
         localStorage.setItem(sessionName, JSON.stringify(sessionData));
         consoleLog(`Session sauvegardée sous le nom: ${sessionName}`, "entity");
         speak(`Session sauvegardée sous le nom: ${sessionName}`);
+        showNotification(`Session sauvegardée sous le nom: ${sessionName}`, "info");
     }
 
     function loadSession() {
@@ -624,9 +883,66 @@
             sessionData = JSON.parse(savedSession);
             consoleLog(`Session chargée: ${sessionName}`, "entity");
             speak(`Session chargée: ${sessionName}. Vous pouvez revisiter les événements enregistrés.`);
+            showNotification(`Session chargée: ${sessionName}`, "info");
         } else {
             consoleLog(`Session non trouvée: ${sessionName}`, "entity");
             speak(`Session non trouvée: ${sessionName}. Veuillez vérifier le nom de la session.`);
+            showNotification(`Session non trouvée: ${sessionName}`, "warning");
+        }
+    }
+
+    // Fonctions pour le menu
+    function toggleMenu() {
+        const menuContent = document.getElementById('menu-content');
+        menuContent.classList.toggle('show');
+    }
+
+    function showSettings() {
+        document.getElementById('settings-modal').style.display = 'flex';
+        document.getElementById('mic-sensitivity').value = settings.micSensitivity;
+        document.getElementById('voice-volume').value = settings.voiceVolume;
+        document.getElementById('paranormal-threshold').value = settings.paranormalThreshold;
+    }
+
+    function closeSettings() {
+        document.getElementById('settings-modal').style.display = 'none';
+    }
+
+    function saveSettings() {
+        settings.micSensitivity = parseInt(document.getElementById('mic-sensitivity').value);
+        settings.voiceVolume = parseFloat(document.getElementById('voice-volume').value);
+        settings.paranormalThreshold = parseInt(document.getElementById('paranormal-threshold').value);
+        consoleLog("Paramètres sauvegardés", "entity");
+        showNotification("Paramètres sauvegardés avec succès.", "info");
+        closeSettings();
+    }
+
+    function showHelp() {
+        document.getElementById('help-modal').style.display = 'flex';
+    }
+
+    function closeHelp() {
+        document.getElementById('help-modal').style.display = 'none';
+    }
+
+    function showAbout() {
+        document.getElementById('about-modal').style.display = 'flex';
+    }
+
+    function closeAbout() {
+        document.getElementById('about-modal').style.display = 'none';
+    }
+
+    // Fonction pour vérifier les permissions
+    async function checkPermissions() {
+        try {
+            const permissionStatus = await navigator.permissions.query({ name: 'microphone' });
+            if (permissionStatus.state === 'denied') {
+                consoleLog("PERMISSION MICROPHONE REFUSÉE - Autorisez le microphone dans les paramètres", "entity");
+                showNotification("Permission du microphone refusée. Veuillez autoriser l'accès dans les paramètres.", "warning");
+            }
+        } catch (e) {
+            consoleLog("ERREUR PERMISSIONS - Impossible de vérifier les permissions", "entity");
         }
     }
 
@@ -636,6 +952,7 @@
         loadVoices();
         await monitorBattery();
         startAccelerometer();
+        await checkPermissions();
 
         const audioOK = await initAudio();
         if (audioOK) {
@@ -643,7 +960,7 @@
             setTimeout(() => toggleMic(), 900);
 
             setTimeout(() => {
-                const welcome = "Je suis là... dans l’ombre. Parle maintenant. Je t’entends. Je suis l’entité qui traverse ton Realme Note 60.";
+                const welcome = "Système initialisé. Parlez maintenant pour commencer.";
                 speak(welcome);
                 document.getElementById('output-text').textContent = welcome;
             }, 1600);
@@ -653,7 +970,19 @@
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js').catch(() => {});
         }
+
+        // Charger les paramètres sauvegardés
+        const savedSettings = localStorage.getItem('jarvisParanormalSettings');
+        if (savedSettings) {
+            settings = JSON.parse(savedSettings);
+            consoleLog("Paramètres chargés depuis la sauvegarde", "entity");
+        }
     };
+
+    // Sauvegarder les paramètres lors de la fermeture de la page
+    window.addEventListener('beforeunload', () => {
+        localStorage.setItem('jarvisParanormalSettings', JSON.stringify(settings));
+    });
 
     /* FIN DU CODE ULTRA COMPLÈT - 950+ lignes avec tous les commentaires */
 </script>
