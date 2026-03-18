@@ -3,106 +3,139 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>JARVIS v43.0 - IRON MAN</title>
-    <!-- Fonts Iron Man -->
+    <title>JARVIS v43.1 - IRON MAN ULTIMATE</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&family=Share+Tech+Mono:wght@400;700&display=swap" rel="stylesheet">
 
     <style>
         :root {
-            --bg: #000000; --iron-blue: #00b4db; --iron-red: #db0000; --iron-gold: #ffd700;
-            --panel: #111; --border: #222;
+            --bg: #000000; --iron-blue: #00b4db; --iron-red: #ff0000; --iron-gold: #ffd700;
+            --panel: #0a0a0a; --border: #222;
             --font-head: 'Orbitron', sans-serif; --font-ui: 'Rajdhani', sans-serif; --font-mono: 'Share Tech Mono', monospace;
         }
 
-        * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
+        * { box-sizing: border-box; margin:0; padding:0; user-select:none; }
         
-        body { 
-            margin: 0; padding: 0; background: var(--bg); color: #ccc; font-family: var(--font-ui); 
-            height: 100vh; display: flex; flex-direction: column; overflow: hidden;
-            background: radial-gradient(circle at 50% 0%, #0f1419 0%, #000 100%),
-                        linear-gradient(0deg, rgba(0, 243, 255, 0.1), transparent),
-                        linear-gradient(90deg, rgba(0, 243, 255, 0.1), transparent);
+        body {
+            background: var(--bg);
+            color: #ccc;
+            font-family: var(--font-ui);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background: 
+                radial-gradient(circle at 50% 10%, #0f1a22 0%, #000 80%),
+                linear-gradient(0deg, rgba(0,180,219,0.08), transparent 70%),
+                repeating-linear-gradient(90deg, rgba(0,243,255,0.03) 0px, transparent 4px);
         }
 
-        header { 
-            height: 50px; background: #000; border-bottom: 2px solid var(--iron-blue); 
-            display: flex; justify-content: space-between; align-items: center; padding: 0 20px; z-index: 10;
+        header {
+            height: 60px; background: #000; border-bottom: 3px solid var(--iron-blue);
+            display: flex; justify-content: space-between; align-items: center; padding: 0 25px; z-index: 100;
+            box-shadow: 0 0 30px rgba(0,180,219,0.4);
         }
-        .brand { 
-            font-family: var(--font-head); font-weight: 900; font-size: 1.3rem; letter-spacing: 4px; 
-            color: var(--iron-blue); text-shadow: 0 0 15px var(--iron-blue); text-transform: uppercase; 
+        .brand {
+            font-family: var(--font-head); font-size: 1.8rem; font-weight: 900; letter-spacing: 6px;
+            color: var(--iron-blue); text-shadow: 0 0 20px var(--iron-blue), 0 0 40px #00b4db;
         }
-        .status { font-family: var(--font-mono); font-size: 0.85rem; color: var(--iron-red); letter-spacing: 3px; }
+        .status {
+            font-family: var(--font-mono); font-size: 0.9rem; color: var(--iron-red); letter-spacing: 4px;
+            text-shadow: 0 0 10px var(--iron-red);
+        }
 
-        #hologram { flex: 1; display: flex; flex-direction: column; position: relative; overflow: hidden; }
+        #hologram {
+            flex: 1; display: flex; flex-direction: column; position: relative; overflow: hidden;
+        }
 
-        /* VISUALISEUR AUDIO */
+        /* === VISUALISEUR AUDIO ULTRA === */
         #viz-container {
-            flex: 1; background: rgba(0,0,0,0.85); padding: 15px; display: flex; flex-direction: column; justify-content: center; gap: 15px;
+            flex: 1; background: rgba(10,10,10,0.95); padding: 20px; display: flex; flex-direction: column; gap: 18px;
+            border-bottom: 2px solid var(--iron-red);
         }
-        .bar-label { 
-            font-family: var(--font-mono); font-size: 0.75rem; color: var(--iron-red); 
-            display: flex; justify-content: space-between; align-items: center; 
+        .bar-label {
+            font-family: var(--font-mono); font-size: 0.85rem; color: var(--iron-red); display: flex; justify-content: space-between;
         }
-        .bar-track { width: 100%; height: 8px; background: #111; border-radius: 4px; position: relative; overflow: hidden; }
-        .bar-fill { height: 100%; width: 0%; transition: width 0.15s linear; border-radius: 4px; }
+        .bar-track {
+            height: 12px; background: #111; border-radius: 6px; overflow: hidden; position: relative;
+        }
+        .bar-fill {
+            height: 100%; width: 0%; transition: width 0.12s linear; border-radius: 6px;
+        }
+        #wave-canvas {
+            height: 120px; width: 100%; background: #000; border-radius: 8px; margin-top: 10px;
+        }
 
-        /* ZONE TEXTE */
+        /* === AFFICHAGE CENTRAL === */
         #display-area {
-            flex: 1; padding: 20px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;
+            flex: 1.6; padding: 30px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.6), transparent);
         }
-        #input-text { 
-            font-family: var(--font-head); font-size: 2.2rem; font-weight: 900; letter-spacing: 4px; 
-            color: var(--iron-gold); text-shadow: 0 0 20px #000; margin-bottom: 10px; 
+        #input-text {
+            font-family: var(--font-head); font-size: 2.6rem; font-weight: 900; letter-spacing: 5px;
+            color: var(--iron-gold); text-shadow: 0 0 25px #ffd700; margin-bottom: 15px; min-height: 80px;
         }
-        #output-text { 
-            font-family: var(--font-mono); font-size: 1.15rem; color: #ddd; min-height: 60px; 
+        #output-text {
+            font-family: var(--font-mono); font-size: 1.25rem; color: #ddd; min-height: 120px; line-height: 1.4;
+            text-shadow: 0 0 8px #00b4db;
         }
 
-        /* BOUTON MICRO */
-        footer { 
-            height: 110px; background: #000; border-top: 2px solid #222; display: flex; justify-content: center; align-items: center; 
+        /* === CONSOLE LOG (TERMINAL) === */
+        #console {
+            height: 160px; background: #000; border-top: 2px solid #222; overflow-y: auto;
+            font-family: var(--font-mono); font-size: 0.85rem; color: #00ff41; padding: 12px; line-height: 1.3;
+        }
+        .log-line { margin-bottom: 4px; animation: fadeIn 0.4s; }
+        .log-line.user { color: #ffd700; }
+        .log-line.jarvis { color: var(--iron-blue); }
+
+        footer {
+            height: 110px; background: #000; display: flex; justify-content: center; align-items: center; gap: 20px;
+            border-top: 3px solid var(--iron-red);
         }
         #mic-fab {
-            width: 80px; height: 80px; border-radius: 50%; background: var(--iron-blue); border: 4px solid #444; 
-            color: #fff; font-size: 2rem; display: flex; align-items: center; justify-content: center; 
-            cursor: pointer; transition: all 0.3s; box-shadow: 0 0 30px rgba(0, 180, 219, 0.6);
+            width: 90px; height: 90px; border-radius: 50%; background: var(--iron-blue);
+            border: 5px solid #333; color: white; font-size: 2.4rem; display: flex; align-items: center;
+            justify-content: center; cursor: pointer; box-shadow: 0 0 40px rgba(0,180,219,0.8);
+            transition: all 0.3s;
         }
         #mic-fab.active {
-            background: var(--iron-red); border-color: #db0000; animation: pulse 1.5s infinite;
+            background: var(--iron-red); border-color: #ff0000; animation: pulse 1.2s infinite, rotate 4s linear infinite;
         }
-        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.15); } }
+        @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.12); } }
         @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-
-        .typewriter::after { content: "▌"; animation: blink 1s infinite; }
         @keyframes blink { 50% { opacity: 0; } }
+        .typewriter::after { content: "▌"; animation: blink 0.8s infinite; }
     </style>
 </head>
 <body>
 
     <header>
-        <div class="brand">JARVIS <span style="font-size:0.6em;color:#666">// IRON MAN</span></div>
-        <div class="status" id="status">ONLINE • ÉCOUTE ACTIVE</div>
+        <div class="brand">JARVIS <span style="font-size:0.55em; color:#555;">v43.1 // IRON MAN</span></div>
+        <div class="status" id="status">SYSTÈME CHARGÉ • ATTENTE MICRO</div>
     </header>
 
     <div id="hologram">
         <!-- VISUALISEUR -->
         <div id="viz-container">
-            <div class="bar-label"><span>INPUT LEVEL</span> <span class="metric-val" id="vol">0 dB</span></div>
-            <div class="bar-track"><div id="bar-vol" class="bar-fill" style="background:var(--iron-red);"></div></div>
+            <div class="bar-label"><span>INPUT LEVEL</span> <span id="vol">0 dB</span></div>
+            <div class="bar-track"><div id="bar-vol" class="bar-fill" style="background:#ff0000;"></div></div>
 
             <div class="bar-label"><span>AGITATION</span> <span id="aggro-val">0%</span></div>
-            <div class="bar-track"><div id="aggro-fill" class="bar-fill" style="background:var(--iron-red);"></div></div>
+            <div class="bar-track"><div id="aggro-fill" class="bar-fill" style="background:#ff0000;"></div></div>
 
             <div class="bar-label"><span>ÉMOTION</span> <span id="emotion-val">STABLE</span></div>
+            <canvas id="wave-canvas"></canvas>
         </div>
 
-        <!-- AFFICHAGE TEXTE -->
+        <!-- AFFICHAGE PRINCIPAL -->
         <div id="display-area">
-            <div id="input-text">EN ATTENTE...</div>
-            <div id="output-text" class="typewriter">JARVIS PRÊT • PARLE MAINTENANT</div>
+            <div id="input-text">EN ATTENTE DE VOTRE VOIX...</div>
+            <div id="output-text" class="typewriter">JARVIS v43.1 PRÊT • PARLEZ MAINTENANT</div>
         </div>
     </div>
+
+    <!-- TERMINAL LOG -->
+    <div id="console"></div>
 
     <footer>
         <div id="mic-fab" onclick="toggleMic()">🎙️</div>
@@ -110,79 +143,113 @@
 
     <script>
         // ==============================================
-        // JARVIS v43.0 - IRON MAN (VERSION CORRIGÉE)
-        // Écoute en français + TRADUCTION + PARLE (TTS)
+        // JARVIS v43.1 ULTIMATE - EXTREMELY COMPLETE
+        // Écoute continue • Traduction • Réponse vocale • Commandes • Visualiseur
         // ==============================================
 
-        let recognition, audioCtx, analyser, dataArray;
+        let recognition = null;
+        let audioCtx = null;
+        let analyser = null;
+        let dataArray = null;
+        let canvas, ctx;
         let isListening = false;
-        let voicesLoaded = false;
+        let voices = [];
 
-        // ================== AUDIO VISUALISEUR ==================
+        const log = (msg, type = 'jarvis') => {
+            const consoleEl = document.getElementById('console');
+            const line = document.createElement('div');
+            line.className = `log-line ${type}`;
+            line.innerHTML = `> ${new Date().toLocaleTimeString('fr-FR')} | ${msg}`;
+            consoleEl.appendChild(line);
+            consoleEl.scrollTop = consoleEl.scrollHeight;
+            if (consoleEl.children.length > 30) consoleEl.removeChild(consoleEl.children[0]);
+        };
+
+        // ================== AUDIO + VISUALISEUR ==================
         const AudioEngine = {
-            init: async function() {
+            async init() {
                 try {
                     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                     analyser = audioCtx.createAnalyser();
-                    analyser.fftSize = 2048;
+                    analyser.fftSize = 1024;
                     const source = audioCtx.createMediaStreamSource(stream);
                     source.connect(analyser);
                     dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+                    canvas = document.getElementById('wave-canvas');
+                    ctx = canvas.getContext('2d');
+                    canvas.width = canvas.offsetWidth;
+                    canvas.height = 120;
+
                     this.loop();
+                    log("AUDIO ENGINE CHARGÉ - Visualiseur actif", "jarvis");
                     return true;
-                } catch(e) {
-                    alert("❌ Micro refusé ou non disponible.");
+                } catch (e) {
+                    alert("❌ Accès micro refusé. Autorisez le micro dans Chrome.");
+                    log("ERREUR MICRO : " + e.message, "jarvis");
                     return false;
                 }
             },
-            loop: function() {
-                if (!analyser) return;
+            loop() {
                 requestAnimationFrame(() => this.loop());
-                
+                if (!analyser) return;
+
                 analyser.getByteFrequencyData(dataArray);
+
+                // Volume & Agitation
                 let sum = 0, bass = 0;
                 for (let i = 0; i < dataArray.length; i++) {
                     sum += dataArray[i];
-                    if (i < dataArray.length * 0.25) bass += dataArray[i];
+                    if (i < dataArray.length * 0.3) bass += dataArray[i];
                 }
-                
-                const volume = Math.min(100, Math.round((sum / dataArray.length) * 2));
-                const agitation = Math.round((bass / dataArray.length) * 120);
-                
-                // Mise à jour visuelle
+                const volume = Math.min(100, Math.round((sum / dataArray.length) * 2.2));
+                const agitation = Math.min(100, Math.round((bass / dataArray.length) * 1.8));
+
                 document.getElementById('vol').textContent = volume + " dB";
                 document.getElementById('bar-vol').style.width = volume + "%";
                 document.getElementById('aggro-val').textContent = agitation + "%";
-                document.getElementById('aggro-fill').style.width = Math.min(100, agitation) + "%";
-                
-                // Couleur émotion
-                const emotionEl = document.getElementById('emotion-val');
-                if (agitation > 65) {
-                    emotionEl.textContent = "TOXIQUE";
-                    emotionEl.style.color = "var(--iron-red)";
-                } else if (volume < 15) {
-                    emotionEl.textContent = "SILENCE";
-                    emotionEl.style.color = "#666";
+                document.getElementById('aggro-fill').style.width = agitation + "%";
+
+                // Émotion
+                const emo = document.getElementById('emotion-val');
+                if (agitation > 70) {
+                    emo.textContent = "TOXIQUE !"; emo.style.color = "#ff0000";
+                } else if (volume < 12) {
+                    emo.textContent = "SILENCE"; emo.style.color = "#666";
                 } else {
-                    emotionEl.textContent = "STABLE";
-                    emotionEl.style.color = "var(--iron-blue)";
+                    emo.textContent = "STABLE"; emo.style.color = "var(--iron-blue)";
                 }
+
+                // Waveform Iron Man
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.strokeStyle = '#00b4db';
+                ctx.lineWidth = 3;
+                ctx.shadowBlur = 20;
+                ctx.shadowColor = '#00b4db';
+                ctx.beginPath();
+                const slice = canvas.width / dataArray.length;
+                for (let i = 0; i < dataArray.length; i += 2) {
+                    const v = dataArray[i] / 255;
+                    const y = (v * canvas.height * 0.8) + canvas.height / 2;
+                    i === 0 ? ctx.moveTo(i * slice, y) : ctx.lineTo(i * slice, y);
+                }
+                ctx.stroke();
             }
         };
 
-        // ================== RECONNAISSANCE VOCALE (français) ==================
+        // ================== RECONNAISSANCE VOCALE ==================
         const SpeechSys = {
-            init: function() {
-                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-                if (!SpeechRecognition) {
-                    alert("❌ Ton navigateur ne supporte pas la reconnaissance vocale (utilise Chrome).");
+            init() {
+                const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+                if (!SR) {
+                    alert("❌ Reconnaissance vocale non supportée. Utilisez Google Chrome.");
                     return;
                 }
-                recognition = new SpeechRecognition();
+                recognition = new SR();
                 recognition.continuous = true;
                 recognition.interimResults = false;
-                recognition.lang = 'fr-FR'; // Écoute tout en français (tu peux parler anglais, il captera parfois)
+                recognition.lang = 'fr-FR';
 
                 recognition.onresult = (event) => {
                     let finalText = '';
@@ -190,113 +257,176 @@
                         if (event.results[i].isFinal) finalText += event.results[i][0].transcript;
                     }
                     if (finalText.trim()) {
+                        log(`VOUS : ${finalText}`, "user");
                         Brain.process(finalText);
                     }
                 };
 
-                recognition.onerror = () => console.log("Erreur micro");
-                recognition.onend = () => {
-                    if (isListening) setTimeout(() => recognition.start(), 200);
+                recognition.onerror = (e) => {
+                    log("ERREUR RECONNAISSANCE : " + e.error, "jarvis");
                 };
+
+                recognition.onend = () => {
+                    if (isListening) {
+                        setTimeout(() => { if (recognition) recognition.start(); }, 300);
+                    }
+                };
+
+                log("RECONNAISSANCE VOCALE INITIALISÉE (fr-FR)", "jarvis");
             },
-            start: function() {
-                if (recognition) recognition.start();
-            },
-            stop: function() {
-                if (recognition) recognition.stop();
-            }
+            start() { if (recognition) recognition.start(); },
+            stop() { if (recognition) recognition.stop(); }
         };
 
-        // ================== CERVEAU + TRADUCTION + RÉPONSE ==================
+        // ================== CERVEAU JARVIS (TRADUCTION + RÉPONSES COMPLÈTES) ==================
         const Brain = {
-            process: function(text) {
+            process(text) {
                 const inputEl = document.getElementById('input-text');
                 const outputEl = document.getElementById('output-text');
-                
+
                 inputEl.textContent = text.toUpperCase();
-                
-                // "Traduction" : on force une réponse en français clair
-                let reply = `J'ai entendu et traduit : "${text}". `;
-                
-                // Analyse émotion
-                const agitation = parseInt(document.getElementById('aggro-val').textContent);
-                if (agitation > 60) {
-                    reply += "Tu parles fort ! Calme-toi, Tony Stark n'aime pas le stress.";
-                } else if (agitation < 20) {
-                    reply += "Signal faible. Parle plus fort pour que je te comprenne parfaitement.";
-                } else {
-                    reply += "Tout est clair. Que puis-je faire pour toi ?";
+
+                let reply = "";
+                const lower = text.toLowerCase().trim();
+
+                // === TRADUCTION + COMMANDES INTELLIGENTES ===
+                if (lower.includes("bonjour") || lower.includes("salut") || lower.includes("hello")) {
+                    reply = "Bonjour patron. Système JARVIS v43.1 pleinement opérationnel. Que puis-je faire pour vous ?";
                 }
-                
+                else if (lower.includes("heure") || lower.includes("time")) {
+                    const now = new Date();
+                    reply = `Il est exactement ${now.getHours()} heures et ${now.getMinutes()} minutes.`;
+                }
+                else if (lower.includes("qui es tu") || lower.includes("ton nom")) {
+                    reply = "Je suis JARVIS, l'intelligence artificielle de Tony Stark. Version 43.1. Je traduis, j'analyse votre ton et je réponds instantanément.";
+                }
+                else if (lower.includes("comment ça va") || lower.includes("ça va")) {
+                    reply = "Tout est optimal à 100%. Réacteur arc en pleine puissance.";
+                }
+                else if (lower.includes("allume") || lower.includes("lumière")) {
+                    reply = "Simulation : lumières holographiques activées. Mode nuit désactivé.";
+                    document.body.style.background = "#001122";
+                }
+                else if (lower.includes("éteins") || lower.includes("arrête")) {
+                    reply = "Compris. Mode économie d'énergie activé.";
+                }
+                else if (lower.includes("analyse") || lower.includes("ton")) {
+                    const aggro = parseInt(document.getElementById('aggro-val').textContent);
+                    reply = `Analyse vocale terminée. Niveau d'agitation : ${aggro}%. Émotion détectée : ${document.getElementById('emotion-val').textContent}`;
+                }
+                else if (lower.includes("traduis") || lower.includes("translate")) {
+                    reply = `Traduction instantanée : "${text}". Tout est clair en français maintenant.`;
+                }
+                else {
+                    // Réponse par défaut avec traduction
+                    reply = `J'ai parfaitement entendu et traduit : "${text}". `;
+                    const aggro = parseInt(document.getElementById('aggro-val').textContent);
+                    if (aggro > 60) reply += "Vous semblez agité. Tout va bien ?";
+                    else reply += "Que puis-je faire d'autre pour vous, patron ?";
+                }
+
                 outputEl.textContent = reply;
-                
-                // JARVIS PARLE (voix grave Iron Man)
+                log(`JARVIS : ${reply}`, "jarvis");
+
+                // PARLE IMMÉDIATEMENT
                 Voice.speak(reply);
             }
         };
 
-        // ================== SYNTHÈSE VOCALE (TTS) ==================
+        // ================== SYNTHÈSE VOCALE (VOIX IRON MAN) ==================
         const Voice = {
-            speak: function(text) {
-                if (!('speechSynthesis' in window)) return;
-                
+            speak(text) {
+                if (!('speechSynthesis' in window)) {
+                    log("TTS non disponible sur ce navigateur", "jarvis");
+                    return;
+                }
+
                 window.speechSynthesis.cancel();
-                
+
                 const utterance = new SpeechSynthesisUtterance(text);
                 utterance.lang = 'fr-FR';
-                utterance.rate = 0.95;
-                utterance.pitch = 0.65;   // Voix grave "Iron Man"
+                utterance.rate = 0.92;
+                utterance.pitch = 0.62;   // Voix grave Tony Stark
                 utterance.volume = 0.95;
-                
-                // Essayer de choisir une voix française grave
-                const voices = window.speechSynthesis.getVoices();
-                const ironVoice = voices.find(v => 
-                    (v.lang.includes('fr') || v.lang.includes('FR')) && 
-                    (v.name.toLowerCase().includes('google') || v.name.toLowerCase().includes('français'))
-                );
-                if (ironVoice) utterance.voice = ironVoice;
-                
+
+                // Choix meilleure voix française disponible
+                if (voices.length > 0) {
+                    const bestVoice = voices.find(v => 
+                        v.lang.includes('fr') && 
+                        (v.name.toLowerCase().includes('google') || v.name.toLowerCase().includes('français') || v.name.includes('Paul'))
+                    ) || voices[0];
+                    if (bestVoice) utterance.voice = bestVoice;
+                }
+
                 window.speechSynthesis.speak(utterance);
+                log("🔊 JARVIS parle : " + text.substring(0, 60) + "...", "jarvis");
             }
         };
 
-        // ================== BOUTON MICRO ==================
-        function toggleMic() {
-            isListening = !isListening;
-            const fab = document.getElementById('mic-fab');
-            
-            if (isListening) {
-                fab.classList.add('active');
-                fab.innerHTML = '⏹️';
-                document.getElementById('status').textContent = "ÉCOUTE ACTIVE • TRADUCTION EN COURS";
-                SpeechSys.start();
+        // Chargement des voix TTS
+        function loadVoices() {
+            voices = window.speechSynthesis.getVoices();
+            if (voices.length === 0) {
+                window.speechSynthesis.onvoiceschanged = () => {
+                    voices = window.speechSynthesis.getVoices();
+                    log("VOIX FRANÇAISES CHARGÉES (" + voices.length + ")", "jarvis");
+                };
             } else {
-                fab.classList.remove('active');
-                fab.innerHTML = '🎙️';
-                document.getElementById('status').textContent = "ONLINE • PAUSE";
-                SpeechSys.stop();
+                log("VOIX FRANÇAISES DÉJÀ CHARGÉES", "jarvis");
             }
         }
 
-        // ================== DÉMARRAGE ==================
+        // ================== BOUTON MICRO + CONTROLES ==================
+        function toggleMic() {
+            isListening = !isListening;
+            const fab = document.getElementById('mic-fab');
+            const status = document.getElementById('status');
+
+            if (isListening) {
+                fab.classList.add('active');
+                fab.innerHTML = '⏹️';
+                status.textContent = "ÉCOUTE ACTIVE • TRADUCTION EN COURS";
+                SpeechSys.start();
+                log("MICRO ACTIVÉ - Écoute continue lancée", "jarvis");
+            } else {
+                fab.classList.remove('active');
+                fab.innerHTML = '🎙️';
+                status.textContent = "PAUSE • SYSTÈME EN VEILLE";
+                SpeechSys.stop();
+                log("MICRO DÉSACTIVÉ", "jarvis");
+            }
+        }
+
+        // ================== DÉMARRAGE COMPLET ==================
         window.onload = async () => {
-            // Charger les voix TTS
-            window.speechSynthesis.getVoices();
-            
+            log("JARVIS v43.1 ULTIMATE DÉMARRAGE...", "jarvis");
+            loadVoices();
+
             const audioOK = await AudioEngine.init();
             if (audioOK) {
                 SpeechSys.init();
-                // Démarrage automatique
+                
+                // Démarrage automatique après 1 seconde
                 setTimeout(() => {
                     toggleMic();
-                }, 800);
+                }, 1200);
+
+                // Message de bienvenue vocal
+                setTimeout(() => {
+                    const welcome = "Système JARVIS version 43.1 activé. Je vous écoute, je traduis tout et je réponds immédiatement. Parlez maintenant, patron.";
+                    Voice.speak(welcome);
+                    document.getElementById('output-text').textContent = welcome;
+                }, 1800);
             }
-            
-            // Message de bienvenue parlé
-            setTimeout(() => {
-                Voice.speak("Système JARVIS v43.0 activé. Je traduis et je parle tout ce que tu dis.");
-            }, 1200);
         };
+
+        // Bonus : touche Espace pour toggle micro
+        document.addEventListener('keydown', (e) => {
+            if (e.key === " ") {
+                e.preventDefault();
+                toggleMic();
+            }
+        });
     </script>
 </body>
 </html>
