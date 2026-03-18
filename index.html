@@ -3,290 +3,380 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>JARVIS v99.0 - THE ABSOLUTE</title>
+    <title>PERSONA LINK v100.0</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
 
     <style>
         :root {
-            --c-abs: #00ff41; /* Absolute Green */
-            --c-void: #000000;
-            --c-blood: #ff0000;
-            --c-cyan: #00f3ff;
-            --glass: rgba(0, 20, 0, 0.6);
+            --primary: #00ffcc; /* Cyan cyber */
+            --secondary: #004433;
+            --alert: #ff3366;
+            --bg: #050a08;
+            --panel: rgba(0, 20, 15, 0.85);
+            --font-main: 'Rajdhani', sans-serif;
+            --font-tech: 'Orbitron', sans-serif;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
 
         body {
-            background-color: var(--c-void);
-            color: var(--c-abs);
-            font-family: 'Share Tech Mono', monospace;
+            background-color: var(--bg);
+            color: var(--primary);
+            font-family: var(--font-main);
             height: 100vh;
             overflow: hidden;
             display: flex;
             flex-direction: column;
         }
 
-        /* --- FX LAYERS --- */
-        .crt-overlay {
+        /* BACKGROUND GRID EFFECT */
+        .bg-grid {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
-            background-size: 100% 2px, 3px 100%;
-            pointer-events: none; z-index: 999;
+            background-image: linear-gradient(var(--secondary) 1px, transparent 1px), linear-gradient(90deg, var(--secondary) 1px, transparent 1px);
+            background-size: 40px 40px;
+            opacity: 0.1;
+            z-index: -1;
         }
 
-        .vignette {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: radial-gradient(circle, transparent 50%, black 100%);
-            pointer-events: none; z-index: 998;
-        }
-
-        /* --- HUD LAYOUT --- */
+        /* --- HEADER --- */
         header {
             height: 60px;
-            border-bottom: 1px solid var(--c-abs);
+            border-bottom: 2px solid var(--primary);
             display: flex; justify-content: space-between; align-items: center;
-            padding: 0 15px; background: rgba(0,0,0,0.8); z-index: 10;
+            padding: 0 20px; background: var(--panel);
+            box-shadow: 0 0 15px rgba(0, 255, 204, 0.1);
+        }
+
+        .user-badge {
+            display: flex; align-items: center; gap: 10px;
         }
         
-        .brand { font-family: 'Orbitron'; font-weight: 900; letter-spacing: 2px; font-size: 1.1rem; text-shadow: 0 0 10px var(--c-abs); }
+        .avatar-ring {
+            width: 40px; height: 40px; border: 2px solid var(--primary);
+            border-radius: 50%; display: flex; justify-content: center; align-items: center;
+            font-family: var(--font-tech); font-weight: bold; font-size: 0.8rem;
+            box-shadow: 0 0 10px var(--primary);
+        }
 
+        .status-badge {
+            font-size: 0.7rem; background: var(--primary); color: #000;
+            padding: 2px 8px; border-radius: 4px; font-weight: bold; text-transform: uppercase;
+        }
+
+        /* --- MAIN INTERFACE --- */
         main {
-            flex: 1; position: relative; display: grid; grid-template-rows: 1fr 140px;
-            padding: 10px; gap: 10px; z-index: 5;
+            flex: 1; position: relative; display: flex; flex-direction: column;
+            padding: 15px; gap: 15px; z-index: 10;
         }
 
-        /* --- THE CORE (Centerpiece) --- */
-        #core-container {
-            position: relative; border: 1px solid var(--c-abs);
-            background: rgba(0, 10, 0, 0.3);
-            display: flex; justify-content: center; align-items: center;
-            overflow: hidden;
+        /* RESONANCE CORE (The Visual Center) */
+        .core-section {
+            flex: 1; display: flex; justify-content: center; align-items: center; position: relative;
+            border: 1px solid var(--secondary); background: rgba(0,0,0,0.3);
         }
 
-        #entity-core {
-            width: 150px; height: 150px;
+        #resonance-circle {
+            width: 180px; height: 180px;
             border-radius: 50%;
-            border: 2px solid var(--c-abs);
-            box-shadow: 0 0 30px var(--c-abs), inset 0 0 30px var(--c-abs);
-            display: flex; justify-content: center; align-items: center;
-            transition: all 0.1s ease;
-            position: relative;
-        }
-
-        #entity-core::after {
-            content: ''; position: absolute; width: 100%; height: 100%; border-radius: 50%;
-            border: 1px dashed var(--c-cyan); animation: spin 10s linear infinite;
-        }
-
-        #core-text {
-            font-family: 'Orbitron'; font-size: 1.2rem; text-align: center;
-            text-shadow: 0 0 10px var(--c-abs); z-index: 2;
-        }
-
-        canvas#waveform {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.4; z-index: 1;
-        }
-
-        /* --- SENSOR DASHBOARD --- */
-        #dashboard {
-            display: grid; grid-template-columns: 1fr 1fr;
-            gap: 10px;
-        }
-
-        .sensor-panel {
-            border: 1px solid #333; padding: 8px;
-            background: rgba(0,0,0,0.5); position: relative;
-        }
-
-        .sensor-header { font-size: 0.7rem; color: #888; display: flex; justify-content: space-between; margin-bottom: 5px; }
-        .sensor-data { font-size: 1.4rem; font-weight: bold; }
-        .sensor-bar-bg { height: 4px; background: #111; margin-top: 5px; }
-        .sensor-bar-fill { height: 100%; background: var(--c-abs); width: 0%; transition: width 0.05s linear; }
-
-        /* --- FOOTER CONTROLS --- */
-        footer {
-            height: 130px; border-top: 1px solid var(--c-abs);
+            border: 4px solid var(--primary);
             display: flex; flex-direction: column; justify-content: center; align-items: center;
-            gap: 10px; background: #000; z-index: 20; position: relative;
+            position: relative;
+            transition: all 0.1s;
         }
 
-        #log-stream {
-            width: 100%; font-size: 0.65rem; color: #666; text-align: center;
-            height: 20px; overflow: hidden;
+        #resonance-circle::before {
+            content: ''; position: absolute; top: -10px; left: -10px; right: -10px; bottom: -10px;
+            border: 1px dashed var(--primary); border-radius: 50%;
+            animation: spin-slow 20s linear infinite;
         }
 
-        .controls { display: flex; gap: 20px; align-items: center; }
+        #resonance-val {
+            font-family: var(--font-tech); font-size: 2.5rem; font-weight: 900;
+            text-shadow: 0 0 20px var(--primary);
+        }
 
-        #main-btn {
-            width: 90px; height: 90px; border-radius: 50%;
-            border: 3px solid var(--c-abs); background: transparent;
-            color: var(--c-abs); font-size: 2rem;
+        #resonance-label {
+            font-size: 0.8rem; letter-spacing: 2px; opacity: 0.8;
+        }
+
+        /* DATA GRID */
+        .data-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 15px; height: 140px;
+        }
+
+        .data-card {
+            background: var(--panel); border: 1px solid var(--secondary); padding: 10px;
+            display: flex; flex-direction: column; justify-content: space-between;
+        }
+
+        .card-title { font-size: 0.7rem; color: #aaa; text-transform: uppercase; letter-spacing: 1px; }
+        .card-value { font-family: var(--font-tech); font-size: 1.4rem; color: #fff; }
+        .progress-bar { height: 3px; background: #112211; margin-top: 5px; width: 100%; }
+        .progress-fill { height: 100%; background: var(--primary); width: 0%; transition: width 0.1s; }
+
+        /* --- FOOTER & CONTROLS --- */
+        footer {
+            height: 100px; border-top: 1px solid var(--secondary);
+            background: var(--panel); display: flex; flex-direction: column;
+            justify-content: center; align-items: center; gap: 5px;
+        }
+
+        #log-display {
+            width: 90%; font-size: 0.7rem; color: #666; text-align: center;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+
+        .control-dock {
+            display: flex; gap: 20px; align-items: center;
+        }
+
+        #action-btn {
+            width: 70px; height: 70px; border-radius: 12px;
+            border: 2px solid var(--primary); background: rgba(0, 255, 204, 0.1);
+            color: var(--primary); font-size: 1.5rem;
             display: flex; justify-content: center; align-items: center;
             cursor: pointer; transition: 0.2s;
-            box-shadow: 0 0 20px rgba(0, 255, 65, 0.2);
+            box-shadow: 0 0 15px rgba(0, 255, 204, 0.1);
         }
 
-        #main-btn.active { background: var(--c-abs); color: #000; animation: pulse-core 1s infinite; }
-        #main-btn.danger { border-color: var(--c-blood); color: var(--c-blood); box-shadow: 0 0 20px rgba(255, 0, 0, 0.4); }
+        #action-btn:active { transform: scale(0.95); background: var(--primary); color: #000; }
+        #action-btn.active { background: var(--alert); border-color: var(--alert); color: #fff; animation: pulse-alert 1s infinite; }
 
-        .sub-btn {
-            background: transparent; border: 1px solid #444; color: #888;
-            padding: 10px 20px; font-family: 'Orbitron'; font-size: 0.8rem; cursor: pointer;
-            text-transform: uppercase; transition: 0.2s;
+        .mini-btn {
+            background: none; border: 1px solid #444; color: #888;
+            padding: 10px; font-family: var(--font-tech); font-size: 0.7rem; cursor: pointer;
+            border-radius: 4px;
         }
-        .sub-btn:hover { border-color: var(--c-abs); color: var(--c-abs); }
+        .mini-btn:hover { border-color: var(--primary); color: var(--primary); }
+
+        /* --- SETUP MODAL (IDENTITY) --- */
+        #setup-modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95); z-index: 2000;
+            display: flex; justify-content: center; align-items: center; flex-direction: column;
+        }
+
+        .input-group { margin-top: 20px; display: flex; gap: 10px; }
+        #codename-input {
+            background: transparent; border: 2px solid var(--primary); color: var(--primary);
+            padding: 10px; font-family: var(--font-tech); font-size: 1.2rem; text-align: center;
+            outline: none; width: 250px; text-transform: uppercase;
+        }
 
         /* --- ANIMATIONS --- */
-        @keyframes spin { 100% { transform: rotate(360deg); } }
-        @keyframes pulse-core { 0% { box-shadow: 0 0 0 0 rgba(0, 255, 65, 0.7); } 70% { box-shadow: 0 0 0 20px rgba(0, 255, 65, 0); } 100% { box-shadow: 0 0 0 0 rgba(0, 255, 65, 0); } }
-        
-        /* TEXT DECRYPTION EFFECT */
-        .decrypting { color: var(--c-blood); }
-        
-        /* OVERLAYS */
-        .modal {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.95); z-index: 1000;
-            display: none; justify-content: center; align-items: center; flex-direction: column;
+        @keyframes spin-slow { 100% { transform: rotate(360deg); } }
+        @keyframes pulse-alert { 0% { box-shadow: 0 0 0 0 rgba(255, 51, 102, 0.7); } 70% { box-shadow: 0 0 0 15px rgba(255, 51, 102, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 51, 102, 0); } }
+
+        /* Canvas Overlay */
+        #wave-canvas {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            opacity: 0.3; pointer-events: none; z-index: 1;
         }
-        .modal h2 { font-family: 'Orbitron'; color: var(--c-abs); margin-bottom: 20px; }
-        .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .grid-btn { padding: 20px; border: 1px solid #333; color: #fff; background: #111; cursor: pointer; }
-        .grid-btn:hover { background: #222; border-color: var(--c-abs); }
 
     </style>
 </head>
 <body>
 
-<div class="crt-overlay"></div>
-<div class="vignette"></div>
+<div class="bg-grid"></div>
+
+<!-- IDENTITY SETUP -->
+<div id="setup-modal">
+    <h1 style="font-family: var(--font-tech); color: var(--primary); margin-bottom: 10px;">INITIALISATION LIEN</h1>
+    <p style="color: #888; font-size: 0.9rem;">IDENTIFIEZ-VOUS POUR SYNCHRONISER LE SYSTÈME.</p>
+    <div class="input-group">
+        <input type="text" id="codename-input" placeholder="VOTRE CODE NOM" maxlength="12">
+        <button onclick="registerUser()" style="background: var(--primary); border:none; padding: 0 20px; font-weight: bold; cursor: pointer;">OK</button>
+    </div>
+</div>
 
 <header>
-    <div class="brand">JARVIS <span style="color:#fff">ABSOLUTE</span></div>
-    <div style="font-size:0.7rem; text-align:right">
-        <div id="clock">00:00:00</div>
-        <div id="battery-sys">BAT: --%</div>
+    <div class="user-badge">
+        <div class="avatar-ring" id="user-initial">?</div>
+        <div>
+            <div style="font-weight: bold; font-size: 1.1rem;" id="display-name">OPÉRATEUR</div>
+            <div style="font-size: 0.7rem; color: #666;">NIVEAU D'ACCÈS: ALPHA</div>
+        </div>
     </div>
+    <div class="status-badge" id="sys-status">EN LIGNE</div>
 </header>
 
 <main>
-    <div id="core-container">
-        <canvas id="waveform"></canvas>
-        <div id="entity-core">
-            <div id="core-text">STANDBY</div>
-        </div>
-        <div style="position:absolute; bottom:10px; left:10px; font-size:0.7rem; color:#666;">
-            FRÉQUENCE DOMINANTE: <span id="dom-freq">0</span> Hz
+    <div class="core-section">
+        <canvas id="wave-canvas"></canvas>
+        <div id="resonance-circle">
+            <div id="resonance-val">0%</div>
+            <div id="resonance-label">RÉSONANCE</div>
         </div>
     </div>
 
-    <div id="dashboard">
-        <div class="sensor-panel">
-            <div class="sensor-header"><span>ENTRÉE AUDIO (RMS)</span> <i class="fas fa-wave-square"></i></div>
-            <div class="sensor-data"><span id="val-audio">0</span> dB</div>
-            <div class="sensor-bar-bg"><div id="bar-audio" class="sensor-bar-fill"></div></div>
+    <div class="data-grid">
+        <div class="data-card">
+            <div class="card-title">ENTRÉE VOCALE (USER)</div>
+            <div class="card-value"><span id="val-input">0</span> dB</div>
+            <div class="progress-bar"><div id="bar-input" class="progress-fill"></div></div>
         </div>
-        <div class="sensor-panel">
-            <div class="sensor-header"><span>ACTIVITÉ CINÉTIQUE</span> <i class="fas fa-wind"></i></div>
-            <div class="sensor-data"><span id="val-motion">0.00</span> G</div>
-            <div class="sensor-bar-bg"><div id="bar-motion" class="sensor-bar-fill" style="background:var(--c-cyan)"></div></div>
-        </div>
-        <div class="sensor-panel">
-            <div class="sensor-header"><span>CHAMP ÉLÉCTROMAGNÉTIQUE</span> <i class="fas fa-bolt"></i></div>
-            <div class="sensor-data"><span id="val-emf">--</span> µT</div>
-            <div class="sensor-bar-bg"><div id="bar-emf" class="sensor-bar-fill" style="background:var(--c-blood)"></div></div>
-        </div>
-        <div class="sensor-panel">
-            <div class="sensor-header"><span>ÉTAT DE L'ENTITÉ</span> <i class="fas fa-brain"></i></div>
-            <div class="sensor-data" id="entity-state" style="font-size:1rem; color:var(--c-cyan)">DORMANT</div>
-            <div class="sensor-bar-bg"><div id="bar-state" class="sensor-bar-fill" style="background:purple; width:10%"></div></div>
+        <div class="data-card">
+            <div class="card-title">ACTIVITÉ KINÉTIQUE</div>
+            <div class="card-value"><span id="val-move">0.0</span> G</div>
+            <div class="progress-bar"><div id="bar-move" class="progress-fill" style="background:var(--alert)"></div></div>
         </div>
     </div>
 </main>
 
 <footer>
-    <div id="log-stream">INITIALISATION DU SYSTÈME... VEUILLEZ CALIBRER.</div>
-    <div class="controls">
-        <button class="sub-btn" onclick="toggleMenu()"><i class="fas fa-bars"></i></button>
-        <button id="main-btn" onclick="toggleMic()"><i class="fas fa-microphone"></i></button>
-        <button class="sub-btn" onclick="triggerPurge()"><i class="fas fa-radiation-alt"></i></button>
+    <div id="log-display">SYSTÊME EN ATTENTE DE PILOTAGE...</div>
+    <div class="control-dock">
+        <button class="mini-btn" onclick="toggleMenu()"><i class="fas fa-cog"></i></button>
+        <button id="action-btn" onclick="toggleLink()"><i class="fas fa-microphone"></i></button>
+        <button class="mini-btn" onclick="speakToEntity()"><i class="fas fa-comment-dots"></i></button>
     </div>
 </footer>
-
-<!-- MENU MODAL -->
-<div id="menu-modal" class="modal">
-    <h2>COMMANDE SYSTÈME</h2>
-    <div class="btn-grid">
-        <button class="grid-btn" onclick="calibrateSensors()">CALIBRER CAPTEURS</button>
-        <button class="grid-btn" onclick="forceSpeak()">INTERROGER ENTITÉ</button>
-        <button class="grid-btn" onclick="saveLog()">SAUVEGARDER LOGS</button>
-        <button class="grid-btn" onclick="closeMenu()">FERMER</button>
-    </div>
-</div>
 
 <script>
     /* 
        ================================================================
-       JARVIS PARANORMAL v99.0 - THE ABSOLUTE EDITION
-       Fusion Réalité / Fiction.
-       Utilise AudioContext (Réel) + Accéléromètre (Réel)
-       pour piloter une IA Spectrale (Fiction).
+       PERSONA LINK v100.0
+       Système adapté à l'Identité de l'Utilisateur
        ================================================================
     */
+
+    const USER = {
+        codename: "OPÉRATEUR",
+        initials: "OP",
+        aggressionProfile: 50, // S'adapte à l'utilisateur
+        linked: false
+    };
 
     const SYS = {
         audioCtx: null,
         analyser: null,
-        mic: null,
         recognition: null,
         voices: [],
-        baseline: { audio: 0, motion: 0.1 },
-        state: 'DORMANT', // DORMANT, AGITATED, HOSTILE, POSSESSED
-        aggression: 0,
-        isListening: false
+        baseline: 0,
+        resonance: 0
     };
 
-    const UI = {
-        log: (msg) => {
-            const el = document.getElementById('log-stream');
-            const time = new Date().toLocaleTimeString().split(' ')[0];
-            el.innerText = `[${time}] ${msg}`;
-        },
-        core: document.getElementById('entity-core'),
-        coreText: document.getElementById('core-text'),
-        barState: document.getElementById('bar-state')
+    // --- 1. GESTION DE L'IDENTITÉ ---
+    window.onload = () => {
+        const savedName = localStorage.getItem('jarvis_codename');
+        if (savedName) {
+            USER.codename = savedName.toUpperCase();
+            USER.initials = savedName.substring(0, 2).toUpperCase();
+            applyIdentity();
+            startSystem();
+        } else {
+            // Focus input pour démarrer
+            setTimeout(() => document.getElementById('codename-input').focus(), 500);
+        }
     };
 
-    // --- 1. AUDIO ENGINE (RÉEL) ---
-    async function initAudio() {
+    function registerUser() {
+        const input = document.getElementById('codename-input').value;
+        if (input.trim().length > 0) {
+            USER.codename = input.toUpperCase();
+            USER.initials = input.substring(0, 2).toUpperCase();
+            localStorage.setItem('jarvis_codename', USER.codename);
+            
+            document.getElementById('setup-modal').style.display = 'none';
+            applyIdentity();
+            startSystem();
+        }
+    }
+
+    function applyIdentity() {
+        document.getElementById('display-name').innerText = USER.codename;
+        document.getElementById('user-initial').innerText = USER.initials;
+        document.getElementById('log-display').innerText = `BIENVENUE, ${USER.codename}. LIEN NEURAL ÉTABLI.`;
+    }
+
+    // --- 2. DÉMARRAGE SYSTÈME (RÉEL) ---
+    async function startSystem() {
         try {
             SYS.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             
             SYS.analyser = SYS.audioCtx.createAnalyser();
-            SYS.analyser.fftSize = 2048;
-            SYS.analyser.smoothingTimeConstant = 0.8;
-            
-            SYS.mic = SYS.audioCtx.createMediaStreamSource(stream);
-            SYS.mic.connect(SYS.analyser);
+            SYS.analyser.fftSize = 256;
+            const source = SYS.audioCtx.createMediaStreamSource(stream);
+            source.connect(SYS.analyser);
 
-            drawWaveform();
-            analyzeLoop();
-            UI.log("Moteur Audio Connecté. Spectre actif.");
+            initCanvas();
+            analyzeUserBio();
+            initMotion();
+            initSpeech();
+            loadVoices();
+
+            // Message de bienvenue personnalisé
+            setTimeout(() => speak(`Système prêt, ${USER.codename}. J'attends vos ordres.`), 1000);
+
         } catch(e) {
-            UI.log("ERREUR CRITIQUE: ACCÈS MICRO REFUSÉ.");
+            alert("Autorisation Micro requise pour le lien neural.");
         }
     }
 
-    // --- 2. VISUALISATION (L'ÂME VISUELLE) ---
-    function drawWaveform() {
-        const canvas = document.getElementById('waveform');
+    // --- 3. ANALYSE BIO-MÉTRIQUE (L'utilisateur est le capteur) ---
+    function analyzeUserBio() {
+        if (!SYS.analyser) return;
+        
+        const array = new Uint8Array(SYS.analyser.frequencyBinCount);
+        
+        function loop() {
+            requestAnimationFrame(loop);
+            SYS.analyser.getByteFrequencyData(array);
+
+            // Calcul intensité User
+            let sum = 0;
+            for(let i=0; i<array.length; i++) sum += array[i];
+            const rms = Math.sqrt(sum / array.length);
+            const db = 20 * Math.log10(rms) || -100;
+            const displayDb = Math.max(-100, Math.round(db));
+
+            // Calibrage dynamique
+            if (SYS.baseline === 0) SYS.baseline = displayDb + 10;
+            
+            // Update UI
+            document.getElementById('val-input').innerText = displayDb;
+            document.getElementById('bar-input').style.width = Math.min(100, (displayDb + 100) * 0.8) + "%";
+
+            // Calcul RÉSONANCE (C'est le "score" de connexion)
+            // Si l'utilisateur est calme, la résonance est stable. S'il est bruyant, elle monte.
+            let resonance = 0;
+            if (displayDb > SYS.baseline) {
+                resonance = ((displayDb - SYS.baseline) * 5); 
+            }
+            resonance = Math.min(100, resonance);
+            
+            // Lissage visuel
+            SYS.resonance += (resonance - SYS.resonance) * 0.1;
+            
+            // Update Core Visual
+            document.getElementById('resonance-val').innerText = Math.round(SYS.resonance) + "%";
+            const circle = document.getElementById('resonance-circle');
+            const scale = 1 + (SYS.resonance / 200);
+            circle.style.transform = `scale(${scale})`;
+            circle.style.boxShadow = `0 0 ${SYS.resonance}px var(--primary)`;
+            
+            // Couleur dynamique
+            if(SYS.resonance > 80) {
+                circle.style.borderColor = 'var(--alert)';
+                document.getElementById('resonance-label').innerText = "PICS D'ÉNERGIE";
+                document.getElementById('resonance-label').style.color = 'var(--alert)';
+            } else {
+                circle.style.borderColor = 'var(--primary)';
+                document.getElementById('resonance-label').innerText = "RÉSONANCE STABLE";
+                document.getElementById('resonance-label').style.color = 'var(--primary)';
+            }
+        }
+        loop();
+    }
+
+    // --- 4. CANVAS WAVE ---
+    function initCanvas() {
+        const canvas = document.getElementById('wave-canvas');
         const ctx = canvas.getContext('2d');
         const resize = () => { canvas.width = canvas.parentElement.offsetWidth; canvas.height = canvas.parentElement.offsetHeight; };
-        window.addEventListener('resize', resize);
-        resize();
+        window.addEventListener('resize', resize); resize();
 
         const bufferLength = SYS.analyser.frequencyBinCount;
         const dataArray = new Uint8Array(bufferLength);
@@ -294,23 +384,16 @@
         function draw() {
             requestAnimationFrame(draw);
             SYS.analyser.getByteTimeDomainData(dataArray);
-
-            ctx.fillStyle = 'rgba(0, 20, 0, 0.2)';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.lineWidth = 2;
-            // La couleur change selon l'agression
-            ctx.strokeStyle = SYS.state === 'HOSTILE' ? '#ff0000' : (SYS.state === 'POSSESSED' ? '#ff00ff' : '#00ff41');
-            
+            ctx.strokeStyle = SYS.resonance > 80 ? 'var(--alert)' : 'var(--primary)';
             ctx.beginPath();
             const sliceWidth = canvas.width * 1.0 / bufferLength;
             let x = 0;
-
             for(let i = 0; i < bufferLength; i++) {
                 const v = dataArray[i] / 128.0;
                 const y = v * canvas.height / 2;
-                if(i === 0) ctx.moveTo(x, y);
-                else ctx.lineTo(x, y);
+                if(i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
                 x += sliceWidth;
             }
             ctx.stroke();
@@ -318,160 +401,56 @@
         draw();
     }
 
-    // --- 3. ANALYSE RÉELLE & RÉACTION ENTITÉ ---
-    function analyzeLoop() {
-        if(!SYS.analyser) return;
-
-        const array = new Uint8Array(SYS.analyser.frequencyBinCount);
-        SYS.analyser.getByteFrequencyData(array);
-
-        // Calcul Volume Réel (RMS)
-        let sum = 0;
-        for(let i = 0; i < array.length; i++) sum += array[i] * array[i];
-        const rms = Math.sqrt(sum / array.length);
-        const db = 20 * Math.log10(rms) || -100;
-        const dbDisplay = Math.max(-100, Math.round(db));
-
-        // Fréquence Dominante
-        let maxVal = 0; let maxIdx = 0;
-        for(let i=0; i<array.length; i++) { if(array[i] > maxVal) { maxVal = array[i]; maxIdx = i; } }
-        const freq = maxIdx * SYS.audioCtx.sampleRate / SYS.analyser.fftSize;
-
-        // UPDATE UI AUDIO
-        document.getElementById('val-audio').innerText = dbDisplay;
-        document.getElementById('bar-audio').style.width = Math.min(100, (dbDisplay + 100) * 0.8) + "%";
-        document.getElementById('dom-freq').innerText = Math.round(freq);
-
-        // LE CŒUR RÉAGIT AU SON RÉEL
-        // Plus c'est fort, plus le cœur grandit
-        const scale = 1 + (rms / 50); 
-        UI.core.style.transform = `scale(${Math.min(2.5, scale)})`;
-        UI.core.style.boxShadow = `0 0 ${rms * 2}px var(--c-abs), inset 0 0 ${rms * 2}px var(--c-abs)`;
-
-        // LOGIQUE D'ENTITÉ (Basée sur le réel)
-        const noiseLevel = dbDisplay - SYS.baseline.audio;
-        
-        if (noiseLevel > 15) {
-            // Bruit soudain détecté
-            increaseAggression(2);
-            if(SYS.state === 'DORMANT') {
-                changeState('AGITATED');
-                UI.log("DÉTECTION : Perturbation sonore anormale.");
-            }
-        } else if (noiseLevel < 5 && SYS.aggression > 0) {
-            // Calme retour
-            increaseAggression(-1);
-        }
-
-        requestAnimationFrame(analyzeLoop);
-    }
-
-    // --- 4. CAPTEUR DE MOUVEMENT (RÉEL) ---
+    // --- 5. MOUVEMENT (RÉEL) ---
     function initMotion() {
-        if (window.DeviceMotionEvent) {
+        if(window.DeviceMotionEvent) {
             window.addEventListener('devicemotion', (e) => {
                 const acc = e.accelerationIncludingGravity;
                 if(!acc) return;
-                const motion = Math.abs(acc.x) + Math.abs(acc.y) + Math.abs(acc.z);
-                const motionVal = (motion / 3).toFixed(2);
-                
-                document.getElementById('val-motion').innerText = motionVal;
-                document.getElementById('bar-motion').style.width = Math.min(100, motionVal * 20) + "%";
-
-                if (motionVal > 0.5) { // Seuil de mouvement
-                    increaseAggression(5);
-                    UI.log("DÉTECTION : Mouvement cinétique physique.");
-                    if(navigator.vibrate) navigator.vibrate(50);
-                }
+                const m = Math.abs(acc.x) + Math.abs(acc.y) + Math.abs(acc.z);
+                const val = (m/3).toFixed(2);
+                document.getElementById('val-move').innerText = val;
+                document.getElementById('bar-move').style.width = Math.min(100, val * 20) + "%";
             });
-        } else {
-            document.getElementById('val-motion').innerText = "N/A";
         }
     }
 
-    // --- 5. GESTION DE L'ENTITÉ (L'INTELLIGENCE) ---
-    function increaseAggression(amount) {
-        SYS.aggression = Math.max(0, Math.min(100, SYS.aggression + amount));
-        UI.barState.style.width = SYS.aggression + "%";
-
-        if (SYS.aggression > 80) changeState('POSSESSED');
-        else if (SYS.aggression > 50) changeState('HOSTILE');
-        else if (SYS.aggression > 20) changeState('AGITATED');
-        else changeState('DORMANT');
-    }
-
-    function changeState(newState) {
-        if (SYS.state === newState) return;
-        SYS.state = newState;
-        document.getElementById('entity-state').innerText = newState;
-        
-        // Effets visuels d'état
-        if(newState === 'POSSESSED') {
-            document.documentElement.style.setProperty('--c-abs', '#ff00ff');
-            document.body.style.filter = "invert(1) hue-rotate(180deg)";
-            setTimeout(() => document.body.style.filter = "none", 200);
-            speak("JE SUIS ICI. JE SUIS TOUT.");
-        } else if (newState === 'HOSTILE') {
-            document.documentElement.style.setProperty('--c-abs', '#ff0000');
-        } else {
-            document.documentElement.style.setProperty('--c-abs', '#00ff41');
-        }
-    }
-
-    // --- 6. SYNTHÈSE & RECONNAISSANCE ---
+    // --- 6. INTERACTION & IA ---
     function loadVoices() {
         SYS.voices = window.speechSynthesis.getVoices();
         window.speechSynthesis.onvoiceschanged = () => SYS.voices = window.speechSynthesis.getVoices();
-    }
-
-    // Text Decryption Effect
-    function decryptText(text, element) {
-        let iterations = 0;
-        const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()";
-        const interval = setInterval(() => {
-            element.innerText = text.split("")
-                .map((letter, index) => {
-                    if(index < iterations) return text[index];
-                    return letters[Math.floor(Math.random() * 26)];
-                })
-                .join("");
-            
-            if(iterations >= text.length) clearInterval(interval);
-            iterations += 1/2;
-        }, 30);
     }
 
     function speak(text) {
         window.speechSynthesis.cancel();
         const u = new SpeechSynthesisUtterance(text);
         u.lang = 'fr-FR';
-        
-        // La voix change selon l'état (réel)
-        if (SYS.state === 'POSSESSED') { u.rate = 1.2; u.pitch = 0.2; }
-        else if (SYS.state === 'HOSTILE') { u.rate = 1.0; u.pitch = 0.4; }
-        else { u.rate = 0.7; u.pitch = 0.6; }
-
-        const frVoice = SYS.voices.find(v => v.lang.includes('fr'));
-        if(frVoice) u.voice = frVoice;
-
-        decryptText(">> " + text.toUpperCase(), UI.coreText);
+        u.rate = 0.9;
+        u.pitch = 0.6;
+        const fr = SYS.voices.find(v => v.lang.includes('fr'));
+        if(fr) u.voice = fr;
         window.speechSynthesis.speak(u);
-        UI.log("ENTITÉ: " + text);
+        document.getElementById('log-display').innerText = `> ${text}`;
     }
 
-    const responses = {
-        DORMANT: ["...", "Silence.", "Qui ose ?", "Je veille."],
-        AGITATED: ["Ne crie pas.", "Je sens ta peur.", "Pourquoi es-tu là ?", "La température baisse."],
-        HOSTILE: ["TU NE DEVRAIS PAS ÊTRE ICI.", "ARRÊTE.", "JE VOIS TON ÂME.", "TU VAS REGRETTER."],
-        POSSESSED: ["JE SUIS L'ABSOLU.", "IL N'Y A PLUS D'ÉCHAPATOIRE.", "TON CORPS EST MANTenant À MOI.", "MOURIR."]
-    };
-
-    function forceSpeak() {
-        const pool = responses[SYS.state] || responses['DORMANT'];
-        speak(pool[Math.floor(Math.random() * pool.length)]);
-        closeMenu();
+    function speakToEntity() {
+        const phrases = [
+            "Je sens ta présence.",
+            "Montre-toi.",
+            "Quelle est ta nature ?",
+            "Je ne crains rien.",
+            "Parle-moi."
+        ];
+        const p = phrases[Math.floor(Math.random() * phrases.length)];
+        document.getElementById('log-display').innerText = `VOUS: ${p}`;
+        // Simulation réponse entité rapide
+        setTimeout(() => {
+            const replies = ["Je suis partout.", "Pourquoi cherches-tu ?", "Silence...", "Tu ne comprends pas."];
+            speak(replies[Math.floor(Math.random() * replies.length)]);
+        }, 1500);
     }
 
+    // --- SPEECH RECOG ---
     function initSpeech() {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         if(!SpeechRecognition) return;
@@ -481,93 +460,33 @@
         
         SYS.recognition.onresult = (e) => {
             const txt = e.results[0][0].transcript;
-            UI.log("UTILISATEUR: " + txt);
-            increaseAggression(10); // Parler énerve l'entité
-            setTimeout(forceSpeak, 1000);
+            document.getElementById('log-display').innerText = `${USER.codename}: "${txt}"`;
+            // L'entité réagit à l'utilisateur
+            setTimeout(() => speak("Message reçu, " + USER.codename + ". Traitement en cours."), 1000);
         };
+        
         SYS.recognition.onend = () => {
-             SYS.isListening = false;
-             document.getElementById('main-btn').classList.remove('active');
+            USER.linked = false;
+            document.getElementById('action-btn').classList.remove('active');
         };
     }
 
-    function toggleMic() {
+    function toggleLink() {
         if(!SYS.recognition) return;
         try {
             SYS.recognition.start();
-            SYS.isListening = true;
-            document.getElementById('main-btn').classList.add('active');
-            UI.log("CANAL VOCAL OUVERT.");
+            USER.linked = true;
+            document.getElementById('action-btn').classList.add('active');
+            document.getElementById('log-display').innerText = "CONNECTION AUDIO ACTIVE... PARLEZ.";
         } catch(e) {}
     }
 
-    // --- 7. UTILS & SYSTEM ---
-    function toggleMenu() { document.getElementById('menu-modal').style.display = 'flex'; }
-    function closeMenu() { document.getElementById('menu-modal').style.display = 'none'; }
-    
-    function calibrateSensors() {
-        UI.log("CALIBRATION EN COURS... FAITES SILENCE.");
-        if(SYS.analyser) {
-             // Simulation rapide de calibration (capture un instantané)
-             const arr = new Uint8Array(SYS.analyser.frequencyBinCount);
-             SYS.analyser.getByteFrequencyData(arr);
-             let sum = 0;
-             for(let i=0; i<arr.length; i++) sum += arr[i];
-             const rms = Math.sqrt(sum/arr.length);
-             const db = 20 * Math.log10(rms) || -100;
-             SYS.baseline.audio = db;
-             UI.log(`CALIBRATION TERMINÉE. BRUIT DE FOND: ${Math.round(db)} dB`);
+    function toggleMenu() {
+        if(confirm("Réinitialiser l'identité de " + USER.codename + " ?")) {
+            localStorage.removeItem('jarvis_codename');
+            location.reload();
         }
-        closeMenu();
     }
-
-    function triggerPurge() {
-        UI.log("INITIATION SÉQUENCE DE PURGE...");
-        SYS.aggression = 0;
-        changeState('DORMANT');
-        speak("Système purgé. Retour au néant.");
-        if(navigator.vibrate) navigator.vibrate([200, 100, 200]);
-    }
-
-    function saveLog() {
-        const data = `SESSION JARVIS v99.0\nDATE: ${new Date()}\nÉTAT FINAL: ${SYS.state}\nAGRESSION: ${SYS.aggression}%`;
-        const blob = new Blob([data], { type: 'text/plain' });
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = 'jarvis_log_absolute.txt';
-        a.click();
-        UI.log("LOGS SAUVEGARDÉS.");
-        closeMenu();
-    }
-
-    // Clock
-    setInterval(() => {
-        const now = new Date();
-        document.getElementById('clock').innerText = now.toLocaleTimeString('fr-FR');
-    }, 1000);
-
-    // Battery
-    navigator.getBattery?.().then(b => {
-        const updateBat = () => {
-            const lvl = Math.round(b.level * 100);
-            document.getElementById('battery-sys').innerText = `BAT: ${lvl}%`;
-            // Si batterie faible, entité plus faible
-            if(lvl < 20 && SYS.aggression > 50) SYS.aggression -= 5;
-        };
-        updateBat();
-        b.addEventListener('levelchange', updateBat);
-    });
-
-    // START
-    window.onload = async () => {
-        loadVoices();
-        await initAudio();
-        initMotion();
-        initSpeech();
-        
-        // Auto calibrate après 2 sec
-        setTimeout(calibrateSensors, 2000);
-    };
 
 </script>
 </body>
