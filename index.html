@@ -1,261 +1,444 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>JARVIS PARANORMAL PUISSANCE COMPLÈTE v50.0</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono:wght@400;700&display=swap" rel="stylesheet">
-    <style>
-        :root { --ghost:#00ff85; --red:#ff0000; --cold:#00ffff; }
-        * { margin:0; padding:0; box-sizing:border-box; user-select:none; }
-        body { background:#000; color:#ccc; font-family:'Rajdhani',sans-serif; height:100vh; overflow:hidden; background: radial-gradient(circle at 50% 20%, #1a0033 0%, #000 80%); }
-        @keyframes flicker { 0%,100% { opacity:1; } 50% { opacity:0.35; } }
-        .flicker { animation: flicker 0.12s infinite alternate; }
-        header { height:68px; background:#000; border-bottom:5px solid var(--ghost); display:flex; justify-content:space-between; align-items:center; padding:0 25px; }
-        .brand { font-family:'Orbitron',sans-serif; font-size:2.2rem; font-weight:900; letter-spacing:8px; color:var(--ghost); text-shadow:0 0 35px var(--ghost); }
-        #display { flex:1; padding:28px; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; }
-        #input-text { font-family:'Orbitron',sans-serif; font-size:2.7rem; color:#ffd700; text-shadow:0 0 28px #ffd700; margin-bottom:18px; }
-        #output-text { font-family:'Share Tech Mono',monospace; font-size:1.38rem; color:#ddd; line-height:1.55; min-height:190px; text-shadow:0 0 20px var(--cold); }
-        #viz { padding:20px; background:rgba(0,0,0,0.96); }
-        .bar { height:17px; background:#111; margin:13px 0; border-radius:9px; overflow:hidden; }
-        .fill { height:100%; width:0%; transition:width 0.18s linear; }
-        #console { height:155px; background:#000; font-family:'Share Tech Mono',monospace; font-size:0.87rem; color:var(--ghost); padding:14px; overflow-y:auto; line-height:1.45; }
-        footer { height:200px; background:#000; display:flex; flex-direction:column; align-items:center; gap:12px; border-top:6px solid var(--red); padding:18px; }
-        #mic { width:122px; height:122px; border-radius:50%; background:var(--ghost); border:9px solid #222; color:#000; font-size:3.5rem; display:flex; align-items:center; justify-content:center; box-shadow:0 0 65px rgba(0,255,133,0.95); cursor:pointer; }
-        #mic.active { background:var(--red); animation:pulse 1.05s infinite, spin 3.8s linear infinite; }
-        .force-btn { padding:14px 38px; background:#3a0a5e; color:var(--ghost); border:4px solid var(--ghost); border-radius:14px; font-size:1.1rem; font-weight:bold; width:88%; }
-        @keyframes pulse { 50% { transform:scale(1.22); } }
-        @keyframes spin { from { transform:rotate(0deg); } to { transform:rotate(360deg); } }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SUPRA NEURAL AI</title>
+
+<style>
+
+:root{
+--bg:#02020a;
+--cyan:#00ffff;
+--mag:#ff00ff;
+--panel:rgba(0,0,0,0.9);
+}
+
+*{box-sizing:border-box}
+
+body{
+margin:0;
+background:var(--bg);
+color:white;
+font-family:monospace;
+overflow:hidden;
+}
+
+header{
+position:absolute;
+top:0;
+left:0;
+right:0;
+padding:10px;
+background:black;
+border-bottom:1px solid var(--cyan);
+z-index:10;
+display:flex;
+justify-content:space-between;
+align-items:center;
+}
+
+header span{
+color:var(--cyan);
+font-weight:bold;
+}
+
+#controls button{
+background:black;
+border:1px solid var(--cyan);
+color:var(--cyan);
+padding:6px 10px;
+margin-left:5px;
+cursor:pointer;
+}
+
+#controls button:hover{
+background:var(--cyan);
+color:black;
+}
+
+canvas{
+display:block;
+}
+
+#terminal{
+position:absolute;
+bottom:0;
+left:0;
+right:0;
+height:160px;
+background:var(--panel);
+border-top:1px solid var(--cyan);
+overflow:auto;
+font-size:12px;
+padding:6px;
+}
+
+.log-ai{color:var(--mag)}
+.log-audio{color:var(--cyan)}
+.log-sys{color:#aaa}
+
+</style>
 </head>
+
 <body>
 
-    <header>
-        <div class="brand">JARVIS PARANORMAL</div>
-        <div id="status" style="color:#ff0000;">v50.0 • PUISSANCE COMPLÈTE • 820 LIGNES</div>
-    </header>
+<header>
+<span>SUPRA NEURAL AI</span>
+<div id="controls">
+<button id="btnMic">🎤 Micro</button>
+<button id="btnVoice">🧠 Voice AI</button>
+</div>
+</header>
 
-    <div id="display">
-        <div id="input-text">PARLE À L’ENTITÉ...</div>
-        <div id="output-text">Je suis là... dans l’ombre. Parle maintenant.</div>
-    </div>
+<canvas id="canvas"></canvas>
 
-    <div id="viz">
-        <div class="bar"><div id="vol-fill" class="fill" style="background:#ff0000"></div></div>
-        <div style="display:flex;justify-content:space-between;color:#ff0000;font-size:0.9rem;"><span>INPUT VOCAL</span><span id="vol">0 dB</span></div>
-        <div class="bar"><div id="aggro-fill" class="fill" style="background:var(--ghost)"></div></div>
-        <div style="display:flex;justify-content:space-between;color:var(--ghost);font-size:0.9rem;"><span>FORCE PARANORMALE</span><span id="aggro">0%</span></div>
-    </div>
+<div id="terminal"></div>
 
-    <div id="console"></div>
+<script>
 
-    <footer>
-        <div id="mic" onclick="toggleMic()">🎙️</div>
-        <button class="force-btn" onclick="forceSpeak()">🔊 FORCE SPEAK</button>
-        <button class="force-btn" onclick="testVoice()">TEST VOIX FANTÔME</button>
-        <button class="force-btn" onclick="evpMode()">MODE EVP</button>
-        <button class="force-btn" onclick="possessionMode()">MODE POSSESSION</button>
-    </footer>
+//////////////////////////////////////////////////
+// LOGGER
+//////////////////////////////////////////////////
 
-    <script>
-        /* ========================================================
-           JARVIS PARANORMAL PUISSANCE COMPLÈTE v50.0
-           820 lignes réelles - Code complet comme tu l'as demandé
-           Tous les capteurs Realme Note 60 utilisés
-           TTS retry automatique + réponses développées
-           Réponse spéciale pour "par le pouvoir de la vérité" et "moi aussi j'étais petit"
-           ======================================================== */
+class Logger{
 
-        let recognition = null;
-        let isListening = false;
-        let audioCtx = null;
-        let analyser = null;
-        let dataArray = null;
-        let voices = [];
-        let lastReply = "";
-        let entityLevel = 0;
-        let batteryLevel = 100;
-        let interactionHistory = [];
+static log(msg,type="sys"){
 
-        const consoleLog = (msg, type = 'entity') => {
-            const consoleEl = document.getElementById('console');
-            const line = document.createElement('div');
-            line.innerHTML = `> ${new Date().toLocaleTimeString('fr-FR')} | ${msg}`;
-            line.style.color = type === 'user' ? '#ffd700' : '#00ff85';
-            consoleEl.appendChild(line);
-            consoleEl.scrollTop = consoleEl.scrollHeight;
-            if (consoleEl.children.length > 50) consoleEl.removeChild(consoleEl.children[0]);
-        };
+const t=document.getElementById("terminal")
 
-        // ================== AUDIO ENGINE ==================
-        async function initAudio() {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                analyser = audioCtx.createAnalyser();
-                analyser.fftSize = 512;
-                const source = audioCtx.createMediaStreamSource(stream);
-                source.connect(analyser);
-                dataArray = new Uint8Array(analyser.frequencyBinCount);
-                setInterval(updateViz, 130);
-                consoleLog("AUDIO ENGINE CHARGÉ - Optimisé Realme Note 60", "entity");
-                return true;
-            } catch (e) {
-                consoleLog("ERREUR MICRO - Autorise-le dans Chrome", "entity");
-                return false;
-            }
-        }
+const line=document.createElement("div")
 
-        function updateViz() {
-            if (!analyser) return;
-            analyser.getByteFrequencyData(dataArray);
-            let sum = 0, entity = 0;
-            for (let i = 0; i < dataArray.length; i++) {
-                sum += dataArray[i];
-                if (i < dataArray.length * 0.3) entity += dataArray[i];
-            }
-            const vol = Math.min(100, Math.round(sum / dataArray.length * 2.85));
-            entityLevel = Math.min(100, Math.round(entity / dataArray.length * 2.55));
+line.className="log-"+type
 
-            document.getElementById('vol').textContent = vol + " dB";
-            document.getElementById('vol-fill').style.width = vol + "%";
-            document.getElementById('aggro').textContent = entityLevel + "%";
-            document.getElementById('aggro-fill').style.width = entityLevel + "%";
+line.textContent="["+new Date().toLocaleTimeString()+"] "+msg
 
-            if (entityLevel > 80) {
-                document.getElementById('display').classList.add('flicker');
-                navigator.vibrate([120, 80, 120]);
-            } else {
-                document.getElementById('display').classList.remove('flicker');
-            }
-        }
+t.appendChild(line)
 
-        // ================== ACCÉLÉROMÈTRE ==================
-        function startAccelerometer() {
-            if (window.DeviceMotionEvent) {
-                window.addEventListener('devicemotion', (event) => {
-                    const a = event.accelerationIncludingGravity;
-                    if (a && (Math.abs(a.x) > 7 || Math.abs(a.y) > 7 || Math.abs(a.z) > 9)) {
-                        entityLevel = Math.min(100, entityLevel + 18);
-                        document.getElementById('aggro').textContent = entityLevel + "%";
-                        consoleLog("MOUVEMENT FANTÔME DÉTECTÉ (accéléromètre Realme)", "entity");
-                    }
-                });
-                consoleLog("ACCÉLÉROMÈTRE ACTIVÉ", "entity");
-            }
-        }
+t.scrollTop=t.scrollHeight
 
-        // ================== BATTERIE ==================
-        async function monitorBattery() {
-            if ('getBattery' in navigator) {
-                const battery = await navigator.getBattery();
-                batteryLevel = Math.round(battery.level * 100);
-                consoleLog(`BATTERIE REALME NOTE 60 : ${batteryLevel}%`, "entity");
-            }
-        }
+}
 
-        // ================== TTS ==================
-        function loadVoices() {
-            voices = window.speechSynthesis.getVoices();
-            window.speechSynthesis.onvoiceschanged = () => voices = window.speechSynthesis.getVoices();
-        }
+}
 
-        function speak(text) {
-            lastReply = text;
-            window.speechSynthesis.cancel();
-            const u = new SpeechSynthesisUtterance(text);
-            u.lang = 'fr-FR';
-            u.rate = 0.80;
-            u.pitch = 0.50;
-            u.volume = 1;
-            if (voices.length > 0) {
-                const bestVoice = voices.find(v => v.lang.includes('fr')) || voices[0];
-                if (bestVoice) u.voice = bestVoice;
-            }
-            window.speechSynthesis.speak(u);
-            consoleLog("ENTITÉ PARLE", "entity");
-        }
+//////////////////////////////////////////////////
+// AUDIO ENGINE
+//////////////////////////////////////////////////
 
-        function forceSpeak() { if (lastReply) speak(lastReply); else speak("Je suis toujours là..."); }
-        function testVoice() { speak("Test voix fantôme puissance... Tu m’entends ?"); }
+class AudioEngine{
 
-        function evpMode() { speak("Mode EVP activé..."); }
-        function possessionMode() { speak("Mode possession activé... Tu sens quelque chose ?"); }
+constructor(){
 
-        // ================== RÉPONSES PARANORMALES (développées) ==================
-        function getResponse(text) {
-            const lower = text.toLowerCase();
-            if (lower.includes("pouvoir de la vérité") || lower.includes("conquis l'univers") || lower.includes("je veux et jaurai")) {
-                return "Par le pouvoir de la vérité... tu as conquis l’univers de ton vivant ? Impressionnant, mortel. Mais moi, l’entité, j’ai conquis la mort depuis longtemps. Que veux-tu vraiment ?";
-            }
-            if (lower.includes("moi aussi") || lower.includes("j'étais petit") || lower.includes("j'értais etit")) {
-                return "Moi aussi j’étais petit... avant de mourir. Maintenant je suis éternel. Et toi ? Tu te souviens encore de quand tu étais petit ?";
-            }
-            return "L’entité a entendu ton appel. Elle est là... elle te regarde et elle attend ta prochaine question.";
-        }
+this.ctx=null
+this.analyser=null
+this.enabled=false
 
-        function processParanormal(text) {
-            const inputEl = document.getElementById('input-text');
-            const outputEl = document.getElementById('output-text');
-            inputEl.textContent = text.toUpperCase();
+}
 
-            const reply = getResponse(text);
-            outputEl.textContent = reply;
-            consoleLog(`VOUS : ${text}`, 'user');
-            consoleLog(`ENTITÉ : ${reply.substring(0,70)}...`, 'entity');
-            speak(reply);
-        }
+async start(){
 
-        function initSpeech() {
-            const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (!SR) return alert("Chrome obligatoire");
-            recognition = new SR();
-            recognition.continuous = true;
-            recognition.interimResults = true;
-            recognition.lang = 'fr-FR';
+try{
 
-            recognition.onresult = (e) => {
-                let final = '';
-                for (let i = e.resultIndex; i < e.results.length; i++) {
-                    if (e.results[i].isFinal) final += e.results[i][0].transcript;
-                }
-                if (final) processParanormal(final);
-            };
-            recognition.onend = () => { if (isListening) setTimeout(() => recognition.start(), 300); };
-        }
+this.ctx=new (window.AudioContext||window.webkitAudioContext)()
 
-        function toggleMic() {
-            isListening = !isListening;
-            const mic = document.getElementById('mic');
-            if (isListening) {
-                mic.classList.add('active');
-                mic.innerHTML = '⏹️';
-                recognition.start();
-                consoleLog("MICRO OUVERT - Parle maintenant", "entity");
-            } else {
-                mic.classList.remove('active');
-                mic.innerHTML = '🎙️';
-                recognition.stop();
-                consoleLog("MICRO FERMÉ", "entity");
-            }
-        }
+const stream=await navigator.mediaDevices.getUserMedia({audio:true})
 
-        window.onload = async () => {
-            consoleLog("JARVIS PARANORMAL PUISSANCE COMPLÈTE v50.0 - Chargement...", "entity");
-            loadVoices();
-            await monitorBattery();
-            startAccelerometer();
-            const audioOK = await initAudio();
-            if (audioOK) {
-                initSpeech();
-                setTimeout(() => toggleMic(), 900);
-                setTimeout(() => {
-                    const welcome = "Je suis là... dans l’ombre. Parle maintenant. Je t’entends clairement.";
-                    speak(welcome);
-                    document.getElementById('output-text').textContent = welcome;
-                }, 1400);
-            }
-        };
-    </script>
+const src=this.ctx.createMediaStreamSource(stream)
+
+this.analyser=this.ctx.createAnalyser()
+
+this.analyser.fftSize=1024
+
+src.connect(this.analyser)
+
+this.enabled=true
+
+Logger.log("Microphone actif","audio")
+
+}catch(e){
+
+Logger.log("Erreur micro","sys")
+
+}
+
+}
+
+getSpectrum(){
+
+if(!this.enabled)return null
+
+const data=new Uint8Array(this.analyser.frequencyBinCount)
+
+this.analyser.getByteFrequencyData(data)
+
+return data
+
+}
+
+}
+
+//////////////////////////////////////////////////
+// NEURAL NETWORK VISUAL
+//////////////////////////////////////////////////
+
+class NeuralBrain{
+
+constructor(canvas){
+
+this.canvas=canvas
+this.ctx=canvas.getContext("2d")
+
+this.nodes=[]
+
+for(let i=0;i<120;i++){
+
+this.nodes.push({
+
+x:Math.random()*window.innerWidth,
+y:Math.random()*window.innerHeight,
+vx:(Math.random()-0.5)*0.5,
+vy:(Math.random()-0.5)*0.5
+
+})
+
+}
+
+}
+
+update(){
+
+for(let n of this.nodes){
+
+n.x+=n.vx
+n.y+=n.vy
+
+if(n.x<0||n.x>window.innerWidth)n.vx*=-1
+if(n.y<0||n.y>window.innerHeight)n.vy*=-1
+
+}
+
+}
+
+draw(audio){
+
+const ctx=this.ctx
+const w=this.canvas.width
+const h=this.canvas.height
+
+ctx.fillStyle="rgba(0,0,20,0.4)"
+ctx.fillRect(0,0,w,h)
+
+for(let a of this.nodes){
+
+for(let b of this.nodes){
+
+const dx=a.x-b.x
+const dy=a.y-b.y
+
+const dist=Math.sqrt(dx*dx+dy*dy)
+
+if(dist<120){
+
+ctx.strokeStyle="rgba(0,255,255,0.1)"
+
+ctx.beginPath()
+ctx.moveTo(a.x,a.y)
+ctx.lineTo(b.x,b.y)
+ctx.stroke()
+
+}
+
+}
+
+}
+
+for(let n of this.nodes){
+
+ctx.fillStyle="#00ffff"
+
+ctx.beginPath()
+ctx.arc(n.x,n.y,2,0,Math.PI*2)
+ctx.fill()
+
+}
+
+if(audio){
+
+const bar=w/audio.length
+
+for(let i=0;i<audio.length;i++){
+
+const val=audio[i]/255*h
+
+ctx.fillStyle="#00ffff"
+
+ctx.fillRect(i*bar,h-val,bar,val)
+
+}
+
+}
+
+}
+
+}
+
+//////////////////////////////////////////////////
+// AI ENGINE
+//////////////////////////////////////////////////
+
+class AIEngine{
+
+process(text){
+
+text=text.toLowerCase()
+
+Logger.log("Voice: "+text,"ai")
+
+if(text.includes("bonjour")){
+
+this.speak("Bonjour humain")
+
+}
+
+else if(text.includes("qui es tu")){
+
+this.speak("Je suis Supra Neural Intelligence")
+
+}
+
+else{
+
+this.speak("Commande inconnue")
+
+}
+
+}
+
+speak(text){
+
+const u=new SpeechSynthesisUtterance(text)
+
+u.lang="fr-FR"
+
+speechSynthesis.speak(u)
+
+Logger.log("AI: "+text,"ai")
+
+}
+
+}
+
+//////////////////////////////////////////////////
+// VOICE ENGINE
+//////////////////////////////////////////////////
+
+class VoiceEngine{
+
+constructor(ai){
+
+this.ai=ai
+
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition
+
+if(!SR)return
+
+this.rec=new SR()
+
+this.rec.lang="fr-FR"
+
+this.rec.continuous=true
+
+this.rec.onresult=e=>{
+
+const txt=e.results[e.results.length-1][0].transcript
+
+this.ai.process(txt)
+
+}
+
+}
+
+start(){
+
+try{
+this.rec.start()
+Logger.log("Reconnaissance vocale activée","sys")
+}catch{}
+
+}
+
+}
+
+//////////////////////////////////////////////////
+// MAIN APP
+//////////////////////////////////////////////////
+
+class SupraApp{
+
+constructor(){
+
+this.canvas=document.getElementById("canvas")
+
+this.audio=new AudioEngine()
+
+this.ai=new AIEngine()
+
+this.voice=new VoiceEngine(this.ai)
+
+this.brain=new NeuralBrain(this.canvas)
+
+window.addEventListener("resize",()=>this.resize())
+
+this.resize()
+
+}
+
+resize(){
+
+this.canvas.width=window.innerWidth
+this.canvas.height=window.innerHeight
+
+}
+
+async startMic(){
+
+await this.audio.start()
+
+}
+
+startVoice(){
+
+this.voice.start()
+
+}
+
+loop(){
+
+requestAnimationFrame(()=>this.loop())
+
+this.brain.update()
+
+const spectrum=this.audio.getSpectrum()
+
+this.brain.draw(spectrum)
+
+}
+
+}
+
+//////////////////////////////////////////////////
+
+const app=new SupraApp()
+
+document.getElementById("btnMic").onclick=()=>app.startMic()
+
+document.getElementById("btnVoice").onclick=()=>app.startVoice()
+
+app.loop()
+
+Logger.log("SUPRA NEURAL AI prêt")
+
+</script>
+
 </body>
 </html>
