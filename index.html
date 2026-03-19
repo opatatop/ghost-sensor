@@ -13,8 +13,6 @@
     .brand { font-size:1.22rem; font-weight:bold; letter-spacing:3px; color:var(--primary); }
     .brand span { color:var(--secondary); }
     .env-badge { font-size:0.78rem; padding:5px 12px; border-radius:4px; font-weight:bold; }
-    .blocked { background:var(--danger); color:#fff; animation:blink 1.2s infinite; }
-    @keyframes blink { 50% { opacity:0.3; } }
     button { background:rgba(0,0,0,0.7); border:1px solid var(--primary); color:var(--primary); padding:8px 18px; margin:0 4px; cursor:pointer; transition:0.2s; text-transform:uppercase; }
     button:hover { background:var(--primary); color:#000; box-shadow:0 0 15px var(--primary); }
     button.active { background:var(--danger); color:#fff; }
@@ -32,8 +30,8 @@
 <body>
 
 <header>
-    <div class="brand">SUPRA <span>NEURAL</span> AI <span style="font-size:0.8rem;opacity:0.6;">v4.0 FINAL</span></div>
-    <div id="envBadge" class="env-badge">CHK...</div>
+    <div class="brand">SUPRA <span>NEURAL</span> AI <span style="font-size:0.8rem;opacity:0.6;">v4.0</span></div>
+    <div id="envBadge" class="env-badge">READY</div>
     <div class="controls">
         <button id="btnMic">MICRO</button>
         <button id="btnVoice">ÉCOUTE</button>
@@ -47,7 +45,7 @@
 <div id="terminal"></div>
 
 <script>
-const HARDCODED_KEY = "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";
+const KEY = "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";
 const $ = id => document.getElementById(id);
 
 const Logger = {
@@ -64,63 +62,52 @@ const Logger = {
 
 class AIEngine {
     constructor() {
-        this.apiKey = localStorage.getItem('supra_key') || HARDCODED_KEY;
-        localStorage.setItem('supra_key', this.apiKey);
+        this.key = KEY;
         this.synth = window.speechSynthesis;
         this.isSpeaking = false;
         this.voices = [];
-        setTimeout(() => { this.voices = this.synth.getVoices(); Logger.success("Voix chargées"); }, 500);
-        speechSynthesis.onvoiceschanged = () => this.voices = speechSynthesis.getVoices();
+        setTimeout(() => this.voices = this.synth.getVoices(), 500);
     }
     async process(text) {
         Logger.log(`VOIX: "${text}"`, "user");
-        let resp = "Je suis SUPRA NEURAL AI v4.0.";
-        try { resp = await this.fetchGPT(text); } catch(e) { Logger.error("API plantée"); }
+        let resp = "SUPRA en ligne.";
+        try {
+            const res = await fetch("https://api.openai.com/v1/chat/completions", {
+                method: "POST",
+                headers: {"Content-Type":"application/json", "Authorization":`Bearer ${this.key}`},
+                body: JSON.stringify({model:"gpt-4o-mini", messages:[{role:"system", content:"Réponds en français max 18 mots, style cyberpunk."}, {role:"user", content:text}], max_tokens:45})
+            });
+            const data = await res.json();
+            resp = data.choices[0].message.content;
+        } catch(e) {}
         this.speak(resp);
-    }
-    async fetchGPT(p) {
-        const res = await fetch("https://api.openai.com/v1/chat/completions", {
-            method: "POST",
-            headers: {"Content-Type":"application/json", "Authorization":`Bearer ${this.apiKey}`},
-            body: JSON.stringify({
-                model: "gpt-4o-mini",
-                messages: [{role:"system", content:"Tu es SUPRA NEURAL AI v4.0. Réponds en français, max 18 mots, style cyberpunk direct."}, {role:"user", content:p}],
-                max_tokens: 45
-            })
-        });
-        if (!res.ok) throw new Error("Erreur API");
-        const data = await res.json();
-        return data.choices[0].message.content;
     }
     speak(text) {
         this.synth.cancel();
         const u = new SpeechSynthesisUtterance(text);
-        const frVoice = this.voices.find(v => v.lang.includes('fr') || v.name.toLowerCase().includes('french'));
-        if (frVoice) u.voice = frVoice;
+        const fr = this.voices.find(v => v.lang.includes('fr'));
+        if (fr) u.voice = fr;
         u.rate = 1.08; u.pitch = 1.05;
         u.onstart = () => { this.isSpeaking = true; Logger.log(`IA: "${text}"`, "ai"); };
-        u.onend = () => { this.isSpeaking = false; Logger.success("FIN DE PAROLE"); };
-        u.onerror = e => Logger.error("Erreur voix: " + e.error);
+        u.onend = () => { this.isSpeaking = false; };
         this.synth.speak(u);
     }
 }
 
 class AudioEngine {
-    constructor() { this.ready = false; this.analyser = null; this.dataArray = null; }
+    constructor() { this.ready = false; }
     async start() {
         if (this.ready) return;
-        try {
-            const ctx = new (window.AudioContext || window.webkitAudioContext)();
-            const stream = await navigator.mediaDevices.getUserMedia({audio:true});
-            const src = ctx.createMediaStreamSource(stream);
-            this.analyser = ctx.createAnalyser();
-            this.analyser.fftSize = 256;
-            src.connect(this.analyser);
-            this.dataArray = new Uint8Array(this.analyser.frequencyBinCount);
-            this.ready = true;
-            Logger.success("MICRO OK");
-            $('btnMic').classList.add('active');
-        } catch(e) { Logger.error("Micro refusé"); }
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const stream = await navigator.mediaDevices.getUserMedia({audio:true});
+        const src = ctx.createMediaStreamSource(stream);
+        this.analyser = ctx.createAnalyser();
+        this.analyser.fftSize = 256;
+        src.connect(this.analyser);
+        this.dataArray = new Uint8Array(this.analyser.frequencyBinCount);
+        this.ready = true;
+        Logger.success("MICRO OK");
+        $('btnMic').classList.add('active');
     }
     getData() {
         if (!this.ready) return {vol:0, raw:null};
@@ -134,8 +121,8 @@ class Visuals {
     constructor() {
         this.c = $('canvas'); this.ctx = this.c.getContext('2d');
         this.nodes = Array.from({length:80}, () => ({x:Math.random()*innerWidth, y:Math.random()*innerHeight, vx:(Math.random()-0.5)*1.8, vy:(Math.random()-0.5)*1.8, s:Math.random()*3+1.5}));
-        window.onresize = () => {this.c.width = innerWidth; this.c.height = innerHeight-274;};
-        this.c.width = innerWidth; this.c.height = innerHeight-274;
+        window.onresize = () => {this.c.width=innerWidth; this.c.height=innerHeight-274;};
+        this.c.width=innerWidth; this.c.height=innerHeight-274;
     }
     draw(audio, speaking) {
         const {vol, raw} = audio; const w = this.c.width, h = this.c.height;
@@ -175,7 +162,7 @@ class VoiceEngine {
     constructor(cb) {
         this.cb = cb;
         this.rec = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-        this.rec.lang = 'fr-FR'; this.rec.continuous = true; this.rec.interimResults = false;
+        this.rec.lang = 'fr-FR'; this.rec.continuous = true;
         this.active = false;
         this.rec.onresult = e => this.cb(e.results[e.results.length-1][0].transcript);
         this.rec.onend = () => { if(this.active) this.rec.start(); };
@@ -198,14 +185,14 @@ class App {
         setTimeout(async () => {
             await this.audio.start();
             this.voice.toggle();
-            Logger.success("FULL AUTO LANCÉ");
-        }, 800);
+            Logger.success("SUPRA LANCÉ");
+        }, 600);
 
         $('btnMic').onclick = () => this.audio.start();
         $('btnVoice').onclick = () => this.voice.toggle();
-        $('btnTest').onclick = () => this.ai.speak("Test vocal réussi. Je suis SUPRA NEURAL AI v4.0 et je parle.");
+        $('btnTest').onclick = () => this.ai.speak("Test vocal OK. Je suis SUPRA NEURAL AI v4.0.");
         $('btnAuto').onclick = () => { this.audio.start(); this.voice.toggle(); };
-        $('btnClear').onclick = () => { $('terminal').innerHTML = ''; Logger.success("Terminal vidé"); };
+        $('btnClear').onclick = () => { $('terminal').innerHTML = ''; };
 
         document.addEventListener('keydown', e => { if(e.key === " ") this.voice.toggle(); });
 
