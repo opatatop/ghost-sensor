@@ -2,459 +2,327 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>SUPRA NEURAL AI v6.2 REBORN</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SUPRA NEURAL AI v3.6 ULTIME MAX</title>
 <style>
     :root {
-        --bg-color: #050508;
-        --primary: #00f3ff; 
-        --listen: #bc13fe; 
-        --think: #ff8800; 
-        --speak: #ffffff; 
-        --local: #00ff66; 
-        --font-main: 'Courier New', monospace;
+        --bg: #020205;
+        --primary: #00f3ff;
+        --secondary: #ff00ff;
+        --success: #33ff33;
+        --danger: #ff3333;
+        --panel: rgba(10,10,16,0.97);
+        --font: 'Courier New', Courier, monospace;
     }
-
-    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
-    
+    * { box-sizing: border-box; }
     body {
-        margin: 0;
-        background-color: var(--bg-color);
-        color: #e0e0e0;
-        font-family: var(--font-main);
-        overflow: hidden;
-        height: 100vh;
-        display: flex;
-        flex-direction: column;
-        border-top: 4px solid var(--primary);
+        margin:0; background:var(--bg); color:#e0e0e0; font-family:var(--font);
+        overflow:hidden; height:100vh; display:flex; flex-direction:column;
     }
-
     body::before {
-        content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-        background-image: linear-gradient(rgba(0, 243, 255, 0.03) 1px, transparent 1px),
-                          linear-gradient(90deg, rgba(0, 243, 255, 0.03) 1px, transparent 1px);
-        background-size: 50px 50px; z-index: 0; pointer-events: none;
+        content:""; position:absolute; inset:0;
+        background: linear-gradient(rgba(0,243,255,0.035) 1px,transparent 1px),
+                    linear-gradient(90deg,rgba(0,243,255,0.035) 1px,transparent 1px);
+        background-size: 28px 28px; z-index:0; pointer-events:none;
     }
-
     header {
-        position: relative; z-index: 10; height: 70px;
-        background: rgba(0,0,0,0.95);
-        border-bottom: 1px solid var(--primary);
-        display: flex; justify-content: space-between; align-items: center; padding: 0 20px;
+        height:62px; background:rgba(0,0,0,0.92); border-bottom:2px solid var(--primary);
+        display:flex; justify-content:space-between; align-items:center; padding:0 22px; z-index:10;
     }
+    .brand { font-size:1.2rem; font-weight:bold; letter-spacing:3px; color:var(--primary); }
+    .brand span { color:var(--secondary); }
+    .env-badge { font-size:0.75rem; padding:4px 10px; border-radius:4px; font-weight:bold; }
+    .key-ok { background:var(--success); color:#000; }
 
-    .brand { 
-        font-size: 1rem; font-weight: 900; color: var(--primary); 
-        letter-spacing: 1px; text-transform: uppercase; cursor: pointer; 
-        display: flex; flex-direction: column;
-    }
-    .brand:hover { opacity: 0.8; }
-    .brand span { font-size: 0.6rem; color: #666; font-weight: normal; }
-
-    .status-indicator {
-        font-size: 0.7rem; padding: 4px 8px; border-radius: 4px; 
-        background: #111; color: #666; border: 1px solid #333; text-transform: uppercase;
-    }
-
-    .controls { display: flex; gap: 10px; }
-
+    .controls { display:flex; gap:9px; }
     button {
-        background: rgba(0,0,0,0.6); border: 1px solid var(--primary); color: var(--primary);
-        padding: 8px 15px; font-family: var(--font-main); font-weight: bold; font-size: 0.8rem;
-        cursor: pointer; transition: 0.2s; text-transform: uppercase; border-radius: 4px;
+        background:rgba(0,0,0,0.7); border:1px solid var(--primary); color:var(--primary);
+        padding:8px 18px; font-size:0.85rem; cursor:pointer; transition:all 0.2s;
+        text-transform:uppercase; font-family:var(--font);
     }
-    button:hover { background: var(--primary); color: #000; }
-    button.active { background: var(--listen); color: #fff; border-color: var(--listen); box-shadow: 0 0 15px var(--listen); }
+    button:hover:not(:disabled) { background:var(--primary); color:#000; box-shadow:0 0 15px var(--primary); }
+    button.active, button.success { background:var(--danger); color:#fff; }
 
-    #canvas-container { flex-grow: 1; position: relative; z-index: 1; overflow: hidden; }
-    canvas { display: block; width: 100%; height: 100%; }
+    #canvas-container { flex:1; position:relative; background:#000; }
+    canvas { display:block; width:100%; height:100%; }
 
     #terminal {
-        height: 180px; background: rgba(10, 10, 16, 0.95);
-        border-top: 1px solid var(--primary); padding: 10px; font-size: 12px; overflow-y: auto;
-        z-index: 10; scrollbar-width: thin; scrollbar-color: var(--primary) #000;
+        height:210px; background:var(--panel); border-top:2px solid var(--secondary);
+        padding:12px; font-size:13px; overflow-y:auto; scrollbar-color:var(--secondary) #111;
     }
-    .log-line { margin-bottom: 4px; border-left: 2px solid transparent; padding-left: 8px; opacity: 0; animation: slideIn 0.3s forwards; word-break: break-word; line-height: 1.3;}
-    .log-sys { color: #666; border-color: #666; }
-    .log-user { color: var(--primary); border-color: var(--primary); font-weight: bold; }
-    .log-ai { color: var(--speak); border-color: var(--speak); background: rgba(255,255,255,0.05); }
-    .log-local { color: var(--local); border-color: var(--local); font-style: italic; }
-    .log-error { color: #ff3333; border-color: #ff3333; }
-    @keyframes slideIn { from { opacity:0; transform:translateX(-10px); } to { opacity:1; transform:translateX(0); } }
+    .log-line { margin:3px 0; padding-left:10px; border-left:3px solid transparent; animation:fade 0.4s; }
+    .log-user { color:var(--primary); border-color:var(--primary); }
+    .log-ai { color:var(--secondary); border-color:var(--secondary); font-weight:bold; }
+    .log-error { color:var(--danger); border-color:var(--danger); }
+    .log-success { color:var(--success); border-color:var(--success); }
 
-    #config-modal {
-        display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(0,0,0,0.9); z-index: 100;
-        justify-content: center; align-items: center; padding: 20px;
-    }
-    .modal-box {
-        background: #0a0a0a; border: 1px solid var(--primary);
-        padding: 25px; width: 100%; max-width: 400px;
-    }
-    .modal-box input {
-        width: 100%; background: #000; border: 1px solid #444;
-        color: #fff; padding: 12px; margin: 15px 0; font-family: monospace; box-sizing: border-box;
-    }
-    .modal-actions { display: flex; gap: 10px; }
-    .modal-actions button { flex: 1; }
-    .btn-save { background: var(--primary); color: #000; font-weight: 900; }
-
+    @keyframes fade { from {opacity:0; transform:translateX(-10px);} to {opacity:1;} }
 </style>
 </head>
 <body>
 
 <header>
-    <div class="brand" onclick="openConfig()">
-        SUPRA <span>REBORN v6.2</span>
-    </div>
-    <div class="status-indicator" id="sysStatus">PRÊT</div>
+    <div class="brand">SUPRA <span>NEURAL</span> AI <span style="font-size:0.8rem;opacity:0.6;">v3.6 ULTIME</span></div>
+    <div id="envBadge" class="env-badge">CHK...</div>
     <div class="controls">
         <button id="btnMic">MICRO</button>
-        <button id="btnVoice">ÉCOUTER</button>
-        <button id="btnConfig" onclick="openConfig()">⚙️</button>
+        <button id="btnVoice">ÉCOUTE</button>
+        <button id="btnAuto" class="success">🚀 FULL AUTO</button>
+        <button id="btnClear">🗑️</button>
+        <button id="btnConfig">KEY</button>
     </div>
 </header>
 
-<div id="canvas-container">
-    <canvas id="canvas"></canvas>
-</div>
-
+<div id="canvas-container"><canvas id="canvas"></canvas></div>
 <div id="terminal"></div>
 
-<div id="config-modal">
-    <div class="modal-box">
-        <h3 style="color:var(--primary); margin-top:0;">Clé API</h3>
-        <input type="password" id="apiKeyInput" placeholder="sk-..." autocomplete="off">
-        <div class="modal-actions">
-            <button onclick="toggleModal()" style="border-color:#444; color:#888;">ANNULER</button>
-            <button onclick="saveKey()" class="btn-save">SAUVEGARDER</button>
+<!-- MODAL -->
+<div id="config-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.96);z-index:100;justify-content:center;align-items:center;">
+    <div style="background:#111;border:2px solid var(--primary);padding:30px;width:520px;">
+        <h3 style="color:var(--primary);margin:0 0 15px;">Clé API (hardcodée mais modifiable)</h3>
+        <input type="password" id="apiKeyInput" style="width:100%;padding:12px;background:#000;border:1px solid #555;color:#fff;font-family:monospace;">
+        <div style="margin-top:20px;display:flex;gap:10px;justify-content:flex-end;">
+            <button onclick="toggleModal()" style="background:#333;color:#fff;">FERMER</button>
+            <button onclick="saveKey()" style="background:var(--primary);color:#000;font-weight:bold;">SAUVEGARDER</button>
         </div>
     </div>
 </div>
 
 <script>
-const $ = id => document.getElementById(id);
-const COLORS = { primary: '#00f3ff', listen: '#bc13fe', think: '#ff8800', speak: '#ffffff', local: '#00ff66' };
+// ====================== CONFIG ======================
+const HARDCODED_KEY = "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";
 
+const $ = id => document.getElementById(id);
 const Logger = {
     log: (msg, type="sys") => {
-        const t = $('terminal');
-        if(t.childElementCount > 40) t.removeChild(t.firstChild);
         const d = document.createElement("div");
         d.className = `log-line log-${type}`;
-        d.innerHTML = `[${new Date().toLocaleTimeString('fr-FR', {hour12:false})}] ${msg}`;
-        t.appendChild(d);
-        t.scrollTop = t.scrollHeight;
+        d.innerHTML = `[${new Date().toLocaleTimeString()}] ${msg}`;
+        $('terminal').appendChild(d);
+        $('terminal').scrollTop = $('terminal').scrollHeight;
     },
-    error: (msg) => Logger.log("ERREUR: " + msg, "error")
+    success: m => Logger.log(m, "success"),
+    error: m => Logger.log(m, "error")
 };
 
-/* --- AUDIO --- */
-class AudioEngine {
-    constructor() {
-        this.ready = false;
-        this.analyser = null;
-        this.dataArray = null;
-        this.ctx = null;
-    }
-    async start() {
-        if(this.ready) return;
-        try {
-            this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-            if (this.ctx.state === 'suspended') await this.ctx.resume();
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            const src = this.ctx.createMediaStreamSource(stream);
-            this.analyser = this.ctx.createAnalyser();
-            this.analyser.fftSize = 512; 
-            src.connect(this.analyser);
-            this.dataArray = new Uint8Array(this.analyser.frequencyBinCount);
-            this.ready = true;
-            Logger.log("Audio OK.", "sys");
-            $('btnMic').classList.add('active');
-        } catch(e) { Logger.error("Micro refusé."); }
-    }
-    getData() {
-        if(!this.ready) return { vol:0, raw:null, bass:0 };
-        this.analyser.getByteFrequencyData(this.dataArray);
-        let sum=0, bass=0;
-        for(let i=0;i<this.dataArray.length;i++) {
-            sum+=this.dataArray[i];
-            if(i<10) bass+=this.dataArray[i];
-        }
-        return { vol: sum/this.dataArray.length, raw: this.dataArray, bass: bass/10 };
-    }
-}
-
-/* --- LOCAL BRAIN --- */
-const LocalBrain = {
-    process: (text) => {
-        text = text.toLowerCase();
-        if(text.includes("heure") || text.includes("temps")) return `Il est ${new Date().toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'})}.`;
-        if(text.includes("bonjour")) return "Salut. Mode Local actif.";
-        if(text.includes("blague")) return "Qu'est-ce qu'une fraise sur un cheval ? Une 'fraise à cheval'.";
-        if(text.includes("combien") || text.includes("plus")) {
-            const match = text.match(/(\d+)\s*([\+\-\*\/])\s*(\d+)/);
-            if(match) {
-                let res = 0, a = parseFloat(match[1]), b = parseFloat(match[3]), op = match[2];
-                if(op === '+') res = a+b; if(op === '-') res = a-b; if(op === '*') res = a*b; if(op === '/') res = a/b;
-                return `Résultat : ${res}.`;
-            }
-        }
-        return "Mode Local (Réseau bloqué).";
-    }
-};
-
-/* --- AI ENGINE --- */
+// ====================== AI ENGINE ======================
 class AIEngine {
     constructor() {
-        this.apiKey = localStorage.getItem('supra_api_key') || "";
+        this.apiKey = localStorage.getItem('supra_key') || HARDCODED_KEY;
+        localStorage.setItem('supra_key', this.apiKey);
         this.synth = window.speechSynthesis;
+        this.isSpeaking = false;
         this.voices = [];
-        this.history = [{role: "system", content: "Tu es Supra. Réponds court."}];
-        if(speechSynthesis.onvoiceschanged !== undefined) speechSynthesis.onvoiceschanged = () => this.voices = this.synth.getVoices();
+        speechSynthesis.onvoiceschanged = () => this.voices = speechSynthesis.getVoices();
     }
-    setKey(key) { this.apiKey = key.trim(); localStorage.setItem('supra_api_key', this.apiKey); }
-    hasKey() { return this.apiKey.length > 10; }
     async process(text) {
-        if(text.length < 2) return;
-        Logger.log(`Vous: "${text}"`, "user");
-        let response = "", isLocal = false;
-        if (this.hasKey()) {
-            app.setState('think');
-            try {
-                this.history.push({role: "user", content: text});
-                response = await this.fetchGPT();
-                this.history.push({role: "assistant", content: response});
-                if (this.history.length > 7) this.history = [this.history[0], ...this.history.slice(-6)];
-            } catch(e) {
-                Logger.log("Cloud bloqué -> Local", "sys");
-                response = LocalBrain.process(text); isLocal = true;
-            }
-        } else {
-            response = LocalBrain.process(text); isLocal = true;
-        }
-        this.speak(response, isLocal);
+        if (text.length < 2) return;
+        Logger.log(`VOIX: "${text}"`, "user");
+        const resp = await this.fetchGPT(text);
+        this.speak(resp);
     }
-    async fetchGPT() {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 20000);
-        try {
-            const res = await fetch("https://api.openai.com/v1/chat/completions", {
-                method: "POST",
-                headers: { "Content-Type": "application/json", "Authorization": `Bearer ${this.apiKey}` },
-                body: JSON.stringify({ model: "gpt-3.5-turbo", messages: this.history }),
-                signal: controller.signal
-            });
-            clearTimeout(timeoutId);
-            if (!res.ok) throw new Error("Erreur API");
-            const data = await res.json();
-            return data.choices[0].message.content;
-        } catch(e) { clearTimeout(timeoutId); throw e; }
+    async fetchGPT(p) {
+        const res = await fetch("https://api.openai.com/v1/chat/completions", {
+            method: "POST",
+            headers: {"Content-Type":"application/json","Authorization":`Bearer ${this.apiKey}`},
+            body: JSON.stringify({
+                model: "gpt-4o-mini",
+                messages: [{role:"system",content:"Tu es SUPRA NEURAL AI v3.6. Réponds en français, max 18 mots, style cyberpunk ultra-direct."},{role:"user",content:p}],
+                max_tokens: 45
+            })
+        });
+        const data = await res.json();
+        return data.choices[0].message.content;
     }
-    speak(text, isLocal = false) {
+    speak(text) {
         this.synth.cancel();
         const u = new SpeechSynthesisUtterance(text);
-        const fr = this.voices.find(v => v.lang.includes('fr'));
-        if(fr) u.voice = fr;
-        u.rate = 1.1;
-        u.onstart = () => { 
-            Logger.log(`IA: "${text}"`, isLocal?"local":"ai"); 
-            app.setState('speak'); 
-            app.pauseVoice(); // On coupe le micro
-        };
-        u.onend = () => { 
-            // IMPORTANT : Délai avant de relancer
-            setTimeout(() => app.resumeVoice(), 1000); // 1 seconde de silence
-        };
+        const frVoice = this.voices.find(v => v.lang.includes('fr'));
+        if (frVoice) u.voice = frVoice;
+        u.rate = 1.08;
+        u.onstart = () => { this.isSpeaking = true; Logger.log(`IA → ${text}`, "ai"); };
+        u.onend = () => this.isSpeaking = false;
         this.synth.speak(u);
     }
 }
 
-/* --- VOICE ENGINE (REBORN STRATEGY) --- */
-class VoiceEngine {
-    constructor(callback) {
-        this.callback = callback;
-        this.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        this.isActive = false; // L'utilisateur VEUT écouter
-        this.isListening = false; // Le micro EST en train d'écouter
-        if(!this.SpeechRecognition) { $('btnVoice').disabled = true; return; }
+// ====================== AUDIO + VISUALS (MAX) ======================
+class AudioEngine {
+    constructor() { this.ready = false; }
+    async start() {
+        if (this.ready) return;
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const stream = await navigator.mediaDevices.getUserMedia({audio:true});
+        const src = ctx.createMediaStreamSource(stream);
+        this.analyser = ctx.createAnalyser();
+        this.analyser.fftSize = 256;
+        src.connect(this.analyser);
+        this.data = new Uint8Array(this.analyser.frequencyBinCount);
+        this.ready = true;
+        Logger.success("MICRO CONNECTÉ");
+        $('btnMic').classList.add('active');
     }
-
-    toggle() {
-        this.isActive = !this.isActive;
-        if(this.isActive) {
-            $('btnVoice').classList.add('active');
-            $('btnVoice').textContent = "ÉCOUTE ON";
-            this.startOneShot(); // On lance une écoute unique
-        } else {
-            this.abort();
-            $('btnVoice').classList.remove('active');
-            $('btnVoice').textContent = "ÉCOUTER";
-        }
-    }
-
-    // Cette méthode crée un NOUVEL objet à chaque fois (Anti-Corruption)
-    startOneShot() {
-        if(!this.isActive) return;
-
-        // Nettoyage de l'ancien
-        if(this.rec) {
-            try { this.rec.abort(); } catch(e){}
-        }
-
-        this.rec = new this.SpeechRecognition();
-        this.rec.lang = 'fr-FR';
-        this.rec.continuous = false; // UNE seule phrase, puis stop.
-        this.rec.interimResults = false;
-
-        this.rec.onstart = () => {
-            this.isListening = true;
-            app.setState('listen');
-        };
-
-        this.rec.onend = () => {
-            this.isListening = false;
-            // Si on est toujours "actif" (bouton ON) mais qu'on a fini d'écouter une phrase
-            // On ne relance pas tout de suite ! On attend que l'IA parle.
-            // Le relancement se fait via app.resumeVoice()
-        };
-
-        this.rec.onresult = (e) => {
-            const txt = e.results[0][0].transcript;
-            this.callback(txt);
-        };
-
-        this.rec.onerror = (e) => {
-            this.isListening = false;
-            if(e.error !== 'aborted') {
-                Logger.log("Err Mic: " + e.error, "sys");
-                // Si erreur autre qu'abort, on retente après un délai
-                if(this.isActive) setTimeout(() => this.startOneShot(), 1000);
-            }
-        };
-
-        try {
-            this.rec.start();
-        } catch(e) {
-            // Si le start échoue, on retente
-            setTimeout(() => this.startOneShot(), 500);
-        }
-    }
-
-    abort() {
-        if(this.rec) {
-            try { this.rec.abort(); } catch(e){}
-        }
-        this.isListening = false;
-    }
-
-    // Appelé quand l'IA FINIT de parler
-    restart() {
-        if(this.isActive && !this.isListening) {
-            this.startOneShot();
-        }
+    getData() {
+        if (!this.ready) return {vol:0, raw:null};
+        this.analyser.getByteFrequencyData(this.data);
+        let sum = 0; for (let v of this.data) sum += v;
+        return {vol: sum / this.data.length, raw: this.data};
     }
 }
 
-/* --- VISUALS --- */
-class VisualEngine {
+class Visuals {
     constructor() {
         this.c = $('canvas');
         this.ctx = this.c.getContext('2d');
-        this.nodes = [];
-        this.state = 'idle';
-        this.init();
-        window.onresize = () => { this.c.width=window.innerWidth; this.c.height=window.innerHeight-250; this.init(); };
-        this.c.width=window.innerWidth; this.c.height=window.innerHeight-250;
+        this.nodes = Array.from({length:80}, () => ({
+            x: Math.random()*innerWidth, y: Math.random()*innerHeight,
+            vx: (Math.random()-0.5)*1.8, vy: (Math.random()-0.5)*1.8, s: Math.random()*3+1.5
+        }));
+        this.isSpeaking = false;
+        window.onresize = () => { this.c.width = innerWidth; this.c.height = innerHeight-272; };
+        this.c.width = innerWidth; this.c.height = innerHeight-272;
     }
-    init() {
-        this.nodes = [];
-        for(let i=0; i<40; i++) {
-            this.nodes.push({
-                x: Math.random()*this.c.width, y: Math.random()*this.c.height,
-                vx: (Math.random()-0.5), vy: (Math.random()-0.5),
-                size: Math.random()*2+1, baseX:0, baseY:0
-            });
-            this.nodes[i].baseX = this.nodes[i].x;
-            this.nodes[i].baseY = this.nodes[i].y;
-        }
-    }
-    updateState(s) { this.state = s; }
-    draw(audio) {
-        const { vol, bass, raw } = audio;
+    draw(audio, speaking) {
+        const {vol, raw} = audio;
         const w = this.c.width, h = this.c.height;
-        this.ctx.fillStyle = "rgba(5, 5, 8, 0.25)";
+        this.ctx.fillStyle = "rgba(2,2,5,0.18)";
         this.ctx.fillRect(0,0,w,h);
-        let color = this.state === 'listen' ? COLORS.listen : (this.state === 'think' ? COLORS.think : (this.state === 'speak' ? COLORS.speak : COLORS.primary));
-        const cx = w/2, cy = h/2, pulse = (bass / 255) * 40;
-        if (this.state === 'speak' && raw) {
-            this.ctx.beginPath(); this.ctx.strokeStyle = COLORS.speak; this.ctx.lineWidth = 3;
-            for (let i = 0; i < w; i+=5) {
-                const index = Math.floor((i / w) * raw.length);
-                const v = raw[index] || 0;
-                const y = cy + Math.sin(i * 0.05 + Date.now() * 0.01) * (v * 0.5);
-                if (i===0) this.ctx.moveTo(i, y); else this.ctx.lineTo(i, y);
-            }
-            this.ctx.stroke();
-        } else {
-            this.ctx.beginPath(); this.ctx.arc(cx, cy, 30 + pulse, 0, Math.PI*2);
-            this.ctx.strokeStyle = color; this.ctx.lineWidth = 2; this.ctx.stroke();
+
+        // Orb centrale
+        const pulse = 45 + vol*0.9 + (speaking ? 25 : 0);
+        this.ctx.shadowBlur = 40;
+        this.ctx.shadowColor = "#00f3ff";
+        this.ctx.beginPath();
+        this.ctx.arc(w/2, h/2, pulse, 0, Math.PI*2);
+        this.ctx.strokeStyle = `rgba(0,243,255,${speaking ? 0.9 : 0.4})`;
+        this.ctx.lineWidth = 5;
+        this.ctx.stroke();
+        this.ctx.shadowBlur = 0;
+
+        // Nodes + connexions
+        for (let n of this.nodes) {
+            n.x += n.vx; n.y += n.vy;
+            if (n.x<0||n.x>w) n.vx*=-1;
+            if (n.y<0||n.y>h) n.vy*=-1;
+
+            this.ctx.fillStyle = "#00f3ff";
+            this.ctx.shadowBlur = 12;
+            this.ctx.shadowColor = "#00f3ff";
+            this.ctx.beginPath();
+            this.ctx.arc(n.x, n.y, n.s + vol/30, 0, Math.PI*2);
+            this.ctx.fill();
         }
-        this.nodes.forEach(n => {
-            if(this.state === 'listen') { n.vx += (cx-n.x)*0.001; n.vy += (cy-n.y)*0.001; }
-            else if(this.state === 'speak') { n.vx += (n.x-cx)*0.002; n.vy += (n.y-cy)*0.002; }
-            else { n.vx += (n.baseX-n.x)*0.001; n.vy += (n.baseY-n.y)*0.001; }
-            n.vx *= 0.95; n.vy *= 0.95; n.x += n.vx; n.y += n.vy;
-            this.ctx.beginPath(); this.ctx.arc(n.x, n.y, n.size + (vol/30), 0, Math.PI*2);
-            this.ctx.fillStyle = color; this.ctx.fill();
-        });
+        this.ctx.shadowBlur = 0;
+
+        // Connexions glow
+        this.ctx.lineWidth = 1.2;
+        for (let i=0; i<this.nodes.length; i++) {
+            for (let j=i+1; j<this.nodes.length; j++) {
+                const a = this.nodes[i], b = this.nodes[j];
+                const d = Math.hypot(a.x-b.x, a.y-b.y);
+                if (d < 170) {
+                    this.ctx.strokeStyle = `rgba(0,243,255,${(170-d)/170 * 0.55})`;
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(a.x,a.y);
+                    this.ctx.lineTo(b.x,b.y);
+                    this.ctx.stroke();
+                }
+            }
+        }
+
+        // Barre fréquence
+        if (raw) {
+            const bw = w / raw.length;
+            for (let i=0; i<raw.length; i++) {
+                const height = raw[i]/255 * h*0.38;
+                this.ctx.fillStyle = `rgba(255,0,255,0.3)`;
+                this.ctx.fillRect(i*bw, h-height, bw-1, height);
+            }
+        }
     }
 }
 
-/* --- APP --- */
+// ====================== VOICE + APP ======================
+class VoiceEngine {
+    constructor(cb) {
+        this.cb = cb;
+        this.rec = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        this.rec.lang = 'fr-FR';
+        this.rec.continuous = true;
+        this.rec.interimResults = false;
+        this.active = false;
+
+        this.rec.onresult = e => this.cb(e.results[e.results.length-1][0].transcript);
+        this.rec.onend = () => { if (this.active) this.rec.start(); };
+    }
+    toggle() {
+        this.active = !this.active;
+        this.active ? this.rec.start() : this.rec.stop();
+        $('btnVoice').textContent = this.active ? "ÉCOUTE (ON)" : "ÉCOUTE";
+        $('btnVoice').classList.toggle('active', this.active);
+    }
+}
+
 class App {
     constructor() {
         this.audio = new AudioEngine();
         this.ai = new AIEngine();
-        this.visuals = new VisualEngine();
+        this.visuals = new Visuals();
         this.voice = new VoiceEngine(t => this.ai.process(t));
-        this.isRunning = true;
 
+        checkEnvironment();
+
+        // FULL AUTO
+        setTimeout(async () => {
+            if (this.ai.apiKey) {
+                Logger.success("🔑 CLÉ HARDCO DÉTECTÉE");
+                $('envBadge').textContent = "KEY OK + AUTO";
+                $('envBadge').classList.add('key-ok');
+                await this.audio.start();
+                this.voice.toggle();
+                Logger.success("🚀 TOUT LANCÉ AUTOMATIQUEMENT");
+            }
+        }, 900);
+
+        // Boutons
         $('btnMic').onclick = () => this.audio.start();
         $('btnVoice').onclick = () => this.voice.toggle();
-        
-        if(!this.ai.hasKey()) setTimeout(() => openConfig(), 500);
-        else Logger.log("Système Reborn prêt.", "sys");
+        $('btnAuto').onclick = () => {
+            this.audio.start();
+            this.voice.toggle();
+        };
+        $('btnClear').onclick = () => { $('terminal').innerHTML = ''; Logger.success("Terminal nettoyé"); };
+        $('btnConfig').onclick = () => {
+            $('apiKeyInput').value = this.ai.apiKey;
+            $('config-modal').style.display = 'flex';
+        };
 
-        document.addEventListener("visibilitychange", () => {
-            if (document.hidden) this.isRunning = false; else { this.isRunning = true; this.loop(); }
-        });
+        // Raccourci clavier
+        document.addEventListener('keydown', e => { if (e.key === " ") this.voice.toggle(); });
 
         this.loop();
     }
-
-    setState(s) {
-        this.isThinking = (s === 'think');
-        this.isSpeaking = (s === 'speak');
-        this.visuals.updateState(s);
-        const st = $('sysStatus');
-        if(s==='idle') { st.textContent="PRÊT"; st.style.color="#666"; document.body.style.borderTopColor=COLORS.primary; }
-        if(s==='listen') { st.textContent="ÉCOUTE"; st.style.color=COLORS.listen; document.body.style.borderTopColor=COLORS.listen; }
-        if(s==='think') { st.textContent="CLOUD SYNC"; st.style.color=COLORS.think; document.body.style.borderTopColor=COLORS.think; }
-        if(s==='speak') { st.textContent="PARLE"; st.style.color=COLORS.speak; document.body.style.borderTopColor=COLORS.speak; }
-    }
-    pauseVoice() { this.voice.abort(); }
-    resumeVoice() { this.voice.restart(); }
     loop() {
-        if(!this.isRunning) return;
         requestAnimationFrame(() => this.loop());
-        this.visuals.draw(this.audio.getData());
+        this.visuals.draw(this.audio.getData(), this.ai.isSpeaking);
     }
 }
 
+function checkEnvironment() {
+    const badge = $('envBadge');
+    if (location.protocol === "file:") {
+        badge.textContent = "FILE://";
+        badge.style.background = "red";
+    } else {
+        badge.textContent = "HTTP OK";
+    }
+}
 window.toggleModal = () => $('config-modal').style.display = 'none';
-window.openConfig = () => { $('apiKeyInput').value = app.ai.apiKey; $('config-modal').style.display = 'flex'; };
-window.saveKey = () => { app.ai.setKey($('apiKeyInput').value); toggleModal(); Logger.log("Clé sauvegardée.", "sys"); };
+window.saveKey = () => {
+    localStorage.setItem('supra_key', $('apiKeyInput').value.trim());
+    Logger.success("CLÉ MISE À JOUR");
+    location.reload();
+};
 
 const app = new App();
 </script>
