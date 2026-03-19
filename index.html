@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>SUPRA NEURAL AI v5.2 HARMONIQUE</title>
+<title>SUPRA NEURAL AI v6.0 FUSION</title>
 <style>
     :root {
         --bg-color: #050508;
@@ -11,6 +11,7 @@
         --listen: #bc13fe;    /* Violet */
         --think: #ff8800;     /* Orange */
         --speak: #ffffff;     /* Blanc */
+        --local: #00ff66;     /* Vert - Mode Local */
         --font-main: 'Courier New', monospace;
     }
 
@@ -28,7 +29,7 @@
         border-top: 4px solid var(--primary);
     }
 
-    /* Grille subtile */
+    /* Grille de fond */
     body::before {
         content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
         background-image: 
@@ -89,6 +90,7 @@
     .log-sys { color: #666; border-color: #666; }
     .log-user { color: var(--primary); border-color: var(--primary); font-weight: bold; }
     .log-ai { color: var(--speak); border-color: var(--speak); background: rgba(255,255,255,0.05); }
+    .log-local { color: var(--local); border-color: var(--local); font-style: italic; } /* Réponse locale */
     .log-error { color: #ff3333; border-color: #ff3333; }
     .log-think { color: var(--think); border-color: var(--think); }
 
@@ -120,7 +122,7 @@
 
 <header>
     <div class="brand" onclick="openConfig()">
-        SUPRA <span>HARMONIQUE v5.2</span>
+        SUPRA <span>FUSION v6.0</span>
     </div>
     <div class="status-indicator" id="sysStatus">PRÊT</div>
     <div class="controls">
@@ -140,6 +142,7 @@
 <div id="config-modal">
     <div class="modal-box">
         <h3 style="color:var(--primary); margin-top:0;">Clé API OpenAI</h3>
+        <p style="font-size:0.8rem; color:#888;">Si vide, l'IA fonctionnera en mode Local (calculs, heure, blagues).</p>
         <input type="password" id="apiKeyInput" placeholder="sk-..." autocomplete="off">
         <div class="modal-actions">
             <button onclick="toggleModal()" style="border-color:#444; color:#888;">ANNULER</button>
@@ -151,7 +154,7 @@
 <script>
 /* --- UTILS --- */
 const $ = id => document.getElementById(id);
-const COLORS = { primary: '#00f3ff', listen: '#bc13fe', think: '#ff8800', speak: '#ffffff' };
+const COLORS = { primary: '#00f3ff', listen: '#bc13fe', think: '#ff8800', speak: '#ffffff', local: '#00ff66' };
 
 const Logger = {
     log: (msg, type="sys") => {
@@ -203,14 +206,39 @@ class AudioEngine {
     }
 }
 
-/* --- AI ENGINE --- */
+/* --- CERVEAU LOCAL (FALLBACK) --- */
+const LocalBrain = {
+    process: (text) => {
+        text = text.toLowerCase();
+        if(text.includes("heure") || text.includes("temps")) return `Il est ${new Date().toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'})}.`;
+        if(text.includes("date") || text.includes("jour")) return `Nous sommes le ${new Date().toLocaleDateString('fr-FR')}.`;
+        if(text.includes("bonjour") || text.includes("salut")) return "Bonjour. Mode Local actif.";
+        if(text.includes("blague")) return "Qu'est-ce qu'une fraise sur un cheval ? Une 'fraise à cheval'.";
+        if(text.includes("calcule") || text.includes("combien") || text.includes("plus") || text.includes("fois")) {
+            // Calcul simple
+            const match = text.match(/(\d+)\s*([\+\-\*\/x])\s*(\d+)/);
+            if(match) {
+                let res = 0;
+                const a = parseFloat(match[1]), b = parseFloat(match[3]), op = match[2];
+                if(op === '+') res = a+b;
+                if(op === '-') res = a-b;
+                if(op === '*' || op === 'x') res = a*b;
+                if(op === '/') res = a/b;
+                return `Le résultat est ${res}.`;
+            }
+        }
+        return "Je fonctionne en mode local limité car le réseau est bloqué. Demandez l'heure ou faites un calcul.";
+    }
+};
+
+/* --- AI ENGINE (FUSION) --- */
 class AIEngine {
     constructor() {
         this.apiKey = localStorage.getItem('supra_api_key') || "";
         this.synth = window.speechSynthesis;
         this.voices = [];
         this.history = [
-            {role: "system", content: "Tu es Supra Harmonique. Réponds en français, court, direct et poétique si possible."}
+            {role: "system", content: "Tu es Supra Fusion. Réponds en français, court et direct."}
         ];
         if(speechSynthesis.onvoiceschanged !== undefined) speechSynthesis.onvoiceschanged = () => this.voices = this.synth.getVoices();
     }
@@ -221,11 +249,14 @@ class AIEngine {
     async process(text) {
         if(text.length < 2) return;
         Logger.log(`Vous: "${text}"`, "user");
-        let response = "";
         
+        let response = "";
+        let isLocal = false;
+
+        // 1. Si on a une clé, on tente le cloud
         if (this.hasKey()) {
             app.setState('think');
-            Logger.think("Résonance neurale...");
+            Logger.think("Tentative Cloud...");
             
             try {
                 this.history.push({role: "user", content: text});
@@ -233,18 +264,25 @@ class AIEngine {
                 this.history.push({role: "assistant", content: response});
                 if (this.history.length > 9) this.history = [this.history[0], ...this.history.slice(-8)];
             } catch(e) {
-                Logger.error(e.message);
-                response = "Dissonance dans la connexion.";
+                // 2. SI ÉCHEC (Blocage Free, CORS, etc.) -> BASCULE AUTOMATIQUE EN LOCAL
+                Logger.log("Cloud inaccessible. Bascule mode Local.", "sys");
+                response = LocalBrain.process(text);
+                isLocal = true;
             }
         } else {
-            response = "Clé API manquante.";
+            // Pas de clé = Direct Local
+            response = LocalBrain.process(text);
+            isLocal = true;
         }
-        this.speak(response);
+
+        this.speak(response, isLocal);
     }
 
     async fetchGPT() {
+        // Timeout très long pour 4G instable
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 15000);
+        const timeoutId = setTimeout(() => controller.abort(), 25000);
+        
         try {
             const res = await fetch("https://api.openai.com/v1/chat/completions", {
                 method: "POST",
@@ -256,7 +294,11 @@ class AIEngine {
                 signal: controller.signal
             });
             clearTimeout(timeoutId);
-            if (!res.ok) throw new Error("Erreur API");
+
+            if (!res.ok) {
+                const errData = await res.json();
+                throw new Error(errData.error?.message || `Erreur ${res.status}`);
+            }
             const data = await res.json();
             return data.choices[0].message.content;
         } catch(e) {
@@ -265,13 +307,19 @@ class AIEngine {
         }
     }
 
-    speak(text) {
+    speak(text, isLocal = false) {
         this.synth.cancel();
         const u = new SpeechSynthesisUtterance(text);
         const fr = this.voices.find(v => v.lang.includes('fr'));
         if(fr) u.voice = fr;
         u.rate = 1.1;
-        u.onstart = () => { Logger.log(`IA: "${text}"`, "ai"); app.setState('speak'); app.pauseVoice(); };
+        
+        // Si local, on change légèrement l'état visuel (optionnel)
+        u.onstart = () => { 
+            Logger.log(`IA${isLocal?' (LOCAL)':''}: "${text}"`, isLocal?"local":"ai"); 
+            app.setState(isLocal ? 'speak' : 'speak'); 
+            app.pauseVoice(); 
+        };
         u.onend = () => { app.setState('idle'); app.resumeVoice(); };
         this.synth.speak(u);
     }
@@ -317,7 +365,7 @@ class VoiceEngine {
     resume() { if(this.wasActive) { this.isActive = true; try { this.rec.start(); } catch(e){} } else $('btnVoice').textContent = "ÉCOUTER"; }
 }
 
-/* --- VISUAL ENGINE (HARMONIQUE) --- */
+/* --- VISUAL ENGINE --- */
 class VisualEngine {
     constructor() {
         this.c = $('canvas');
@@ -345,7 +393,6 @@ class VisualEngine {
         const { vol, bass, raw } = audio;
         const w = this.c.width, h = this.c.height;
         
-        // Trainée douce
         this.ctx.fillStyle = "rgba(5, 5, 8, 0.25)";
         this.ctx.fillRect(0,0,w,h);
 
@@ -354,13 +401,12 @@ class VisualEngine {
         const cx = w/2, cy = h/2;
         const pulse = (bass / 255) * 40;
 
-        // Mode "CHANTE" (Visualisation d'onde)
+        // Onde si parle
         if (this.state === 'speak' && raw) {
             this.ctx.beginPath();
             this.ctx.strokeStyle = COLORS.speak;
             this.ctx.lineWidth = 3;
             for (let i = 0; i < w; i+=5) {
-                // On utilise les données audio pour créer une onde
                 const index = Math.floor((i / w) * raw.length);
                 const v = raw[index] || 0;
                 const y = cy + Math.sin(i * 0.05 + Date.now() * 0.01) * (v * 0.5);
@@ -368,13 +414,8 @@ class VisualEngine {
                 else this.ctx.lineTo(i, y);
             }
             this.ctx.stroke();
-            this.ctx.shadowBlur = 20;
-            this.ctx.shadowColor = COLORS.speak;
-            this.ctx.stroke();
-            this.ctx.shadowBlur = 0;
         } 
         else {
-            // Cœur classique
             this.ctx.beginPath();
             this.ctx.arc(cx, cy, 30 + pulse, 0, Math.PI*2);
             this.ctx.strokeStyle = color;
@@ -382,15 +423,12 @@ class VisualEngine {
             this.ctx.stroke();
         }
 
-        // Particules
         this.nodes.forEach(n => {
             if(this.state === 'listen') { n.vx += (cx-n.x)*0.001; n.vy += (cy-n.y)*0.001; }
             else if(this.state === 'speak') { n.vx += (n.x-cx)*0.002; n.vy += (n.y-cy)*0.002; }
             else { n.vx += (n.baseX-n.x)*0.001; n.vy += (n.baseY-n.y)*0.001; }
-            
             n.vx *= 0.95; n.vy *= 0.95;
             n.x += n.vx; n.y += n.vy;
-
             this.ctx.beginPath();
             this.ctx.arc(n.x, n.y, n.size + (vol/30), 0, Math.PI*2);
             this.ctx.fillStyle = color;
@@ -412,9 +450,8 @@ class App {
         $('btnVoice').onclick = () => this.voice.toggle();
         
         if(!this.ai.hasKey()) setTimeout(() => openConfig(), 500);
-        else Logger.log("Système Harmonique prêt.", "sys");
+        else Logger.log("Mode FUSION prêt.", "sys");
 
-        // Veille pour éviter le crash
         document.addEventListener("visibilitychange", () => {
             if (document.hidden) this.isRunning = false;
             else { this.isRunning = true; this.loop(); }
@@ -430,8 +467,8 @@ class App {
         const st = $('sysStatus');
         if(s==='idle') { st.textContent="PRÊT"; st.style.color="#666"; document.body.style.borderTopColor=COLORS.primary; }
         if(s==='listen') { st.textContent="ÉCOUTE"; st.style.color=COLORS.listen; document.body.style.borderTopColor=COLORS.listen; }
-        if(s==='think') { st.textContent="RÉSONANCE"; st.style.color=COLORS.think; document.body.style.borderTopColor=COLORS.think; $('btnVoice').classList.add('thinking'); }
-        if(s==='speak') { st.textContent="CHANTE"; st.style.color=COLORS.speak; document.body.style.borderTopColor=COLORS.speak; $('btnVoice').classList.remove('thinking'); }
+        if(s==='think') { st.textContent="CLOUD SYNC"; st.style.color=COLORS.think; document.body.style.borderTopColor=COLORS.think; $('btnVoice').classList.add('thinking'); }
+        if(s==='speak') { st.textContent="RÉPONSE"; st.style.color=COLORS.speak; document.body.style.borderTopColor=COLORS.speak; $('btnVoice').classList.remove('thinking'); }
     }
     pauseVoice() { this.voice.pause(); }
     resumeVoice() { this.voice.resume(); }
