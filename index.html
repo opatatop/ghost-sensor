@@ -3,12 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SUPRA NEURAL AI v3.0 (LIVE GPT)</title>
+<title>SUPRA NEURAL AI v3.1 (DEBUG)</title>
 <style>
     :root {
         --bg-color: #020205;
         --primary: #00f3ff; 
         --secondary: #ff00ff;
+        --danger: #ff3333;
+        --success: #33ff33;
         --panel-bg: rgba(10, 10, 16, 0.95);
         --font-main: 'Courier New', Courier, monospace;
     }
@@ -26,7 +28,6 @@
         flex-direction: column;
     }
 
-    /* Grille de fond */
     body::before {
         content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
         background-image: linear-gradient(rgba(0, 243, 255, 0.03) 1px, transparent 1px),
@@ -35,57 +36,54 @@
         z-index: 0; pointer-events: none;
     }
 
-    /* HEADER */
     header {
         position: relative; z-index: 10; height: 60px;
         background: rgba(0,0,0,0.9);
         border-bottom: 1px solid var(--primary);
         display: flex; justify-content: space-between; align-items: center; padding: 0 20px;
-        box-shadow: 0 0 20px rgba(0, 243, 255, 0.1);
     }
 
     .brand { font-size: 1.2rem; font-weight: bold; color: var(--primary); letter-spacing: 2px; text-transform: uppercase; }
     .brand span { color: var(--secondary); }
 
-    .controls { display: flex; gap: 10px; align-items: center; }
+    .controls { display: flex; gap: 10px; }
 
     button {
-        background: rgba(0,0,0,0.6);
-        border: 1px solid var(--primary); color: var(--primary);
+        background: rgba(0,0,0,0.6); border: 1px solid var(--primary); color: var(--primary);
         padding: 6px 15px; font-family: var(--font-main); font-size: 0.8rem;
         cursor: pointer; transition: 0.2s; text-transform: uppercase;
     }
     button:hover:not(:disabled) { background: var(--primary); color: #000; }
-    button.active { background: var(--danger); color: #fff; border-color: var(--danger); box-shadow: 0 0 10px var(--danger); }
+    button.active { background: var(--danger); color: #fff; border-color: var(--danger); }
     button:disabled { border-color: #444; color: #444; cursor: not-allowed; }
 
-    /* CANVAS */
     #canvas-container { flex-grow: 1; position: relative; z-index: 1; overflow: hidden; }
     canvas { display: block; }
 
-    /* TERMINAL */
     #terminal {
-        height: 200px; background: var(--panel-bg);
+        height: 220px; background: var(--panel-bg);
         border-top: 1px solid var(--secondary);
         padding: 10px; font-size: 13px; overflow-y: auto;
-        z-index: 10;
-        scrollbar-width: thin; scrollbar-color: var(--secondary) #000;
+        z-index: 10; scrollbar-width: thin; scrollbar-color: var(--secondary) #000;
     }
-    .log-line { margin-bottom: 4px; border-left: 2px solid transparent; padding-left: 8px; opacity: 0.8; }
+    .log-line { margin-bottom: 4px; border-left: 2px solid transparent; padding-left: 8px; opacity: 0.9; animation: fadeIn 0.3s; }
     .log-sys { color: #888; border-color: #888; }
     .log-user { color: var(--primary); border-color: var(--primary); }
     .log-ai { color: var(--secondary); border-color: var(--secondary); font-weight: bold; }
-    .log-error { color: #f00; border-color: #f00; }
+    .log-error { color: var(--danger); border-color: var(--danger); background: rgba(50,0,0,0.2); }
+    .log-success { color: var(--success); border-color: var(--success); }
 
-    /* MODAL CONFIG */
+    @keyframes fadeIn { from { opacity:0; transform:translateX(-5px); } to { opacity:0.9; transform:translateX(0); } }
+
+    /* MODAL */
     #config-modal {
         display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(0,0,0,0.85); z-index: 100;
+        background: rgba(0,0,0,0.9); z-index: 100;
         justify-content: center; align-items: center;
     }
     .modal-box {
         background: #111; border: 1px solid var(--primary);
-        padding: 20px; width: 400px; max-width: 90%;
+        padding: 25px; width: 450px; max-width: 90%;
         box-shadow: 0 0 30px rgba(0, 243, 255, 0.2);
     }
     .modal-box h3 { color: var(--primary); margin-top: 0; }
@@ -93,9 +91,9 @@
         width: 100%; background: #000; border: 1px solid #444;
         color: #fff; padding: 10px; margin: 10px 0; font-family: monospace;
     }
-    .modal-box input:focus { border-color: var(--primary); }
-    .modal-box .hint { font-size: 0.8rem; color: #888; margin-bottom: 10px; display: block; }
-    .modal-actions { display: flex; justify-content: flex-end; gap: 10px; }
+    .modal-actions { display: flex; justify-content: space-between; margin-top: 15px; }
+    .btn-test { background: #333; border-color: #666; color: #fff; }
+    .btn-test:hover { background: #444; color: #fff; }
 
 </style>
 </head>
@@ -106,7 +104,7 @@
     <div class="controls">
         <button id="btnMic">1. Micro</button>
         <button id="btnVoice">2. Écoute (OFF)</button>
-        <button id="btnConfig">⚙️ CONFIG IA</button>
+        <button id="btnConfig">⚙️ CONFIG & DEBUG</button>
     </div>
 </header>
 
@@ -116,22 +114,25 @@
 
 <div id="terminal"></div>
 
-<!-- MODAL DE CONFIGURATION -->
 <div id="config-modal">
     <div class="modal-box">
-        <h3>Configuration Intelligence</h3>
-        <label class="hint">Clé API OpenAI (sk-...) pour activer le cerveau GPT.</label>
+        <h3>Configuration API OpenAI</h3>
+        <label style="font-size:0.8rem; color:#aaa;">Collez votre clé (sk-...). N'ajoutez pas d'espace.</label>
         <input type="password" id="apiKeyInput" placeholder="sk-..." autocomplete="off">
+        
         <div class="modal-actions">
-            <button onclick="toggleModal()">Annuler</button>
-            <button onclick="saveConfig()" style="background:var(--primary); color:#000; font-weight:bold;">Sauvegarder</button>
+            <button class="btn-test" id="btnTestKey">🔧 TESTER LA CONNEXION</button>
+            <div>
+                <button onclick="toggleModal()" style="border-color:#555; color:#aaa;">Fermer</button>
+                <button onclick="saveConfig()" style="background:var(--primary); color:#000; font-weight:bold;">Sauvegarder</button>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
-/* --- UTILS --- */
 const $ = id => document.getElementById(id);
+
 const Logger = {
     log: (msg, type="sys") => {
         const d = document.createElement("div");
@@ -140,10 +141,10 @@ const Logger = {
         $('terminal').appendChild(d);
         $('terminal').scrollTop = $('terminal').scrollHeight;
     },
-    error: (msg) => Logger.log(msg, "error")
+    error: (msg) => Logger.log(msg, "error"),
+    success: (msg) => Logger.log(msg, "success")
 };
 
-/* --- AUDIO ENGINE --- */
 class AudioEngine {
     constructor() { this.ready = false; this.analyser = null; this.dataArray = null; this.ctx = null; }
     async start() {
@@ -158,7 +159,7 @@ class AudioEngine {
             src.connect(this.analyser);
             this.dataArray = new Uint8Array(this.analyser.frequencyBinCount);
             this.ready = true;
-            Logger.log("Audio connecté.", "sys");
+            Logger.log("Audio initialisé.", "sys");
             $('btnMic').classList.add('active');
         } catch(e) { Logger.error("Micro refusé."); }
     }
@@ -171,7 +172,6 @@ class AudioEngine {
     }
 }
 
-/* --- AI ENGINE (GPT + FALLBACK) --- */
 class AIEngine {
     constructor() {
         this.apiKey = localStorage.getItem('supra_api_key') || "";
@@ -180,78 +180,73 @@ class AIEngine {
         if(speechSynthesis.onvoiceschanged !== undefined) speechSynthesis.onvoiceschanged = () => this.voices = this.synth.getVoices();
     }
 
-    setKey(key) { this.apiKey = key; localStorage.setItem('supra_api_key', key); }
+    setKey(key) { this.apiKey = key.trim(); localStorage.setItem('supra_api_key', this.apiKey); }
     hasKey() { return this.apiKey.length > 10; }
 
     async process(text) {
-        // Filtre anti-echo
         if(text.length < 3) return;
-        
         Logger.log(`VOIX: "${text}"`, "user");
 
         let response = "";
-
         if (this.hasKey()) {
-            Logger.log("Requête GPT en cours...", "sys");
+            Logger.log("Interrogation de l'API OpenAI...", "sys");
             try {
                 response = await this.fetchGPT(text);
             } catch(e) {
-                Logger.error("Erreur API GPT: " + e.message);
-                response = "Je ne peux pas contacter le serveur neuronal actuellement.";
+                Logger.error("ÉCHEC API: " + e.message);
+                response = "Erreur de connexion à l'IA. Vérifiez la clé ou les logs.";
             }
         } else {
-            // MODE OFFLINE (Fallback)
             text = text.toLowerCase();
-            if(text.includes("bonjour")) response = "Bonjour, systèmes opérationnels.";
-            else if(text.includes("qui es-tu")) response = "Je suis Supra Neural. En mode démo car aucune clé API n'est configurée.";
-            else if(text.includes("heure")) response = "Il est " + new Date().toLocaleTimeString();
-            else response = "Commande hors ligne. Configurez une clé API OpenAI pour une vraie intelligence.";
+            if(text.includes("bonjour")) response = "Bonjour. Configurez une clé API pour plus d'intelligence.";
+            else if(text.includes("test")) response = "Système en ligne.";
+            else response = "Mode Offline. Clé API manquante.";
         }
-
         this.speak(response);
     }
 
     async fetchGPT(prompt) {
-        const res = await fetch("https://api.openai.com/v1/chat/completions", {
+        const url = "https://api.openai.com/v1/chat/completions";
+        const body = JSON.stringify({
+            model: "gpt-3.5-turbo",
+            messages: [{role: "system", content: "Tu es Supra Neural. Réponds court (max 20 mots)."}, {role: "user", content: prompt}]
+        });
+
+        const res = await fetch(url, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
                 "Authorization": `Bearer ${this.apiKey}`
             },
-            body: JSON.stringify({
-                model: "gpt-3.5-turbo",
-                messages: [{role: "system", content: "Tu es une IA cyberpunk nommée Supra Neural. Réponds de manière brève et technologique."}, {role: "user", content: prompt}]
-            })
+            body: body
         });
+
         const data = await res.json();
-        if(data.error) throw new Error(data.error.message);
+        
+        // Gestion détaillée des erreurs HTTP
+        if (!res.ok) {
+            const errMsg = data.error ? data.error.message : `Erreur HTTP ${res.status}`;
+            throw new Error(errMsg);
+        }
+        
         return data.choices[0].message.content;
     }
 
     speak(text) {
-        this.synth.cancel(); // Stop previous
+        this.synth.cancel();
         const u = new SpeechSynthesisUtterance(text);
         const fr = this.voices.find(v => v.lang.includes('fr'));
         if(fr) u.voice = fr;
         u.rate = 1.1;
-        
-        // Evenements pour la gestion du micro
-        u.onstart = () => {
-            Logger.log(`IA: "${text}"`, "ai");
-            // PAUSE LE MICRO POUR ÉVITER LA BOUCLE (LARSEN)
+        u.onstart = () => { 
+            Logger.log(`IA: "${text}"`, "ai"); 
             app.pauseVoice(); 
         };
-        
-        u.onend = () => {
-            // RÉACTIVE LE MICRO
-            app.resumeVoice(); 
-        };
-
+        u.onend = () => { app.resumeVoice(); };
         this.synth.speak(u);
     }
 }
 
-/* --- VOICE ENGINE (STT) --- */
 class VoiceEngine {
     constructor(callback) {
         this.callback = callback;
@@ -269,46 +264,26 @@ class VoiceEngine {
             $('btnVoice').textContent = "2. Écoute (ON)";
             $('btnVoice').classList.add('active');
         };
-        
         this.rec.onend = () => {
-            if(this.isActive) { 
-                // Redémarrage auto si on est censé être actif (mais pas si l'IA a coupé le micro)
-                try { this.rec.start(); } catch(e){}
-            } else {
+            if(this.isActive) { try { this.rec.start(); } catch(e){} }
+            else {
                 $('btnVoice').textContent = "2. Écoute (OFF)";
                 $('btnVoice').classList.remove('active');
             }
         };
-
         this.rec.onresult = (e) => {
             const txt = e.results[e.results.length-1][0].transcript;
             this.callback(txt);
         };
     }
-
     toggle() {
         if(this.isActive) { this.isActive = false; this.rec.stop(); }
         else { try { this.rec.start(); } catch(e){} }
     }
-    
-    // Méthode pour couper proprement l'écoute pendant que l'IA parle
-    pause() {
-        this.wasActive = this.isActive;
-        this.isActive = false;
-        try { this.rec.stop(); } catch(e){}
-        $('btnVoice').style.opacity = "0.5";
-    }
-
-    resume() {
-        if(this.wasActive) {
-            this.isActive = true;
-            $('btnVoice').style.opacity = "1";
-            try { this.rec.start(); } catch(e){}
-        }
-    }
+    pause() { this.wasActive = this.isActive; this.isActive = false; try { this.rec.stop(); } catch(e){} }
+    resume() { if(this.wasActive) { this.isActive = true; try { this.rec.start(); } catch(e){} } }
 }
 
-/* --- VISUALS --- */
 class Visuals {
     constructor() {
         this.c = $('canvas');
@@ -317,22 +292,18 @@ class Visuals {
             x:Math.random()*window.innerWidth, y:Math.random()*window.innerHeight,
             vx:(Math.random()-0.5), vy:(Math.random()-0.5), s:Math.random()*2+1
         }));
-        window.onresize = () => { this.c.width=window.innerWidth; this.c.height=window.innerHeight-260; };
-        this.c.width=window.innerWidth; this.c.height=window.innerHeight-260;
+        window.onresize = () => { this.c.width=window.innerWidth; this.c.height=window.innerHeight-280; };
+        this.c.width=window.innerWidth; this.c.height=window.innerHeight-280;
     }
     draw(audio) {
         const { vol, raw } = audio;
         const w = this.c.width, h = this.c.height;
         this.ctx.fillStyle = "rgba(2,2,5,0.2)";
         this.ctx.fillRect(0,0,w,h);
-        
-        // Cœur
         this.ctx.beginPath();
         this.ctx.arc(w/2, h/2, 30 + vol/2, 0, Math.PI*2);
         this.ctx.strokeStyle = `rgba(0,243,255, ${0.2 + vol/200})`;
         this.ctx.stroke();
-
-        // Nodes
         this.ctx.fillStyle = "#00f3ff";
         this.nodes.forEach(n => {
             n.x+=n.vx; n.y+=n.vy;
@@ -341,8 +312,6 @@ class Visuals {
             this.ctx.arc(n.x, n.y, n.s + vol/40, 0, Math.PI*2);
             this.ctx.fill();
         });
-
-        // Spectrum
         if(raw) {
             const bw = w/raw.length*2.5;
             for(let i=0; i<raw.length; i++) {
@@ -353,7 +322,6 @@ class Visuals {
     }
 }
 
-/* --- MAIN --- */
 class App {
     constructor() {
         this.audio = new AudioEngine();
@@ -368,29 +336,49 @@ class App {
             $('config-modal').style.display = 'flex';
         };
 
-        if(this.ai.hasKey()) Logger.log("Clé API détectée. Mode Live GPT activé.", "sys");
-        else Logger.log("Mode Démo (Offline). Configurez la clé pour l'IA réelle.", "sys");
+        // Bouton de test
+        $('btnTestKey').onclick = async () => {
+            const key = $('apiKeyInput').value.trim();
+            if(!key) { Logger.error("Veuillez entrer une clé."); return; }
+            
+            Logger.log("Test de connexion à OpenAI...", "sys");
+            try {
+                // Test simple avec une requete minimaliste
+                const res = await fetch("https://api.openai.com/v1/models", {
+                    headers: { "Authorization": `Bearer ${key}` }
+                });
+                
+                if (res.ok) {
+                    Logger.success("SUCCÈS : La clé est valide et la connexion fonctionne !");
+                } else {
+                    const data = await res.json();
+                    Logger.error("Erreur Clé API : " + (data.error?.message || "Inconnue"));
+                }
+            } catch (e) {
+                Logger.error("Erreur Réseau (CORS/Offline) : " + e.message);
+                Logger.log("Astuce : Si vous voyez 'Failed to fetch', essayez d'utiliser 'Live Server' sur VS Code.", "warn");
+            }
+        };
+
+        if(this.ai.hasKey()) Logger.success("Clé API chargée. Mode GPT activé.");
+        else Logger.log("Mode Démo. Aucune clé trouvée.", "sys");
 
         this.loop();
     }
-    
     pauseVoice() { this.voice.pause(); }
     resumeVoice() { this.voice.resume(); }
-    
     loop() {
         requestAnimationFrame(() => this.loop());
         this.visuals.draw(this.audio.getData());
     }
 }
 
-// Modal functions
 window.toggleModal = () => $('config-modal').style.display = 'none';
 window.saveConfig = () => {
     app.ai.setKey($('apiKeyInput').value);
     toggleModal();
-    Logger.log("Configuration sauvegardée.", "sys");
-    if(app.ai.hasKey()) Logger.log("Mode Live GPT ACTIVÉ.", "ai");
-    else Logger.log("Mode Offline activé.", "sys");
+    Logger.success("Configuration sauvegardée.");
+    if(app.ai.hasKey()) Logger.success("Mode GPT ACTIVÉ."); else Logger.log("Mode Offline activé.");
 };
 
 const app = new App();
