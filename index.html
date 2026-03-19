@@ -62,7 +62,6 @@ const Logger = {
     error: m => Logger.log(m, "error")
 };
 
-// ====================== AI ENGINE ======================
 class AIEngine {
     constructor() {
         this.apiKey = localStorage.getItem('supra_key') || HARDCODED_KEY;
@@ -70,22 +69,13 @@ class AIEngine {
         this.synth = window.speechSynthesis;
         this.isSpeaking = false;
         this.voices = [];
-        
-        setTimeout(() => {
-            this.voices = this.synth.getVoices();
-            Logger.success("Voix chargées");
-        }, 500);
-        
+        setTimeout(() => { this.voices = this.synth.getVoices(); Logger.success("Voix chargées"); }, 500);
         speechSynthesis.onvoiceschanged = () => this.voices = speechSynthesis.getVoices();
     }
     async process(text) {
         Logger.log(`VOIX: "${text}"`, "user");
         let resp = "Je suis SUPRA NEURAL AI v4.0.";
-        try {
-            resp = await this.fetchGPT(text);
-        } catch(e) {
-            Logger.error("API plantée → mode vocal direct");
-        }
+        try { resp = await this.fetchGPT(text); } catch(e) { Logger.error("API plantée"); }
         this.speak(resp);
     }
     async fetchGPT(p) {
@@ -115,9 +105,8 @@ class AIEngine {
     }
 }
 
-// ====================== AUDIO ======================
 class AudioEngine {
-    constructor() { this.ready = false; }
+    constructor() { this.ready = false; this.analyser = null; this.dataArray = null; }
     async start() {
         if (this.ready) return;
         try {
@@ -141,7 +130,6 @@ class AudioEngine {
     }
 }
 
-// ====================== VISUALS ======================
 class Visuals {
     constructor() {
         this.c = $('canvas'); this.ctx = this.c.getContext('2d');
@@ -183,7 +171,6 @@ class Visuals {
     }
 }
 
-// ====================== VOICE ======================
 class VoiceEngine {
     constructor(cb) {
         this.cb = cb;
@@ -191,7 +178,7 @@ class VoiceEngine {
         this.rec.lang = 'fr-FR'; this.rec.continuous = true; this.rec.interimResults = false;
         this.active = false;
         this.rec.onresult = e => this.cb(e.results[e.results.length-1][0].transcript);
-        this.rec.onend = () => { if (this.active) this.rec.start(); };
+        this.rec.onend = () => { if(this.active) this.rec.start(); };
     }
     toggle() {
         this.active = !this.active;
@@ -201,7 +188,6 @@ class VoiceEngine {
     }
 }
 
-// ====================== APP ======================
 class App {
     constructor() {
         this.audio = new AudioEngine();
