@@ -3,20 +3,19 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SUPRA NEURAL AI v2.1 (FIXED)</title>
+<title>SUPRA NEURAL AI v2.2 (DIAGNOSTIC)</title>
 <style>
-    /* --- CONFIGURATION & VARIABLES --- */
+    /* --- STYLE --- */
     :root {
         --bg-color: #050508;
-        --primary: #00f3ff; /* Cyan Néon */
-        --secondary: #ff00ff; /* Magenta Néon */
+        --primary: #00f3ff; 
+        --secondary: #ff00ff;
+        --danger: #ff3333;
+        --success: #00ff00;
         --text-color: #e0e0e0;
-        --panel-bg: rgba(10, 10, 16, 0.85);
-        --grid-color: rgba(0, 243, 255, 0.05);
         --font-main: 'Courier New', Courier, monospace;
     }
 
-    /* --- RESET & BASE --- */
     * { box-sizing: border-box; outline: none; }
     
     body {
@@ -36,175 +35,81 @@
         content: "";
         position: absolute;
         top: 0; left: 0; width: 100%; height: 100%;
-        background-image: 
-            linear-gradient(var(--grid-color) 1px, transparent 1px),
-            linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+        background-image: linear-gradient(rgba(0, 243, 255, 0.05) 1px, transparent 1px),
+                          linear-gradient(90deg, rgba(0, 243, 255, 0.05) 1px, transparent 1px);
         background-size: 40px 40px;
-        z-index: 0;
-        pointer-events: none;
+        z-index: 0; pointer-events: none;
     }
 
     /* Scanlines */
     body::after {
-        content: " ";
-        display: block;
-        position: absolute;
+        content: " "; display: block; position: absolute;
         top: 0; left: 0; bottom: 0; right: 0;
-        background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
-        z-index: 2;
-        background-size: 100% 2px, 3px 100%;
-        pointer-events: none;
+        background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
+        z-index: 2; pointer-events: none;
     }
 
-    /* --- HEADER --- */
+    /* HEADER */
     header {
-        position: relative;
-        z-index: 10;
-        height: 60px;
-        background: rgba(0, 0, 0, 0.9);
+        position: relative; z-index: 10; height: 70px;
+        background: rgba(0, 0, 0, 0.95);
         border-bottom: 2px solid var(--primary);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 0 20px;
-        box-shadow: 0 0 15px var(--grid-color);
+        display: flex; justify-content: space-between; align-items: center; padding: 0 20px;
     }
 
-    .brand {
-        font-size: 1.2rem;
-        font-weight: bold;
-        color: var(--primary);
-        text-transform: uppercase;
-        letter-spacing: 2px;
-        text-shadow: 0 0 5px var(--primary);
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-
+    .brand { font-size: 1.4rem; font-weight: bold; color: var(--primary); text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 0 5px var(--primary); }
     .brand span { color: var(--secondary); }
 
-    .controls {
-        display: flex;
-        gap: 10px;
-    }
+    .controls { display: flex; gap: 15px; }
 
     button {
-        background: transparent;
-        border: 1px solid var(--primary);
-        color: var(--primary);
-        padding: 8px 16px;
-        font-family: var(--font-main);
-        font-weight: bold;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        text-transform: uppercase;
-        font-size: 0.8rem;
-        position: relative;
-        overflow: hidden;
+        background: rgba(0,0,0,0.5);
+        border: 1px solid var(--primary); color: var(--primary);
+        padding: 10px 20px; font-family: var(--font-main); font-weight: bold;
+        cursor: pointer; transition: all 0.3s; text-transform: uppercase; font-size: 0.9rem;
     }
 
-    button:hover {
-        background: var(--primary);
-        color: #000;
-        box-shadow: 0 0 15px var(--primary);
-    }
+    button:hover:not(:disabled) { background: var(--primary); color: #000; box-shadow: 0 0 15px var(--primary); }
+    button:disabled { border-color: #555; color: #555; cursor: not-allowed; }
 
-    button:active { transform: scale(0.98); }
+    /* État actif (Rouge pour l'écoute) */
+    button.listening { border-color: var(--danger); color: var(--danger); box-shadow: 0 0 10px var(--danger); }
+    button.listening:hover { background: var(--danger); color: white; }
 
-    /* Indicateurs LED */
-    .status-led {
-        width: 8px; height: 8px;
-        border-radius: 50%;
-        background-color: #333;
-        display: inline-block;
-        margin-right: 5px;
-        box-shadow: 0 0 2px #000;
-        transition: background-color 0.3s;
-    }
-    .status-led.active { background-color: #0f0; box-shadow: 0 0 8px #0f0; }
-    .status-led.busy { background-color: var(--secondary); box-shadow: 0 0 8px var(--secondary); animation: blink 0.5s infinite alternate; }
-
-    @keyframes blink { from { opacity: 1; } to { opacity: 0.4; } }
-
-    /* --- CANVAS --- */
-    #canvas-container {
-        position: relative;
-        flex-grow: 1;
-        width: 100%;
-        z-index: 1;
-    }
+    /* CANVAS */
+    #canvas-container { position: relative; flex-grow: 1; width: 100%; z-index: 1; }
     canvas { display: block; width: 100%; height: 100%; }
 
-    /* --- TERMINAL --- */
+    /* TERMINAL */
     #terminal {
-        position: relative;
-        z-index: 10;
-        height: 180px;
-        background: var(--panel-bg);
+        position: relative; z-index: 10; height: 200px;
+        background: rgba(10, 10, 16, 0.9);
         border-top: 2px solid var(--secondary);
-        padding: 10px;
-        font-size: 13px;
-        overflow-y: auto;
-        backdrop-filter: blur(5px);
-        scrollbar-width: thin;
-        scrollbar-color: var(--primary) #111;
+        padding: 15px; font-size: 14px; overflow-y: auto;
+        scrollbar-width: thin; scrollbar-color: var(--primary) #111;
     }
-
     #terminal::-webkit-scrollbar { width: 8px; }
-    #terminal::-webkit-scrollbar-track { background: #111; }
     #terminal::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 4px; }
 
-    .log-line {
-        margin-bottom: 4px;
-        line-height: 1.4;
-        opacity: 0.9;
-        border-left: 3px solid transparent;
-        padding-left: 8px;
-        animation: fadeIn 0.3s ease;
-    }
-
-    .log-sys { color: #888; border-left-color: #888; }
-    .log-audio { color: var(--primary); border-left-color: var(--primary); text-shadow: 0 0 2px var(--primary); }
+    .log-line { margin-bottom: 6px; line-height: 1.4; opacity: 0.9; border-left: 3px solid transparent; padding-left: 10px; animation: fadeIn 0.2s; }
+    .log-sys { color: #aaa; border-left-color: #aaa; }
+    .log-audio { color: var(--primary); border-left-color: var(--primary); }
     .log-ai { color: var(--secondary); border-left-color: var(--secondary); font-weight: bold; }
-    .log-error { color: #ff3333; border-left-color: #ff3333; }
-    .timestamp { color: #555; margin-right: 8px; font-size: 0.9em; }
+    .log-error { color: var(--danger); border-left-color: var(--danger); background: rgba(255,0,0,0.1); }
+    .log-warn { color: #ffd700; border-left-color: #ffd700; }
 
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 0.9; transform: translateY(0); } }
-
-    /* --- OVERLAY MESSAGE --- */
-    #overlay-msg {
-        position: fixed;
-        top: 50%; left: 50%;
-        transform: translate(-50%, -50%);
-        background: rgba(0,0,0,0.95);
-        border: 1px solid var(--primary);
-        padding: 20px;
-        z-index: 100;
-        display: none;
-        text-align: center;
-        box-shadow: 0 0 30px rgba(0, 243, 255, 0.3);
-        max-width: 80%;
-    }
-    #overlay-msg h3 { margin: 0 0 10px 0; color: var(--primary); }
-    #overlay-msg button { margin-top: 15px; width: 100%; }
+    .timestamp { color: #555; margin-right: 10px; font-size: 0.85em; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateX(-5px); } to { opacity: 0.9; transform: translateX(0); } }
 
 </style>
 </head>
 <body>
 
 <header>
-    <div class="brand">
-        <div id="led-sys" class="status-led"></div>
-        SUPRA <span>NEURAL</span> AI
-    </div>
+    <div class="brand">SUPRA <span>NEURAL</span> AI</div>
     <div class="controls">
-        <button id="btnMic">
-            <span id="led-mic" class="status-led"></span> Micro
-        </button>
-        <button id="btnVoice">
-            <span id="led-voice" class="status-led"></span> Voice AI
-        </button>
+        <button id="btnMic">1. Activer Micro</button>
+        <button id="btnVoice">2. Écouter (OFF)</button>
     </div>
 </header>
 
@@ -214,16 +119,8 @@
 
 <div id="terminal"></div>
 
-<div id="overlay-msg">
-    <h3 id="msg-title">Message</h3>
-    <p id="msg-text">Texte</p>
-    <button onclick="document.getElementById('overlay-msg').style.display='none'">FERMER</button>
-</div>
-
 <script>
-/**
- * LOGGER
- */
+/* --- LOGGER --- */
 class Logger {
     static log(msg, type = "sys") {
         const term = document.getElementById("terminal");
@@ -233,97 +130,203 @@ class Logger {
         line.innerHTML = `<span class="timestamp">[${time}]</span> ${msg}`;
         term.appendChild(line);
         term.scrollTop = term.scrollHeight;
-        if (term.childElementCount > 100) term.removeChild(term.firstChild);
+        if (term.childElementCount > 80) term.removeChild(term.firstChild);
     }
-
-    static error(msg) {
-        this.log(msg, "error");
-        this.showOverlay("Erreur", msg);
-    }
-
-    static showOverlay(title, text) {
-        document.getElementById("msg-title").innerText = title;
-        document.getElementById("msg-text").innerText = text;
-        document.getElementById("overlay-msg').style.display='block';
-    }
+    static error(msg) { this.log("ERREUR: " + msg, "error"); }
+    static warn(msg) { this.log("ATTENTION: " + msg, "warn"); }
 }
 
-/**
- * AUDIO ENGINE
- */
+/* --- AUDIO ENGINE --- */
 class AudioEngine {
     constructor() {
         this.ctx = null;
         this.analyser = null;
-        this.source = null;
         this.dataArray = null;
-        this.isInitialized = false;
-        this.volume = 0;
+        this.isReady = false;
     }
 
-    async start() {
-        if (this.isInitialized) return true;
+    async init() {
+        if (this.isReady) return true;
         try {
             this.ctx = new (window.AudioContext || window.webkitAudioContext)();
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            this.source = this.ctx.createMediaStreamSource(stream);
+            const src = this.ctx.createMediaStreamSource(stream);
             this.analyser = this.ctx.createAnalyser();
             this.analyser.fftSize = 256;
             this.analyser.smoothingTimeConstant = 0.8;
-            this.source.connect(this.analyser);
-            const bufferLength = this.analyser.frequencyBinCount;
-            this.dataArray = new Uint8Array(bufferLength);
-            this.isInitialized = true;
-            Logger.log("Microphone actif.", "audio");
-            document.getElementById('led-mic').classList.add('active');
+            src.connect(this.analyser);
+            this.dataArray = new Uint8Array(this.analyser.frequencyBinCount);
+            this.isReady = true;
+            Logger.log("Flux audio initialisé.", "audio");
             return true;
         } catch (e) {
-            Logger.error("Impossible d'accéder au micro.");
+            Logger.error("Accès micro refusé ou impossible. Vérifiez les permissions.");
+            console.error(e);
             return false;
         }
     }
 
     getAnalysis() {
-        if (!this.isInitialized) return { raw: null, volume: 0, bass: 0 };
+        if (!this.isReady) return { volume: 0, bass: 0, raw: null };
         this.analyser.getByteFrequencyData(this.dataArray);
-        let sum = 0;
-        let bassSum = 0;
-        const bassLimit = Math.floor(this.dataArray.length * 0.1);
+        let sum = 0, bassSum = 0;
         for (let i = 0; i < this.dataArray.length; i++) {
             sum += this.dataArray[i];
-            if (i < bassLimit) bassSum += this.dataArray[i];
+            if (i < 10) bassSum += this.dataArray[i];
         }
-        return {
-            raw: this.dataArray,
-            volume: sum / this.dataArray.length,
-            bass: bassSum / bassLimit
-        };
+        return { volume: sum / this.dataArray.length, bass: bassSum / 10, raw: this.dataArray };
     }
 }
 
-/**
- * VISUAL BRAIN
- */
+/* --- AI ENGINE (TTS & LOGIC) --- */
+class AIEngine {
+    constructor() {
+        this.synth = window.speechSynthesis;
+        this.voices = [];
+        // Force le chargement des voix
+        if (speechSynthesis.onvoiceschanged !== undefined) {
+            speechSynthesis.onvoiceschanged = () => { this.voices = this.synth.getVoices(); };
+        }
+    }
+
+    process(text) {
+        const clean = text.toLowerCase().trim();
+        Logger.log(`Analyse : "${text}"`, "ai");
+        
+        let response = "Commande non reconnue.";
+        
+        if (clean.includes("bonjour") || clean.includes("salut")) response = "Système en ligne. Bonjour.";
+        else if (clean.includes("qui es-tu")) response = "Je suis l'intelligence neurale Supra.";
+        else if (clean.includes("heure")) response = "Il est " + new Date().toLocaleTimeString();
+        else if (clean.includes("test")) response = "Système vocal opérationnel.";
+
+        this.speak(response);
+    }
+
+    speak(text) {
+        // Réveil forcé du contexte audio
+        this.synth.cancel();
+        this.synth.resume();
+
+        const u = new SpeechSynthesisUtterance(text);
+        const frenchVoice = this.voices.find(v => v.lang.includes('fr'));
+        if (frenchVoice) u.voice = frenchVoice;
+        u.lang = 'fr-FR';
+        u.rate = 1;
+        
+        u.onstart = () => Logger.log(">> IA PARLE", "ai");
+        u.onerror = (e) => Logger.error("Erreur synthèse: " + e.error);
+        
+        this.synth.speak(u);
+    }
+}
+
+/* --- VOICE ENGINE (STT) --- */
+class VoiceEngine {
+    constructor(callback) {
+        this.callback = callback;
+        this.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        this.isActive = false;
+        this.recognition = null;
+        this.init();
+    }
+
+    init() {
+        if (!this.SpeechRecognition) {
+            Logger.error("Navigateur incompatible avec la reconnaissance vocale.");
+            document.getElementById('btnVoice').disabled = true;
+            return;
+        }
+        this.createRecognition();
+    }
+
+    createRecognition() {
+        this.recognition = new this.SpeechRecognition();
+        this.recognition.lang = 'fr-FR';
+        this.recognition.continuous = true;
+        this.recognition.interimResults = false;
+
+        this.recognition.onstart = () => {
+            Logger.log("Reconnaissance vocale démarrée.", "audio");
+            this.isActive = true;
+            this.updateButton();
+        };
+
+        this.recognition.onend = () => {
+            // Si on est censé être actif, on redémarre (auto-restart)
+            if (this.isActive) {
+                Logger.log("Connexion perdue, tentative reconnexion...", "warn");
+                try { this.recognition.start(); } catch(e) { this.isActive = false; this.updateButton(); }
+            } else {
+                this.updateButton();
+            }
+        };
+
+        this.recognition.onresult = (event) => {
+            const last = event.results[event.results.length - 1];
+            if (last.isFinal) {
+                this.callback(last[0].transcript);
+            }
+        };
+
+        this.recognition.onerror = (event) => {
+            if (event.error === 'not-allowed') {
+                Logger.error("Permission micro refusée par l'utilisateur.");
+                this.isActive = false;
+                this.updateButton();
+            } else if (event.error !== 'no-speech') {
+                Logger.warn("Erreur Mic: " + event.error);
+            }
+        };
+    }
+
+    toggle() {
+        if (!this.SpeechRecognition) return;
+
+        if (this.isActive) {
+            this.isActive = false;
+            this.recognition.stop();
+            Logger.log("Arrêt manuel de l'écoute.", "sys");
+        } else {
+            try {
+                this.recognition.start();
+            } catch (e) {
+                // Si erreur lors du start (ex: objet mort), on le recrée
+                Logger.warn("Redémarrage du module vocal requis...", "warn");
+                this.createRecognition();
+                this.recognition.start();
+            }
+        }
+    }
+
+    updateButton() {
+        const btn = document.getElementById('btnVoice');
+        if (this.isActive) {
+            btn.textContent = "2. Écouter (ON)";
+            btn.classList.add('listening');
+        } else {
+            btn.textContent = "2. Écouter (OFF)";
+            btn.classList.remove('listening');
+        }
+    }
+}
+
+/* --- VISUALS --- */
 class NeuralBrain {
     constructor(canvas) {
         this.canvas = canvas;
-        this.ctx = canvas.getContext("2d");
+        this.ctx = canvas.getContext('2d');
         this.nodes = [];
-        this.nodeCount = 80;
+        this.nodeCount = 60;
         this.connectionDist = 150;
-        this.mouse = { x: null, y: null };
-        window.addEventListener('mousemove', (e) => {
-            this.mouse.x = e.x;
-            this.mouse.y = e.y - 60;
-        });
         this.resize();
+        window.addEventListener('resize', () => this.resize());
         this.initNodes();
     }
 
     resize() {
         this.canvas.width = window.innerWidth;
-        this.canvas.height = window.innerHeight - 240;
-        this.initNodes();
+        this.canvas.height = window.innerHeight - 270; // Ajusté header + terminal
     }
 
     initNodes() {
@@ -332,281 +335,96 @@ class NeuralBrain {
             this.nodes.push({
                 x: Math.random() * this.canvas.width,
                 y: Math.random() * this.canvas.height,
-                vx: (Math.random() - 0.5) * 1.5,
-                vy: (Math.random() - 0.5) * 1.5,
-                baseSize: Math.random() * 2 + 1,
-                size: 2
+                vx: (Math.random() - 0.5),
+                vy: (Math.random() - 0.5),
+                size: Math.random() * 2 + 1
             });
         }
     }
 
-    update(audioData) {
-        const { volume, bass, raw } = audioData;
+    draw(audio) {
         const w = this.canvas.width;
         const h = this.canvas.height;
-        this.ctx.fillStyle = "rgba(5, 5, 8, 0.2)";
+        const { volume, bass, raw } = audio;
+
+        // Effet de trainée
+        this.ctx.fillStyle = 'rgba(5, 5, 8, 0.2)';
         this.ctx.fillRect(0, 0, w, h);
 
-        // COEUR PULSANT
-        const cx = w / 2;
-        const cy = h / 2;
-        const pulse = (bass / 255) * 30;
-        
+        // Cœur
+        const cx = w/2, cy = h/2;
         this.ctx.beginPath();
-        this.ctx.arc(cx, cy, 50 + pulse, 0, Math.PI * 2);
-        this.ctx.strokeStyle = `rgba(0, 243, 255, ${0.3 + (volume/500)})`;
-        this.ctx.lineWidth = 2;
+        this.ctx.arc(cx, cy, 40 + (bass/5), 0, Math.PI*2);
+        this.ctx.strokeStyle = `rgba(0, 243, 255, ${0.1 + volume/200})`;
         this.ctx.stroke();
 
-        // NODES
-        this.nodes.forEach(node => {
-            node.x += node.vx;
-            node.y += node.vy;
-            if (node.x < 0 || node.x > w) node.vx *= -1;
-            if (node.y < 0 || node.y > h) node.vy *= -1;
+        // Noeuds
+        this.ctx.fillStyle = '#00f3ff';
+        this.nodes.forEach(n => {
+            n.x += n.vx; n.y += n.vy;
+            if (n.x<0||n.x>w) n.vx*=-1;
+            if (n.y<0||n.y>h) n.vy*=-1;
 
-            if (this.mouse.x != null) {
-                let dx = node.x - this.mouse.x;
-                let dy = node.y - this.mouse.y;
-                let dist = Math.sqrt(dx*dx + dy*dy);
-                if(dist < 100) {
-                    node.x += dx/dist * 1;
-                    node.y += dy/dist * 1;
-                }
-            }
-
-            node.size = node.baseSize + (volume / 50);
-            if (node.size > 8) node.size = 8;
-
+            const r = n.size + (volume/30);
             this.ctx.beginPath();
-            this.ctx.arc(node.x, node.y, node.size, 0, Math.PI * 2);
-            this.ctx.fillStyle = (volume > 30) ? "#fff" : "#00f3ff";
+            this.ctx.arc(n.x, n.y, r, 0, Math.PI*2);
             this.ctx.fill();
         });
 
-        // CONNEXIONS
-        this.ctx.lineWidth = 0.5;
-        for (let i = 0; i < this.nodes.length; i++) {
-            for (let j = i + 1; j < this.nodes.length; j++) {
-                const n1 = this.nodes[i];
-                const n2 = this.nodes[j];
-                const dist = Math.hypot(n1.x - n2.x, n1.y - n2.y);
-                if (dist < this.connectionDist) {
-                    this.ctx.strokeStyle = `rgba(0, 243, 255, ${1 - dist/this.connectionDist})`;
+        // Connexions
+        this.ctx.strokeStyle = 'rgba(0, 243, 255, 0.15)';
+        for(let i=0; i<this.nodes.length; i++) {
+            for(let j=i+1; j<this.nodes.length; j++) {
+                const d = Math.hypot(this.nodes[i].x - this.nodes[j].x, this.nodes[i].y - this.nodes[j].y);
+                if (d < this.connectionDist) {
                     this.ctx.beginPath();
-                    this.ctx.moveTo(n1.x, n1.y);
-                    this.ctx.lineTo(n2.x, n2.y);
+                    this.ctx.moveTo(this.nodes[i].x, this.nodes[i].y);
+                    this.ctx.lineTo(this.nodes[j].x, this.nodes[j].y);
                     this.ctx.stroke();
                 }
             }
         }
 
-        // SPECTRUM
-        if (raw) {
-            const barWidth = (w / raw.length) * 2.5;
+        // Spectrum
+        if(raw) {
+            const barW = (w / raw.length) * 2.5;
             let x = 0;
-            for (let i = 0; i < raw.length; i++) {
-                const hBar = (raw[i] / 255) * (h / 3);
-                this.ctx.fillStyle = `rgba(0, 243, 255, 0.3)`;
-                this.ctx.fillRect(x, h - hBar, barWidth, hBar);
-                x += barWidth + 1;
+            for(let i=0; i<raw.length; i++) {
+                const barH = (raw[i]/255) * (h/3);
+                this.ctx.fillStyle = `rgba(0, 243, 255, 0.2)`;
+                this.ctx.fillRect(x, h-barH, barW, barH);
+                x += barW + 1;
             }
         }
     }
 }
 
-/**
- * AI ENGINE (CORRIGÉ POUR PARLER)
- */
-class AIEngine {
+/* --- APP --- */
+class App {
     constructor() {
-        this.voices = [];
-        this.synth = window.speechSynthesis;
-        
-        // Chargement des voix
-        this.loadVoices();
-        
-        // Écouteur de changement de voix (Chrome charge ça en retard)
-        if (speechSynthesis.onvoiceschanged !== undefined) {
-            speechSynthesis.onvoiceschanged = () => this.loadVoices();
-        }
-    }
-
-    loadVoices() {
-        this.voices = this.synth.getVoices();
-        // Logger.log(`Voix chargées : ${this.voices.length}`, "sys");
-    }
-
-    process(text) {
-        const cleanText = text.toLowerCase().trim();
-        Logger.log(`Reçu : "${text}"`, "ai");
-
-        let response = "Commande inconnue.";
-
-        if (cleanText.includes("bonjour") || cleanText.includes("salut")) {
-            response = "Bonjour humain. Les systèmes sont opérationnels.";
-        } 
-        else if (cleanText.includes("qui es-tu") || cleanText.includes("ton nom")) {
-            response = "Je suis Supra Neural IA.";
-        }
-        else if (cleanText.includes("heure")) {
-            response = "Il est " + new Date().toLocaleTimeString();
-        }
-        else if (cleanText.includes("ca va") || cleanText.includes("état")) {
-            response = "Tout fonctionne normalement.";
-        }
-
-        this.speak(response);
-    }
-
-    speak(text) {
-        Logger.log("Préparation synthèse vocale...", "ai");
-
-        // 1. Annuler les sons en cours pour éviter la queue
-        this.synth.cancel();
-
-        // 2. Réveiller l'audio context du navigateur (CRUCIAL)
-        this.synth.resume();
-
-        // 3. Créer l'utterance
-        const utterance = new SpeechSynthesisUtterance(text);
-        
-        // 4. Sélectionner la voix
-        // Si les voix ne sont pas chargées (bug async), on force un rechargement
-        if (this.voices.length === 0) {
-            this.voices = this.synth.getVoices();
-        }
-
-        const frenchVoice = this.voices.find(v => v.lang.includes('fr'));
-        if (frenchVoice) {
-            utterance.voice = frenchVoice;
-            Logger.log(`Voix utilisée : ${frenchVoice.name}`, "sys");
-        } else {
-            Logger.log("Aucune voix FR trouvée, utilisation de la voix par défaut.", "sys");
-        }
-
-        utterance.lang = 'fr-FR';
-        utterance.rate = 1;
-        utterance.pitch = 1;
-
-        // Gestion des événements
-        utterance.onstart = () => {
-            Logger.log(">> IA PARLE EN COURS <<", "ai");
-            document.getElementById('led-voice').classList.add('busy');
-        };
-
-        utterance.onend = () => {
-            Logger.log("Fin de parole.", "sys");
-            document.getElementById('led-voice').classList.remove('busy');
-        };
-
-        utterance.onerror = (e) => {
-            Logger.error(`Erreur Synthèse: ${e.error}`);
-            document.getElementById('led-voice').classList.remove('busy');
-        };
-
-        // 5. Parler
-        this.synth.speak(utterance);
-    }
-}
-
-/**
- * VOICE ENGINE
- */
-class VoiceEngine {
-    constructor(aiCallback) {
-        this.aiCallback = aiCallback;
-        this.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        this.isActive = false;
-        
-        if (!this.SpeechRecognition) {
-            Logger.error("Navigateur incompatible Reconnaissance Vocale.");
-            return;
-        }
-
-        this.rec = new this.SpeechRecognition();
-        this.rec.lang = 'fr-FR';
-        this.rec.continuous = true;
-        this.rec.interimResults = false;
-
-        this.rec.onstart = () => {
-            this.isActive = true;
-            document.getElementById('led-voice').classList.add('active');
-            Logger.log("Écoute vocale activée.", "sys");
-        };
-
-        this.rec.onend = () => {
-            if (this.isActive) {
-                try { this.rec.start(); } catch(e){}
-            } else {
-                document.getElementById('led-voice').classList.remove('active');
-            }
-        };
-
-        this.rec.onerror = (e) => {
-             if(e.error !== 'no-speech') Logger.log("Err Mic: "+e.error, "sys");
-        };
-
-        this.rec.onresult = (event) => {
-            const last = event.results[event.results.length - 1];
-            if (last.isFinal) {
-                this.aiCallback(last[0].transcript);
-            }
-        };
-    }
-
-    toggle() {
-        if (!this.SpeechRecognition) return;
-        if (this.isActive) {
-            this.isActive = false;
-            this.rec.stop();
-        } else {
-            try { this.rec.start(); } catch(e){}
-        }
-    }
-}
-
-/**
- * MAIN APP
- */
-class SupraApp {
-    constructor() {
-        this.canvas = document.getElementById("canvas");
         this.audio = new AudioEngine();
         this.ai = new AIEngine();
-        this.brain = new NeuralBrain(this.canvas);
-        this.voice = new VoiceEngine((t) => this.ai.process(t));
+        this.brain = new NeuralBrain(document.getElementById('canvas'));
+        this.voice = new VoiceEngine((txt) => this.ai.process(txt));
 
-        document.getElementById("btnMic").onclick = () => this.toggleMic();
-        document.getElementById("btnVoice").onclick = () => this.toggleVoice();
+        document.getElementById('btnMic').onclick = async () => {
+            const success = await this.audio.init();
+            if(success) document.getElementById('btnMic').textContent = "Micro Actif";
+        };
         
-        window.addEventListener("resize", () => {
-            this.brain.resize();
-            this.canvas.width = window.innerWidth;
-            this.canvas.height = window.innerHeight - 240;
-        });
+        document.getElementById('btnVoice').onclick = () => this.voice.toggle();
 
         this.loop();
-        document.getElementById('led-sys').classList.add('active');
-        Logger.log("SYSTÈME PRÊT. Activez le Micro et la Voice.", "sys");
-    }
-
-    async toggleMic() {
-        await this.audio.start();
-    }
-
-    toggleVoice() {
-        this.voice.toggle();
+        Logger.log("Initialisation terminée. Cliquez sur 'Activer Micro'.", "sys");
     }
 
     loop() {
         requestAnimationFrame(() => this.loop());
-        const audioData = this.audio.getAnalysis();
-        this.brain.update(audioData);
+        this.brain.draw(this.audio.getAnalysis());
     }
 }
 
-const app = new SupraApp();
+const app = new App();
 </script>
 </body>
 </html>
