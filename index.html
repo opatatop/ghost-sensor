@@ -3,18 +3,18 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>SUPRA NEURAL AI v4.0 (ONLINE)</title>
+<title>SUPRA NEURAL AI v5.2 HARMONIQUE</title>
 <style>
     :root {
-        --bg-color: #020205;
-        --primary: #00f3ff; 
-        --secondary: #ff00ff;
-        --danger: #ff3333;
-        --success: #33ff33;
+        --bg-color: #050508;
+        --primary: #00f3ff;   /* Cyan */
+        --listen: #bc13fe;    /* Violet */
+        --think: #ff8800;     /* Orange */
+        --speak: #ffffff;     /* Blanc */
         --font-main: 'Courier New', monospace;
     }
 
-    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
     
     body {
         margin: 0;
@@ -25,29 +25,40 @@
         height: 100vh;
         display: flex;
         flex-direction: column;
+        border-top: 4px solid var(--primary);
     }
 
+    /* Grille subtile */
     body::before {
         content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-        background-image: linear-gradient(rgba(0, 243, 255, 0.05) 1px, transparent 1px),
-                          linear-gradient(90deg, rgba(0, 243, 255, 0.05) 1px, transparent 1px);
-        background-size: 40px 40px;
+        background-image: 
+            linear-gradient(rgba(0, 243, 255, 0.03) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(0, 243, 255, 0.03) 1px, transparent 1px);
+        background-size: 50px 50px;
         z-index: 0; pointer-events: none;
     }
 
     header {
         position: relative; z-index: 10; height: 70px;
         background: rgba(0,0,0,0.95);
-        border-bottom: 2px solid var(--primary);
-        display: flex; justify-content: space-between; align-items: center; padding: 0 15px;
+        border-bottom: 1px solid var(--primary);
+        display: flex; justify-content: space-between; align-items: center; padding: 0 20px;
+        box-shadow: 0 0 20px rgba(0,0,0,0.8);
     }
 
     .brand { 
-        font-size: 1rem; font-weight: bold; color: var(--primary); 
-        letter-spacing: 1px; text-transform: uppercase; 
-        display: flex; align-items: center; gap: 10px; 
+        font-size: 1.1rem; font-weight: 900; color: var(--primary); 
+        letter-spacing: 2px; text-transform: uppercase; 
+        cursor: pointer; display: flex; flex-direction: column;
     }
-    .brand span { color: var(--secondary); }
+    .brand:hover { opacity: 0.8; text-shadow: 0 0 10px var(--primary); }
+    .brand span { font-size: 0.6rem; color: #666; font-weight: normal; }
+
+    .status-indicator {
+        font-size: 0.7rem; padding: 4px 8px; border-radius: 4px; 
+        background: #111; color: #666; border: 1px solid #333;
+        text-transform: uppercase; transition: all 0.3s;
+    }
 
     .controls { display: flex; gap: 10px; }
 
@@ -56,64 +67,66 @@
         padding: 8px 15px; font-family: var(--font-main); font-weight: bold; font-size: 0.8rem;
         cursor: pointer; transition: 0.2s; text-transform: uppercase; border-radius: 4px;
     }
-    button:active { transform: scale(0.95); }
-    button:hover:not(:disabled) { background: var(--primary); color: #000; }
-    button.active { background: var(--danger); color: #fff; border-color: var(--danger); animation: pulse 2s infinite; }
-    button:disabled { border-color: #444; color: #444; opacity: 0.5; }
+    button:hover { background: var(--primary); color: #000; }
+    button.active { background: var(--listen); color: #fff; border-color: var(--listen); box-shadow: 0 0 15px var(--listen); }
+    button.thinking { background: var(--think); color: #000; border-color: var(--think); animation: pulse 1s infinite; }
 
-    @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(255, 51, 51, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(255, 51, 51, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 51, 51, 0); } }
+    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
 
+    /* CANVAS */
     #canvas-container { flex-grow: 1; position: relative; z-index: 1; overflow: hidden; }
     canvas { display: block; width: 100%; height: 100%; }
 
+    /* TERMINAL */
     #terminal {
-        height: 220px; background: rgba(5, 5, 10, 0.95);
-        border-top: 1px solid var(--secondary);
+        height: 180px; background: rgba(10, 10, 16, 0.95);
+        border-top: 1px solid var(--primary);
         padding: 10px; font-size: 12px; overflow-y: auto;
-        z-index: 10; scrollbar-width: thin; scrollbar-color: var(--secondary) #000;
+        z-index: 10; scrollbar-width: thin; scrollbar-color: var(--primary) #000;
+        font-family: 'Consolas', monospace;
     }
-    .log-line { margin-bottom: 4px; border-left: 2px solid transparent; padding-left: 8px; opacity: 0.9; animation: slideIn 0.3s; word-break: break-all; }
-    .log-sys { color: #888; border-color: #888; }
-    .log-user { color: var(--primary); border-color: var(--primary); }
-    .log-ai { color: var(--secondary); border-color: var(--secondary); font-weight: bold; }
-    .log-error { color: var(--danger); border-color: var(--danger); background: rgba(50,0,0,0.2); }
-    .log-success { color: var(--success); border-color: var(--success); }
+    .log-line { margin-bottom: 4px; border-left: 2px solid transparent; padding-left: 8px; opacity: 0; animation: slideIn 0.3s forwards; word-break: break-word; line-height: 1.3;}
+    .log-sys { color: #666; border-color: #666; }
+    .log-user { color: var(--primary); border-color: var(--primary); font-weight: bold; }
+    .log-ai { color: var(--speak); border-color: var(--speak); background: rgba(255,255,255,0.05); }
+    .log-error { color: #ff3333; border-color: #ff3333; }
+    .log-think { color: var(--think); border-color: var(--think); }
 
-    @keyframes slideIn { from { opacity:0; transform:translateX(-10px); } to { opacity:0.9; transform:translateX(0); } }
+    @keyframes slideIn { from { opacity:0; transform:translateX(-10px); } to { opacity:1; transform:translateX(0); } }
 
-    /* MODAL CONFIG */
+    /* MODAL */
     #config-modal {
         display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
         background: rgba(0,0,0,0.9); z-index: 100;
         justify-content: center; align-items: center; padding: 20px;
     }
     .modal-box {
-        background: #111; border: 1px solid var(--primary);
-        padding: 20px; width: 100%; max-width: 400px;
+        background: #0a0a0a; border: 1px solid var(--primary);
+        padding: 25px; width: 100%; max-width: 400px;
         box-shadow: 0 0 30px rgba(0, 243, 255, 0.2);
     }
-    .modal-box h3 { color: var(--primary); margin-top: 0; }
     .modal-box input {
         width: 100%; background: #000; border: 1px solid #444;
-        color: #fff; padding: 12px; margin: 10px 0; font-family: monospace; font-size: 1rem;
+        color: #fff; padding: 12px; margin: 15px 0; font-family: monospace; font-size: 1rem;
         box-sizing: border-box;
     }
-    .modal-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
-    .btn-test { background: #333; border-color: #888; color: #fff; width: 100%; }
-    .btn-save { background: var(--primary); color: #000; font-weight: bold; width: 100%; }
+    .modal-actions { display: flex; gap: 10px; margin-top: 10px; }
+    .modal-actions button { flex: 1; }
+    .btn-save { background: var(--primary); color: #000; font-weight: 900; }
 
 </style>
 </head>
 <body>
 
 <header>
-    <div class="brand">
-        SUPRA <span>ONLINE</span> AI
+    <div class="brand" onclick="openConfig()">
+        SUPRA <span>HARMONIQUE v5.2</span>
     </div>
+    <div class="status-indicator" id="sysStatus">PRÊT</div>
     <div class="controls">
-        <button id="btnMic">MIC</button>
-        <button id="btnVoice">ECOUTE</button>
-        <button id="btnConfig">⚙️ API</button>
+        <button id="btnMic">MICRO</button>
+        <button id="btnVoice">ÉCOUTER</button>
+        <button id="btnConfig" onclick="openConfig()">⚙️</button>
     </div>
 </header>
 
@@ -123,41 +136,45 @@
 
 <div id="terminal"></div>
 
-<!-- MODAL CONFIG -->
+<!-- CONFIG MODAL -->
 <div id="config-modal">
     <div class="modal-box">
-        <h3>Clé API OpenAI</h3>
-        <label style="font-size:0.8rem; color:#aaa;">Collez votre clé (commence par sk-...)</label>
+        <h3 style="color:var(--primary); margin-top:0;">Clé API OpenAI</h3>
         <input type="password" id="apiKeyInput" placeholder="sk-..." autocomplete="off">
-        
         <div class="modal-actions">
-            <button class="btn-test" id="btnTestKey">TESTER LA CLÉ</button>
-            <button class="btn-save" id="btnSave">SAUVEGARDER</button>
-            <button onclick="toggleModal()" style="background:transparent; border-color:#555; color:#aaa; width:100%;">ANNULER</button>
+            <button onclick="toggleModal()" style="border-color:#444; color:#888;">ANNULER</button>
+            <button onclick="saveKey()" class="btn-save">SAUVEGARDER</button>
         </div>
     </div>
 </div>
 
 <script>
+/* --- UTILS --- */
 const $ = id => document.getElementById(id);
+const COLORS = { primary: '#00f3ff', listen: '#bc13fe', think: '#ff8800', speak: '#ffffff' };
 
-// --- LOGGER ---
 const Logger = {
     log: (msg, type="sys") => {
+        const t = $('terminal');
+        if(t.childElementCount > 50) t.removeChild(t.firstChild);
         const d = document.createElement("div");
         d.className = `log-line log-${type}`;
         d.innerHTML = `[${new Date().toLocaleTimeString('fr-FR', {hour12:false})}] ${msg}`;
-        $('terminal').appendChild(d);
-        $('terminal').scrollTop = $('terminal').scrollHeight;
-        if($('terminal').childElementCount > 50) $('terminal').removeChild($('terminal').firstChild);
+        t.appendChild(d);
+        t.scrollTop = t.scrollHeight;
     },
     error: (msg) => Logger.log("ERREUR: " + msg, "error"),
-    success: (msg) => Logger.log(msg, "success")
+    think: (msg) => Logger.log(msg, "think")
 };
 
-// --- AUDIO ENGINE ---
+/* --- AUDIO ENGINE --- */
 class AudioEngine {
-    constructor() { this.ready = false; this.analyser = null; this.dataArray = null; this.ctx = null; }
+    constructor() {
+        this.ready = false;
+        this.analyser = null;
+        this.dataArray = null;
+        this.ctx = null;
+    }
     async start() {
         if(this.ready) return;
         try {
@@ -166,30 +183,35 @@ class AudioEngine {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             const src = this.ctx.createMediaStreamSource(stream);
             this.analyser = this.ctx.createAnalyser();
-            this.analyser.fftSize = 256;
-            this.analyser.smoothingTimeConstant = 0.8;
+            this.analyser.fftSize = 512; 
             src.connect(this.analyser);
             this.dataArray = new Uint8Array(this.analyser.frequencyBinCount);
             this.ready = true;
-            Logger.log("Microphone actif.", "sys");
+            Logger.log("Audio connecté.", "sys");
             $('btnMic').classList.add('active');
-        } catch(e) { Logger.error("Micro refusé: " + e.message); }
+        } catch(e) { Logger.error("Micro refusé."); }
     }
     getData() {
-        if(!this.ready) return { vol:0, raw:null };
+        if(!this.ready) return { vol:0, raw:null, bass:0 };
         this.analyser.getByteFrequencyData(this.dataArray);
-        let sum=0;
-        for(let i=0;i<this.dataArray.length;i++) sum+=this.dataArray[i];
-        return { vol: sum/this.dataArray.length, raw: this.dataArray };
+        let sum=0, bass=0;
+        for(let i=0;i<this.dataArray.length;i++) {
+            sum+=this.dataArray[i];
+            if(i<10) bass+=this.dataArray[i];
+        }
+        return { vol: sum/this.dataArray.length, raw: this.dataArray, bass: bass/10 };
     }
 }
 
-// --- AI ENGINE (OPENAI ONLINE) ---
+/* --- AI ENGINE --- */
 class AIEngine {
     constructor() {
         this.apiKey = localStorage.getItem('supra_api_key') || "";
         this.synth = window.speechSynthesis;
         this.voices = [];
+        this.history = [
+            {role: "system", content: "Tu es Supra Harmonique. Réponds en français, court, direct et poétique si possible."}
+        ];
         if(speechSynthesis.onvoiceschanged !== undefined) speechSynthesis.onvoiceschanged = () => this.voices = this.synth.getVoices();
     }
 
@@ -197,63 +219,48 @@ class AIEngine {
     hasKey() { return this.apiKey.length > 10; }
 
     async process(text) {
-        if(text.length < 3) return;
+        if(text.length < 2) return;
         Logger.log(`Vous: "${text}"`, "user");
-
         let response = "";
+        
         if (this.hasKey()) {
-            Logger.log("Envoi vers OpenAI...", "sys");
+            app.setState('think');
+            Logger.think("Résonance neurale...");
+            
             try {
-                response = await this.fetchGPT(text);
+                this.history.push({role: "user", content: text});
+                response = await this.fetchGPT();
+                this.history.push({role: "assistant", content: response});
+                if (this.history.length > 9) this.history = [this.history[0], ...this.history.slice(-8)];
             } catch(e) {
-                // DEBUG PRECIS
                 Logger.error(e.message);
-                response = "Erreur de connexion. Vérifiez le terminal pour les détails.";
+                response = "Dissonance dans la connexion.";
             }
         } else {
-            response = "Clé API manquante. Allez dans ⚙️ pour la configurer.";
+            response = "Clé API manquante.";
         }
         this.speak(response);
     }
 
-    async fetchGPT(prompt) {
-        const url = "https://api.openai.com/v1/chat/completions";
-        
-        // Timeout de 15s pour mobile
+    async fetchGPT() {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 15000);
-
         try {
-            const res = await fetch(url, {
+            const res = await fetch("https://api.openai.com/v1/chat/completions", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${this.apiKey}`
                 },
-                body: JSON.stringify({
-                    model: "gpt-3.5-turbo",
-                    messages: [
-                        {role: "system", content: "Tu es Supra Neural, une IA vocale. Réponds en français, de manière brève et amicale."}, 
-                        {role: "user", content: prompt}
-                    ]
-                }),
+                body: JSON.stringify({ model: "gpt-3.5-turbo", messages: this.history }),
                 signal: controller.signal
             });
             clearTimeout(timeoutId);
-
-            // Gestion détaillée des erreurs HTTP
-            if (!res.ok) {
-                const errorData = await res.json();
-                const errMsg = errorData.error ? errorData.error.message : `Erreur ${res.status}`;
-                throw new Error(errMsg);
-            }
-
+            if (!res.ok) throw new Error("Erreur API");
             const data = await res.json();
             return data.choices[0].message.content;
-
         } catch(e) {
             clearTimeout(timeoutId);
-            if (e.name === 'AbortError') throw new Error("Timeout: Le serveur ne répond pas.");
             throw e;
         }
     }
@@ -264,147 +271,181 @@ class AIEngine {
         const fr = this.voices.find(v => v.lang.includes('fr'));
         if(fr) u.voice = fr;
         u.rate = 1.1;
-        u.onstart = () => { Logger.log(`IA: "${text}"`, "ai"); app.pauseVoice(); };
-        u.onend = () => { app.resumeVoice(); };
+        u.onstart = () => { Logger.log(`IA: "${text}"`, "ai"); app.setState('speak'); app.pauseVoice(); };
+        u.onend = () => { app.setState('idle'); app.resumeVoice(); };
         this.synth.speak(u);
     }
 }
 
-// --- VOICE ENGINE ---
+/* --- VOICE ENGINE --- */
 class VoiceEngine {
     constructor(callback) {
         this.callback = callback;
         this.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         this.isActive = false;
-        if(!this.SpeechRecognition) { 
-            $('btnVoice').disabled = true; 
-            Logger.error("Navigateur incompatible reconnaissance vocale.");
-            return; 
-        }
-        
+        if(!this.SpeechRecognition) { $('btnVoice').disabled = true; return; }
+        this.setup();
+    }
+
+    setup() {
         this.rec = new this.SpeechRecognition();
         this.rec.lang = 'fr-FR';
         this.rec.continuous = true;
         this.rec.interimResults = false;
-        
         this.rec.onstart = () => { 
             this.isActive = true; 
             $('btnVoice').classList.add('active');
-            $('btnVoice').textContent = "ECOUTE ON";
+            $('btnVoice').textContent = "ÉCOUTE ON";
+            app.setState('listen');
         };
         this.rec.onend = () => {
             if(this.isActive) { try { this.rec.start(); } catch(e){} }
             else {
                 $('btnVoice').classList.remove('active');
-                $('btnVoice').textContent = "ECOUTE";
+                $('btnVoice').textContent = "ÉCOUTER";
+                if(!app.isThinking && !app.isSpeaking) app.setState('idle');
             }
         };
-        this.rec.onerror = (e) => {
-             if(e.error !== 'no-speech') Logger.error("Err Mic: " + e.error);
-        };
-        this.rec.onresult = (e) => {
-            const txt = e.results[e.results.length-1][0].transcript;
-            this.callback(txt);
-        };
+        this.rec.onresult = (e) => this.callback(e.results[e.results.length-1][0].transcript);
     }
+
     toggle() {
         if(this.isActive) { this.isActive = false; this.rec.stop(); }
-        else { try { this.rec.start(); } catch(e){ Logger.error("Err démarrage micro"); } }
+        else { try { this.rec.start(); } catch(e){ this.setup(); this.rec.start(); } }
     }
-    pause() { this.wasActive = this.isActive; this.isActive = false; try { this.rec.stop(); } catch(e){} }
-    resume() { if(this.wasActive) { this.isActive = true; try { this.rec.start(); } catch(e){} } }
+    pause() { this.wasActive = this.isActive; this.isActive = false; try { this.rec.stop(); } catch(e){} $('btnVoice').textContent = "PAUSE"; }
+    resume() { if(this.wasActive) { this.isActive = true; try { this.rec.start(); } catch(e){} } else $('btnVoice').textContent = "ÉCOUTER"; }
 }
 
-// --- VISUALS ---
-class Visuals {
+/* --- VISUAL ENGINE (HARMONIQUE) --- */
+class VisualEngine {
     constructor() {
         this.c = $('canvas');
         this.ctx = this.c.getContext('2d');
-        this.nodes = Array.from({length:40}, () => ({
-            x:Math.random()*window.innerWidth, y:Math.random()*window.innerHeight,
-            vx:(Math.random()-0.5), vy:(Math.random()-0.5), s:Math.random()*2+1
-        }));
-        const resize = () => {
-            this.c.width=window.innerWidth; 
-            this.c.height=window.innerHeight - $('header').offsetHeight - $('terminal').offsetHeight;
-        };
-        window.onresize = resize;
-        resize();
+        this.nodes = [];
+        this.state = 'idle';
+        this.init();
+        window.onresize = () => { this.c.width=window.innerWidth; this.c.height=window.innerHeight-250; this.init(); };
+        this.c.width=window.innerWidth; this.c.height=window.innerHeight-250;
     }
+    init() {
+        this.nodes = [];
+        for(let i=0; i<40; i++) {
+            this.nodes.push({
+                x: Math.random()*this.c.width, y: Math.random()*this.c.height,
+                vx: (Math.random()-0.5), vy: (Math.random()-0.5),
+                size: Math.random()*2+1, baseX:0, baseY:0
+            });
+            this.nodes[i].baseX = this.nodes[i].x;
+            this.nodes[i].baseY = this.nodes[i].y;
+        }
+    }
+    updateState(s) { this.state = s; }
     draw(audio) {
-        const { vol, raw } = audio;
+        const { vol, bass, raw } = audio;
         const w = this.c.width, h = this.c.height;
-        this.ctx.fillStyle = "rgba(2,2,5,0.3)";
+        
+        // Trainée douce
+        this.ctx.fillStyle = "rgba(5, 5, 8, 0.25)";
         this.ctx.fillRect(0,0,w,h);
+
+        let color = this.state === 'listen' ? COLORS.listen : (this.state === 'think' ? COLORS.think : (this.state === 'speak' ? COLORS.speak : COLORS.primary));
         
-        this.ctx.beginPath();
-        this.ctx.arc(w/2, h/2, 20 + vol/2, 0, Math.PI*2);
-        this.ctx.strokeStyle = `rgba(0,243,255, ${0.3 + vol/200})`;
-        this.ctx.stroke();
-        
-        this.ctx.fillStyle = "#00f3ff";
-        this.nodes.forEach(n => {
-            n.x+=n.vx; n.y+=n.vy;
-            if(n.x<0||n.x>w)n.vx*=-1; if(n.y<0||n.y>h)n.vy*=-1;
+        const cx = w/2, cy = h/2;
+        const pulse = (bass / 255) * 40;
+
+        // Mode "CHANTE" (Visualisation d'onde)
+        if (this.state === 'speak' && raw) {
             this.ctx.beginPath();
-            this.ctx.arc(n.x, n.y, n.s + vol/30, 0, Math.PI*2);
+            this.ctx.strokeStyle = COLORS.speak;
+            this.ctx.lineWidth = 3;
+            for (let i = 0; i < w; i+=5) {
+                // On utilise les données audio pour créer une onde
+                const index = Math.floor((i / w) * raw.length);
+                const v = raw[index] || 0;
+                const y = cy + Math.sin(i * 0.05 + Date.now() * 0.01) * (v * 0.5);
+                if (i===0) this.ctx.moveTo(i, y);
+                else this.ctx.lineTo(i, y);
+            }
+            this.ctx.stroke();
+            this.ctx.shadowBlur = 20;
+            this.ctx.shadowColor = COLORS.speak;
+            this.ctx.stroke();
+            this.ctx.shadowBlur = 0;
+        } 
+        else {
+            // Cœur classique
+            this.ctx.beginPath();
+            this.ctx.arc(cx, cy, 30 + pulse, 0, Math.PI*2);
+            this.ctx.strokeStyle = color;
+            this.ctx.lineWidth = 2;
+            this.ctx.stroke();
+        }
+
+        // Particules
+        this.nodes.forEach(n => {
+            if(this.state === 'listen') { n.vx += (cx-n.x)*0.001; n.vy += (cy-n.y)*0.001; }
+            else if(this.state === 'speak') { n.vx += (n.x-cx)*0.002; n.vy += (n.y-cy)*0.002; }
+            else { n.vx += (n.baseX-n.x)*0.001; n.vy += (n.baseY-n.y)*0.001; }
+            
+            n.vx *= 0.95; n.vy *= 0.95;
+            n.x += n.vx; n.y += n.vy;
+
+            this.ctx.beginPath();
+            this.ctx.arc(n.x, n.y, n.size + (vol/30), 0, Math.PI*2);
+            this.ctx.fillStyle = color;
             this.ctx.fill();
         });
     }
 }
 
-// --- APP ---
+/* --- APP --- */
 class App {
     constructor() {
         this.audio = new AudioEngine();
         this.ai = new AIEngine();
-        this.visuals = new Visuals();
+        this.visuals = new VisualEngine();
         this.voice = new VoiceEngine(t => this.ai.process(t));
-        
+        this.isRunning = true;
+
         $('btnMic').onclick = () => this.audio.start();
         $('btnVoice').onclick = () => this.voice.toggle();
-        $('btnConfig').onclick = () => {
-            $('apiKeyInput').value = this.ai.apiKey;
-            $('config-modal').style.display = 'flex';
-        };
+        
+        if(!this.ai.hasKey()) setTimeout(() => openConfig(), 500);
+        else Logger.log("Système Harmonique prêt.", "sys");
 
-        $('btnSave').onclick = () => {
-            this.ai.setKey($('apiKeyInput').value);
-            toggleModal();
-            Logger.success("Clé sauvegardée.");
-        };
-
-        // Bouton Test
-        $('btnTestKey').onclick = async () => {
-            const key = $('apiKeyInput').value.trim();
-            if(!key) return Logger.error("Clé vide.");
-            Logger.log("Test de connexion...", "sys");
-            try {
-                const res = await fetch("https://api.openai.com/v1/models", { 
-                    headers: { "Authorization": `Bearer ${key}` } 
-                });
-                if (res.ok) Logger.success("Clé Valide ! Connexion OK.");
-                else {
-                    const err = await res.json();
-                    Logger.error("Clé Invalide: " + (err.error?.message || "Erreur inconnue"));
-                }
-            } catch(e) {
-                Logger.error("Erreur Réseau: " + e.message);
-            }
-        };
+        // Veille pour éviter le crash
+        document.addEventListener("visibilitychange", () => {
+            if (document.hidden) this.isRunning = false;
+            else { this.isRunning = true; this.loop(); }
+        });
 
         this.loop();
-        Logger.log("Système en ligne. Configurez la clé API dans ⚙️.", "sys");
+    }
+
+    setState(s) {
+        this.isThinking = (s === 'think');
+        this.isSpeaking = (s === 'speak');
+        this.visuals.updateState(s);
+        const st = $('sysStatus');
+        if(s==='idle') { st.textContent="PRÊT"; st.style.color="#666"; document.body.style.borderTopColor=COLORS.primary; }
+        if(s==='listen') { st.textContent="ÉCOUTE"; st.style.color=COLORS.listen; document.body.style.borderTopColor=COLORS.listen; }
+        if(s==='think') { st.textContent="RÉSONANCE"; st.style.color=COLORS.think; document.body.style.borderTopColor=COLORS.think; $('btnVoice').classList.add('thinking'); }
+        if(s==='speak') { st.textContent="CHANTE"; st.style.color=COLORS.speak; document.body.style.borderTopColor=COLORS.speak; $('btnVoice').classList.remove('thinking'); }
     }
     pauseVoice() { this.voice.pause(); }
     resumeVoice() { this.voice.resume(); }
     loop() {
+        if(!this.isRunning) return;
         requestAnimationFrame(() => this.loop());
         this.visuals.draw(this.audio.getData());
     }
 }
 
 window.toggleModal = () => $('config-modal').style.display = 'none';
+window.openConfig = () => { $('apiKeyInput').value = app.ai.apiKey; $('config-modal').style.display = 'flex'; };
+window.saveKey = () => { app.ai.setKey($('apiKeyInput').value); toggleModal(); Logger.log("Clé sauvegardée.", "sys"); };
+
 const app = new App();
 </script>
 </body>
