@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SUPRA NEURAL AI v2.0</title>
+<title>SUPRA NEURAL AI v2.1 (FIXED)</title>
 <style>
     /* --- CONFIGURATION & VARIABLES --- */
     :root {
@@ -24,14 +24,14 @@
         background-color: var(--bg-color);
         color: var(--text-color);
         font-family: var(--font-main);
-        overflow: hidden; /* Pas de scrollbars */
+        overflow: hidden;
         height: 100vh;
         width: 100vw;
         display: flex;
         flex-direction: column;
     }
 
-    /* Effet de grille de fond */
+    /* Fond Grille */
     body::before {
         content: "";
         position: absolute;
@@ -44,7 +44,7 @@
         pointer-events: none;
     }
 
-    /* Effet Scanline (Lignes TV) */
+    /* Scanlines */
     body::after {
         content: " ";
         display: block;
@@ -112,10 +112,9 @@
 
     button:active { transform: scale(0.98); }
 
-    /* Indicateurs d'état (LED) */
+    /* Indicateurs LED */
     .status-led {
-        width: 8px;
-        height: 8px;
+        width: 8px; height: 8px;
         border-radius: 50%;
         background-color: #333;
         display: inline-block;
@@ -124,7 +123,9 @@
         transition: background-color 0.3s;
     }
     .status-led.active { background-color: #0f0; box-shadow: 0 0 8px #0f0; }
-    .status-led.busy { background-color: var(--secondary); box-shadow: 0 0 8px var(--secondary); }
+    .status-led.busy { background-color: var(--secondary); box-shadow: 0 0 8px var(--secondary); animation: blink 0.5s infinite alternate; }
+
+    @keyframes blink { from { opacity: 1; } to { opacity: 0.4; } }
 
     /* --- CANVAS --- */
     #canvas-container {
@@ -146,7 +147,6 @@
         font-size: 13px;
         overflow-y: auto;
         backdrop-filter: blur(5px);
-        /* Scrollbar stylisée */
         scrollbar-width: thin;
         scrollbar-color: var(--primary) #111;
     }
@@ -168,26 +168,26 @@
     .log-audio { color: var(--primary); border-left-color: var(--primary); text-shadow: 0 0 2px var(--primary); }
     .log-ai { color: var(--secondary); border-left-color: var(--secondary); font-weight: bold; }
     .log-error { color: #ff3333; border-left-color: #ff3333; }
-
     .timestamp { color: #555; margin-right: 8px; font-size: 0.9em; }
 
     @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 0.9; transform: translateY(0); } }
 
-    /* --- OVERLAY MESSAGE (No Alert) --- */
+    /* --- OVERLAY MESSAGE --- */
     #overlay-msg {
         position: fixed;
         top: 50%; left: 50%;
         transform: translate(-50%, -50%);
-        background: rgba(0,0,0,0.9);
+        background: rgba(0,0,0,0.95);
         border: 1px solid var(--primary);
         padding: 20px;
         z-index: 100;
         display: none;
         text-align: center;
-        box-shadow: 0 0 20px rgba(0, 243, 255, 0.2);
+        box-shadow: 0 0 30px rgba(0, 243, 255, 0.3);
+        max-width: 80%;
     }
     #overlay-msg h3 { margin: 0 0 10px 0; color: var(--primary); }
-    #overlay-msg button { margin-top: 10px; }
+    #overlay-msg button { margin-top: 15px; width: 100%; }
 
 </style>
 </head>
@@ -214,7 +214,6 @@
 
 <div id="terminal"></div>
 
-<!-- Boîte de dialogue personnalisée pour remplacer alert() -->
 <div id="overlay-msg">
     <h3 id="msg-title">Message</h3>
     <p id="msg-text">Texte</p>
@@ -223,44 +222,34 @@
 
 <script>
 /**
- * GESTIONNAIRE DE JOURNAL (LOGGER)
- * Affiche les messages dans le terminal avec style
+ * LOGGER
  */
 class Logger {
     static log(msg, type = "sys") {
         const term = document.getElementById("terminal");
         const line = document.createElement("div");
         line.className = `log-line log-${type}`;
-        
         const time = new Date().toLocaleTimeString('fr-FR', { hour12: false });
         line.innerHTML = `<span class="timestamp">[${time}]</span> ${msg}`;
-        
         term.appendChild(line);
-        
-        // Auto-scroll en bas
         term.scrollTop = term.scrollHeight;
-
-        // Limiter le nombre de lignes pour la mémoire (max 100)
-        if (term.childElementCount > 100) {
-            term.removeChild(term.firstChild);
-        }
+        if (term.childElementCount > 100) term.removeChild(term.firstChild);
     }
 
     static error(msg) {
         this.log(msg, "error");
-        this.showOverlay("Erreur Système", msg);
+        this.showOverlay("Erreur", msg);
     }
 
     static showOverlay(title, text) {
         document.getElementById("msg-title").innerText = title;
         document.getElementById("msg-text").innerText = text;
-        document.getElementById("overlay-msg").style.display = 'block';
+        document.getElementById("overlay-msg').style.display='block';
     }
 }
 
 /**
- * MOTEUR AUDIO
- * Gère le micro et l'analyse fréquentielle (FFT)
+ * AUDIO ENGINE
  */
 class AudioEngine {
     constructor() {
@@ -269,91 +258,72 @@ class AudioEngine {
         this.source = null;
         this.dataArray = null;
         this.isInitialized = false;
-        this.volume = 0; // Volume moyen global (0-255)
+        this.volume = 0;
     }
 
     async start() {
         if (this.isInitialized) return true;
-
         try {
             this.ctx = new (window.AudioContext || window.webkitAudioContext)();
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            
             this.source = this.ctx.createMediaStreamSource(stream);
             this.analyser = this.ctx.createAnalyser();
-            
-            // Configuration pour une visualisation précise
-            this.analyser.fftSize = 256; 
+            this.analyser.fftSize = 256;
             this.analyser.smoothingTimeConstant = 0.8;
-            
             this.source.connect(this.analyser);
-            
             const bufferLength = this.analyser.frequencyBinCount;
             this.dataArray = new Uint8Array(bufferLength);
-            
             this.isInitialized = true;
-            Logger.log("Microphone connecté et analysé.", "audio");
+            Logger.log("Microphone actif.", "audio");
             document.getElementById('led-mic').classList.add('active');
             return true;
-
         } catch (e) {
-            Logger.error("Accès micro refusé ou impossible.");
-            console.error(e);
+            Logger.error("Impossible d'accéder au micro.");
             return false;
         }
     }
 
     getAnalysis() {
         if (!this.isInitialized) return { raw: null, volume: 0, bass: 0 };
-
         this.analyser.getByteFrequencyData(this.dataArray);
-
-        // Calcul du volume moyen
         let sum = 0;
-        // Calcul des basses (premières fréquences)
         let bassSum = 0;
-        const bassLimit = Math.floor(this.dataArray.length * 0.1); // 10% premières fréquences
-
+        const bassLimit = Math.floor(this.dataArray.length * 0.1);
         for (let i = 0; i < this.dataArray.length; i++) {
             sum += this.dataArray[i];
             if (i < bassLimit) bassSum += this.dataArray[i];
         }
-
         return {
             raw: this.dataArray,
-            volume: sum / this.dataArray.length, // 0 - 255
+            volume: sum / this.dataArray.length,
             bass: bassSum / bassLimit
         };
     }
 }
 
 /**
- * CERVEAU NEURAL VISUEL
- * Gère l'animation Canvas (Particules + Connexions + Visualisation)
+ * VISUAL BRAIN
  */
 class NeuralBrain {
     constructor(canvas) {
         this.canvas = canvas;
         this.ctx = canvas.getContext("2d");
         this.nodes = [];
-        this.nodeCount = 80; // Nombre de neurones
+        this.nodeCount = 80;
         this.connectionDist = 150;
         this.mouse = { x: null, y: null };
-        
-        // Écouter la souris pour l'interaction
         window.addEventListener('mousemove', (e) => {
             this.mouse.x = e.x;
-            this.mouse.y = e.y - 60; // Ajustement hauteur header
+            this.mouse.y = e.y - 60;
         });
-
         this.resize();
         this.initNodes();
     }
 
     resize() {
         this.canvas.width = window.innerWidth;
-        this.canvas.height = window.innerHeight - 60 - 180; // Moins header et terminal
-        this.initNodes(); // Réinitialiser les positions si on redimensionne
+        this.canvas.height = window.innerHeight - 240;
+        this.initNodes();
     }
 
     initNodes() {
@@ -374,89 +344,55 @@ class NeuralBrain {
         const { volume, bass, raw } = audioData;
         const w = this.canvas.width;
         const h = this.canvas.height;
-
-        // Effet de traînée (Trail)
         this.ctx.fillStyle = "rgba(5, 5, 8, 0.2)";
         this.ctx.fillRect(0, 0, w, h);
 
-        // --- 1. VISUALISEUR CENTRAL (CŒUR) ---
+        // COEUR PULSANT
         const cx = w / 2;
         const cy = h / 2;
+        const pulse = (bass / 255) * 30;
         
-        // Le cœur pulse avec les basses
-        const pulse = (bass / 255) * 30; 
-        
-        // Cercle extérieur (Néon Cyan)
         this.ctx.beginPath();
         this.ctx.arc(cx, cy, 50 + pulse, 0, Math.PI * 2);
         this.ctx.strokeStyle = `rgba(0, 243, 255, ${0.3 + (volume/500)})`;
         this.ctx.lineWidth = 2;
         this.ctx.stroke();
 
-        // Cercle intérieur (Magenta)
-        this.ctx.beginPath();
-        this.ctx.arc(cx, cy, 30 + (pulse * 0.5), 0, Math.PI * 2);
-        this.ctx.fillStyle = `rgba(255, 0, 255, ${0.1 + (bass/500)})`;
-        this.ctx.fill();
-
-        // --- 2. MISE À JOUR DES NEURONES ---
+        // NODES
         this.nodes.forEach(node => {
-            // Mouvement
             node.x += node.vx;
             node.y += node.vy;
-
-            // Rebond bords
             if (node.x < 0 || node.x > w) node.vx *= -1;
             if (node.y < 0 || node.y > h) node.vy *= -1;
 
-            // Interaction Souris
             if (this.mouse.x != null) {
                 let dx = node.x - this.mouse.x;
                 let dy = node.y - this.mouse.y;
-                let distance = Math.sqrt(dx * dx + dy * dy);
-                if (distance < 100) {
-                    const angle = Math.atan2(dy, dx);
-                    const force = (100 - distance) / 100;
-                    const push = force * 2;
-                    node.x += Math.cos(angle) * push;
-                    node.y += Math.sin(angle) * push;
+                let dist = Math.sqrt(dx*dx + dy*dy);
+                if(dist < 100) {
+                    node.x += dx/dist * 1;
+                    node.y += dy/dist * 1;
                 }
             }
 
-            // Taille dynamique selon l'audio
             node.size = node.baseSize + (volume / 50);
             if (node.size > 8) node.size = 8;
 
-            // Dessiner le neurone
             this.ctx.beginPath();
             this.ctx.arc(node.x, node.y, node.size, 0, Math.PI * 2);
-            
-            // Couleur dynamique : Si silence = bleu sombre, Si fort = blanc/rose
-            if (volume > 30) {
-                this.ctx.fillStyle = `rgb(255, ${255 - volume}, 255)`;
-                this.ctx.shadowBlur = 10;
-                this.ctx.shadowColor = "white";
-            } else {
-                this.ctx.fillStyle = "#00f3ff";
-                this.ctx.shadowBlur = 0;
-            }
+            this.ctx.fillStyle = (volume > 30) ? "#fff" : "#00f3ff";
             this.ctx.fill();
-            this.ctx.shadowBlur = 0; // Reset
         });
 
-        // --- 3. CONNEXIONS (SYNAPSES) ---
+        // CONNEXIONS
         this.ctx.lineWidth = 0.5;
         for (let i = 0; i < this.nodes.length; i++) {
             for (let j = i + 1; j < this.nodes.length; j++) {
                 const n1 = this.nodes[i];
                 const n2 = this.nodes[j];
-                const dx = n1.x - n2.x;
-                const dy = n1.y - n2.y;
-                const dist = Math.sqrt(dx * dx + dy * dy);
-
+                const dist = Math.hypot(n1.x - n2.x, n1.y - n2.y);
                 if (dist < this.connectionDist) {
-                    const opacity = 1 - (dist / this.connectionDist);
-                    this.ctx.strokeStyle = `rgba(0, 243, 255, ${opacity * 0.5})`;
+                    this.ctx.strokeStyle = `rgba(0, 243, 255, ${1 - dist/this.connectionDist})`;
                     this.ctx.beginPath();
                     this.ctx.moveTo(n1.x, n1.y);
                     this.ctx.lineTo(n2.x, n2.y);
@@ -464,22 +400,15 @@ class NeuralBrain {
                 }
             }
         }
-        
-        // --- 4. SPECTRUM AUDIO BAS (Miroir) ---
+
+        // SPECTRUM
         if (raw) {
             const barWidth = (w / raw.length) * 2.5;
             let x = 0;
             for (let i = 0; i < raw.length; i++) {
-                const barHeight = (raw[i] / 255) * (h / 4);
-                
-                // Dégradé de couleur
+                const hBar = (raw[i] / 255) * (h / 3);
                 this.ctx.fillStyle = `rgba(0, 243, 255, 0.3)`;
-                
-                // Barres en bas
-                this.ctx.fillRect(x, h - barHeight, barWidth, barHeight);
-                // Barres en haut (miroir)
-                this.ctx.fillRect(x, 0, barWidth, barHeight * 0.5);
-                
+                this.ctx.fillRect(x, h - hBar, barWidth, hBar);
                 x += barWidth + 1;
             }
         }
@@ -487,73 +416,102 @@ class NeuralBrain {
 }
 
 /**
- * MOTEUR IA (LOGIQUE & PAROLE)
+ * AI ENGINE (CORRIGÉ POUR PARLER)
  */
 class AIEngine {
     constructor() {
         this.voices = [];
-        // Charger les voix de manière asynchrone
-        window.speechSynthesis.onvoiceschanged = () => {
-            this.voices = window.speechSynthesis.getVoices();
-        };
+        this.synth = window.speechSynthesis;
+        
+        // Chargement des voix
+        this.loadVoices();
+        
+        // Écouteur de changement de voix (Chrome charge ça en retard)
+        if (speechSynthesis.onvoiceschanged !== undefined) {
+            speechSynthesis.onvoiceschanged = () => this.loadVoices();
+        }
+    }
+
+    loadVoices() {
+        this.voices = this.synth.getVoices();
+        // Logger.log(`Voix chargées : ${this.voices.length}`, "sys");
     }
 
     process(text) {
         const cleanText = text.toLowerCase().trim();
         Logger.log(`Reçu : "${text}"`, "ai");
 
-        let response = "Commande non reconnue. Veuillez répéter.";
+        let response = "Commande inconnue.";
 
-        // Logique de base (Pattern Matching)
         if (cleanText.includes("bonjour") || cleanText.includes("salut")) {
-            response = "Bonjour humain. Le système Supra Neural est en ligne.";
+            response = "Bonjour humain. Les systèmes sont opérationnels.";
         } 
         else if (cleanText.includes("qui es-tu") || cleanText.includes("ton nom")) {
-            response = "Je suis Supra Neural, une intelligence artificielle distribuée.";
+            response = "Je suis Supra Neural IA.";
         }
         else if (cleanText.includes("heure")) {
-            response = "Il est actuellement " + new Date().toLocaleTimeString();
+            response = "Il est " + new Date().toLocaleTimeString();
         }
-        else if (cleanText.includes("état") || cleanText.includes("ca va")) {
-            response = "Tous les systèmes sont opérationnels. Activité neuronale normale.";
-        }
-        else if (cleanText.includes("merci")) {
-            response = "Je suis là pour servir.";
+        else if (cleanText.includes("ca va") || cleanText.includes("état")) {
+            response = "Tout fonctionne normalement.";
         }
 
         this.speak(response);
     }
 
     speak(text) {
-        if (window.speechSynthesis.speaking) {
-            window.speechSynthesis.cancel();
-        }
+        Logger.log("Préparation synthèse vocale...", "ai");
 
+        // 1. Annuler les sons en cours pour éviter la queue
+        this.synth.cancel();
+
+        // 2. Réveiller l'audio context du navigateur (CRUCIAL)
+        this.synth.resume();
+
+        // 3. Créer l'utterance
         const utterance = new SpeechSynthesisUtterance(text);
         
-        // Essayer de trouver une voix française
-        const frenchVoice = this.voices.find(v => v.lang.includes('fr'));
-        if (frenchVoice) utterance.voice = frenchVoice;
-        
-        utterance.lang = 'fr-FR';
-        utterance.rate = 1; // Vitesse normale
-        utterance.pitch = 1; // Ton normal
+        // 4. Sélectionner la voix
+        // Si les voix ne sont pas chargées (bug async), on force un rechargement
+        if (this.voices.length === 0) {
+            this.voices = this.synth.getVoices();
+        }
 
+        const frenchVoice = this.voices.find(v => v.lang.includes('fr'));
+        if (frenchVoice) {
+            utterance.voice = frenchVoice;
+            Logger.log(`Voix utilisée : ${frenchVoice.name}`, "sys");
+        } else {
+            Logger.log("Aucune voix FR trouvée, utilisation de la voix par défaut.", "sys");
+        }
+
+        utterance.lang = 'fr-FR';
+        utterance.rate = 1;
+        utterance.pitch = 1;
+
+        // Gestion des événements
         utterance.onstart = () => {
+            Logger.log(">> IA PARLE EN COURS <<", "ai");
             document.getElementById('led-voice').classList.add('busy');
-            Logger.log(`IA parle : "${text}"`, "ai");
         };
 
         utterance.onend = () => {
+            Logger.log("Fin de parole.", "sys");
             document.getElementById('led-voice').classList.remove('busy');
         };
 
-        window.speechSynthesis.speak(utterance);
+        utterance.onerror = (e) => {
+            Logger.error(`Erreur Synthèse: ${e.error}`);
+            document.getElementById('led-voice').classList.remove('busy');
+        };
+
+        // 5. Parler
+        this.synth.speak(utterance);
     }
 }
 
 /**
- * MOTEUR DE RECONNAISSANCE VOCALE
+ * VOICE ENGINE
  */
 class VoiceEngine {
     constructor(aiCallback) {
@@ -562,65 +520,54 @@ class VoiceEngine {
         this.isActive = false;
         
         if (!this.SpeechRecognition) {
-            Logger.error("Votre navigateur ne supporte pas la reconnaissance vocale.");
-            document.getElementById('btnVoice').disabled = true;
+            Logger.error("Navigateur incompatible Reconnaissance Vocale.");
             return;
         }
 
         this.rec = new this.SpeechRecognition();
         this.rec.lang = 'fr-FR';
-        this.rec.continuous = true; // Écoute en continu
-        this.rec.interimResults = false; // Résultats finaux uniquement
+        this.rec.continuous = true;
+        this.rec.interimResults = false;
 
         this.rec.onstart = () => {
-            Logger.log("Reconnaissance vocale active.", "sys");
             this.isActive = true;
             document.getElementById('led-voice').classList.add('active');
+            Logger.log("Écoute vocale activée.", "sys");
         };
 
         this.rec.onend = () => {
-            // Si on est censé être actif mais que ça s'arrête, on redémarre
             if (this.isActive) {
-                this.rec.start();
+                try { this.rec.start(); } catch(e){}
             } else {
                 document.getElementById('led-voice').classList.remove('active');
             }
         };
 
-        this.rec.onerror = (event) => {
-            if (event.error !== 'no-speech') {
-                Logger.log("Erreur reconnaissance: " + event.error, "error");
-            }
+        this.rec.onerror = (e) => {
+             if(e.error !== 'no-speech') Logger.log("Err Mic: "+e.error, "sys");
         };
 
         this.rec.onresult = (event) => {
-            const lastResult = event.results[event.results.length - 1];
-            if (lastResult.isFinal) {
-                const transcript = lastResult[0].transcript;
-                this.aiCallback(transcript);
+            const last = event.results[event.results.length - 1];
+            if (last.isFinal) {
+                this.aiCallback(last[0].transcript);
             }
         };
     }
 
     toggle() {
         if (!this.SpeechRecognition) return;
-
         if (this.isActive) {
             this.isActive = false;
             this.rec.stop();
-            Logger.log("Reconnaissance vocale désactivée.", "sys");
         } else {
-            try {
-                this.rec.start();
-            } catch(e) {
-                console.warn(e);
-            }
+            try { this.rec.start(); } catch(e){}
         }
     }
 }
 
 /**
- * APPLICATION PRINCIPALE
+ * MAIN APP
  */
 class SupraApp {
     constructor() {
@@ -628,38 +575,24 @@ class SupraApp {
         this.audio = new AudioEngine();
         this.ai = new AIEngine();
         this.brain = new NeuralBrain(this.canvas);
-        
-        // Le moteur vocal a besoin de la fonction process de l'IA
-        this.voice = new VoiceEngine((text) => this.ai.process(text));
+        this.voice = new VoiceEngine((t) => this.ai.process(t));
 
-        // Événements UI
         document.getElementById("btnMic").onclick = () => this.toggleMic();
         document.getElementById("btnVoice").onclick = () => this.toggleVoice();
         
         window.addEventListener("resize", () => {
             this.brain.resize();
             this.canvas.width = window.innerWidth;
-            this.canvas.height = window.innerHeight - 240; // Ajustement layout
+            this.canvas.height = window.innerHeight - 240;
         });
 
-        // Boucle d'animation
         this.loop();
-        
-        // LED système verte
         document.getElementById('led-sys').classList.add('active');
-        Logger.log("SUPRA NEURAL AI v2.0 initialisé.", "sys");
-        Logger.log("Cliquez sur 'Micro' puis 'Voice AI' pour commencer.", "sys");
+        Logger.log("SYSTÈME PRÊT. Activez le Micro et la Voice.", "sys");
     }
 
     async toggleMic() {
-        const btn = document.getElementById("btnMic");
-        if (this.audio.isInitialized) {
-            // Si déjà actif, on ne peut pas vraiment "stopper" le flux sans recharger la page dans certains browsers,
-            // mais on peut arrêter l'analyse visuelle.
-            Logger.log("Micro déjà actif.", "sys");
-        } else {
-            await this.audio.start();
-        }
+        await this.audio.start();
     }
 
     toggleVoice() {
@@ -668,18 +601,12 @@ class SupraApp {
 
     loop() {
         requestAnimationFrame(() => this.loop());
-
-        // 1. Récupérer données audio
         const audioData = this.audio.getAnalysis();
-
-        // 2. Mettre à jour le visuel
         this.brain.update(audioData);
     }
 }
 
-// Lancement de l'application
 const app = new SupraApp();
-
 </script>
 </body>
 </html>
