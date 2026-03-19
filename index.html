@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SUPRA NEURAL AI v3.8 FULL COMPLETE</title>
+<title>SUPRA NEURAL AI v4.0 FINAL</title>
 <style>
     :root { --bg:#020205; --primary:#00f3ff; --secondary:#ff00ff; --success:#33ff33; --danger:#ff3333; --panel:rgba(10,10,16,0.97); }
     * { box-sizing:border-box; }
@@ -15,7 +15,7 @@
     .env-badge { font-size:0.78rem; padding:5px 12px; border-radius:4px; font-weight:bold; }
     .blocked { background:var(--danger); color:#fff; animation:blink 1.2s infinite; }
     @keyframes blink { 50% { opacity:0.3; } }
-    .controls button { background:rgba(0,0,0,0.7); border:1px solid var(--primary); color:var(--primary); padding:8px 18px; margin:0 4px; cursor:pointer; transition:0.2s; text-transform:uppercase; }
+    button { background:rgba(0,0,0,0.7); border:1px solid var(--primary); color:var(--primary); padding:8px 18px; margin:0 4px; cursor:pointer; transition:0.2s; text-transform:uppercase; }
     button:hover { background:var(--primary); color:#000; box-shadow:0 0 15px var(--primary); }
     button.active { background:var(--danger); color:#fff; }
     button.success { background:var(--success); color:#000; }
@@ -32,13 +32,13 @@
 <body>
 
 <header>
-    <div class="brand">SUPRA <span>NEURAL</span> AI <span style="font-size:0.8rem;opacity:0.6;">v3.8 FULL</span></div>
+    <div class="brand">SUPRA <span>NEURAL</span> AI <span style="font-size:0.8rem;opacity:0.6;">v4.0 FINAL</span></div>
     <div id="envBadge" class="env-badge">CHK...</div>
     <div class="controls">
         <button id="btnMic">MICRO</button>
         <button id="btnVoice">ÉCOUTE</button>
+        <button id="btnTest" class="success">TEST IA</button>
         <button id="btnAuto" class="success">🚀 FULL AUTO</button>
-        <button id="btnTestNet">TEST RÉSEAU</button>
         <button id="btnClear">🗑️</button>
     </div>
 </header>
@@ -47,9 +47,7 @@
 <div id="terminal"></div>
 
 <script>
-// ====================== CLÉ (rien à cacher) ======================
 const HARDCODED_KEY = "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";
-
 const $ = id => document.getElementById(id);
 
 const Logger = {
@@ -72,18 +70,23 @@ class AIEngine {
         this.synth = window.speechSynthesis;
         this.isSpeaking = false;
         this.voices = [];
+        
+        setTimeout(() => {
+            this.voices = this.synth.getVoices();
+            Logger.success("Voix chargées");
+        }, 500);
+        
         speechSynthesis.onvoiceschanged = () => this.voices = speechSynthesis.getVoices();
-        this.voices = speechSynthesis.getVoices();
     }
     async process(text) {
-        if (text.length < 2) return;
         Logger.log(`VOIX: "${text}"`, "user");
+        let resp = "Je suis SUPRA NEURAL AI v4.0.";
         try {
-            const resp = await this.fetchGPT(text);
-            this.speak(resp);
+            resp = await this.fetchGPT(text);
         } catch(e) {
-            Logger.error("RÉSEAU BLOQUÉ → " + e.message);
+            Logger.error("API plantée → mode vocal direct");
         }
+        this.speak(resp);
     }
     async fetchGPT(p) {
         const res = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -91,140 +94,103 @@ class AIEngine {
             headers: {"Content-Type":"application/json", "Authorization":`Bearer ${this.apiKey}`},
             body: JSON.stringify({
                 model: "gpt-4o-mini",
-                messages: [
-                    {role:"system", content:"Tu es SUPRA NEURAL AI v3.8. Réponds en français, max 18 mots, style cyberpunk direct."},
-                    {role:"user", content:p}
-                ],
+                messages: [{role:"system", content:"Tu es SUPRA NEURAL AI v4.0. Réponds en français, max 18 mots, style cyberpunk direct."}, {role:"user", content:p}],
                 max_tokens: 45
             })
         });
-        if (!res.ok) throw new Error("CORS ou clé invalide");
+        if (!res.ok) throw new Error("Erreur API");
         const data = await res.json();
         return data.choices[0].message.content;
     }
     speak(text) {
         this.synth.cancel();
         const u = new SpeechSynthesisUtterance(text);
-        const frVoice = this.voices.find(v => v.lang.includes('fr'));
+        const frVoice = this.voices.find(v => v.lang.includes('fr') || v.name.toLowerCase().includes('french'));
         if (frVoice) u.voice = frVoice;
-        u.rate = 1.08;
+        u.rate = 1.08; u.pitch = 1.05;
         u.onstart = () => { this.isSpeaking = true; Logger.log(`IA: "${text}"`, "ai"); };
-        u.onend = () => { this.isSpeaking = false; };
+        u.onend = () => { this.isSpeaking = false; Logger.success("FIN DE PAROLE"); };
+        u.onerror = e => Logger.error("Erreur voix: " + e.error);
         this.synth.speak(u);
     }
 }
 
-// ====================== AUDIO ENGINE ======================
+// ====================== AUDIO ======================
 class AudioEngine {
-    constructor() { this.ready = false; this.analyser = null; this.dataArray = null; }
+    constructor() { this.ready = false; }
     async start() {
         if (this.ready) return;
         try {
             const ctx = new (window.AudioContext || window.webkitAudioContext)();
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            const stream = await navigator.mediaDevices.getUserMedia({audio:true});
             const src = ctx.createMediaStreamSource(stream);
             this.analyser = ctx.createAnalyser();
             this.analyser.fftSize = 256;
             src.connect(this.analyser);
             this.dataArray = new Uint8Array(this.analyser.frequencyBinCount);
             this.ready = true;
-            Logger.success("MICRO CONNECTÉ");
+            Logger.success("MICRO OK");
             $('btnMic').classList.add('active');
         } catch(e) { Logger.error("Micro refusé"); }
     }
     getData() {
-        if (!this.ready) return { vol: 0, raw: null };
+        if (!this.ready) return {vol:0, raw:null};
         this.analyser.getByteFrequencyData(this.dataArray);
-        let sum = 0;
-        for (let i = 0; i < this.dataArray.length; i++) sum += this.dataArray[i];
-        return { vol: sum / this.dataArray.length, raw: this.dataArray };
+        let sum = 0; for (let v of this.dataArray) sum += v;
+        return {vol: sum / this.dataArray.length, raw: this.dataArray};
     }
 }
 
-// ====================== VISUALS (NEURAL MAX) ======================
+// ====================== VISUALS ======================
 class Visuals {
     constructor() {
-        this.c = $('canvas');
-        this.ctx = this.c.getContext('2d');
-        this.nodes = Array.from({length: 80}, () => ({
-            x: Math.random() * innerWidth,
-            y: Math.random() * innerHeight,
-            vx: (Math.random() - 0.5) * 1.8,
-            vy: (Math.random() - 0.5) * 1.8,
-            s: Math.random() * 3 + 1.5
-        }));
-        window.onresize = () => { this.c.width = innerWidth; this.c.height = innerHeight - 274; };
-        this.c.width = innerWidth; this.c.height = innerHeight - 274;
+        this.c = $('canvas'); this.ctx = this.c.getContext('2d');
+        this.nodes = Array.from({length:80}, () => ({x:Math.random()*innerWidth, y:Math.random()*innerHeight, vx:(Math.random()-0.5)*1.8, vy:(Math.random()-0.5)*1.8, s:Math.random()*3+1.5}));
+        window.onresize = () => {this.c.width = innerWidth; this.c.height = innerHeight-274;};
+        this.c.width = innerWidth; this.c.height = innerHeight-274;
     }
     draw(audio, speaking) {
-        const { vol, raw } = audio;
-        const w = this.c.width, h = this.c.height;
-        this.ctx.fillStyle = "rgba(2,2,5,0.18)";
-        this.ctx.fillRect(0, 0, w, h);
-
-        // Orb centrale pulse
-        const pulse = 45 + vol * 0.9 + (speaking ? 28 : 0);
-        this.ctx.shadowBlur = 45;
-        this.ctx.shadowColor = "#00f3ff";
-        this.ctx.beginPath();
-        this.ctx.arc(w/2, h/2, pulse, 0, Math.PI*2);
-        this.ctx.strokeStyle = `rgba(0,243,255,${speaking ? 0.95 : 0.45})`;
-        this.ctx.lineWidth = 6;
-        this.ctx.stroke();
+        const {vol, raw} = audio; const w = this.c.width, h = this.c.height;
+        this.ctx.fillStyle = "rgba(2,2,5,0.18)"; this.ctx.fillRect(0,0,w,h);
+        const pulse = 45 + vol*0.9 + (speaking ? 28 : 0);
+        this.ctx.shadowBlur = 45; this.ctx.shadowColor = "#00f3ff";
+        this.ctx.beginPath(); this.ctx.arc(w/2, h/2, pulse, 0, Math.PI*2);
+        this.ctx.strokeStyle = `rgba(0,243,255,${speaking?0.95:0.45})`; this.ctx.lineWidth = 6; this.ctx.stroke();
         this.ctx.shadowBlur = 0;
-
-        // Nodes
         for (let n of this.nodes) {
             n.x += n.vx; n.y += n.vy;
-            if (n.x < 0 || n.x > w) n.vx *= -1;
-            if (n.y < 0 || n.y > h) n.vy *= -1;
-            this.ctx.fillStyle = "#00f3ff";
-            this.ctx.shadowBlur = 15;
-            this.ctx.shadowColor = "#00f3ff";
-            this.ctx.beginPath();
-            this.ctx.arc(n.x, n.y, n.s + vol/28, 0, Math.PI*2);
-            this.ctx.fill();
+            if (n.x<0||n.x>w) n.vx*=-1; if (n.y<0||n.y>h) n.vy*=-1;
+            this.ctx.fillStyle = "#00f3ff"; this.ctx.shadowBlur = 15; this.ctx.shadowColor = "#00f3ff";
+            this.ctx.beginPath(); this.ctx.arc(n.x, n.y, n.s + vol/28, 0, Math.PI*2); this.ctx.fill();
         }
         this.ctx.shadowBlur = 0;
-
-        // Connexions neurales
         this.ctx.lineWidth = 1.1;
-        for (let i = 0; i < this.nodes.length; i++) {
-            for (let j = i + 1; j < this.nodes.length; j++) {
-                const a = this.nodes[i], b = this.nodes[j];
-                const dist = Math.hypot(a.x - b.x, a.y - b.y);
-                if (dist < 165) {
-                    this.ctx.strokeStyle = `rgba(0,243,255,${(165 - dist)/165 * 0.6})`;
-                    this.ctx.beginPath();
-                    this.ctx.moveTo(a.x, a.y);
-                    this.ctx.lineTo(b.x, b.y);
-                    this.ctx.stroke();
-                }
+        for (let i=0; i<this.nodes.length; i++) for (let j=i+1; j<this.nodes.length; j++) {
+            const a = this.nodes[i], b = this.nodes[j];
+            const d = Math.hypot(a.x-b.x, a.y-b.y);
+            if (d < 165) {
+                this.ctx.strokeStyle = `rgba(0,243,255,${(165-d)/165*0.6})`;
+                this.ctx.beginPath(); this.ctx.moveTo(a.x,a.y); this.ctx.lineTo(b.x,b.y); this.ctx.stroke();
             }
         }
-
-        // Barre fréquence
         if (raw) {
             const bw = w / raw.length;
-            for (let i = 0; i < raw.length; i++) {
-                const height = (raw[i] / 255) * h * 0.38;
-                this.ctx.fillStyle = `rgba(255,0,255,0.35)`;
-                this.ctx.fillRect(i * bw, h - height, bw - 1, height);
+            for (let i=0; i<raw.length; i++) {
+                const height = (raw[i]/255) * h * 0.38;
+                this.ctx.fillStyle = `rgba(255,0,255,0.35)`; this.ctx.fillRect(i*bw, h-height, bw-1, height);
             }
         }
     }
 }
 
-// ====================== VOICE ENGINE ======================
+// ====================== VOICE ======================
 class VoiceEngine {
-    constructor(callback) {
-        this.callback = callback;
+    constructor(cb) {
+        this.cb = cb;
         this.rec = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-        this.rec.lang = 'fr-FR';
-        this.rec.continuous = true;
-        this.rec.interimResults = false;
+        this.rec.lang = 'fr-FR'; this.rec.continuous = true; this.rec.interimResults = false;
         this.active = false;
-        this.rec.onresult = e => this.callback(e.results[e.results.length-1][0].transcript);
+        this.rec.onresult = e => this.cb(e.results[e.results.length-1][0].transcript);
         this.rec.onend = () => { if (this.active) this.rec.start(); };
     }
     toggle() {
@@ -242,57 +208,22 @@ class App {
         this.ai = new AIEngine();
         this.visuals = new Visuals();
         this.voice = new VoiceEngine(t => this.ai.process(t));
-        this.isNetworkOk = false;
-
-        this.checkNetworkAndSecure();
 
         setTimeout(async () => {
-            if (this.isNetworkOk) {
-                Logger.success("🔑 RÉSEAU OK → FULL AUTO");
-                await this.audio.start();
-                this.voice.toggle();
-            }
-        }, 900);
+            await this.audio.start();
+            this.voice.toggle();
+            Logger.success("FULL AUTO LANCÉ");
+        }, 800);
 
         $('btnMic').onclick = () => this.audio.start();
         $('btnVoice').onclick = () => this.voice.toggle();
+        $('btnTest').onclick = () => this.ai.speak("Test vocal réussi. Je suis SUPRA NEURAL AI v4.0 et je parle.");
         $('btnAuto').onclick = () => { this.audio.start(); this.voice.toggle(); };
-        $('btnTestNet').onclick = () => this.testNetwork();
         $('btnClear').onclick = () => { $('terminal').innerHTML = ''; Logger.success("Terminal vidé"); };
 
-        document.addEventListener('keydown', e => { if (e.key === " ") this.voice.toggle(); });
+        document.addEventListener('keydown', e => { if(e.key === " ") this.voice.toggle(); });
 
         this.loop();
-    }
-    async checkNetworkAndSecure() {
-        const badge = $('envBadge');
-        if (!window.isSecureContext || location.protocol === 'file:') {
-            badge.textContent = "RÉSEAU BLOQUÉ";
-            badge.classList.add('blocked');
-            Logger.error("MODE VOCAL BLOQUÉ → Ouvre avec Live Server");
-            return;
-        }
-        try {
-            const r = await fetch("https://api.openai.com/v1/models", { method: "HEAD", headers: { "Authorization": `Bearer ${this.ai.apiKey}` } });
-            if (r.ok) {
-                badge.textContent = "RÉSEAU OK";
-                badge.style.background = "#003300";
-                this.isNetworkOk = true;
-            }
-        } catch {
-            badge.textContent = "RÉSEAU BLOQUÉ";
-            badge.classList.add('blocked');
-            Logger.error("CORS bloqué → Utilise Live Server");
-        }
-    }
-    async testNetwork() {
-        Logger.log("Test réseau OpenAI...");
-        try {
-            const r = await fetch("https://api.openai.com/v1/models", { headers: { "Authorization": `Bearer ${this.ai.apiKey}` } });
-            r.ok ? Logger.success("✅ RÉSEAU OK") : Logger.error("Clé ou réseau invalide");
-        } catch(e) {
-            Logger.error("RÉSEAU BLOQUÉ → Live Server obligatoire");
-        }
     }
     loop() {
         requestAnimationFrame(() => this.loop());
