@@ -2,432 +2,305 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SUPRA NEURAL AI v4.0 FINAL</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>SUPRA AI v7.0 FINALE</title>
 <style>
-    :root { 
-        --bg:#020205; 
-        --primary:#00f3ff; 
-        --secondary:#ff00ff; 
-        --success:#33ff33; 
-        --danger:#ff3333; 
-        --panel:rgba(10,10,16,0.97); 
+    :root {
+        --bg-color: #050508;
+        --primary: #00f3ff;
+        --secondary: #bc13fe;
+        --font-main: 'Courier New', monospace;
     }
-    * { box-sizing:border-box; }
-    body { 
-        margin:0; background:var(--bg); color:#e0e0e0; 
-        font-family:'Courier New',monospace; 
-        overflow:hidden; height:100vh; 
-        display:flex; flex-direction:column; 
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
+    
+    body {
+        margin: 0;
+        background-color: var(--bg-color);
+        color: #e0e0e0;
+        font-family: var(--font-main);
+        overflow: hidden;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        border-top: 4px solid var(--primary);
     }
-    body::before { 
-        content:""; position:absolute; inset:0; 
-        background:linear-gradient(rgba(0,243,255,0.035)1px,transparent 1px),
-                    linear-gradient(90deg,rgba(0,243,255,0.035)1px,transparent 1px); 
-        background-size:28px 28px; z-index:0; pointer-events:none; 
+
+    /* Fond animé */
+    body::before {
+        content: ""; position: absolute; top: 0; left: 0; width: 200%; height: 200%;
+        background-image: linear-gradient(rgba(0, 243, 255, 0.03) 1px, transparent 1px),
+                          linear-gradient(90deg, rgba(0, 243, 255, 0.03) 1px, transparent 1px);
+        background-size: 50px 50px; z-index: 0; pointer-events: none;
+        animation: gridMove 60s linear infinite;
     }
-    header { 
-        height:64px; background:rgba(0,0,0,0.93); 
-        border-bottom:2px solid var(--primary); 
-        display:flex; justify-content:space-between; align-items:center; 
-        padding:0 20px; z-index:10; 
+    @keyframes gridMove { 0% { transform: translate(0, 0); } 100% { transform: translate(-50px, -50px); } }
+
+    header {
+        position: relative; z-index: 10; height: 70px;
+        background: rgba(0,0,0,0.95);
+        border-bottom: 1px solid var(--primary);
+        display: flex; justify-content: space-between; align-items: center; padding: 0 15px;
     }
-    .brand { font-size:1.28rem; font-weight:bold; letter-spacing:5px; color:var(--primary); }
-    .brand span { color:var(--secondary); }
-    .env-badge { 
-        font-size:0.78rem; padding:6px 16px; border-radius:4px; font-weight:bold; 
-        background:rgba(0,0,0,0.7); transition:0.3s; 
+
+    .brand { font-size: 1.1rem; font-weight: 900; color: var(--primary); letter-spacing: 2px; text-transform: uppercase; }
+    
+    .controls { display: flex; gap: 10px; }
+
+    button {
+        background: rgba(0,0,0,0.6); border: 1px solid var(--primary); color: var(--primary);
+        padding: 8px 16px; font-family: var(--font-main); font-weight: bold; font-size: 0.8rem;
+        cursor: pointer; transition: 0.2s; text-transform: uppercase; border-radius: 4px;
     }
-    #input-bar {
-        background:var(--panel); padding:10px 20px; display:flex; align-items:center; gap:12px;
-        border-bottom:2px solid var(--secondary); z-index:9;
+    button:hover:not(:disabled) { background: var(--primary); color: #000; }
+    button.active { background: var(--secondary); color: #fff; border-color: var(--secondary); box-shadow: 0 0 15px var(--secondary); animation: glow 2s infinite; }
+    
+    @keyframes glow { 0% { box-shadow: 0 0 5px var(--secondary); } 50% { box-shadow: 0 0 20px var(--secondary); } 100% { box-shadow: 0 0 5px var(--secondary); } }
+
+    #canvas-container { flex-grow: 1; position: relative; z-index: 1; overflow: hidden; }
+    canvas { display: block; width: 100%; height: 100%; }
+
+    #terminal {
+        height: 180px; background: rgba(5, 5, 10, 0.95);
+        border-top: 1px solid var(--primary);
+        padding: 10px; font-size: 12px; overflow-y: auto;
+        z-index: 10; scrollbar-width: thin; scrollbar-color: var(--primary) #000;
     }
-    #userInput {
-        flex:1; background:rgba(0,0,0,0.85); border:2px solid var(--primary);
-        color:#e0e0e0; padding:12px 16px; font-family:inherit; font-size:15px;
-        border-radius:4px; transition:0.2s;
+    .log-line { margin-bottom: 4px; border-left: 2px solid transparent; padding-left: 8px; opacity: 0; animation: slideIn 0.3s forwards; word-break: break-word;}
+    .log-sys { color: #888; border-color: #888; }
+    .log-user { color: var(--primary); border-color: var(--primary); }
+    .log-ai { color: #fff; border-color: #fff; font-weight: bold; }
+    
+    @keyframes slideIn { from { opacity:0; transform:translateX(-10px); } to { opacity:1; transform:translateX(0); } }
+
+    /* CONFIG MODAL */
+    #config-modal {
+        display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.9); z-index: 100; justify-content: center; align-items: center; padding: 20px;
     }
-    #userInput:focus { outline:none; box-shadow:0 0 20px var(--primary); border-color:var(--secondary); }
-    button { 
-        background:rgba(0,0,0,0.7); border:1px solid var(--primary); color:var(--primary); 
-        padding:9px 18px; cursor:pointer; transition:0.2s; text-transform:uppercase; font-size:0.85rem;
+    .modal-box { background: #0a0a0a; border: 1px solid var(--primary); padding: 20px; width: 100%; max-width: 400px; }
+    .modal-box input {
+        width: 100%; background: #000; border: 1px solid #444; color: #fff; padding: 12px; margin: 15px 0; font-family: monospace;
     }
-    button:hover { background:var(--primary); color:#000; box-shadow:0 0 20px var(--primary); }
-    button.active { background:var(--danger); color:#fff; box-shadow:0 0 15px var(--danger); }
-    button.success { background:var(--success); color:#000; }
-    #canvas-container { flex:1; position:relative; background:rgba(2,2,5,0.4); }
-    canvas { display:block; width:100%; height:100%; }
-    #terminal { 
-        height:210px; background:var(--panel); border-top:2px solid var(--secondary); 
-        padding:12px; font-size:13px; overflow-y:auto; scrollbar-width:thin;
-    }
-    .log-line { margin:4px 0; padding-left:12px; border-left:3px solid; }
-    .log-user { color:var(--primary); border-color:var(--primary); }
-    .log-ai { color:var(--secondary); border-color:var(--secondary); font-weight:bold; }
-    .log-error { color:var(--danger); border-color:var(--danger); }
-    .log-success { color:var(--success); border-color:var(--success); }
-    .log-sys { color:#888; border-color:#666; font-style:italic; }
 </style>
 </head>
 <body>
 
 <header>
-    <div class="brand">SUPRA <span>NEURAL</span> AI <span style="font-size:0.82rem;opacity:0.65;">v4.0 FINAL</span></div>
-    <div id="envBadge" class="env-badge">READY</div>
+    <div class="brand">SUPRA <span>AI FINALE</span></div>
     <div class="controls">
-        <button id="btnMic">MICRO</button>
-        <button id="btnVoice">ÉCOUTE</button>
-        <button id="btnTest" class="success">TEST IA</button>
-        <button id="btnAuto" class="success">🚀 FULL AUTO</button>
-        <button id="btnClear">🗑️ CLEAR</button>
+        <button id="btnMic">1. MICRO</button>
+        <button id="btnVoice">2. ÉCOUTE</button>
+        <button id="btnConfig">⚙️</button>
     </div>
 </header>
 
-<div id="input-bar">
-    <input id="userInput" type="text" placeholder="Tapez votre question...">
-    <button id="btnSend">ENVOYER →</button>
+<div id="canvas-container">
+    <canvas id="canvas"></canvas>
 </div>
 
-<div id="canvas-container"><canvas id="canvas"></canvas></div>
 <div id="terminal"></div>
 
+<!-- CONFIG MODAL -->
+<div id="config-modal">
+    <div class="modal-box">
+        <h3 style="color:var(--primary); margin:0;">Clé API (Optionnel)</h3>
+        <p style="color:#666; font-size:0.8rem; margin-top:5px;">Laissez vide pour le Mode Local.</p>
+        <input type="password" id="apiKeyInput" placeholder="sk-..." autocomplete="off">
+        <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:10px;">
+            <button onclick="toggleModal()" style="border-color:#333; color:#888;">Fermer</button>
+            <button onclick="saveKey()" style="background:var(--primary); color:#000; font-weight:bold;">OK</button>
+        </div>
+    </div>
+</div>
+
 <script>
-// ====================== CONFIGURATION CLÉ API ======================
-let API_KEY = localStorage.getItem('supra_api_key') || "";
-if (!API_KEY) {
-    const entered = prompt("🚀 SUPRA NEURAL AI v4.0\n\nEntrez votre clé OpenAI (commence par sk-...)\n\nElle sera sauvegardée dans le navigateur.");
-    if (entered && entered.startsWith('sk-')) {
-        API_KEY = entered;
-        localStorage.setItem('supra_api_key', API_KEY);
-    } else {
-        alert("❌ Clé invalide ou annulée.\nL'IA ne pourra pas répondre sans clé valide.");
-    }
-}
 const $ = id => document.getElementById(id);
+const COLORS = { primary: '#00f3ff', listen: '#bc13fe', speak: '#ffffff' };
 
 const Logger = {
     log: (msg, type="sys") => {
+        const t = $('terminal');
         const d = document.createElement("div");
         d.className = `log-line log-${type}`;
-        d.innerHTML = `[${new Date().toLocaleTimeString()}] ${msg}`;
-        $('terminal').appendChild(d);
-        $('terminal').scrollTop = $('terminal').scrollHeight;
-    },
-    success: m => Logger.log(m, "success"),
-    error: m => Logger.log(m, "error"),
-    sys: m => Logger.log(m, "sys")
+        d.innerHTML = `<span style="color:#555">[${new Date().toLocaleTimeString('fr-FR', {hour12:false})}]</span> ${msg}`;
+        t.appendChild(d);
+        t.scrollTop = t.scrollHeight;
+        if(t.childElementCount > 50) t.removeChild(t.firstChild);
+    }
 };
 
-class AIEngine {
-    constructor() {
-        this.synth = window.speechSynthesis;
-        this.isSpeaking = false;
-        this.voices = [];
-        this.synth.onvoiceschanged = () => this.voices = this.synth.getVoices();
-        setTimeout(() => this.voices = this.synth.getVoices(), 300);
+/* --- AUDIO --- */
+class AudioEngine {
+    constructor() { this.ready = false; this.analyser = null; this.dataArray = null; this.ctx = null; }
+    async start() {
+        if(this.ready) return;
+        try {
+            this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+            if (this.ctx.state === 'suspended') await this.ctx.resume();
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            const src = this.ctx.createMediaStreamSource(stream);
+            this.analyser = this.ctx.createAnalyser();
+            this.analyser.fftSize = 256;
+            this.analyser.smoothingTimeConstant = 0.8;
+            src.connect(this.analyser);
+            this.dataArray = new Uint8Array(this.analyser.frequencyBinCount);
+            this.ready = true;
+            Logger.log("Microphone actif.", "sys");
+            $('btnMic').classList.add('active');
+        } catch(e) { Logger.log("Erreur micro.", "sys"); }
     }
+    getData() {
+        if(!this.ready) return { vol:0, raw:null };
+        this.analyser.getByteFrequencyData(this.dataArray);
+        let sum=0;
+        for(let i=0;i<this.dataArray.length;i++) sum+=this.dataArray[i];
+        return { vol: sum/this.dataArray.length, raw: this.dataArray };
+    }
+}
+
+/* --- CERVEAU --- */
+class Brain {
+    constructor() {
+        this.apiKey = localStorage.getItem('supra_api_key') || "";
+        this.synth = window.speechSynthesis;
+        this.voices = [];
+        if(speechSynthesis.onvoiceschanged !== undefined) speechSynthesis.onvoiceschanged = () => this.voices = this.synth.getVoices();
+    }
+    setKey(key) { this.apiKey = key.trim(); localStorage.setItem('supra_api_key', this.apiKey); }
     async process(text) {
-        const trimmed = text.trim();
-        if (!trimmed || trimmed.length < 2) return;
+        if(text.length < 2) return;
+        Logger.log(`VOIX: "${text}"`, "user");
         
-        Logger.log(`QUERY: "${trimmed}"`, "user");
-        $('envBadge').textContent = "THINKING";
-        
-        let resp = "SUPRA en ligne.";
+        let response = "";
+        if (this.apiKey.length > 10) {
+            try {
+                response = await this.fetchGPT(text);
+            } catch (e) {
+                response = this.localProcess(text);
+            }
+        } else {
+            response = this.localProcess(text);
+        }
+        this.speak(response);
+    }
+    async fetchGPT(prompt) {
+        const controller = new AbortController();
+        setTimeout(() => controller.abort(), 5000); 
         try {
             const res = await fetch("https://api.openai.com/v1/chat/completions", {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${API_KEY}`
-                },
+                headers: { "Content-Type": "application/json", "Authorization": `Bearer ${this.apiKey}` },
                 body: JSON.stringify({
-                    model: "gpt-4o-mini",
-                    messages: [
-                        {role: "system", content: "Tu es SUPRA NEURAL AI v4.0 — IA cyberpunk ultra-rapide. Réponds en français, style hacker/neon, maximum 16 mots, très direct."},
-                        {role: "user", content: trimmed}
-                    ],
-                    max_tokens: 50,
-                    temperature: 0.9
-                })
+                    model: "gpt-3.5-turbo",
+                    messages: [{role: "system", content: "Tu es Supra. Réponds court."}, {role: "user", content: prompt}]
+                }),
+                signal: controller.signal
             });
-            if (!res.ok) throw new Error(res.status);
+            if (!res.ok) throw new Error();
             const data = await res.json();
-            resp = data.choices[0].message.content.trim();
-        } catch(e) {
-            Logger.error("ERREUR OPENAI — vérifie ta clé ou connexion");
-            resp = "Erreur API. Clé invalide ou réseau.";
+            return data.choices[0].message.content;
+        } catch(e) { throw e; }
+    }
+    localProcess(text) {
+        const t = text.toLowerCase();
+        // COMMANDES SPÉCIALES
+        if (t.includes("musique") || t.includes("allume") || t.includes("lance")) return "C'est parti, lancement de la procédure audio.";
+        if (t.includes("heure")) return `Il est ${new Date().toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'})}.`;
+        if (t.includes("date")) return `Nous sommes le ${new Date().toLocaleDateString('fr-FR')}.`;
+        if (t.includes("qui es-tu")) return "Je suis Supra IA, version finale.";
+        if (t.includes("bonjour") || t.includes("salut")) return "Bonjour humain. Système opérationnel.";
+        if (t.includes("merci")) return "Avec plaisir.";
+        if (t.includes("stop") || t.includes("arrête")) return "Arrêt de la séquence.";
+        // CALCULS SIMPLES
+        if (t.includes("plus") && t.match(/\d+/)) {
+            const nums = t.match(/\d+/g);
+            if(nums && nums.length>=2) return `Ça fait ${parseInt(nums[0])+parseInt(nums[1])}.`;
         }
-        this.speak(resp);
+        return "Commande reçue.";
     }
     speak(text) {
         this.synth.cancel();
         const u = new SpeechSynthesisUtterance(text);
-        const frVoice = this.voices.find(v => v.lang.includes('fr'));
-        if (frVoice) u.voice = frVoice;
-        u.rate = 1.09; u.pitch = 1.04;
-        
-        u.onstart = () => {
-            this.isSpeaking = true;
-            Logger.log(`IA: "${text}"`, "ai");
-            $('envBadge').textContent = "SPEAKING";
-        };
-        u.onend = () => {
-            this.isSpeaking = false;
-            $('envBadge').textContent = "READY";
-        };
+        const fr = this.voices.find(v => v.lang.includes('fr'));
+        if(fr) u.voice = fr;
+        u.rate = 1.1;
+        u.onstart = () => { Logger.log(`IA: "${text}"`, "ai"); app.pauseVoice(); };
+        u.onend = () => { app.resumeVoice(); };
         this.synth.speak(u);
     }
 }
 
-class AudioEngine {
-    constructor(transcriptCb) {
-        this.ready = false;
-        this.transcriptCb = transcriptCb;
-        this.threshold = 12;           // ← ULTRA BAS pour détecter le moindre bruit/énergie
-        this.silenceDuration = 1400;   // 1.4s de silence = fin d'enregistrement
-        this.isRecording = false;
-        this.recorder = null;
-        this.chunks = [];
-        this.silenceTimer = null;
-        this.vadActive = false;
-        this.vadInterval = null;
-        this.stream = null;
-        this.analyser = null;
-        this.dataArray = null;
-    }
-    async start() {
-        if (this.ready) return;
-        try {
-            const ctx = new (window.AudioContext || window.webkitAudioContext)();
-            this.stream = await navigator.mediaDevices.getUserMedia({audio:true});
-            const src = ctx.createMediaStreamSource(this.stream);
-            this.analyser = ctx.createAnalyser();
-            this.analyser.fftSize = 256;
-            src.connect(this.analyser);
-            this.dataArray = new Uint8Array(this.analyser.frequencyBinCount);
-            this.ready = true;
-            Logger.success("MICRO + VAD ACTIVÉ");
-            $('btnMic').classList.add('active');
-        } catch(e) {
-            Logger.error("Accès micro refusé");
-        }
-    }
-    getData() {
-        if (!this.ready) return {vol:0, raw:null};
-        this.analyser.getByteFrequencyData(this.dataArray);
-        let sum = 0;
-        for (let v of this.dataArray) sum += v;
-        return {vol: sum / this.dataArray.length, raw: this.dataArray};
-    }
-    toggleVAD() {
-        this.vadActive = !this.vadActive;
-        if (this.vadActive) {
-            if (!this.ready) this.start();
-            this.vadInterval = setInterval(() => this.checkVAD(), 65);
-            $('btnVoice').textContent = "ÉCOUTE (VAD ON)";
-            $('btnVoice').classList.add('active');
-            $('envBadge').textContent = "LISTENING";
-            Logger.sys("VAD ULTRA-SENSIBLE activé — détecte moindre bruit");
-        } else {
-            if (this.vadInterval) clearInterval(this.vadInterval);
-            if (this.isRecording) this.stopRecording();
-            $('btnVoice').textContent = "ÉCOUTE";
-            $('btnVoice').classList.remove('active');
-            $('envBadge').textContent = "READY";
-        }
-    }
-    checkVAD() {
-        if (!this.ready || !this.vadActive) return;
-        const {vol} = this.getData();
-        
-        if (vol > this.threshold) {
-            if (!this.isRecording) this.startRecording();
-            if (this.silenceTimer) {
-                clearTimeout(this.silenceTimer);
-                this.silenceTimer = null;
-            }
-        } else {
-            if (this.isRecording && !this.silenceTimer) {
-                this.silenceTimer = setTimeout(() => this.stopRecording(), this.silenceDuration);
-            }
-        }
-    }
-    startRecording() {
-        this.chunks = [];
-        this.recorder = new MediaRecorder(this.stream, {mimeType: 'audio/webm'});
-        this.recorder.ondataavailable = e => this.chunks.push(e.data);
-        this.recorder.onstop = () => {
-            if (this.chunks.length) {
-                const blob = new Blob(this.chunks, {type: 'audio/webm'});
-                this.transcribeWithWhisper(blob);
-            }
-            this.isRecording = false;
+/* --- VOIX --- */
+class VoiceEngine {
+    constructor(callback) {
+        this.callback = callback;
+        this.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        this.isActive = false;
+        if(!this.SpeechRecognition) { $('btnVoice').disabled = true; return; }
+        this.rec = new this.SpeechRecognition();
+        this.rec.lang = 'fr-FR';
+        this.rec.continuous = true;
+        this.rec.interimResults = false;
+        this.rec.onstart = () => { this.isActive = true; $('btnVoice').classList.add('active'); $('btnVoice').textContent = "ECOUTE"; };
+        this.rec.onend = () => {
+            if(this.isActive) { try { this.rec.start(); } catch(e){} }
+            else { $('btnVoice').classList.remove('active'); $('btnVoice').textContent = "ECOUTE"; }
         };
-        this.recorder.start(200);
-        this.isRecording = true;
+        this.rec.onresult = (e) => this.callback(e.results[e.results.length-1][0].transcript);
     }
-    stopRecording() {
-        if (this.recorder && this.isRecording) {
-            this.recorder.stop();
-        }
-    }
-    async transcribeWithWhisper(blob) {
-        const form = new FormData();
-        form.append("file", blob, "audio.webm");
-        form.append("model", "whisper-1");
-        form.append("language", "fr");
-        form.append("response_format", "text");
-        
-        try {
-            const res = await fetch("https://api.openai.com/v1/audio/transcriptions", {
-                method: "POST",
-                headers: { "Authorization": `Bearer ${API_KEY}` },
-                body: form
-            });
-            if (!res.ok) throw new Error();
-            const text = (await res.text()).trim();
-            if (text && text.length > 2) {
-                Logger.success(`WHISPER → "${text}"`);
-                this.transcriptCb(text);
-            }
-        } catch(e) {
-            Logger.error("Whisper échec (clé ou réseau)");
-        }
-    }
+    toggle() { if(this.isActive) { this.isActive = false; this.rec.stop(); } else { try { this.rec.start(); } catch(e){} } }
+    pause() { this.wasActive = this.isActive; this.isActive = false; try { this.rec.stop(); } catch(e){} }
+    resume() { if(this.wasActive) { this.isActive = true; try { this.rec.start(); } catch(e){} } }
 }
 
+/* --- VISUELS --- */
 class Visuals {
     constructor() {
-        this.c = $('canvas'); this.ctx = this.c.getContext('2d');
-        this.nodes = Array.from({length:92}, () => ({
-            x: Math.random()*innerWidth, y: Math.random()*innerHeight,
-            vx: (Math.random()-0.5)*2.4, vy: (Math.random()-0.5)*2.4,
-            s: Math.random()*4 + 1.6
-        }));
-        const resize = () => {
-            this.c.width = this.c.parentElement.clientWidth;
-            this.c.height = this.c.parentElement.clientHeight;
-        };
-        window.addEventListener('resize', resize);
-        setTimeout(resize, 100);
-        resize();
+        this.c = $('canvas');
+        this.ctx = this.c.getContext('2d');
+        this.nodes = Array.from({length:40}, () => ({ x:Math.random()*innerWidth, y:Math.random()*innerHeight, vx:(Math.random()-0.5), vy:(Math.random()-0.5), s:Math.random()*2+1 }));
+        const resize = () => { this.c.width=innerWidth; this.c.height=innerHeight-$('header').offsetHeight-$('terminal').offsetHeight; };
+        onresize = resize; resize();
     }
-    draw(audio, speaking) {
-        const {vol, raw} = audio;
-        const w = this.c.width, h = this.c.height;
-        this.ctx.fillStyle = "rgba(2,2,5,0.25)";
-        this.ctx.fillRect(0,0,w,h);
-        
-        const pulse = 52 + vol * 1.35 + (speaking ? 38 : 0);
-        this.ctx.shadowBlur = 65;
-        this.ctx.shadowColor = speaking ? "#ff00ff" : "#00f3ff";
-        this.ctx.beginPath();
-        this.ctx.arc(w/2, h/2, pulse, 0, Math.PI*2);
-        this.ctx.strokeStyle = `rgba(0,243,255,${speaking?0.98:0.5})`;
-        this.ctx.lineWidth = 8;
-        this.ctx.stroke();
-        this.ctx.shadowBlur = 0;
-        
-        // Texte central glitch
-        this.ctx.save();
-        this.ctx.font = "900 29px Courier New";
-        this.ctx.textAlign = "center";
-        this.ctx.shadowBlur = speaking ? 45 : 18;
-        this.ctx.shadowColor = "#00f3ff";
-        this.ctx.fillStyle = "#00f3ff";
-        let txt = "SUPRA NEURAL";
-        if (speaking && Math.random() > 0.6) txt = "S U P R A   N E U R A L";
-        this.ctx.fillText(txt, w/2, h/2 - pulse - 42);
-        this.ctx.restore();
-        
-        // Nodes + liens
-        for (let n of this.nodes) {
-            n.x += n.vx; n.y += n.vy;
-            if (n.x<0||n.x>w) n.vx*=-1;
-            if (n.y<0||n.y>h) n.vy*=-1;
-            this.ctx.shadowBlur = 22;
-            this.ctx.shadowColor = "#00f3ff";
-            this.ctx.fillStyle = "#00f3ff";
-            this.ctx.beginPath();
-            this.ctx.arc(n.x, n.y, n.s + vol/24, 0, Math.PI*2);
-            this.ctx.fill();
-        }
-        this.ctx.shadowBlur = 0;
-        this.ctx.lineWidth = 1.2;
-        for (let i=0; i<this.nodes.length; i++) {
-            for (let j=i+1; j<this.nodes.length; j++) {
-                const a = this.nodes[i], b = this.nodes[j];
-                const d = Math.hypot(a.x-b.x, a.y-b.y);
-                if (d < 175) {
-                    this.ctx.strokeStyle = `rgba(0,243,255,${(175-d)/175*0.7})`;
-                    this.ctx.beginPath(); this.ctx.moveTo(a.x,a.y); this.ctx.lineTo(b.x,b.y); this.ctx.stroke();
-                }
-            }
-        }
-        
-        // Fréquences (énergie visuelle)
-        if (raw) {
-            const bw = w / raw.length;
-            for (let i=0; i<raw.length; i++) {
-                const height = (raw[i]/255) * h * 0.48;
-                this.ctx.fillStyle = `rgba(255,0,255,${0.5 + vol/600})`;
-                this.ctx.fillRect(i*bw, h-height, bw-1.8, height);
-            }
-        }
+    draw(audio) {
+        const { vol, raw } = audio; const w = this.c.width, h = this.c.height;
+        this.ctx.fillStyle = "rgba(2,2,5,0.2)"; this.ctx.fillRect(0,0,w,h);
+        let col = app.isSpeaking ? COLORS.speak : (app.isListening ? COLORS.listen : COLORS.primary);
+        this.nodes.forEach(n => {
+            n.x+=n.vx; n.y+=n.vy; if(n.x<0||n.x>w)n.vx*=-1; if(n.y<0||n.y>h)n.vy*=-1;
+            this.ctx.beginPath(); this.ctx.arc(n.x, n.y, n.s + vol/30, 0, Math.PI*2); this.ctx.fillStyle = col; this.ctx.fill();
+        });
+        this.ctx.beginPath(); this.ctx.arc(w/2, h/2, 30 + vol/2, 0, Math.PI*2); this.ctx.strokeStyle = col; this.ctx.stroke();
+        if(raw) { this.ctx.beginPath(); for(let i=0;i<raw.length;i++) this.ctx.lineTo((i/raw.length)*w, h-(raw[i]/255)*(h/3)); this.ctx.strokeStyle = col; this.ctx.globalAlpha=0.2; this.ctx.stroke(); this.ctx.globalAlpha=1; }
     }
 }
 
+/* --- APP --- */
 class App {
     constructor() {
-        this.ai = new AIEngine();
+        this.audio = new AudioEngine();
+        this.brain = new Brain();
         this.visuals = new Visuals();
-        
-        // Whisper + VAD intégré
-        this.audio = new AudioEngine(text => this.ai.process(text));
-        
-        // Initialisation
-        setTimeout(async () => {
-            await this.audio.start();
-            this.audio.toggleVAD(); // FULL AUTO au démarrage
-            Logger.success("SUPRA NEURAL AI v4.0 → VAD WHISPER ACTIVÉ");
-        }, 300);
-        
-        // Boutons
+        this.voice = new VoiceEngine(t => this.brain.process(t));
+        this.isListening = false; this.isSpeaking = false;
+
         $('btnMic').onclick = () => this.audio.start();
-        $('btnVoice').onclick = () => this.audio.toggleVAD();
-        $('btnTest').onclick = () => this.ai.speak("Test vocal OK. Je suis SUPRA NEURAL AI v4.0.");
-        $('btnAuto').onclick = () => {
-            this.audio.start();
-            if (!this.audio.vadActive) this.audio.toggleVAD();
+        $('btnVoice').onclick = () => { 
+            this.voice.toggle(); 
+            this.isListening = this.voice.isActive;
         };
-        $('btnClear').onclick = () => $('terminal').innerHTML = '';
-        
-        // Input texte
-        this.userInput = $('userInput');
-        $('btnSend').onclick = () => this.sendText();
-        this.userInput.addEventListener('keypress', e => { if(e.key === "Enter") this.sendText(); });
-        
-        // Raccourcis
-        document.addEventListener('keydown', e => {
-            if (e.key === " ") { e.preventDefault(); this.audio.toggleVAD(); }
-            if (e.key.toLowerCase() === "t") this.ai.speak("Test OK.");
-        });
-        
+        $('btnConfig').onclick = () => { $('apiKeyInput').value = this.brain.apiKey; $('config-modal').style.display = 'flex'; };
         this.loop();
+        Logger.log("Système Finale Prêt.", "sys");
     }
-    sendText() {
-        const txt = this.userInput.value.trim();
-        if (txt) {
-            this.ai.process(txt);
-            this.userInput.value = "";
-        }
-    }
-    loop() {
-        requestAnimationFrame(() => this.loop());
-        this.visuals.draw(this.audio.getData(), this.ai.isSpeaking);
-    }
+    pauseVoice() { this.voice.pause(); this.isListening = false; }
+    resumeVoice() { this.voice.resume(); this.isListening = this.voice.isActive; }
+    loop() { requestAnimationFrame(() => this.loop()); this.visuals.draw(this.audio.getData()); }
 }
+
+window.toggleModal = () => $('config-modal').style.display = 'none';
+window.saveKey = () => { app.brain.setKey($('apiKeyInput').value); toggleModal(); Logger.log("Config ok", "sys"); };
 
 const app = new App();
 </script>
