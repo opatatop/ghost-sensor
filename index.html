@@ -148,6 +148,7 @@ class AIEngine {
 
         let resp = "SUPRA en ligne.";
         try {
+            Logger.sys("Tentative de connexion à l'API OpenAI...");
             const res = await fetch("https://api.openai.com/v1/chat/completions", {
                 method: "POST",
                 headers: {
@@ -167,8 +168,9 @@ class AIEngine {
             if (!res.ok) throw new Error(res.status);
             const data = await res.json();
             resp = data.choices[0].message.content.trim();
+            Logger.sys("Réponse de l'API reçue.");
         } catch(e) {
-            Logger.error("ERREUR OPENAI — vérifie ta clé ou connexion");
+            Logger.error(`ERREUR OPENAI — vérifie ta clé ou connexion. Erreur: ${e.message}`);
             resp = "Erreur API. Clé invalide ou réseau.";
         }
         this.speak(resp);
@@ -212,6 +214,7 @@ class AudioEngine {
     async start() {
         if (this.ready) return;
         try {
+            Logger.sys("Tentative d'accès au microphone...");
             const ctx = new (window.AudioContext || window.webkitAudioContext)();
             this.stream = await navigator.mediaDevices.getUserMedia({audio:true});
             const src = ctx.createMediaStreamSource(this.stream);
@@ -223,7 +226,7 @@ class AudioEngine {
             Logger.success("MICRO + VAD ACTIVÉ");
             $('btnMic').classList.add('active');
         } catch(e) {
-            Logger.error("Accès micro refusé");
+            Logger.error(`Accès micro refusé. Erreur: ${e.message}`);
         }
     }
     getData() {
@@ -253,6 +256,7 @@ class AudioEngine {
     checkVAD() {
         if (!this.ready || !this.vadActive) return;
         const {vol} = this.getData();
+        Logger.sys(`Niveau audio: ${vol}`);
 
         if (vol > this.threshold) {
             if (!this.isRecording) this.startRecording();
@@ -279,10 +283,12 @@ class AudioEngine {
         };
         this.recorder.start(200);
         this.isRecording = true;
+        Logger.sys("Enregistrement commencé...");
     }
     stopRecording() {
         if (this.recorder && this.isRecording) {
             this.recorder.stop();
+            Logger.sys("Enregistrement arrêté.");
         }
     }
     async transcribeWithWhisper(blob) {
@@ -293,6 +299,7 @@ class AudioEngine {
         form.append("response_format", "text");
 
         try {
+            Logger.sys("Tentative de transcription avec Whisper...");
             const res = await fetch("https://api.openai.com/v1/audio/transcriptions", {
                 method: "POST",
                 headers: { "Authorization": `Bearer ${API_KEY}` },
@@ -305,7 +312,7 @@ class AudioEngine {
                 this.transcriptCb(text);
             }
         } catch(e) {
-            Logger.error("Whisper échec (clé ou réseau)");
+            Logger.error(`Whisper échec (clé ou réseau). Erreur: ${e.message}`);
         }
     }
 }
