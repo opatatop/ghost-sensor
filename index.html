@@ -3,34 +3,40 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>SUPRA v13 — REALME NOTE 60</title>
+<title>SUPRA v13.1 — NOTE 60 + IA PARLANTE</title>
 <style>
-:root{--bg:#000;--primary:#00ff41;--danger:#ff0000}
+:root{--bg:#000;--primary:#00ff41;--secondary:#ff00ff}
 body{margin:0;background:var(--bg);color:var(--primary);font-family:'Courier New',monospace;height:100vh;display:flex;flex-direction:column;overflow:hidden}
-header{height:65px;background:rgba(0,255,65,0.1);border-bottom:3px solid var(--primary);display:flex;justify-content:space-between;align-items:center;padding:0 15px}
+header{height:70px;background:rgba(0,255,65,0.1);border-bottom:3px solid var(--primary);display:flex;justify-content:space-between;align-items:center;padding:0 15px}
 .brand{font-size:1.35rem;font-weight:900;letter-spacing:5px}
-#status{font-size:0.95rem;background:#111;padding:6px 14px;border:2px solid var(--primary);min-width:150px;text-align:center}
+#status{font-size:0.95rem;background:#111;padding:6px 14px;border:2px solid var(--primary);min-width:160px;text-align:center}
+#apikey{display:flex;gap:8px;padding:8px;background:#111}
+input{background:#000;border:1px solid #0f0;color:#0f0;padding:8px;width:100%}
 canvas{display:block;width:100%;height:100%}
-#terminal{height:170px;background:#000;border-top:3px solid var(--primary);padding:10px;overflow-y:auto;font-size:11px}
+#terminal{height:160px;background:#000;border-top:3px solid var(--primary);padding:10px;overflow-y:auto;font-size:11px}
 .log{margin:3px 0}
-.log.emf{color:#ffff00}
-.log.motion{color:#ff00ff}
+.log.ai{color:#ff00ff;text-shadow:0 0 8px #ff00ff}
 button{background:#111;border:1px solid #0f0;color:#0f0;padding:10px;font-weight:bold;cursor:pointer}
 </style>
 </head>
 <body>
 
 <header>
-<div class="brand">SUPRA v13 — NOTE 60</div>
+<div class="brand">SUPRA v13.1 — NOTE 60</div>
 <div id="status">EMF : 0.0 μT</div>
 </header>
+
+<div id="apikey">
+<input type="password" id="keyinput" placeholder="Colle ta clé OpenAI ici (sk-...)">
+<button onclick="saveKey()">SAUVEGARDER CLÉ</button>
+</div>
 
 <div id="canvas-container"><canvas id="canvas"></canvas></div>
 <div id="terminal"></div>
 
 <div style="padding:12px;background:#111;display:flex;gap:8px;flex-wrap:wrap">
 <button onclick="toggleRecording()">🎤 ENREGISTRER EVP</button>
-<button onclick="startScan()">SCAN PARANORMAL</button>
+<button onclick="startScan()">SCAN + IA PARLANTE</button>
 <button onclick="clearLogs()">EFFACER</button>
 </div>
 
@@ -43,102 +49,148 @@ const log = (txt, type="") => {
   d.innerHTML = `[${new Date().toLocaleTimeString('fr-FR')}] ${txt}`;
   t.appendChild(d);
   t.scrollTop = t.scrollHeight;
-  if(t.children.length > 70) t.removeChild(t.firstChild);
+  if(t.children.length > 80) t.removeChild(t.firstChild);
 };
 
 let stream, mediaRecorder, audioChunks = [], isRecording = false;
 let analyser, dataArray;
-let emfValue = 0, motionValue = 0, lightValue = 50;
-let ghostIntensity = 0;
+let emfValue = 0, motionValue = 0, ghostIntensity = 0;
+let apiKey = localStorage.getItem('supra_key') || "";
 
-// === MICRO + SPECTRE 48kHz ===
+// Sauvegarde clé
+function saveKey() {
+  apiKey = $('keyinput').value.trim();
+  if(apiKey) {
+    localStorage.setItem('supra_key', apiKey);
+    log("✅ Clé OpenAI sauvegardée", "ai");
+  }
+}
+
+// Micro + spectre
 async function initMicro() {
   try {
-    stream = await navigator.mediaDevices.getUserMedia({audio:{sampleRate:48000,echoCancellation:false,noiseSuppression:false}});
+    stream = await navigator.mediaDevices.getUserMedia({audio:{sampleRate:48000}});
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
     const source = ctx.createMediaStreamSource(stream);
     analyser = ctx.createAnalyser();
     analyser.fftSize = 4096;
     source.connect(analyser);
     dataArray = new Uint8Array(analyser.frequencyBinCount);
-    log("Micro 48kHz + spectre réel → ACTIVÉ (Note 60)");
-  } catch(e){ log("Micro refusé", "danger"); }
+    log("Micro 48kHz activé");
+  } catch(e){ log("Micro refusé"); }
 }
 
-// === MAGNÉTOMÈTRE (EMF RÉEL) + ACCÉLÉRO ===
+// Capteurs Note 60
 if(window.DeviceOrientationEvent) {
   window.addEventListener('deviceorientation', e => {
     emfValue = Math.hypot(e.alpha||0, e.beta||0, e.gamma||0) / 3;
     $('status').textContent = `EMF : ${emfValue.toFixed(1)} μT`;
-    if(emfValue > 45) {
-      log("SPIKE EMF → PRÉSENCE !", "emf");
-      ghostIntensity = 90;
-      navigator.vibrate([100,50,100]);
-    }
+    if(emfValue > 45) triggerAIResponse("EMF SPIKE");
   });
 }
 
 if(window.DeviceMotionEvent) {
   window.addEventListener('devicemotion', e => {
     motionValue = Math.hypot(e.acceleration.x||0, e.acceleration.y||0, e.acceleration.z||0);
-    if(motionValue > 8) {
-      log(`COUP DÉTECTÉ (${motionValue.toFixed(1)}g)`, "motion");
-      ghostIntensity = 120;
-      navigator.vibrate(300);
-    }
+    if(motionValue > 9) triggerAIResponse("COUP DÉTECTÉ");
   });
 }
 
-// === CAPTEUR LUMIÈRE (AmbientLightSensor) ===
-if('AmbientLightSensor' in window) {
+// IA qui parle vraiment
+async function triggerAIResponse(reason) {
+  ghostIntensity = 100;
+  log(`⚠️ ${reason} → Demande à l'IA...`, "ai");
+
+  if(!apiKey) {
+    speak("Clé OpenAI non détectée. Je réponds en mode local.");
+    return;
+  }
+
   try {
-    const sensor = new AmbientLightSensor();
-    sensor.onreading = () => {
-      lightValue = sensor.illuminance;
-      if(lightValue < 8) log("CHUTE LUMIÈRE → ENTITÉ FROIDE", "danger");
-    };
-    sensor.start();
-  } catch(e){}
+    const res = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        messages: [{
+          role: "system",
+          content: "Tu es Supra Paranormal v13, une IA cyber-sombre et flippante. Tu parles en français, style froid et puissant. Réponds court (1-2 phrases max)."
+        }, {
+          role: "user",
+          content: `Détection paranormale : ${reason}. Que ressens-tu ? Parle comme une entité qui communique à travers moi.`
+        }]
+      })
+    });
+
+    const data = await res.json();
+    const reply = data.choices[0].message.content.trim();
+    log(`SUPRA : ${reply}`, "ai");
+    speak(reply);
+  } catch(e) {
+    log("Erreur API", "ai");
+    speak("Erreur de connexion avec le noyau.");
+  }
 }
 
-// === VISUEL ===
+function speak(text) {
+  const u = new SpeechSynthesisUtterance(text);
+  u.rate = 0.95;
+  u.pitch = 0.85;
+  u.volume = 1;
+  const frVoice = speechSynthesis.getVoices().find(v => v.lang.includes('fr'));
+  if(frVoice) u.voice = frVoice;
+  speechSynthesis.speak(u);
+}
+
+// Reconnaissance vocale
+const rec = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+rec.lang = 'fr-FR';
+rec.continuous = true;
+rec.onresult = e => {
+  const txt = e.results[e.results.length-1][0].transcript.toLowerCase();
+  if(txt.includes('esprit') || txt.includes('supra') || txt.includes('réponds')) {
+    triggerAIResponse("Commande vocale : " + txt);
+  }
+};
+rec.start();
+
+// Visuel
 const canvas = document.querySelector('canvas');
 const ctx = canvas.getContext('2d');
-function resize() { canvas.width = innerWidth; canvas.height = innerHeight; }
-resize();
-window.addEventListener('resize', resize);
+function resize(){canvas.width=innerWidth;canvas.height=innerHeight;}
+resize(); window.addEventListener('resize',resize);
 
 function draw() {
   requestAnimationFrame(draw);
-  ctx.fillStyle = "rgba(0,0,0,0.18)";
+  ctx.fillStyle = "rgba(0,0,0,0.16)";
   ctx.fillRect(0,0,canvas.width,canvas.height);
 
-  // Spectre micro
-  if(analyser) {
+  if(analyser){
     analyser.getByteFrequencyData(dataArray);
     for(let i=0;i<80;i++){
-      const h = (dataArray[i*10]||0) / 255 * canvas.height * 0.75;
-      ctx.fillStyle = h > canvas.height*0.55 ? '#ff00ff' : '#00ff41';
-      ctx.fillRect(i*(canvas.width/80), canvas.height-h, 7, h);
+      const h = (dataArray[i*10]||0)/255 * canvas.height * 0.8;
+      ctx.fillStyle = h>canvas.height*0.6 ? '#ff00ff' : '#00ff41';
+      ctx.fillRect(i*(canvas.width/80), canvas.height-h, 8, h);
     }
   }
 
-  // Orbes + EMF ring
-  if(ghostIntensity > 5) {
+  if(ghostIntensity > 5){
     const cx = canvas.width/2, cy = canvas.height/2;
-    ctx.shadowBlur = 35;
-    ctx.shadowColor = '#ff00ff';
-    for(let i=0;i<12;i++){
-      const x = cx + Math.sin(Date.now()/300 + i)* (70 + ghostIntensity);
-      ctx.fillStyle = `rgba(255,0,255,${ghostIntensity/150})`;
-      ctx.fillRect(x, cy-15, 9, 9);
+    ctx.shadowBlur = 40; ctx.shadowColor = '#ff00ff';
+    for(let i=0;i<14;i++){
+      const x = cx + Math.sin(Date.now()/280 + i) * (75 + ghostIntensity);
+      ctx.fillStyle = `rgba(255,0,255,${ghostIntensity/180})`;
+      ctx.fillRect(x-4, cy-12, 11, 11);
     }
-    ghostIntensity *= 0.92;
+    ghostIntensity *= 0.93;
   }
 }
 draw();
 
-// === ENREGISTREMENT EVP ===
+// Enregistrement EVP
 function toggleRecording() {
   if(!isRecording){
     mediaRecorder = new MediaRecorder(stream);
@@ -146,30 +198,27 @@ function toggleRecording() {
     mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
     mediaRecorder.onstop = () => {
       const blob = new Blob(audioChunks, {type:'audio/webm'});
-      const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = url; a.download = `EVP_Note60_${Date.now()}.webm`; a.click();
-      log("✅ EVP sauvegardé (fichier webm)");
+      a.href = URL.createObjectURL(blob);
+      a.download = `EVP_Note60_${Date.now()}.webm`;
+      a.click();
+      log("✅ EVP enregistré et téléchargé");
     };
     mediaRecorder.start();
     isRecording = true;
-    log("🎤 ENREGISTREMENT EVP EN COURS...");
+    log("🎤 Enregistrement EVP en cours...");
   } else {
     mediaRecorder.stop();
     isRecording = false;
   }
 }
 
-function startScan() {
-  log("SCAN PARANORMAL LANCÉ (EMF + MOTION + LUMIÈRE)", "danger");
-  ghostIntensity = 80;
-}
-
+function startScan(){ triggerAIResponse("Scan manuel lancé"); }
 function clearLogs(){ $('terminal').innerHTML = ''; }
 
 initMicro();
-log("SUPRA v13 optimisé pour Realme Note 60");
-log("Magnétomètre + Accéléro + Lumière + Micro 48kHz → tout actif");
+log("SUPRA v13.1 prête sur ton Realme Note 60");
+log("Colle ta clé OpenAI + appuie sur SCAN ou dis 'esprit'");
 </script>
 </body>
 </html>
