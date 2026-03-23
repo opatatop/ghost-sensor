@@ -5,980 +5,131 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>SUPRA AI v10.0 // ULTIMATE</title>
 <style>
-    :root {
-        /* THEME PAR DÉFAUT (CYBER) */
-        --bg-color: #020205;
-        --primary: #00f3ff;
-        --secondary: #bc13fe;
-        --danger: #ff2a2a;
-        --success: #00ff41;
-        --text-color: #e0e0e0;
-        --panel-bg: rgba(10, 15, 20, 0.95);
-        --font-main: 'Courier New', Courier, monospace;
-    }
-
-    /* THEMES */
-    body.theme-matrix {
-        --primary: #00ff41; --secondary: #008f11; --bg-color: #001100;
-    }
-    body.theme-inferno {
-        --primary: #ffaa00; --secondary: #ff4400; --bg-color: #110500;
-    }
-
-    * { 
-        box-sizing: border-box; 
-        -webkit-tap-highlight-color: transparent; 
-        user-select: none; 
-        outline: none; 
-    }
-    
-    body {
-        margin: 0; 
-        background-color: var(--bg-color); 
-        color: var(--text-color);
-        font-family: var(--font-main); 
-        overflow: hidden; 
-        height: 100vh;
-        display: flex; 
-        flex-direction: column; 
-        border-top: 2px solid var(--primary);
-        transition: background-color 0.5s;
-    }
-
-    /* CRT EFFECT */
-    body::after {
-        content: " "; 
-        position: absolute; 
-        top: 0; left: 0; 
-        width: 100vw; height: 100vh;
-        background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
-                    linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
-        background-size: 100% 2px, 3px 100%; 
-        pointer-events: none; 
-        z-index: 999; 
-        opacity: 0; 
-        transition: opacity 0.3s;
-    }
-    body.crt-on::after { opacity: 0.45; }
-
-    /* HEADER */
-    header {
-        position: relative; 
-        z-index: 10; 
-        height: 70px;
-        background: var(--panel-bg); 
-        border-bottom: 1px solid var(--primary);
-        display: flex; 
-        justify-content: space-between; 
-        align-items: center; 
-        padding: 0 20px;
-        box-shadow: 0 0 20px rgba(0, 243, 255, 0.15);
-    }
-
-    .brand { 
-        font-size: 1.15rem; 
-        font-weight: 900; 
-        color: var(--primary); 
-        letter-spacing: 4px; 
-        text-transform: uppercase; 
-        display: flex; 
-        flex-direction: column; 
-        line-height: 1; 
-    }
-    .brand span { 
-        font-size: 0.65rem; 
-        color: #666; 
-        letter-spacing: 2px; 
-        margin-top: 2px; 
-    }
-    
-    .status-indicator {
-        font-size: 0.85rem; 
-        color: #fff; 
-        background: #111; 
-        padding: 6px 14px; 
-        border: 1px solid #333;
-        text-transform: uppercase; 
-        letter-spacing: 1.5px; 
-        min-width: 130px; 
-        text-align: center; 
-        transition: all 0.4s ease;
-        border-radius: 2px;
-    }
-    .status-indicator.active { 
-        border-color: var(--secondary); 
-        color: var(--secondary); 
-        box-shadow: 0 0 15px var(--secondary); 
-    }
-    .status-indicator.listening { 
-        border-color: var(--primary); 
-        color: var(--primary); 
-        box-shadow: 0 0 15px var(--primary); 
-    }
-
-    .controls { display: flex; gap: 10px; align-items: center; }
-
-    button {
-        background: rgba(0,0,0,0.7); 
-        border: 1px solid #444; 
-        color: #ccc;
-        padding: 9px 14px; 
-        font-family: var(--font-main); 
-        font-weight: bold; 
-        font-size: 0.75rem;
-        cursor: pointer; 
-        transition: all 0.25s; 
-        text-transform: uppercase;
-        border-radius: 2px;
-    }
-    button:hover:not(:disabled) { 
-        border-color: var(--primary); 
-        color: var(--primary); 
-        box-shadow: 0 0 12px var(--primary);
-    }
-    
-    #btnPrivacy.privacy-on { 
-        border-color: var(--danger); 
-        color: var(--danger); 
-        background: rgba(255, 42, 42, 0.15); 
-        animation: blinkRed 1.2s infinite; 
-    }
-    
-    /* CANVAS */
-    #canvas-container { 
-        flex-grow: 1; 
-        position: relative; 
-        z-index: 1; 
-        overflow: hidden; 
-        background: radial-gradient(circle at center, #08080c 0%, #000 100%); 
-    }
-    canvas { display: block; width: 100%; height: 100%; }
-
-    /* TERMINAL */
-    #terminal {
-        height: 135px; 
-        background: rgba(0, 0, 0, 0.96); 
-        border-top: 1px solid var(--primary);
-        padding: 10px 15px; 
-        font-size: 11px; 
-        overflow-y: auto; 
-        z-index: 10;
-        scrollbar-width: thin; 
-        scrollbar-color: var(--primary) #111; 
-        font-family: 'Consolas', monospace;
-    }
-    .log-line { 
-        margin-bottom: 3px; 
-        padding-left: 8px; 
-        opacity: 0; 
-        animation: slideIn 0.25s forwards; 
-        display: flex; 
-        gap: 10px;
-    }
-    .log-time { color: #444; min-width: 70px; }
-    .log-msg { color: #aaa; }
-    .log-sys { color: #555; }
-    .log-wake { color: var(--secondary); font-weight: bold; text-shadow: 0 0 6px var(--secondary); }
-    @keyframes slideIn { 
-        from { opacity:0; transform:translateX(-8px); } 
-        to { opacity:1; transform:translateX(0); } 
-    }
-
-    /* --- SETTINGS MODAL --- */
-    .modal { 
-        display: none; 
-        position: fixed; 
-        top: 0; left: 0; 
-        width: 100%; height: 100%; 
-        background: rgba(0,0,0,0.92); 
-        z-index: 100; 
-        justify-content: center; 
-        align-items: center; 
-        padding: 20px; 
-        backdrop-filter: blur(8px); 
-    }
-    .modal-box { 
-        background: #0f0f13; 
-        border: 1px solid var(--primary); 
-        padding: 0; 
-        width: 100%; 
-        max-width: 520px; 
-        box-shadow: 0 0 40px rgba(0, 243, 255, 0.2); 
-        display: flex; 
-        flex-direction: column; 
-        height: 82vh; 
-        border-radius: 4px;
-        overflow: hidden;
-    }
-    
-    /* TABS */
-    .tabs { 
-        display: flex; 
-        border-bottom: 1px solid #333; 
-    }
-    .tab-btn { 
-        flex: 1; 
-        padding: 16px; 
-        background: #111; 
-        color: #666; 
-        border: none; 
-        cursor: pointer; 
-        font-family: var(--font-main); 
-        font-weight: bold; 
-        border-bottom: 3px solid transparent; 
-        transition: all 0.2s;
-    }
-    .tab-btn.active { 
-        color: var(--primary); 
-        background: #0a0a0a; 
-        border-bottom: 3px solid var(--primary); 
-    }
-    
-    /* TAB CONTENT */
-    .tab-content { 
-        padding: 22px; 
-        overflow-y: auto; 
-        flex-grow: 1; 
-        display: none; 
-    }
-    .tab-content.active { display: block; }
-    
-    /* FORM ELEMENTS */
-    .setting-group { 
-        margin-bottom: 22px; 
-        border-bottom: 1px solid #222; 
-        padding-bottom: 18px; 
-    }
-    .setting-group:last-child { border-bottom: none; }
-    .label { 
-        display: block; 
-        color: #888; 
-        font-size: 0.82rem; 
-        margin-bottom: 8px; 
-        text-transform: uppercase; 
-        letter-spacing: 1px; 
-    }
-    
-    input[type="text"], select, input[type="password"] {
-        width: 100%; 
-        background: #000; 
-        border: 1px solid #333; 
-        color: var(--primary);
-        padding: 11px; 
-        font-family: monospace; 
-        margin-bottom: 10px;
-        font-size: 0.9rem;
-    }
-    input[type="range"] { 
-        width: 100%; 
-        accent-color: var(--primary); 
-    }
-    
-    .toggle-row { 
-        display: flex; 
-        justify-content: space-between; 
-        align-items: center; 
-        margin-bottom: 12px; 
-        font-size: 0.9rem;
-    }
-    .toggle-row input[type="checkbox"] {
-        accent-color: var(--primary);
-        transform: scale(1.1);
-    }
-    
-    .save-bar { 
-        padding: 16px; 
-        border-top: 1px solid #333; 
-        display: flex; 
-        justify-content: flex-end; 
-        gap: 12px; 
-        background: #0a0a0a; 
-    }
-    
-    /* BOOT OVERLAY */
-    #boot-overlay {
-        position: fixed; 
-        top: 0; left: 0; 
-        width: 100%; height: 100%;
-        background: #000; 
-        z-index: 2000; 
-        display: flex; 
-        flex-direction: column;
-        justify-content: center; 
-        align-items: center; 
-        color: var(--primary);
-        transition: opacity 1.2s ease;
-    }
-    .start-btn {
-        margin-top: 35px; 
-        padding: 16px 45px; 
-        background: var(--primary); 
-        color: #000;
-        border: none; 
-        font-family: var(--font-main); 
-        font-weight: bold; 
-        font-size: 1.25rem;
-        cursor: pointer; 
-        text-transform: uppercase; 
-        letter-spacing: 3px;
-        box-shadow: 0 0 25px var(--primary); 
-        transition: all 0.3s;
-    }
-    .start-btn:hover { 
-        transform: scale(1.08); 
-        box-shadow: 0 0 50px var(--primary); 
-    }
-
-    @keyframes blinkRed { 
-        0%, 100% { box-shadow: 0 0 8px var(--danger); } 
-        50% { box-shadow: 0 0 20px var(--danger); } 
-    }
+:root{--bg-color:#020205;--primary:#00f3ff;--secondary:#bc13fe;--danger:#ff2a2a;--text-color:#e0e0e0;--panel-bg:rgba(10,15,20,0.95);--font-main:'Courier New',Courier,monospace}
+body.theme-matrix{--primary:#00ff41;--secondary:#008f11;--bg-color:#001100}
+body.theme-inferno{--primary:#ffaa00;--secondary:#ff4400;--bg-color:#110500}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;outline:none}
+body{margin:0;background:var(--bg-color);color:var(--text-color);font-family:var(--font-main);overflow:hidden;height:100vh;display:flex;flex-direction:column;border-top:2px solid var(--primary)}
+body::after{content:" ";position:absolute;top:0;left:0;width:100vw;height:100vh;background:linear-gradient(rgba(18,16,16,0)50%,rgba(0,0,0,.25)50%),linear-gradient(90deg,rgba(255,0,0,.06),rgba(0,255,0,.02),rgba(0,0,255,.06));background-size:100% 2px,3px 100%;pointer-events:none;z-index:999;opacity:0}
+body.crt-on::after{opacity:.45}
+header{position:relative;z-index:10;height:70px;background:var(--panel-bg);border-bottom:1px solid var(--primary);display:flex;justify-content:space-between;align-items:center;padding:0 20px;box-shadow:0 0 20px rgba(0,243,255,.15)}
+.brand{font-size:1.15rem;font-weight:900;color:var(--primary);letter-spacing:4px;text-transform:uppercase;display:flex;flex-direction:column;line-height:1}
+.brand span{font-size:.65rem;color:#666;letter-spacing:2px;margin-top:2px}
+.status-indicator{font-size:.85rem;color:#fff;background:#111;padding:6px 14px;border:1px solid #333;text-transform:uppercase;letter-spacing:1.5px;min-width:130px;text-align:center;transition:all .4s;border-radius:2px}
+.status-indicator.active{border-color:var(--secondary);color:var(--secondary);box-shadow:0 0 15px var(--secondary)}
+.status-indicator.listening{border-color:var(--primary);color:var(--primary);box-shadow:0 0 15px var(--primary)}
+.controls{display:flex;gap:10px}
+button{background:rgba(0,0,0,.7);border:1px solid #444;color:#ccc;padding:9px 14px;font-family:var(--font-main);font-weight:bold;font-size:.75rem;cursor:pointer;transition:all .25s;text-transform:uppercase;border-radius:2px}
+button:hover:not(:disabled){border-color:var(--primary);color:var(--primary);box-shadow:0 0 12px var(--primary)}
+#btnPrivacy.privacy-on{border-color:var(--danger);color:var(--danger);background:rgba(255,42,42,.15);animation:blinkRed 1.2s infinite}
+#canvas-container{flex-grow:1;position:relative;z-index:1;overflow:hidden;background:radial-gradient(circle at center,#08080c 0%,#000 100%)}
+canvas{display:block;width:100%;height:100%}
+#terminal{height:135px;background:rgba(0,0,0,.96);border-top:1px solid var(--primary);padding:10px 15px;font-size:11px;overflow-y:auto;font-family:'Consolas',monospace;scrollbar-width:thin;scrollbar-color:var(--primary)#111}
+.log-line{margin-bottom:3px;padding-left:8px;animation:slideIn .25s forwards;display:flex;gap:10px}
+.log-time{color:#444;min-width:70px}
+.log-msg{color:#aaa}
+.log-wake{color:var(--secondary);font-weight:bold;text-shadow:0 0 6px var(--secondary)}
+@keyframes slideIn{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:100;justify-content:center;align-items:center;padding:20px;backdrop-filter:blur(8px)}
+.modal-box{background:#0f0f13;border:1px solid var(--primary);width:100%;max-width:520px;height:82vh;box-shadow:0 0 40px rgba(0,243,255,.2);display:flex;flex-direction:column;border-radius:4px;overflow:hidden}
+.tabs{display:flex;border-bottom:1px solid #333}
+.tab-btn{flex:1;padding:16px;background:#111;color:#666;border:none;cursor:pointer;font-family:var(--font-main);font-weight:bold;transition:all .2s}
+.tab-btn.active{color:var(--primary);background:#0a0a0a;border-bottom:3px solid var(--primary)}
+.tab-content{padding:22px;overflow-y:auto;flex-grow:1;display:none}
+.tab-content.active{display:block}
+.setting-group{margin-bottom:22px;border-bottom:1px solid #222;padding-bottom:18px}
+.label{display:block;color:#888;font-size:.82rem;margin-bottom:8px;text-transform:uppercase;letter-spacing:1px}
+input[type=text],select,input[type=password]{width:100%;background:#000;border:1px solid #333;color:var(--primary);padding:11px;font-family:monospace;margin-bottom:10px}
+input[type=range]{width:100%;accent-color:var(--primary)}
+.toggle-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.save-bar{padding:16px;border-top:1px solid #333;display:flex;justify-content:flex-end;gap:12px;background:#0a0a0a}
+#boot-overlay{position:fixed;inset:0;background:#000;z-index:2000;display:flex;flex-direction:column;justify-content:center;align-items:center;color:var(--primary);transition:opacity 1.2s}
+.start-btn{margin-top:35px;padding:16px 45px;background:var(--primary);color:#000;border:none;font-family:var(--font-main);font-weight:bold;font-size:1.25rem;cursor:pointer;text-transform:uppercase;letter-spacing:3px;box-shadow:0 0 25px var(--primary);transition:all .3s}
+.start-btn:hover{transform:scale(1.08);box-shadow:0 0 50px var(--primary)}
+@keyframes blinkRed{0%,100%{box-shadow:0 0 8px var(--danger)}50%{box-shadow:0 0 20px var(--danger)}}
 </style>
 </head>
 <body class="crt-on">
 
 <div id="boot-overlay">
-    <h1 style="letter-spacing:6px; margin:0; font-size:2.1rem;">SUPRA ULTIMATE</h1>
-    <div style="font-size:0.85rem; color:#555; margin-top:8px; letter-spacing:2px;">CHARGEMENT SYSTÈME v10.0 — NEURAL CORE ONLINE</div>
-    <button class="start-btn" onclick="app.manualBoot()">DÉMARRER LE SYSTÈME</button>
+<h1 style="letter-spacing:6px;margin:0;font-size:2.1rem">SUPRA ULTIMATE</h1>
+<div style="font-size:.85rem;color:#555;margin-top:8px;letter-spacing:2px">CHARGEMENT SYSTÈME v10.0 — NEURAL CORE ONLINE</div>
+<button class="start-btn" onclick="app.manualBoot()">DÉMARRER LE SYSTÈME</button>
 </div>
 
 <header>
-    <div class="brand">SUPRA <span>ULTIMATE v10</span></div>
-    <div id="statusDisplay" class="status-indicator">VEILLE</div>
-    <div class="controls">
-        <button id="btnPrivacy">🔒 PRIVACY</button>
-        <button id="btnConfig">⚙️ OPTIONS</button>
-    </div>
+<div class="brand">SUPRA <span>ULTIMATE v10</span></div>
+<div id="statusDisplay" class="status-indicator">VEILLE</div>
+<div class="controls">
+<button id="btnPrivacy">🔒 PRIVACY</button>
+<button id="btnConfig">⚙️ OPTIONS</button>
+</div>
 </header>
 
-<div id="canvas-container">
-    <canvas id="canvas"></canvas>
-</div>
-
+<div id="canvas-container"><canvas id="canvas"></canvas></div>
 <div id="terminal"></div>
 
-<!-- SETTINGS MODAL -->
 <div id="config-modal" class="modal">
-    <div class="modal-box">
-        <div class="tabs">
-            <button class="tab-btn active" onclick="ui.switchTab('tab-detect', this)">DÉTECTION</button>
-            <button class="tab-btn" onclick="ui.switchTab('tab-voice', this)">VOIX</button>
-            <button class="tab-btn" onclick="ui.switchTab('tab-visual', this)">VISUEL</button>
-            <button class="tab-btn" onclick="ui.switchTab('tab-sys', this)">SYSTÈME</button>
-        </div>
+<div class="modal-box">
+<div class="tabs">
+<button class="tab-btn active" onclick="ui.switchTab('tab-detect',this)">DÉTECTION</button>
+<button class="tab-btn" onclick="ui.switchTab('tab-voice',this)">VOIX</button>
+<button class="tab-btn" onclick="ui.switchTab('tab-visual',this)">VISUEL</button>
+<button class="tab-btn" onclick="ui.switchTab('tab-sys',this)">SYSTÈME</button>
+</div>
 
-        <!-- TAB: DETECTION -->
-        <div id="tab-detect" class="tab-content active">
-            <div class="setting-group">
-                <label class="label">Mots de Réveil (séparés par virgule)</label>
-                <input type="text" id="set-wakewords" placeholder="supra, système, jarvis, hey supra">
-                <div style="font-size:0.75rem; color:#555;">L’IA ne réagit que si un mot est détecté en début de phrase (mode strict).</div>
-            </div>
-            <div class="setting-group">
-                <div class="toggle-row">
-                    <span>Mode Strict (début de phrase uniquement)</span>
-                    <input type="checkbox" id="set-strict" checked>
-                </div>
-            </div>
-        </div>
+<div id="tab-detect" class="tab-content active">
+<div class="setting-group"><label class="label">Mots de Réveil</label><input type="text" id="set-wakewords" placeholder="supra, système, jarvis"></div>
+<div class="setting-group"><div class="toggle-row"><span>Mode Strict</span><input type="checkbox" id="set-strict" checked></div></div>
+</div>
 
-        <!-- TAB: VOICE -->
-        <div id="tab-voice" class="tab-content">
-            <div class="setting-group">
-                <label class="label">Voix Synthétisée</label>
-                <select id="set-voiceuri"><option value="">Chargement des voix...</option></select>
-            </div>
-            <div class="setting-group">
-                <label class="label">Vitesse: <span id="val-rate">1.1</span>x</label>
-                <input type="range" id="set-rate" min="0.5" max="2" step="0.05" value="1.1" oninput="document.getElementById('val-rate').innerText=this.value">
-            </div>
-            <div class="setting-group">
-                <label class="label">Ton (grave/aigu): <span id="val-pitch">1.0</span></label>
-                <input type="range" id="set-pitch" min="0.5" max="2" step="0.05" value="1.0" oninput="document.getElementById('val-pitch').innerText=this.value">
-            </div>
-        </div>
+<div id="tab-voice" class="tab-content">
+<div class="setting-group"><label class="label">Voix</label><select id="set-voiceuri"><option value="">Chargement...</option></select></div>
+<div class="setting-group"><label class="label">Vitesse: <span id="val-rate">1.1</span>x</label><input type="range" id="set-rate" min="0.5" max="2" step="0.05" value="1.1" oninput="document.getElementById('val-rate').innerText=this.value"></div>
+<div class="setting-group"><label class="label">Ton: <span id="val-pitch">1.0</span></label><input type="range" id="set-pitch" min="0.5" max="2" step="0.05" value="1.0" oninput="document.getElementById('val-pitch').innerText=this.value"></div>
+</div>
 
-        <!-- TAB: VISUAL -->
-        <div id="tab-visual" class="tab-content">
-            <div class="setting-group">
-                <label class="label">Thème Couleur</label>
-                <select id="set-theme">
-                    <option value="cyber">Cyberpunk (Cyan/Violet)</option>
-                    <option value="matrix">Matrix (Vert Matrix)</option>
-                    <option value="inferno">Inferno (Orange/Rouge)</option>
-                </select>
-            </div>
-            <div class="setting-group">
-                <div class="toggle-row">
-                    <span>Effet CRT (scanlines rétro)</span>
-                    <input type="checkbox" id="set-crt" checked>
-                </div>
-            </div>
-            <div class="setting-group">
-                <div class="toggle-row">
-                    <span>Particules Neurales (CPU léger)</span>
-                    <input type="checkbox" id="set-particles" checked>
-                </div>
-            </div>
-        </div>
+<div id="tab-visual" class="tab-content">
+<div class="setting-group"><label class="label">Thème</label><select id="set-theme"><option value="cyber">Cyberpunk</option><option value="matrix">Matrix</option><option value="inferno">Inferno</option></select></div>
+<div class="setting-group"><div class="toggle-row"><span>CRT</span><input type="checkbox" id="set-crt" checked></div></div>
+<div class="setting-group"><div class="toggle-row"><span>Particules</span><input type="checkbox" id="set-particles" checked></div></div>
+</div>
 
-        <!-- TAB: SYSTEM -->
-        <div id="tab-sys" class="tab-content">
-            <div class="setting-group">
-                <label class="label">Clé API OpenAI (optionnel – mode GPT-4o-mini)</label>
-                <input type="password" id="set-apikey" placeholder="sk-...">
-                <div style="font-size:0.75rem; color:#555;">Vide = cerveau local ultra-rapide.</div>
-            </div>
-            <div class="setting-group">
-                <button onclick="app.clearLogs()" style="width:100%; border-color:#444; color:#888;">EFFACER TOUT LE TERMINAL</button>
-            </div>
-        </div>
+<div id="tab-sys" class="tab-content">
+<div class="setting-group"><label class="label">Clé OpenAI</label><input type="password" id="set-apikey" placeholder="sk-..."></div>
+<div class="setting-group"><button onclick="app.clearLogs()" style="width:100%">EFFACER TERMINAL</button></div>
+</div>
 
-        <div class="save-bar">
-            <button onclick="toggleModal()" style="border-color:#444;">ANNULER</button>
-            <button onclick="ui.saveSettings()" style="background:var(--primary); color:#000; font-weight:900;">SAUVEGARDER &amp; APPLIQUER</button>
-        </div>
-    </div>
+<div class="save-bar">
+<button onclick="toggleModal()">ANNULER</button>
+<button onclick="ui.saveSettings()" style="background:var(--primary);color:#000">SAUVEGARDER</button>
+</div>
+</div>
 </div>
 
 <script>
-const $ = id => document.getElementById(id);
-const now = () => new Date().toLocaleTimeString('fr-FR', {hour12:false});
+const $=id=>document.getElementById(id);
+const now=()=>new Date().toLocaleTimeString('fr-FR',{hour12:false});
 
-/* ====================== CONFIG ====================== */
-const Config = {
-    defaults: {
-        wakeWords: ["supra", "système", "assistant", "hey supra", "ordi", "jarvis"],
-        voiceRate: 1.1,
-        voicePitch: 1.0,
-        voiceURI: "",
-        theme: "cyber",
-        crtEffect: true,
-        particles: true,
-        apiKey: "",
-        strictMode: true
-    },
-    data: {},
-    
-    load() {
-        const stored = localStorage.getItem('supra_v10_config');
-        this.data = stored ? { ...this.defaults, ...JSON.parse(stored) } : { ...this.defaults };
-        this.applyTheme();
-    },
-    
-    save() {
-        localStorage.setItem('supra_v10_config', JSON.stringify(this.data));
-        this.applyTheme();
-        Logger.log("Configuration sauvegardée dans le noyau.", "sys");
-    },
-    
-    applyTheme() {
-        const body = document.body;
-        // Nettoyage des thèmes précédents
-        body.classList.remove('theme-matrix', 'theme-inferno');
-        if (this.data.theme === 'matrix') body.classList.add('theme-matrix');
-        else if (this.data.theme === 'inferno') body.classList.add('theme-inferno');
-        
-        // CRT
-        body.classList.toggle('crt-on', this.data.crtEffect);
-    }
-};
+const Config={defaults:{wakeWords:["supra","système","assistant","hey supra","ordi"],voiceRate:1.1,voicePitch:1.0,voiceURI:"",theme:"cyber",crtEffect:true,particles:true,apiKey:"",strictMode:true},data:{},load(){const s=localStorage.getItem('supra_v10_config');this.data=s?{...this.defaults,...JSON.parse(s)}:{...this.defaults};this.applyTheme()},save(){localStorage.setItem('supra_v10_config',JSON.stringify(this.data));this.applyTheme()},applyTheme(){document.body.classList.remove('theme-matrix','theme-inferno');if(this.data.theme==='matrix')document.body.classList.add('theme-matrix');if(this.data.theme==='inferno')document.body.classList.add('theme-inferno');document.body.classList.toggle('crt-on',this.data.crtEffect)}};
 
-/* ====================== LOGGER ====================== */
-const Logger = {
-    log: (msg, type = "sys") => {
-        const t = $('terminal');
-        if (!t) return;
-        const d = document.createElement("div");
-        d.className = `log-line log-${type}`;
-        d.innerHTML = `<span class="log-time">[${now()}]</span> <span class="log-msg">${msg}</span>`;
-        t.appendChild(d);
-        t.scrollTop = t.scrollHeight;
-        if (t.childElementCount > 50) t.removeChild(t.firstChild);
-    },
-    clear: () => { $('terminal').innerHTML = ''; }
-};
+const Logger={log:(msg,type="sys")=>{const t=$('terminal');const d=document.createElement("div");d.className=`log-line log-${type}`;d.innerHTML=`<span class="log-time">[${now()}]</span> <span class="log-msg">${msg}</span>`;t.appendChild(d);t.scrollTop=t.scrollHeight;if(t.childElementCount>50)t.removeChild(t.firstChild)},clear:()=>$('terminal').innerHTML=''};
 
-/* ====================== AUDIO ENGINE ====================== */
-class AudioEngine {
-    constructor() {
-        this.ready = false;
-        this.analyser = null;
-        this.dataArray = null;
-        this.stream = null;
-        this.ctx = null;
-        this.isMuted = false;
-    }
-    async start() {
-        if (this.ready || this.isMuted) return true;
-        try {
-            this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-            if (this.ctx.state === 'suspended') await this.ctx.resume();
-            this.stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
-            const src = this.ctx.createMediaStreamSource(this.stream);
-            this.analyser = this.ctx.createAnalyser();
-            this.analyser.fftSize = 512;
-            src.connect(this.analyser);
-            this.dataArray = new Uint8Array(this.analyser.frequencyBinCount);
-            this.ready = true;
-            return true;
-        } catch(e) { 
-            Logger.log("Erreur microphone : " + e.message, "err"); 
-            return false;
-        }
-    }
-    stop() {
-        if (this.stream) {
-            this.stream.getTracks().forEach(track => track.stop());
-            this.stream = null;
-        }
-        this.ready = false;
-    }
-    getData() {
-        if (!this.ready || this.isMuted) return { vol: 0, raw: new Uint8Array(0) };
-        this.analyser.getByteFrequencyData(this.dataArray);
-        let sum = 0;
-        for (let i = 0; i < this.dataArray.length; i++) sum += this.dataArray[i];
-        return { vol: sum / this.dataArray.length, raw: this.dataArray };
-    }
-}
+class AudioEngine{constructor(){this.ready=false;this.analyser=null;this.dataArray=null;this.stream=null;this.ctx=null;this.isMuted=false}async start(){if(this.ready||this.isMuted)return true;try{this.ctx=new(window.AudioContext||window.webkitAudioContext)();if(this.ctx.state==='suspended')await this.ctx.resume();this.stream=await navigator.mediaDevices.getUserMedia({audio:true});const src=this.ctx.createMediaStreamSource(this.stream);this.analyser=this.ctx.createAnalyser();this.analyser.fftSize=512;src.connect(this.analyser);this.dataArray=new Uint8Array(this.analyser.frequencyBinCount);this.ready=true;return true}catch(e){Logger.log("Erreur micro: "+e.message,"err");return false}}stop(){if(this.stream){this.stream.getTracks().forEach(t=>t.stop());this.stream=null}this.ready=false}getData(){if(!this.ready||this.isMuted)return{vol:0,raw:new Uint8Array(0)};this.analyser.getByteFrequencyData(this.dataArray);let sum=0;for(let i=0;i<this.dataArray.length;i++)sum+=this.dataArray[i];return{vol:sum/this.dataArray.length,raw:this.dataArray}}}
 
-/* ====================== BRAIN ====================== */
-class Brain {
-    constructor() {
-        this.synth = window.speechSynthesis;
-        this.voices = [];
-        this.loadVoices();
-        speechSynthesis.onvoiceschanged = () => this.loadVoices();
-    }
-    loadVoices() { 
-        this.voices = this.synth.getVoices(); 
-        ui.populateVoices(); 
-    }
+class Brain{constructor(){this.synth=window.speechSynthesis;this.voices=[];this.loadVoices();speechSynthesis.onvoiceschanged=()=>this.loadVoices()}loadVoices(){this.voices=this.synth.getVoices();ui.populateVoices()}async process(text){const t=text.toLowerCase().trim();if(t.length<3)return;const wakeList=Config.data.wakeWords.map(w=>w.toLowerCase().trim());let triggered=false;let command="";for(let word of wakeList){if(Config.data.strictMode){if(t.startsWith(word)){triggered=true;command=t.replace(word,"").trim();break}}else if(t.includes(word)){triggered=true;command=t.replace(word,"").trim();break}}if(!triggered)return;app.setStatus("COMMANDE",true);Logger.log(`DÉTECTÉ: "${text}"`,"wake");sfx.play(820,'sine',0.12);if(!command){this.speak("Oui ?");app.resetStatus();return}let response=Config.data.apiKey&&Config.data.apiKey.length>15?await this.fetchGPT(command):this.localLogic(command);this.speak(response)}localLogic(cmd){const c=cmd.toLowerCase();if(c.includes("heure"))return`Il est ${new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}.`;if(c.includes("date"))return`Nous sommes le ${new Date().toLocaleDateString('fr-FR')}.`;if(c.includes("qui es-tu"))return"Je suis SUPRA ULTIMATE v10.0";if(c.includes("blague"))return"Pourquoi les plongeurs plongent-ils en arrière ? Parce que sinon ils tombent dans le bateau !";return"Commande reçue : "+cmd}async fetchGPT(prompt){try{const res=await fetch("https://api.openai.com/v1/chat/completions",{method:"POST",headers:{"Content-Type":"application/json","Authorization":`Bearer ${Config.data.apiKey}`},body:JSON.stringify({model:"gpt-4o-mini",messages:[{role:"system",content:"Réponds court en français."},{role:"user",content:prompt}]})});const data=await res.json();return data.choices[0].message.content}catch(e){return"Erreur API"}}speak(text){if(!text){app.resetStatus();return}this.synth.cancel();const u=new SpeechSynthesisUtterance(text);u.rate=Config.data.voiceRate;u.pitch=Config.data.voicePitch;if(Config.data.voiceURI){const v=this.voices.find(v=>v.voiceURI===Config.data.voiceURI);if(v)u.voice=v}else{const fr=this.voices.find(v=>v.lang.includes('fr'));if(fr)u.voice=fr}u.onstart=()=>app.setSpeaking(true);u.onend=()=>app.resetStatus();this.synth.speak(u)}}
 
-    async process(text) {
-        const t = text.toLowerCase().trim();
-        if (t.length < 3) return;
+class VoiceEngine{constructor(callback){this.callback=callback;this.SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;if(!this.SpeechRecognition)return;this.rec=new this.SpeechRecognition();this.rec.lang='fr-FR';this.rec.continuous=true;this.rec.interimResults=false;this.rec.onend=()=>{if(this.keepAlive&&!app.isMuted&&!app.isSpeaking)setTimeout(()=>{try{this.rec.start()}catch(e){}},500)};this.rec.onresult=e=>{const last=e.results[e.results.length-1];if(last.isFinal)this.callback(last[0].transcript)};this.rec.onstart=()=>{if(!app.isSpeaking)app.setStatus("SURVEILLANCE",false)};}start(){this.keepAlive=true;try{this.rec.start()}catch(e){}}stop(){this.keepAlive=false;try{this.rec.stop()}catch(e){}}}
 
-        const wakeList = Config.data.wakeWords.map(w => w.toLowerCase().trim());
-        let triggered = false;
-        let command = "";
+class Visuals{constructor(){this.c=$('canvas');this.ctx=this.c.getContext('2d');this.resize();window.addEventListener('resize',()=>this.resize());this.angle=0;this.particles=[]}resize(){this.c.width=this.c.offsetWidth;this.c.height=this.c.offsetHeight}draw(audioData,state){const{vol,raw}=audioData;const w=this.c.width,h=this.c.height,cx=w/2,cy=h/2;this.ctx.fillStyle="rgba(2,2,5,.18)";this.ctx.fillRect(0,0,w,h);const style=getComputedStyle(document.body);let color=style.getPropertyValue('--primary').trim();if(state==="SPEAKING")color="#fff";this.ctx.shadowBlur=22;this.ctx.shadowColor=color;const r=48+(vol*.65)+Math.sin(this.angle)*6;this.ctx.lineWidth=state==="SPEAKING"?7:3;this.ctx.beginPath();this.ctx.arc(cx,cy,r,0,Math.PI*2);this.ctx.strokeStyle=color;this.ctx.stroke();if(state==="SPEAKING"){for(let k=1;k<=3;k++){const rr=r+k*28+Math.sin(this.angle*1.3+k)*8;this.ctx.beginPath();this.ctx.arc(cx,cy,rr,0,Math.PI*2);this.ctx.stroke()}}this.ctx.shadowBlur=0;if(raw&&raw.length>0){const step=Math.floor(raw.length/42);for(let i=0;i<42;i++){const val=raw[i*step];const h=(val/255)*115;this.ctx.fillStyle=color;this.ctx.fillRect(cx-105+i*5,cy+68,3.5,h)}}if(Config.data.particles){if(Math.random()<.4+vol/200){this.particles.push({x:cx+(Math.random()-.5)*w*.7,y:cy+(Math.random()-.5)*h*.7,vx:(Math.random()-.5)*4,vy:(Math.random()-.5)*4,life:70,size:2.5+Math.random()*3})}for(let i=this.particles.length-1;i>=0;i--){const p=this.particles[i];p.x+=p.vx;p.y+=p.vy;p.life-=1.8;p.vx*=.96;p.vy*=.96;if(p.life<=0){this.particles.splice(i,1);continue}const a=p.life/85;this.ctx.save();this.ctx.globalAlpha=a;this.ctx.shadowBlur=12;this.ctx.shadowColor=style.getPropertyValue('--secondary');this.ctx.fillStyle=color;this.ctx.beginPath();this.ctx.arc(p.x,p.y,p.size,0,Math.PI*2);this.ctx.fill();this.ctx.restore()}}this.angle+=.023}}
 
-        for (let word of wakeList) {
-            if (Config.data.strictMode) {
-                if (t.startsWith(word)) {
-                    triggered = true;
-                    command = t.replace(word, "").trim();
-                    break;
-                }
-            } else if (t.includes(word)) {
-                triggered = true;
-                command = t.replace(word, "").trim();
-                break;
-            }
-        }
+const ui={switchTab:(tabId,btn)=>{document.querySelectorAll('.tab-content').forEach(el=>el.classList.remove('active'));document.querySelectorAll('.tab-btn').forEach(el=>el.classList.remove('active'));$(tabId).classList.add('active');if(btn)btn.classList.add('active')},populateVoices(){const sel=$('set-voiceuri');sel.innerHTML='<option value="">Par défaut</option>';app.brain.voices.forEach(v=>{const o=document.createElement('option');o.value=v.voiceURI;o.textContent=`${v.name} (${v.lang})`;sel.appendChild(o)})},openSettings(){$('set-wakewords').value=Config.data.wakeWords.join(', ');$('set-rate').value=Config.data.voiceRate;$('val-rate').innerText=Config.data.voiceRate;$('set-pitch').value=Config.data.voicePitch;$('val-pitch').innerText=Config.data.voicePitch;$('set-theme').value=Config.data.theme;$('set-crt').checked=Config.data.crtEffect;$('set-particles').checked=Config.data.particles;$('set-apikey').value=Config.data.apiKey;$('set-strict').checked=Config.data.strictMode;ui.populateVoices();$('config-modal').style.display='flex'},saveSettings(){const wws=$('set-wakewords').value.split(',').map(s=>s.trim()).filter(s=>s);Config.data.wakeWords=wws.length?wws:Config.defaults.wakeWords;Config.data.voiceRate=parseFloat($('set-rate').value);Config.data.voicePitch=parseFloat($('set-pitch').value);Config.data.voiceURI=$('set-voiceuri').value;Config.data.theme=$('set-theme').value;Config.data.crtEffect=$('set-crt').checked;Config.data.particles=$('set-particles').checked;Config.data.apiKey=$('set-apikey').value;Config.data.strictMode=$('set-strict').checked;Config.save();toggleModal();sfx.play(1250,'sine',.15)}};
 
-        if (!triggered) return;
+class SoundFX{constructor(){this.ctx=null}init(){if(!this.ctx)this.ctx=new(window.AudioContext||window.webkitAudioContext)()}play(freq,type,dur){this.init();const osc=this.ctx.createOscillator();const g=this.ctx.createGain();osc.type=type;osc.frequency.value=freq;g.gain.setValueAtTime(.12,this.ctx.currentTime);g.gain.exponentialRampToValueAtTime(.001,this.ctx.currentTime+dur);osc.connect(g);g.connect(this.ctx.destination);osc.start();osc.stop(this.ctx.currentTime+dur)}}
 
-        app.setStatus("COMMANDE", true);
-        Logger.log(`WAKE WORD → "${text}"`, "wake");
-        sfx.play(820, 'sine', 0.12);
+class App{constructor(){Config.load();this.audio=new AudioEngine();this.brain=new Brain();this.visuals=new Visuals();this.voice=new VoiceEngine(t=>this.brain.process(t));this.isMuted=false;this.isSpeaking=false;this.currentState="IDLE";$('btnPrivacy').onclick=()=>this.togglePrivacy();$('btnConfig').onclick=()=>ui.openSettings();this.loop()}async manualBoot(){const ok=await this.audio.start();const ov=$('boot-overlay');ov.style.opacity=0;setTimeout(()=>ov.remove(),1200);if(ok){Logger.log(`SUPRA v10.0 PRÊT — Mot : "${Config.data.wakeWords[0]}"`,"sys");this.setStatus("SURVEILLANCE",false);this.voice.start()}else{Logger.log("Erreur micro","err")}}togglePrivacy(){this.isMuted=!this.isMuted;const btn=$('btnPrivacy');if(this.isMuted){this.audio.stop();this.voice.stop();btn.classList.add('privacy-on');btn.textContent="🔓 MUET";Logger.log("PRIVACY ACTIVÉ","err");this.setStatus("OFF",false)}else{this.audio.start();this.voice.start();btn.classList.remove('privacy-on');btn.textContent="🔒 PRIVACY";Logger.log("Micro ACTIF","sys");this.setStatus("SURVEILLANCE",false)}}setStatus(text,active){this.currentState=text;const el=$('statusDisplay');el.textContent=text;el.className=`status-indicator ${active?"active":"listening"}`}resetStatus(){this.isSpeaking=false;if(!this.isMuted)this.setStatus("SURVEILLANCE",false);else this.setStatus("OFF",false)}setSpeaking(val){this.isSpeaking=val;if(val)this.setStatus("PAROLE",true)}clearLogs(){Logger.clear()}loop(){requestAnimationFrame(()=>this.loop());this.visuals.draw(this.audio.getData(),this.currentState)}}
 
-        if (!command) {
-            this.speak("Oui maître ?");
-            app.resetStatus();
-            return;
-        }
-
-        let response = "";
-        if (Config.data.apiKey && Config.data.apiKey.length > 15) {
-            try { 
-                response = await this.fetchGPT(command); 
-            } catch(e) { 
-                Logger.log("OpenAI indisponible → mode local", "err");
-                response = this.localLogic(command); 
-            }
-        } else {
-            response = this.localLogic(command);
-        }
-        this.speak(response);
-    }
-
-    localLogic(cmd) {
-        const c = cmd.toLowerCase();
-        if (c.includes("heure")) return `Il est ${new Date().toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'})}.`;
-        if (c.includes("date")) return `Nous sommes le ${new Date().toLocaleDateString('fr-FR')}.`;
-        if (c.includes("qui es-tu") || c.includes("qui tu es")) return "Je suis SUPRA ULTIMATE v10.0, l’assistant IA cyberpunk ultime.";
-        if (c.includes("blague")) return "Pourquoi les plongeurs plongent-ils en arrière ? Parce que sinon ils tombent dans le bateau ! 😂";
-        if (c.includes("état") || c.includes("status")) return "Noyau neural à 100%. Tous les systèmes sont opérationnels.";
-        if (c.includes("salut") || c.includes("bonjour")) return "Bonjour maître ! Prêt à exécuter tes ordres.";
-        if (c.includes("au revoir") || c.includes("bye")) return "Au revoir ! Le système reste en veille.";
-        if (c.includes("merci")) return "Avec plaisir. C’est toujours un honneur de te servir.";
-        if (c.includes("version")) return "SUPRA AI Ultimate – Version 10.0 (Mars 2026)";
-        if (c.includes("météo")) return "Simulation locale : 21°C, ciel dégagé à Paris. Veux-tu une vraie API ?";
-        return `Commande interprétée : ${cmd}. Que veux-tu que je fasse ?`;
-    }
-
-    async fetchGPT(prompt) {
-        const res = await fetch("https://api.openai.com/v1/chat/completions", {
-            method: "POST",
-            headers: { 
-                "Content-Type": "application/json", 
-                "Authorization": `Bearer ${Config.data.apiKey}` 
-            },
-            body: JSON.stringify({
-                model: "gpt-4o-mini",
-                messages: [
-                    {role: "system", content: "Tu es Supra Ultimate, un IA cyberpunk concise et immersive. Réponds toujours en français, maximum 2 phrases."},
-                    {role: "user", content: prompt}
-                ],
-                max_tokens: 120,
-                temperature: 0.7
-            })
-        });
-        const data = await res.json();
-        return data.choices[0].message.content.trim();
-    }
-
-    speak(text) {
-        if (!text) { app.resetStatus(); return; }
-        this.synth.cancel();
-        const u = new SpeechSynthesisUtterance(text);
-        u.rate = Config.data.voiceRate;
-        u.pitch = Config.data.voicePitch;
-
-        if (Config.data.voiceURI) {
-            const v = this.voices.find(voice => voice.voiceURI === Config.data.voiceURI);
-            if (v) u.voice = v;
-        } else {
-            const fr = this.voices.find(v => v.lang.includes('fr'));
-            if (fr) u.voice = fr;
-        }
-
-        u.onstart = () => app.setSpeaking(true);
-        u.onend = () => app.resetStatus();
-        this.synth.speak(u);
-    }
-}
-
-/* ====================== VOICE RECOGNITION ====================== */
-class VoiceEngine {
-    constructor(callback) {
-        this.callback = callback;
-        this.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        this.isActive = false;
-        this.keepAlive = true;
-        if (!this.SpeechRecognition) {
-            Logger.log("Speech Recognition non supporté par ce navigateur", "err");
-            return;
-        }
-        this.rec = new this.SpeechRecognition();
-        this.rec.lang = 'fr-FR';
-        this.rec.continuous = true;
-        this.rec.interimResults = false;
-        this.rec.onend = () => {
-            if (this.keepAlive && !app.isMuted && !app.isSpeaking) {
-                setTimeout(() => { try { this.rec.start(); } catch(e){} }, 400);
-            } else {
-                this.isActive = false;
-                app.resetStatus();
-            }
-        };
-        this.rec.onresult = (e) => {
-            const last = e.results[e.results.length - 1];
-            if (last.isFinal) this.callback(last[0].transcript);
-        };
-        this.rec.onstart = () => { 
-            this.isActive = true; 
-            if (!app.isSpeaking) app.setStatus("SURVEILLANCE", false); 
-        };
-    }
-    start() { this.keepAlive = true; try { this.rec.start(); } catch(e){} }
-    stop() { this.keepAlive = false; try { this.rec.stop(); } catch(e){} }
-}
-
-/* ====================== VISUALS (AMPLIÉ) ====================== */
-class Visuals {
-    constructor() {
-        this.c = $('canvas');
-        this.ctx = this.c.getContext('2d');
-        this.resize();
-        window.addEventListener('resize', () => this.resize());
-        this.angle = 0;
-        this.particles = [];
-    }
-    resize() {
-        this.c.width = this.c.offsetWidth;
-        this.c.height = this.c.offsetHeight;
-    }
-    draw(audioData, state) {
-        const { vol, raw } = audioData;
-        const w = this.c.width, h = this.c.height, cx = w/2, cy = h/2;
-
-        // Fade background
-        this.ctx.fillStyle = "rgba(2, 2, 5, 0.18)";
-        this.ctx.fillRect(0, 0, w, h);
-
-        const style = getComputedStyle(document.body);
-        let color = style.getPropertyValue('--primary').trim();
-        let color2 = style.getPropertyValue('--secondary').trim();
-
-        if (state === "SPEAKING") color = "#ffffff";
-
-        // GLOW GLOBAL
-        this.ctx.shadowBlur = 22;
-        this.ctx.shadowColor = color;
-
-        // CERCLE CENTRAL + RINGS QUAND PARLE
-        const r = 48 + (vol * 0.65) + Math.sin(this.angle) * 6;
-        this.ctx.lineWidth = state === "SPEAKING" ? 7 : 3;
-        this.ctx.beginPath();
-        this.ctx.arc(cx, cy, r, 0, Math.PI * 2);
-        this.ctx.strokeStyle = color;
-        this.ctx.stroke();
-
-        // RINGS SUPPLÉMENTAIRES (EFFET PAROLE)
-        if (state === "SPEAKING") {
-            for (let k = 1; k <= 3; k++) {
-                const rr = r + k * 28 + Math.sin(this.angle * 1.3 + k) * 8;
-                this.ctx.beginPath();
-                this.ctx.arc(cx, cy, rr, 0, Math.PI * 2);
-                this.ctx.stroke();
-            }
-        }
-
-        this.ctx.shadowBlur = 0;
-
-        // BARRES ÉQUALIZER
-        if (raw && raw.length > 0 && state !== "IDLE") {
-            const step = Math.floor(raw.length / 42);
-            for (let i = 0; i < 42; i++) {
-                const val = raw[i * step];
-                const hBar = (val / 255) * 115;
-                this.ctx.fillStyle = color;
-                this.ctx.fillRect(cx - 105 + (i * 5), cy + 68, 3.5, hBar);
-            }
-        }
-
-        // PARTICULES NEURALES (AMPLIFIÉ)
-        if (Config.data.particles) {
-            const spawnRate = (state === "SPEAKING" ? 0.75 : 0.35) + (vol / 180);
-            if (Math.random() < spawnRate) {
-                this.particles.push({
-                    x: cx + (Math.random() - 0.5) * (w * 0.7),
-                    y: cy + (Math.random() - 0.5) * (h * 0.7),
-                    vx: (Math.random() - 0.5) * 4,
-                    vy: (Math.random() - 0.5) * 4,
-                    life: 45 + Math.random() * 55,
-                    size: 2.5 + Math.random() * 3
-                });
-            }
-
-            for (let i = this.particles.length - 1; i >= 0; i--) {
-                const p = this.particles[i];
-                p.x += p.vx;
-                p.y += p.vy;
-                p.life -= 1.8;
-                p.vx *= 0.96;
-                p.vy *= 0.96;
-
-                if (p.life <= 0) {
-                    this.particles.splice(i, 1);
-                    continue;
-                }
-
-                const alpha = p.life / 85;
-                this.ctx.save();
-                this.ctx.globalAlpha = alpha;
-                this.ctx.shadowBlur = 12;
-                this.ctx.shadowColor = color2;
-                this.ctx.fillStyle = color;
-                this.ctx.beginPath();
-                this.ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-                this.ctx.fill();
-                this.ctx.restore();
-            }
-        }
-
-        this.angle += 0.023;
-    }
-}
-
-/* ====================== UI ====================== */
-const ui = {
-    switchTab: (tabId, btn) => {
-        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-        $(tabId).classList.add('active');
-        if (btn) btn.classList.add('active');
-    },
-    
-    populateVoices: () => {
-        const sel = $('set-voiceuri');
-        sel.innerHTML = '<option value="">Par défaut (français auto)</option>';
-        app.brain.voices.forEach(v => {
-            const opt = document.createElement('option');
-            opt.value = v.voiceURI;
-            opt.textContent = `${v.name} (${v.lang})`;
-            if (v.lang.includes('fr')) opt.style.backgroundColor = "#1a1a1a";
-            sel.appendChild(opt);
-        });
-    },
-
-    openSettings: () => {
-        $('set-wakewords').value = Config.data.wakeWords.join(', ');
-        $('set-rate').value = Config.data.voiceRate;
-        $('val-rate').innerText = Config.data.voiceRate;
-        $('set-pitch').value = Config.data.voicePitch;
-        $('val-pitch').innerText = Config.data.voicePitch;
-        $('set-theme').value = Config.data.theme;
-        $('set-crt').checked = Config.data.crtEffect;
-        $('set-particles').checked = Config.data.particles;
-        $('set-apikey').value = Config.data.apiKey;
-        $('set-strict').checked = Config.data.strictMode;
-
-        ui.populateVoices();
-        $('config-modal').style.display = 'flex';
-    },
-
-    saveSettings: () => {
-        const wws = $('set-wakewords').value.split(',').map(s => s.trim()).filter(s => s);
-        Config.data.wakeWords = wws.length ? wws : Config.defaults.wakeWords;
-        Config.data.voiceRate = parseFloat($('set-rate').value);
-        Config.data.voicePitch = parseFloat($('set-pitch').value);
-        Config.data.voiceURI = $('set-voiceuri').value;
-        Config.data.theme = $('set-theme').value;
-        Config.data.crtEffect = $('set-crt').checked;
-        Config.data.particles = $('set-particles').checked;
-        Config.data.apiKey = $('set-apikey').value;
-        Config.data.strictMode = $('set-strict').checked;
-
-        Config.save();
-        toggleModal();
-        sfx.play(1250, 'sine', 0.15);
-        Logger.log("Thème & paramètres appliqués en temps réel.", "sys");
-    }
-};
-
-/* ====================== SOUND FX ====================== */
-class SoundFX {
-    constructor() { this.ctx = null; }
-    init() { 
-        if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); 
-    }
-    play(freq, type, dur) {
-        this.init();
-        const osc = this.ctx.createOscillator();
-        const g = this.ctx.createGain();
-        osc.type = type;
-        osc.frequency.value = freq;
-        g.gain.setValueAtTime(0.12, this.ctx.currentTime);
-        g.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + dur);
-        osc.connect(g);
-        g.connect(this.ctx.destination);
-        osc.start();
-        osc.stop(this.ctx.currentTime + dur);
-    }
-}
-
-/* ====================== APP CONTROLLER ====================== */
-class App {
-    constructor() {
-        Config.load();
-        this.audio = new AudioEngine();
-        this.brain = new Brain();
-        this.visuals = new Visuals();
-        this.voice = new VoiceEngine(t => this.brain.process(t));
-        this.isMuted = false;
-        this.isSpeaking = false;
-        this.currentState = "IDLE";
-
-        $('btnPrivacy').onclick = () => this.togglePrivacy();
-        $('btnConfig').onclick = () => ui.openSettings();
-
-        this.loop();
-    }
-
-    async manualBoot() {
-        Logger.log("=== SUPRA ULTIMATE v10.0 BOOT SEQUENCE ===", "sys");
-        Logger.log("Noyau neural chargé", "sys");
-        Logger.log("Microphone initialisé", "sys");
-        
-        const audioSuccess = await this.audio.start();
-        const overlay = $('boot-overlay');
-        overlay.style.opacity = 0;
-        setTimeout(() => overlay.remove(), 1200);
-
-        if (audioSuccess) {
-            Logger.log(`SUPRA PRÊT — Mot de réveil principal : "${Config.data.wakeWords[0]}"`, "sys");
-            this.setStatus("SURVEILLANCE", false);
-            this.voice.start();
-            sfx.play(680, 'sawtooth', 0.2);
-        } else {
-            Logger.log("Échec micro — mode visuel uniquement", "err");
-        }
-    }
-
-    togglePrivacy() {
-        this.isMuted = !this.isMuted;
-        const btn = $('btnPrivacy');
-        if (this.isMuted) {
-            this.audio.stop();
-            this.voice.stop();
-            btn.classList.add('privacy-on');
-            btn.textContent = "🔓 MICRO OFF";
-            Logger.log("MODE PRIVACY ACTIVÉ — Aucun enregistrement", "err");
-            this.setStatus("OFF", false);
-        } else {
-            this.audio.start();
-            this.voice.start();
-            btn.classList.remove('privacy-on');
-            btn.textContent = "🔒 PRIVACY";
-            Logger.log("Microphone réactivé", "sys");
-            this.setStatus("SURVEILLANCE", false);
-        }
-    }
-
-    setStatus(text, active) {
-        this.currentState = text;
-        const el = $('statusDisplay');
-        el.textContent = text;
-        el.className = `status-indicator ${active ? "active" : "listening"}`;
-    }
-    
-    resetStatus() {
-        this.isSpeaking = false;
-        if (!this.isMuted) this.setStatus("SURVEILLANCE", false);
-        else this.setStatus("OFF", false);
-    }
-
-    setSpeaking(val) { 
-        this.isSpeaking = val; 
-        if (val) this.setStatus("PAROLE", true);
-    }
-
-    clearLogs() { 
-        Logger.clear(); 
-        Logger.log("Terminal nettoyé", "sys");
-    }
-
-    loop() {
-        requestAnimationFrame(() => this.loop());
-        this.visuals.draw(this.audio.getData(), this.currentState);
-    }
-}
-
-const sfx = new SoundFX();
-let app;
-
-window.onload = () => { 
-    app = new App(); 
-};
-
-window.toggleModal = () => {
-    $('config-modal').style.display = 'none';
-};
+const sfx=new SoundFX();let app;window.onload=()=>{app=new App()};window.toggleModal=()=>{$('config-modal').style.display='none'}
 </script>
 </body>
 </html>
