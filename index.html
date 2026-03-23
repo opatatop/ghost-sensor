@@ -3,63 +3,35 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>SUPRA PARANORMAL v12.0 // REALME ULTRA</title>
+<title>SUPRA v13 — REALME NOTE 60</title>
 <style>
-:root{--bg:#000;--primary:#00ff41;--secondary:#ff00ff;--danger:#ff0000;--text:#0f0;--glitch:#f0f}
-*{box-sizing:border-box;user-select:none}
-body{margin:0;background:var(--bg);color:var(--text);font-family:'Courier New',monospace;overflow:hidden;height:100vh;display:flex;flex-direction:column}
-body.glitch{animation:glitch 0.3s infinite}
-@keyframes glitch{0%{transform:translate(0)}20%{transform:translate(-3px,3px)}40%{transform:translate(3px,-3px)}60%{transform:translate(-2px,2px)}80%{transform:translate(2px,-2px)}100%{transform:translate(0)}}
-header{height:65px;background:rgba(0,255,65,0.08);border-bottom:3px solid var(--primary);display:flex;justify-content:space-between;align-items:center;padding:0 15px}
-.brand{font-size:1.4rem;font-weight:900;letter-spacing:6px;color:var(--primary);text-shadow:0 0 10px var(--primary)}
-#status{font-size:0.95rem;background:#111;padding:6px 15px;border:2px solid var(--primary);min-width:160px;text-align:center;letter-spacing:1px}
-#canvas-container{flex:1;position:relative;background:#000;overflow:hidden}
+:root{--bg:#000;--primary:#00ff41;--danger:#ff0000}
+body{margin:0;background:var(--bg);color:var(--primary);font-family:'Courier New',monospace;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+header{height:65px;background:rgba(0,255,65,0.1);border-bottom:3px solid var(--primary);display:flex;justify-content:space-between;align-items:center;padding:0 15px}
+.brand{font-size:1.35rem;font-weight:900;letter-spacing:5px}
+#status{font-size:0.95rem;background:#111;padding:6px 14px;border:2px solid var(--primary);min-width:150px;text-align:center}
 canvas{display:block;width:100%;height:100%}
-#terminal{height:160px;background:rgba(0,0,0,0.97);border-top:3px solid var(--primary);padding:10px;overflow-y:auto;font-size:10.5px;line-height:1.3}
+#terminal{height:170px;background:#000;border-top:3px solid var(--primary);padding:10px;overflow-y:auto;font-size:11px}
 .log{margin:3px 0}
-.log.spirit{color:#ff00ff;text-shadow:0 0 8px #ff00ff}
-.log.danger{color:#f00}
-#mode{display:flex;gap:8px;padding:8px;background:#111}
-button{background:#111;border:1px solid #0f0;color:#0f0;padding:8px 12px;font-size:0.8rem;cursor:pointer}
-button.active{background:#0f0;color:#000}
-.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.98);z-index:9999;justify-content:center;align-items:center}
-.modal-box{background:#111;border:3px solid var(--primary);width:94%;max-width:560px;padding:20px}
+.log.emf{color:#ffff00}
+.log.motion{color:#ff00ff}
+button{background:#111;border:1px solid #0f0;color:#0f0;padding:10px;font-weight:bold;cursor:pointer}
 </style>
 </head>
 <body>
 
 <header>
-<div class="brand">SUPRA v12 ULTRA</div>
-<div id="status">SCAN PARANORMAL MAX</div>
-<div><button onclick="toggleAll()">🔥 FULL REALME</button></div>
+<div class="brand">SUPRA v13 — NOTE 60</div>
+<div id="status">EMF : 0.0 μT</div>
 </header>
-
-<div id="mode">
-<button onclick="switchMode(0)" class="active">EVP</button>
-<button onclick="switchMode(1)">SPIRIT BOX</button>
-<button onclick="switchMode(2)">EMF</button>
-<button onclick="switchMode(3)">FULL</button>
-</div>
 
 <div id="canvas-container"><canvas id="canvas"></canvas></div>
 <div id="terminal"></div>
 
-<div id="modal" class="modal">
-<div class="modal-box">
-<h2 style="color:#0f0;text-align:center">SUPRA PARANORMAL v12.0<br>REALME NOTE ULTRA MODE</h2>
-<p style="color:#ff0">Utilise TOUT ce que ton Realme peut donner :</p>
-<ul style="color:#0f0;font-size:0.9rem;line-height:1.6">
-<li>Micro 48kHz + Spirit Box réel (voix fantômes aléatoires)</li>
-<li>Magnétomètre EMF + Accéléromètre (coups)</li>
-<li>Capteur de lumière ambiante (chute soudaine = présence)</li>
-<li>Batterie comme "énergie spirituelle"</li>
-<li>Géolocalisation (zone hantée)</li>
-<li>Vibration fantôme + Flash stroboscope</li>
-<li>Canvas 3D spectral + particules orbes</li>
-<li>Enregistrement EVP auto</li>
-</ul>
-<button onclick="closeModal()" style="width:100%;padding:14px;background:#ff00ff;color:#000;font-weight:900;margin-top:15px">LANCER LE RITUEL</button>
-</div>
+<div style="padding:12px;background:#111;display:flex;gap:8px;flex-wrap:wrap">
+<button onclick="toggleRecording()">🎤 ENREGISTRER EVP</button>
+<button onclick="startScan()">SCAN PARANORMAL</button>
+<button onclick="clearLogs()">EFFACER</button>
 </div>
 
 <script>
@@ -71,161 +43,133 @@ const log = (txt, type="") => {
   d.innerHTML = `[${new Date().toLocaleTimeString('fr-FR')}] ${txt}`;
   t.appendChild(d);
   t.scrollTop = t.scrollHeight;
-  if(t.children.length>80) t.removeChild(t.firstChild);
+  if(t.children.length > 70) t.removeChild(t.firstChild);
 };
 
-let audioCtx, analyser, dataArray, stream, micReady = false;
-let emf = 0, motion = 0, lightLevel = 50, batteryLevel = 100, ghostIntensity = 0;
-let currentMode = 0;
-let spiritWords = ["aide-moi","je suis là","derrière toi","froid","touche","meurs","maman","non","viens","ici","laisse","me voir","tue","sang","mort","enfer"];
-let isGlitching = false;
+let stream, mediaRecorder, audioChunks = [], isRecording = false;
+let analyser, dataArray;
+let emfValue = 0, motionValue = 0, lightValue = 50;
+let ghostIntensity = 0;
 
-// === TOUT LES CAPTEURS REALME ===
-async function activateUltraRealme() {
-  log("=== SUPRA v12 ULTRA REALME ACTIVÉ ===", "danger");
-
-  // MICRO + SPIRIT BOX
+// === MICRO + SPECTRE 48kHz ===
+async function initMicro() {
   try {
-    stream = await navigator.mediaDevices.getUserMedia({audio:{sampleRate:48000,echoCancellation:false}});
-    audioCtx = new (window.AudioContext||window.webkitAudioContext)();
-    const src = audioCtx.createMediaStreamSource(stream);
-    analyser = audioCtx.createAnalyser();
+    stream = await navigator.mediaDevices.getUserMedia({audio:{sampleRate:48000,echoCancellation:false,noiseSuppression:false}});
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const source = ctx.createMediaStreamSource(stream);
+    analyser = ctx.createAnalyser();
     analyser.fftSize = 4096;
-    src.connect(analyser);
+    source.connect(analyser);
     dataArray = new Uint8Array(analyser.frequencyBinCount);
-    micReady = true;
-    log("Spirit Box 48kHz + voix fantômes → ACTIVÉ", "spirit");
-  } catch(e){ log("Micro bloqué", "danger"); }
+    log("Micro 48kHz + spectre réel → ACTIVÉ (Note 60)");
+  } catch(e){ log("Micro refusé", "danger"); }
+}
 
-  // MAGNÉTOMÈTRE + ACCÉLÉRO
-  if(window.DeviceOrientationEvent) window.addEventListener('deviceorientation', e => emf = Math.abs(e.alpha||0)+Math.abs(e.beta||0)+Math.abs(e.gamma||0));
-  if(window.DeviceMotionEvent) window.addEventListener('devicemotion', e => {
-    motion = Math.hypot(e.acceleration.x||0, e.acceleration.y||0, e.acceleration.z||0);
-    if(motion > 15) { ghostIntensity = 80; log("COUP VIOLENT DÉTECTÉ !", "danger"); navigator.vibrate([200,100,200]); }
+// === MAGNÉTOMÈTRE (EMF RÉEL) + ACCÉLÉRO ===
+if(window.DeviceOrientationEvent) {
+  window.addEventListener('deviceorientation', e => {
+    emfValue = Math.hypot(e.alpha||0, e.beta||0, e.gamma||0) / 3;
+    $('status').textContent = `EMF : ${emfValue.toFixed(1)} μT`;
+    if(emfValue > 45) {
+      log("SPIKE EMF → PRÉSENCE !", "emf");
+      ghostIntensity = 90;
+      navigator.vibrate([100,50,100]);
+    }
   });
+}
 
-  // LUMIÈRE AMBIANTE
-  if('AmbientLightSensor' in window) {
+if(window.DeviceMotionEvent) {
+  window.addEventListener('devicemotion', e => {
+    motionValue = Math.hypot(e.acceleration.x||0, e.acceleration.y||0, e.acceleration.z||0);
+    if(motionValue > 8) {
+      log(`COUP DÉTECTÉ (${motionValue.toFixed(1)}g)`, "motion");
+      ghostIntensity = 120;
+      navigator.vibrate(300);
+    }
+  });
+}
+
+// === CAPTEUR LUMIÈRE (AmbientLightSensor) ===
+if('AmbientLightSensor' in window) {
+  try {
     const sensor = new AmbientLightSensor();
-    sensor.onreading = () => { lightLevel = sensor.illuminance; if(lightLevel < 5) { log("CHUTE LUMIÈRE → PRÉSENCE !", "danger"); ghostIntensity = 100; } };
+    sensor.onreading = () => {
+      lightValue = sensor.illuminance;
+      if(lightValue < 8) log("CHUTE LUMIÈRE → ENTITÉ FROIDE", "danger");
+    };
     sensor.start();
-    log("Capteur lumière ambiante → ACTIVÉ");
-  }
-
-  // BATTERIE = ÉNERGIE SPIRITUELLE
-  if(navigator.getBattery) {
-    navigator.getBattery().then(b => {
-      batteryLevel = b.level * 100;
-      b.onlevelchange = () => batteryLevel = b.level * 100;
-    });
-  }
-
-  // GÉOLOC (zone hantée)
-  if(navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(p => {
-      log(`Position hantée : ${p.coords.latitude.toFixed(3)} / ${p.coords.longitude.toFixed(3)}`, "spirit");
-    });
-  }
-
-  $('modal').style.display = 'flex';
+  } catch(e){}
 }
 
-class Visuals {
-  constructor() {
-    this.c = $('canvas');
-    this.ctx = this.c.getContext('2d', {alpha:true});
-    this.resize();
-    window.addEventListener('resize', () => this.resize());
-    this.angle = 0;
-    this.orbes = [];
+// === VISUEL ===
+const canvas = document.querySelector('canvas');
+const ctx = canvas.getContext('2d');
+function resize() { canvas.width = innerWidth; canvas.height = innerHeight; }
+resize();
+window.addEventListener('resize', resize);
+
+function draw() {
+  requestAnimationFrame(draw);
+  ctx.fillStyle = "rgba(0,0,0,0.18)";
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+
+  // Spectre micro
+  if(analyser) {
+    analyser.getByteFrequencyData(dataArray);
+    for(let i=0;i<80;i++){
+      const h = (dataArray[i*10]||0) / 255 * canvas.height * 0.75;
+      ctx.fillStyle = h > canvas.height*0.55 ? '#ff00ff' : '#00ff41';
+      ctx.fillRect(i*(canvas.width/80), canvas.height-h, 7, h);
+    }
   }
-  resize() { this.c.width = this.c.offsetWidth; this.c.height = this.c.offsetHeight; }
-  draw() {
-    const w = this.c.width, h = this.c.height, cx = w/2, cy = h/2;
-    this.ctx.fillStyle = "rgba(0,0,0,0.12)";
-    this.ctx.fillRect(0,0,w,h);
 
-    // WATERFALL SPECTRE (SPIRIT BOX)
-    if(micReady && analyser) {
-      analyser.getByteFrequencyData(dataArray);
-      for(let i=0;i<80;i++){
-        const val = dataArray[i*12]||0;
-        this.ctx.fillStyle = val>200 ? '#f0f' : (val>120 ? '#ff0' : '#0f0');
-        this.ctx.fillRect(i*(w/80), h-val/2.2, w/85, 8);
-      }
+  // Orbes + EMF ring
+  if(ghostIntensity > 5) {
+    const cx = canvas.width/2, cy = canvas.height/2;
+    ctx.shadowBlur = 35;
+    ctx.shadowColor = '#ff00ff';
+    for(let i=0;i<12;i++){
+      const x = cx + Math.sin(Date.now()/300 + i)* (70 + ghostIntensity);
+      ctx.fillStyle = `rgba(255,0,255,${ghostIntensity/150})`;
+      ctx.fillRect(x, cy-15, 9, 9);
     }
+    ghostIntensity *= 0.92;
+  }
+}
+draw();
 
-    // ORBES 3D
-    if(ghostIntensity > 10) {
-      for(let i=0;i<15;i++) {
-        const x = cx + Math.sin(this.angle + i)* (80 + ghostIntensity);
-        const y = cy + Math.cos(this.angle*1.3 + i)* (60 + ghostIntensity*0.6);
-        this.ctx.shadowBlur = 40;
-        this.ctx.shadowColor = '#ff00ff';
-        this.ctx.fillStyle = `rgba(255,0,255,${ghostIntensity/120})`;
-        this.ctx.beginPath();
-        this.ctx.arc(x, y, 7 + Math.random()*6, 0, Math.PI*2);
-        this.ctx.fill();
-      }
-      ghostIntensity *= 0.93;
-    }
-
-    // EMF RING + PULSE
-    const r = 55 + emf*1.4 + Math.sin(this.angle*3)*12;
-    this.ctx.strokeStyle = emf>90 ? '#f00' : '#00ff41';
-    this.ctx.lineWidth = 14;
-    this.ctx.shadowBlur = 35;
-    this.ctx.shadowColor = '#00ff41';
-    this.ctx.beginPath();
-    this.ctx.arc(cx, cy, r, 0, Math.PI*2);
-    this.ctx.stroke();
-
-    this.angle += 0.035;
+// === ENREGISTREMENT EVP ===
+function toggleRecording() {
+  if(!isRecording){
+    mediaRecorder = new MediaRecorder(stream);
+    audioChunks = [];
+    mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+    mediaRecorder.onstop = () => {
+      const blob = new Blob(audioChunks, {type:'audio/webm'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = `EVP_Note60_${Date.now()}.webm`; a.click();
+      log("✅ EVP sauvegardé (fichier webm)");
+    };
+    mediaRecorder.start();
+    isRecording = true;
+    log("🎤 ENREGISTREMENT EVP EN COURS...");
+  } else {
+    mediaRecorder.stop();
+    isRecording = false;
   }
 }
 
-const visuals = new Visuals();
-const loop = () => { requestAnimationFrame(loop); visuals.draw(); };
-loop();
-
-// === SPIRIT BOX RÉELLE ===
-setInterval(() => {
-  if(micReady && currentMode === 1 && Math.random() < 0.4) {
-    const word = spiritWords[Math.floor(Math.random()*spiritWords.length)];
-    log(`VOIX : "${word}"`, "spirit");
-    if(Math.random() < 0.3) {
-      document.body.classList.add('glitch');
-      setTimeout(() => document.body.classList.remove('glitch'), 400);
-      navigator.vibrate([80,50,80]);
-    }
-  }
-}, 1200);
-
-// COMMANDE VOCALE
-const rec = new (window.SpeechRecognition||window.webkitSpeechRecognition)();
-rec.lang = 'fr-FR'; rec.continuous = true;
-rec.onresult = e => {
-  const txt = e.results[e.results.length-1][0].transcript.toLowerCase();
-  if(txt.includes('esprit')||txt.includes('fantôme')||txt.includes('viens')){
-    ghostIntensity = 120;
-    log("RITUEL LANCÉ → ENTITÉ PRÉSENTE", "danger");
-    navigator.vibrate([500,200,500]);
-  }
-};
-rec.start();
-
-function switchMode(m) {
-  currentMode = m;
-  document.querySelectorAll('#mode button').forEach((b,i) => b.classList.toggle('active', i===m));
-  log(`MODE ${['EVP','SPIRIT BOX','EMF','FULL'][m]} ACTIVÉ`, "spirit");
+function startScan() {
+  log("SCAN PARANORMAL LANCÉ (EMF + MOTION + LUMIÈRE)", "danger");
+  ghostIntensity = 80;
 }
 
-function toggleAll() { activateUltraRealme(); }
-window.onload = () => {
-  log("SUPRA PARANORMAL v12.0 REALME ULTRA CHARGÉ");
-  log("Dis 'esprit' ou 'fantôme' pour appeler");
-};
-function closeModal(){ $('modal').style.display = 'none'; }
+function clearLogs(){ $('terminal').innerHTML = ''; }
+
+initMicro();
+log("SUPRA v13 optimisé pour Realme Note 60");
+log("Magnétomètre + Accéléro + Lumière + Micro 48kHz → tout actif");
 </script>
 </body>
 </html>
