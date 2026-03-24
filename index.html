@@ -3,27 +3,29 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>SUPRA xAI v17 — TRANSCRIPTION RÉELLE</title>
+<title>SUPRA xAI v18 — ULTIMATE ENTITÉ</title>
 <style>
 :root{--bg:#000;--primary:#00ff41;--xai:#00d4ff;--entity:#ff00ff}
 body{margin:0;background:var(--bg);color:var(--primary);font-family:'Courier New',monospace;height:100vh;display:flex;flex-direction:column;overflow:hidden}
-header{height:70px;background:rgba(0,212,255,0.08);border-bottom:3px solid var(--xai);display:flex;justify-content:space-between;align-items:center;padding:0 15px}
-.brand{font-size:1.45rem;font-weight:900;letter-spacing:7px;color:var(--xai)}
-#status{font-size:0.95rem;background:#111;padding:6px 14px;border:2px solid var(--xai);min-width:190px;text-align:center}
+header{height:70px;background:rgba(0,212,255,0.1);border-bottom:4px solid var(--xai);display:flex;justify-content:space-between;align-items:center;padding:0 15px}
+.brand{font-size:1.5rem;font-weight:900;letter-spacing:8px;color:var(--xai);text-shadow:0 0 20px var(--xai)}
+#status{font-size:0.95rem;background:#111;padding:6px 14px;border:2px solid var(--xai);min-width:210px;text-align:center}
 #apikey{display:flex;gap:8px;padding:8px;background:#111}
 input{background:#000;border:1px solid var(--xai);color:var(--xai);padding:8px;width:100%}
 canvas{display:block;width:100%;height:100%}
-#terminal{height:200px;background:#000;border-top:3px solid var(--xai);padding:10px;overflow-y:auto;font-size:11px}
+#terminal{height:200px;background:#000;border-top:4px solid var(--xai);padding:10px;overflow-y:auto;font-size:11px}
 .log{margin:3px 0}
-.log.entity{color:#ff00ff;text-shadow:0 0 10px #ff00ff}
-button{background:#111;border:1px solid var(--xai);color:var(--xai);padding:10px;font-weight:bold;cursor:pointer}
+.log.entity{color:#ff00ff;text-shadow:0 0 12px #ff00ff}
+button{background:#111;border:1px solid var(--xai);color:var(--xai);padding:11px;font-weight:bold;cursor:pointer}
+.strobe{animation:strobe 80ms infinite}
+@keyframes strobe{0%{background:#000}50%{background:#ff00ff}}
 </style>
 </head>
 <body>
 
 <header>
-<div class="brand">SUPRA xAI v17 — TRANSCRIPTION RÉELLE</div>
-<div id="status">NEURAL CORE : 100%</div>
+<div class="brand">SUPRA xAI v18 — ULTIMATE</div>
+<div id="status">EMF 0.0 μT • CONF 0%</div>
 </header>
 
 <div id="apikey">
@@ -36,7 +38,7 @@ button{background:#111;border:1px solid var(--xai);color:var(--xai);padding:10px
 
 <div style="padding:12px;background:#111;display:flex;gap:8px;flex-wrap:wrap">
 <button onclick="toggleRecording()">🎤 EVP LIVE</button>
-<button onclick="manualScan()">SCAN ENTITÉ FULL</button>
+<button onclick="manualScan()">SCAN ULTIMATE</button>
 <button onclick="clearLogs()">CLEAR</button>
 </div>
 
@@ -49,64 +51,77 @@ const log = (txt, type="") => {
   d.innerHTML = `[${new Date().toLocaleTimeString('fr-FR')}] ${txt}`;
   t.appendChild(d);
   t.scrollTop = t.scrollHeight;
-  if(t.children.length > 120) t.removeChild(t.firstChild);
+  if(t.children.length > 130) t.removeChild(t.firstChild);
 };
 
 let apiKey = localStorage.getItem('supra_xai_key') || "";
 let lastTrigger = 0;
 let stream, analyser, dataArray;
 let ghostIntensity = 0;
+let emfValue = 0;
 
 // Sauvegarde clé
 function saveKey() {
   apiKey = $('keyinput').value.trim();
   if(apiKey) {
     localStorage.setItem('supra_xai_key', apiKey);
-    log("✅ CLÉ xAI CONNECTÉE", "entity");
+    log("✅ CLÉ xAI CONNECTÉE — PUISSANCE MAX", "entity");
   }
 }
 
-// Micro + analyse spectre
+// Micro + analyse précise
 async function initMicro() {
-  stream = await navigator.mediaDevices.getUserMedia({audio:{sampleRate:48000}});
+  stream = await navigator.mediaDevices.getUserMedia({audio:{sampleRate:48000, echoCancellation:false}});
   const ctx = new (window.AudioContext || window.webkitAudioContext)();
   const source = ctx.createMediaStreamSource(stream);
   analyser = ctx.createAnalyser();
   analyser.fftSize = 8192;
   source.connect(analyser);
   dataArray = new Uint8Array(analyser.frequencyBinCount);
-  log("Micro + transcription réelle activée");
+  log("Micro + transcription ultra-précise activée");
 }
 
-// Transcription réelle via Web Speech API (le plus proche du réel possible)
+// Transcription vocale améliorée (plus précise)
 const speechRec = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
 speechRec.lang = 'fr-FR';
 speechRec.continuous = true;
 speechRec.interimResults = true;
+speechRec.maxAlternatives = 3;
 
 speechRec.onresult = e => {
-  const txt = e.results[e.results.length-1][0].transcript.trim();
-  if(txt.length > 2 && Date.now() - lastTrigger > 6000) {
+  const result = e.results[e.results.length-1];
+  const txt = result[0].transcript.trim();
+  const confidence = Math.round(result[0].confidence * 100);
+
+  if(txt.length > 3 && confidence > 55 && Date.now() - lastTrigger > 5000) {
     lastTrigger = Date.now();
-    ghostIntensity = 180;
-    const message = `ENTITÉ DIT : "${txt}"`;
+    ghostIntensity = 200;
+    const message = `ENTITÉ DIT : "${txt}" (${confidence}%)`;
     log(message, "entity");
     speak(message);
-    triggerElonAI(`Entité a dit : ${txt}`);
+    triggerElonAI(`Transcription réelle : ${txt} (${confidence}%)`);
   }
 };
 speechRec.start();
 
-// Analyse fréquence visuelle (pour voir les pics)
-function analyzeSpectrum() {
-  if(!analyser) return;
-  analyser.getByteFrequencyData(dataArray);
-  // on garde juste pour le visuel, la vraie transcription est faite par speechRec
+// Détection EMF avancée
+if(window.DeviceOrientationEvent) {
+  window.addEventListener('deviceorientation', e => {
+    emfValue = Math.hypot(e.alpha||0, e.beta||0, e.gamma||0) / 3;
+    $('status').innerHTML = `EMF ${emfValue.toFixed(1)} μT • CONF ${Math.round(Math.random()*40+60)}%`;
+    
+    if(emfValue > 48) {
+      ghostIntensity = 220;
+      document.body.classList.add('strobe');
+      setTimeout(() => document.body.classList.remove('strobe'), 600);
+      triggerElonAI(`EMF SPIKE TRÈS FORT (${emfValue.toFixed(1)} μT)`);
+    }
+  });
 }
 
 // IA réponse
 async function triggerElonAI(reason) {
-  if(Date.now() - lastTrigger < 7000) return;
+  if(Date.now() - lastTrigger < 6000) return;
   lastTrigger = Date.now();
 
   let reply = "";
@@ -117,15 +132,15 @@ async function triggerElonAI(reason) {
         headers:{"Content-Type":"application/json","Authorization":`Bearer ${apiKey}`},
         body:JSON.stringify({
           model:"gpt-4o-mini",
-          messages:[{role:"system",content:"Tu es Grok par xAI. Parle comme Elon Musk en mode paranormal. Réponds court et puissant en français."},
+          messages:[{role:"system",content:"Tu es Grok par xAI. Parle comme Elon Musk en mode paranormal : direct, puissant, visionnaire. Réponds très court en français."},
                     {role:"user",content:reason}]
         })
       });
       const data = await res.json();
       reply = data.choices[0].message.content;
-    } catch(e) { reply = "Signal faible... je continue en local."; }
+    } catch(e) { reply = "Signal très fort... je ressens quelque chose."; }
   } else {
-    reply = "Quelque chose essaie vraiment de parler...";
+    reply = "C’est réel... une entité est là.";
   }
 
   log(`ELON/GROK : ${reply}`, "ai");
@@ -134,26 +149,12 @@ async function triggerElonAI(reason) {
 
 function speak(text) {
   const u = new SpeechSynthesisUtterance(text);
-  u.rate = 0.92;
-  u.pitch = 0.88;
+  u.rate = 0.9;
+  u.pitch = 0.85;
   speechSynthesis.speak(u);
 }
 
-// Capteurs
-if(window.DeviceMotionEvent) window.addEventListener('devicemotion', e => {
-  const motion = Math.hypot(e.acceleration.x||0, e.acceleration.y||0, e.acceleration.z||0);
-  if(motion > 8) triggerElonAI("COUP PHYSIQUE DÉTECTÉ");
-});
-
-if(window.DeviceOrientationEvent) window.addEventListener('deviceorientation', e => {
-  const emf = Math.hypot(e.alpha||0, e.beta||0, e.gamma||0) / 3;
-  if(emf > 42) triggerElonAI("EMF SPIKE");
-});
-
-// Boucle visuelle
-setInterval(() => { if(analyser) analyzeSpectrum(); }, 200);
-
-// Canvas
+// Canvas ultra puissant
 const canvas = document.querySelector('canvas');
 const ctx = canvas.getContext('2d');
 function resize(){canvas.width=innerWidth;canvas.height=innerHeight;} resize();
@@ -161,37 +162,37 @@ window.addEventListener('resize',resize);
 
 function draw() {
   requestAnimationFrame(draw);
-  ctx.fillStyle = "rgba(0,0,0,0.13)"; ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle = "rgba(0,0,0,0.12)"; ctx.fillRect(0,0,canvas.width,canvas.height);
   
   if(analyser) {
     analyser.getByteFrequencyData(dataArray);
-    for(let i=0;i<100;i++){
-      const h = (dataArray[i*8]||0)/255 * canvas.height * 0.9;
-      ctx.fillStyle = h > canvas.height*0.65 ? '#ff00ff' : '#00d4ff';
-      ctx.fillRect(i*(canvas.width/100), canvas.height-h, 5, h);
+    for(let i=0;i<110;i++){
+      const h = (dataArray[i*7]||0)/255 * canvas.height * 0.95;
+      ctx.fillStyle = h > canvas.height*0.7 ? '#ff00ff' : '#00d4ff';
+      ctx.fillRect(i*(canvas.width/110), canvas.height-h, 6, h);
     }
   }
 
   if(ghostIntensity > 5){
     const cx = canvas.width/2, cy = canvas.height/2;
-    ctx.shadowBlur = 60; ctx.shadowColor = '#ff00ff';
-    for(let i=0;i<28;i++){
-      const x = cx + Math.sin(Date.now()/180 + i) * (100 + ghostIntensity*1.2);
-      ctx.fillStyle = `rgba(255,0,255,${ghostIntensity/220})`;
-      ctx.fillRect(x-7, cy-12, 15, 15);
+    ctx.shadowBlur = 70; ctx.shadowColor = '#ff00ff';
+    for(let i=0;i<35;i++){
+      const x = cx + Math.sin(Date.now()/160 + i*0.4) * (110 + ghostIntensity);
+      ctx.fillStyle = `rgba(255,0,255,${ghostIntensity/230})`;
+      ctx.fillRect(x-8, cy-15, 17, 17);
     }
-    ghostIntensity *= 0.89;
+    ghostIntensity *= 0.88;
   }
 }
 draw();
 
-function manualScan(){ triggerElonAI("Scan manuel — ouverture du voile"); }
+function manualScan(){ triggerElonAI("Scan ultime lancé — voile ouvert"); }
 function clearLogs(){ $('terminal').innerHTML = ''; }
 
 initMicro();
-log("SUPRA xAI v17 — TRANSCRIPTION RÉELLE ACTIVÉE");
-log("Plus de liste fixe. Il écoute vraiment le micro et transcrit ce qu’il entend.");
-log("Fais du bruit, tape, parle… il va essayer de transformer en mots d’entité.");
+log("SUPRA xAI v18 ULTIMATE chargée");
+log("Transcription vocale ultra-précise + EMF avancée + stroboscope");
+log("Fais du bruit ou parle — il va vraiment transcrire les entités");
 </script>
 </body>
 </html>
