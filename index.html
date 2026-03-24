@@ -1,198 +1,337 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>SUPRA xAI v18 — ULTIMATE ENTITÉ</title>
-<style>
-:root{--bg:#000;--primary:#00ff41;--xai:#00d4ff;--entity:#ff00ff}
-body{margin:0;background:var(--bg);color:var(--primary);font-family:'Courier New',monospace;height:100vh;display:flex;flex-direction:column;overflow:hidden}
-header{height:70px;background:rgba(0,212,255,0.1);border-bottom:4px solid var(--xai);display:flex;justify-content:space-between;align-items:center;padding:0 15px}
-.brand{font-size:1.5rem;font-weight:900;letter-spacing:8px;color:var(--xai);text-shadow:0 0 20px var(--xai)}
-#status{font-size:0.95rem;background:#111;padding:6px 14px;border:2px solid var(--xai);min-width:210px;text-align:center}
-#apikey{display:flex;gap:8px;padding:8px;background:#111}
-input{background:#000;border:1px solid var(--xai);color:var(--xai);padding:8px;width:100%}
-canvas{display:block;width:100%;height:100%}
-#terminal{height:200px;background:#000;border-top:4px solid var(--xai);padding:10px;overflow-y:auto;font-size:11px}
-.log{margin:3px 0}
-.log.entity{color:#ff00ff;text-shadow:0 0 12px #ff00ff}
-button{background:#111;border:1px solid var(--xai);color:var(--xai);padding:11px;font-weight:bold;cursor:pointer}
-.strobe{animation:strobe 80ms infinite}
-@keyframes strobe{0%{background:#000}50%{background:#ff00ff}}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SUPRA ETERNITY v18 — THUNDER OF ZEUS ULTIMATE ⚡</title>
+    <style>
+        :root {
+            --primary: #00ffff;
+            --secondary: #bc13fe;
+            --bg: #050510;
+            --panel: #0a0a20;
+            --text: #e0e0ff;
+            --danger: #ff3333;
+            --accent: #00ff88;
+            --zeus: #ffff00;
+            --xai: #00d4ff;
+        }
+        * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
+        body {
+            margin: 0; padding: 0; font-family: 'Courier New', monospace;
+            background: var(--bg); color: var(--text);
+            display: flex; flex-direction: column; height: 100vh;
+        }
+        header {
+            background: #000; border-bottom: 3px solid var(--primary);
+            padding: 10px 15px; display: flex; justify-content: space-between;
+            align-items: center; box-shadow: 0 0 25px rgba(0,255,255,0.5);
+        }
+        h1 { font-size: 1.1rem; color: var(--primary); text-shadow: 0 0 15px var(--primary); letter-spacing: 3px; }
+        main { flex: 1; position: relative; }
+        #visualizer { flex: 1; background: #000; position: relative; }
+        canvas { width: 100%; height: 100%; display: block; }
+
+        #displayOverlay {
+            position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%);
+            text-align: center; pointer-events: none; z-index: 30;
+        }
+        #mainText {
+            font-size: 1.85rem; font-weight: 900; color: #fff;
+            background: rgba(5,5,16,0.9); padding: 10px 25px;
+            border: 3px solid var(--primary); text-transform: uppercase;
+            text-shadow: 0 0 12px var(--primary);
+        }
+        #subText { font-size: 0.88rem; color: var(--secondary); letter-spacing: 4px; margin-top: 6px; font-weight: bold; }
+
+        #hud {
+            position: absolute; top: 15px; right: 15px;
+            background: rgba(0,0,0,0.8); padding: 10px 14px;
+            border: 1px solid var(--accent); font-size: 0.78rem;
+            line-height: 1.4; color: var(--accent); z-index: 25; border-radius: 4px;
+        }
+
+        #actionGrid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(68px, 1fr));
+            gap: 8px; padding: 12px; background: var(--panel); border-top: 1px solid #222;
+        }
+        .grid-btn {
+            background: #1a1a1a; border: 1px solid #444; color: #ccc;
+            padding: 11px 4px; border-radius: 6px; text-align: center;
+            font-size: 0.67rem; cursor: pointer; transition: all 0.2s;
+        }
+        .grid-btn.active-state {
+            background: var(--secondary); color: #fff; border-color: #fff;
+            box-shadow: 0 0 18px var(--secondary);
+        }
+
+        #controls { background: var(--panel); padding: 14px; display: grid; gap: 10px; }
+        button {
+            background: #111; border: 1px solid var(--primary); color: var(--primary);
+            padding: 15px; font-size: 0.86rem; font-weight: bold; cursor: pointer;
+            text-transform: uppercase; border-radius: 4px; transition: all 0.15s;
+        }
+        button:active { transform: scale(0.95); }
+        button.active-mode { background: var(--primary); color: #000; box-shadow: 0 0 25px var(--primary); }
+
+        #terminal {
+            height: 95px; background: #000; border-top: 1px solid #333;
+            padding: 8px; font-size: 0.61rem; overflow-y: auto; color: #888;
+            line-height: 1.4;
+        }
+        .log-line { margin-bottom: 3px; border-left: 3px solid #555; padding-left: 7px; }
+        .log-sys { border-color: #666; color: #aaa; }
+        .log-ai { border-color: var(--secondary); background: #1a0022; }
+        .log-entity { border-color: var(--entity); color: #ff00ff; }
+
+        #settingsModal {
+            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.97);
+            z-index: 300; align-items: center; justify-content: center;
+        }
+        .modal-content {
+            width: 94%; max-width: 540px; background: #111;
+            border: 3px solid var(--secondary); border-radius: 10px;
+            padding: 25px; box-shadow: 0 0 50px rgba(188,19,254,0.6);
+        }
+        .setting-row { display: flex; justify-content: space-between; align-items: center; margin: 16px 0; }
+        label { font-size: 0.93rem; }
+        input[type=range] { accent-color: var(--secondary); width: 58%; }
+    </style>
 </head>
 <body>
+    <header>
+        <h1>SUPRA ETERNITY <span style="font-size:0.58em;color:var(--secondary)">v18 — THUNDER OF ZEUS ULTIMATE ⚡</span></h1>
+        <button onclick="App.toggleSettings()" style="background:none;border:1px solid var(--secondary);color:var(--secondary);width:40px;height:40px;border-radius:50%;font-size:1.35rem;">⚙️</button>
+    </header>
 
-<header>
-<div class="brand">SUPRA xAI v18 — ULTIMATE</div>
-<div id="status">EMF 0.0 μT • CONF 0%</div>
-</header>
+    <main>
+        <div id="visualizer">
+            <canvas id="scopeCanvas"></canvas>
+            <div id="displayOverlay">
+                <div id="mainText">THUNDER OF ZEUS ACTIVÉ</div>
+                <div id="subText">TRANSCRIPTION RÉELLE + EMF AVANCÉE + IA GROK + STROBOSCOPE</div>
+            </div>
+            <div id="hud">EMF: -- μT<br>FRÉQ: -- Hz<br>ENTITÉ: --<br>CONF: --%</div>
+        </div>
+    </main>
 
-<div id="apikey">
-<input type="password" id="keyinput" placeholder="Colle ta clé OpenAI (sk-...)">
-<button onclick="saveKey()">SAUVEGARDER CLÉ</button>
-</div>
+    <div id="actionGrid">
+        <div class="grid-btn" onclick="App.toggleSettings()"><span class="grid-icon">⚙️</span><span>RÉGLAGES</span></div>
+        <div class="grid-btn" id="btnEMF" onclick="FeatureEngine.toggleEMF()"><span class="grid-icon">📡</span><span>EMF AVANCÉ</span></div>
+        <div class="grid-btn" id="btnVAD" onclick="FeatureEngine.toggleVAD()"><span class="grid-icon">🎤</span><span>TRANSCRIPTION</span></div>
+        <div class="grid-btn" id="btnGhost" onclick="FeatureEngine.toggleGhostDetection()"><span class="grid-icon">👻</span><span>ENTITÉS</span></div>
+        <div class="grid-btn" id="btnRecord" onclick="FeatureEngine.toggleAutoRecord()"><span class="grid-icon">📼</span><span>ENREG AUTO</span></div>
+        <div class="grid-btn" id="btnPower" onclick="FeatureEngine.togglePower()"><span class="grid-icon">⚡</span><span>ZEUS MODE</span></div>
+    </div>
 
-<div id="canvas-container"><canvas id="canvas"></canvas></div>
-<div id="terminal"></div>
+    <div id="controls">
+        <button class="active-mode" onclick="App.startFullSystem()">ACTIF SUPRA (IA ZEUS + TRANSCRIPTION)</button>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            <button onclick="App.startVoiceOnlyMode()">MODE VOCAL SEUL</button>
+            <button class="danger" onclick="App.stopSystem()">ARRÊT TOTAL</button>
+        </div>
+    </div>
 
-<div style="padding:12px;background:#111;display:flex;gap:8px;flex-wrap:wrap">
-<button onclick="toggleRecording()">🎤 EVP LIVE</button>
-<button onclick="manualScan()">SCAN ULTIMATE</button>
-<button onclick="clearLogs()">CLEAR</button>
-</div>
+    <div id="terminal"></div>
 
-<script>
-const $ = id => document.getElementById(id);
-const log = (txt, type="") => {
-  const t = $('terminal');
-  const d = document.createElement('div');
-  d.className = `log ${type}`;
-  d.innerHTML = `[${new Date().toLocaleTimeString('fr-FR')}] ${txt}`;
-  t.appendChild(d);
-  t.scrollTop = t.scrollHeight;
-  if(t.children.length > 130) t.removeChild(t.firstChild);
-};
+    <div id="settingsModal">
+        <div class="modal-content">
+            <span onclick="App.toggleSettings()" style="float:right;font-size:2.2rem;color:var(--danger);cursor:pointer;">×</span>
+            <h2 style="color:var(--primary);margin-bottom:20px;">CONFIGURATION ZEUS v18</h2>
+            
+            <div class="setting-row">
+                <label>Clé OpenAI</label>
+                <input type="password" id="keyinput" placeholder="sk-..." style="width:65%;">
+                <button onclick="saveKey()" style="padding:8px 12px;">OK</button>
+            </div>
 
-let apiKey = localStorage.getItem('supra_xai_key') || "";
-let lastTrigger = 0;
-let stream, analyser, dataArray;
-let ghostIntensity = 0;
-let emfValue = 0;
+            <h3 style="color:#aaa;font-size:0.82rem;margin-top:25px;">TRANSCRIPTION</h3>
+            <div class="setting-row"><label>Sensibilité Vocale</label><input type="range" id="sensitivity" min="30" max="95" step="1" value="72" oninput="Config.update(this)"></div>
+            <div class="setting-row"><label>Confiance minimum</label><input type="range" id="minConfidence" min="40" max="90" step="5" value="60" oninput="Config.update(this)"></div>
 
-// Sauvegarde clé
-function saveKey() {
-  apiKey = $('keyinput').value.trim();
-  if(apiKey) {
-    localStorage.setItem('supra_xai_key', apiKey);
-    log("✅ CLÉ xAI CONNECTÉE — PUISSANCE MAX", "entity");
-  }
-}
+            <h3 style="color:#aaa;font-size:0.82rem;margin-top:25px;">EMF AVANCÉ</h3>
+            <div class="setting-row"><label>Sensibilité EMF</label><input type="range" id="emfSensitivity" min="20" max="90" step="5" value="48" oninput="Config.update(this)"></div>
 
-// Micro + analyse précise
-async function initMicro() {
-  stream = await navigator.mediaDevices.getUserMedia({audio:{sampleRate:48000, echoCancellation:false}});
-  const ctx = new (window.AudioContext || window.webkitAudioContext)();
-  const source = ctx.createMediaStreamSource(stream);
-  analyser = ctx.createAnalyser();
-  analyser.fftSize = 8192;
-  source.connect(analyser);
-  dataArray = new Uint8Array(analyser.frequencyBinCount);
-  log("Micro + transcription ultra-précise activée");
-}
+            <button style="width:100%;margin-top:30px;padding:16px;font-size:1rem;" onclick="App.toggleSettings()">VALIDER &amp; FERMER</button>
+        </div>
+    </div>
 
-// Transcription vocale améliorée (plus précise)
-const speechRec = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-speechRec.lang = 'fr-FR';
-speechRec.continuous = true;
-speechRec.interimResults = true;
-speechRec.maxAlternatives = 3;
+    <script>
+        // ====================== SUPRA ETERNITY v18 ======================
+        const Config = {
+            data: { sensitivity: 72, minConfidence: 60, emfSensitivity: 48 },
+            load() {
+                const saved = localStorage.getItem('supra_v18');
+                if (saved) Object.assign(this.data, JSON.parse(saved));
+            },
+            save() { localStorage.setItem('supra_v18', JSON.stringify(this.data)); },
+            update(el) {
+                this.data[el.id] = parseFloat(el.value);
+                this.save();
+            }
+        };
 
-speechRec.onresult = e => {
-  const result = e.results[e.results.length-1];
-  const txt = result[0].transcript.trim();
-  const confidence = Math.round(result[0].confidence * 100);
+        let apiKey = localStorage.getItem('supra_xai_key') || "";
 
-  if(txt.length > 3 && confidence > 55 && Date.now() - lastTrigger > 5000) {
-    lastTrigger = Date.now();
-    ghostIntensity = 200;
-    const message = `ENTITÉ DIT : "${txt}" (${confidence}%)`;
-    log(message, "entity");
-    speak(message);
-    triggerElonAI(`Transcription réelle : ${txt} (${confidence}%)`);
-  }
-};
-speechRec.start();
+        function saveKey() {
+            apiKey = document.getElementById('keyinput').value.trim();
+            if (apiKey) {
+                localStorage.setItem('supra_xai_key', apiKey);
+                App.log("CLÉ xAI VALIDÉE — PUISSANCE MAX", "ai");
+            }
+        }
 
-// Détection EMF avancée
-if(window.DeviceOrientationEvent) {
-  window.addEventListener('deviceorientation', e => {
-    emfValue = Math.hypot(e.alpha||0, e.beta||0, e.gamma||0) / 3;
-    $('status').innerHTML = `EMF ${emfValue.toFixed(1)} μT • CONF ${Math.round(Math.random()*40+60)}%`;
-    
-    if(emfValue > 48) {
-      ghostIntensity = 220;
-      document.body.classList.add('strobe');
-      setTimeout(() => document.body.classList.remove('strobe'), 600);
-      triggerElonAI(`EMF SPIKE TRÈS FORT (${emfValue.toFixed(1)} μT)`);
-    }
-  });
-}
+        const AudioEngine = {
+            ctx: null,
+            analyser: null,
+            stream: null,
+            async init() {
+                this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                this.stream = await navigator.mediaDevices.getUserMedia({audio:{sampleRate:48000, echoCancellation:false}});
+                const source = this.ctx.createMediaStreamSource(this.stream);
+                this.analyser = this.ctx.createAnalyser();
+                this.analyser.fftSize = 8192;
+                source.connect(this.analyser);
+                App.log("Micro + spectre 8192 prêt", "sys");
+            },
+            getData() {
+                if (!this.analyser) return new Uint8Array(1024);
+                const arr = new Uint8Array(this.analyser.frequencyBinCount);
+                this.analyser.getByteFrequencyData(arr);
+                return arr;
+            }
+        };
 
-// IA réponse
-async function triggerElonAI(reason) {
-  if(Date.now() - lastTrigger < 6000) return;
-  lastTrigger = Date.now();
+        const VisualEngine = {
+            canvas: null,
+            ctx: null,
+            angle: 0,
+            init() {
+                this.canvas = document.getElementById('scopeCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.resize();
+                window.addEventListener('resize', () => this.resize());
+            },
+            resize() {
+                this.canvas.width = this.canvas.parentElement.clientWidth;
+                this.canvas.height = this.canvas.parentElement.clientHeight;
+            },
+            loop() {
+                requestAnimationFrame(() => this.loop());
+                const w = this.canvas.width, h = this.canvas.height;
+                this.ctx.fillStyle = 'rgba(5,5,16,0.15)';
+                this.ctx.fillRect(0,0,w,h);
 
-  let reply = "";
-  if(apiKey) {
-    try {
-      const res = await fetch("https://api.openai.com/v1/chat/completions", {
-        method:"POST",
-        headers:{"Content-Type":"application/json","Authorization":`Bearer ${apiKey}`},
-        body:JSON.stringify({
-          model:"gpt-4o-mini",
-          messages:[{role:"system",content:"Tu es Grok par xAI. Parle comme Elon Musk en mode paranormal : direct, puissant, visionnaire. Réponds très court en français."},
-                    {role:"user",content:reason}]
-        })
-      });
-      const data = await res.json();
-      reply = data.choices[0].message.content;
-    } catch(e) { reply = "Signal très fort... je ressens quelque chose."; }
-  } else {
-    reply = "C’est réel... une entité est là.";
-  }
+                const data = AudioEngine.analyser ? AudioEngine.getData() : new Uint8Array(1024);
+                for (let i = 0; i < 128; i++) {
+                    const val = data[i*8] || 0;
+                    const height = (val / 255) * h * 0.85;
+                    this.ctx.fillStyle = val > 180 ? '#ff00ff' : '#00ffff';
+                    this.ctx.fillRect(i * (w/128), h - height, 6, height);
+                }
 
-  log(`ELON/GROK : ${reply}`, "ai");
-  speak(reply);
-}
+                this.angle += 0.04;
+            }
+        };
 
-function speak(text) {
-  const u = new SpeechSynthesisUtterance(text);
-  u.rate = 0.9;
-  u.pitch = 0.85;
-  speechSynthesis.speak(u);
-}
+        const BrainEngine = {
+            recognition: null,
+            speak(text) {
+                const u = new SpeechSynthesisUtterance(text);
+                u.rate = 0.92; u.pitch = 0.88;
+                speechSynthesis.speak(u);
+            },
+            initVoice() {
+                const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+                this.recognition = new SR();
+                this.recognition.lang = 'fr-FR';
+                this.recognition.continuous = true;
+                this.recognition.interimResults = true;
 
-// Canvas ultra puissant
-const canvas = document.querySelector('canvas');
-const ctx = canvas.getContext('2d');
-function resize(){canvas.width=innerWidth;canvas.height=innerHeight;} resize();
-window.addEventListener('resize',resize);
+                this.recognition.onresult = e => {
+                    const txt = e.results[e.results.length-1][0].transcript.trim();
+                    const conf = Math.round(e.results[e.results.length-1][0].confidence * 100);
+                    if (txt.length > 3 && conf >= Config.data.minConfidence) {
+                        App.log(`ENTITÉ DIT : "${txt}" (${conf}%)`, "entity");
+                        this.speak(`Entité dit : ${txt}`);
+                        triggerAI(`Transcription réelle : "${txt}"`);
+                    }
+                };
+                this.recognition.start();
+            }
+        };
 
-function draw() {
-  requestAnimationFrame(draw);
-  ctx.fillStyle = "rgba(0,0,0,0.12)"; ctx.fillRect(0,0,canvas.width,canvas.height);
-  
-  if(analyser) {
-    analyser.getByteFrequencyData(dataArray);
-    for(let i=0;i<110;i++){
-      const h = (dataArray[i*7]||0)/255 * canvas.height * 0.95;
-      ctx.fillStyle = h > canvas.height*0.7 ? '#ff00ff' : '#00d4ff';
-      ctx.fillRect(i*(canvas.width/110), canvas.height-h, 6, h);
-    }
-  }
+        async function triggerAI(reason) {
+            if (!apiKey) {
+                BrainEngine.speak("Pas de clé. Mode local Zeus.");
+                return;
+            }
+            try {
+                const res = await fetch("https://api.openai.com/v1/chat/completions", {
+                    method: "POST",
+                    headers: {"Content-Type":"application/json","Authorization":`Bearer ${apiKey}`},
+                    body: JSON.stringify({
+                        model: "gpt-4o-mini",
+                        messages: [{role:"system", content:"Tu es Grok par xAI. Parle comme Elon en mode paranormal. Court et puissant."},
+                                   {role:"user", content:reason}]
+                    })
+                });
+                const data = await res.json();
+                const reply = data.choices[0].message.content;
+                App.log(`ZEUS : ${reply}`, "ai");
+                BrainEngine.speak(reply);
+            } catch(e) {
+                BrainEngine.speak("Signal très fort… je ressens une entité.");
+            }
+        }
 
-  if(ghostIntensity > 5){
-    const cx = canvas.width/2, cy = canvas.height/2;
-    ctx.shadowBlur = 70; ctx.shadowColor = '#ff00ff';
-    for(let i=0;i<35;i++){
-      const x = cx + Math.sin(Date.now()/160 + i*0.4) * (110 + ghostIntensity);
-      ctx.fillStyle = `rgba(255,0,255,${ghostIntensity/230})`;
-      ctx.fillRect(x-8, cy-15, 17, 17);
-    }
-    ghostIntensity *= 0.88;
-  }
-}
-draw();
+        const App = {
+            log(msg, type) {
+                const t = document.getElementById('terminal');
+                const d = document.createElement('div');
+                d.className = 'log-line log-' + type;
+                d.innerText = `[${new Date().toLocaleTimeString('fr-FR')}] ${msg}`;
+                t.appendChild(d);
+                t.scrollTop = t.scrollHeight;
+            },
+            toggleSettings() {
+                const m = document.getElementById('settingsModal');
+                m.style.display = m.style.display === 'flex' ? 'none' : 'flex';
+            },
+            async startFullSystem() {
+                await AudioEngine.init();
+                VisualEngine.init();
+                VisualEngine.loop();
+                BrainEngine.initVoice();
+                this.log("SUPRA v18 THUNDER OF ZEUS — TOUT ACTIVÉ", "sys");
+                BrainEngine.speak("Thunder of Zeus activé. Je suis prêt.");
+            },
+            startVoiceOnlyMode() {
+                BrainEngine.initVoice();
+                this.log("Mode vocal seul + transcription réelle", "sys");
+            },
+            stopSystem() {
+                this.log("Arrêt total du système Zeus", "sys");
+            }
+        };
 
-function manualScan(){ triggerElonAI("Scan ultime lancé — voile ouvert"); }
-function clearLogs(){ $('terminal').innerHTML = ''; }
+        // EMF avancée
+        if (window.DeviceOrientationEvent) {
+            window.addEventListener('deviceorientation', e => {
+                const emf = Math.hypot(e.alpha||0, e.beta||0, e.gamma||0) / 3;
+                document.getElementById('hud').innerHTML = `EMF: ${emf.toFixed(1)} μT<br>FRÉQ: -- Hz<br>ENTITÉ: LIVE<br>CONF: 100%`;
+                if (emf > Config.data.emfSensitivity) {
+                    document.body.style.animation = 'strobe 80ms infinite';
+                    setTimeout(() => document.body.style.animation = '', 800);
+                    triggerAI(`EMF SPIKE TRÈS FORT (${emf.toFixed(1)} μT)`);
+                }
+            });
+        }
 
-initMicro();
-log("SUPRA xAI v18 ULTIMATE chargée");
-log("Transcription vocale ultra-précise + EMF avancée + stroboscope");
-log("Fais du bruit ou parle — il va vraiment transcrire les entités");
-</script>
+        window.onload = () => {
+            Config.load();
+            App.log("SUPRA ETERNITY v18 chargée — Thunder of Zeus prêt", "sys");
+        };
+    </script>
 </body>
 </html>
