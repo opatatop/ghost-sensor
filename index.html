@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SUPRA ETERNITY v20 — THUNDER OF ZEUS ULTIMATE ⚡</title>
+    <title>SUPRA ETERNITY v21 — THUNDER OF ZEUS ULTIMATE ⚡</title>
     <style>
         :root {
             --primary: #00ffff;
@@ -101,7 +101,7 @@
 </head>
 <body>
     <header>
-        <h1>SUPRA ETERNITY <span style="font-size:0.58em;color:var(--secondary)">v20 — THUNDER OF ZEUS ULTIMATE ⚡</span></h1>
+        <h1>SUPRA ETERNITY <span style="font-size:0.58em;color:var(--secondary)">v21 — THUNDER OF ZEUS ULTIMATE ⚡</span></h1>
         <button onclick="App.toggleSettings()" style="background:none;border:1px solid var(--secondary);color:var(--secondary);width:40px;height:40px;border-radius:50%;font-size:1.35rem;">⚙️</button>
     </header>
 
@@ -109,8 +109,8 @@
         <div id="visualizer">
             <canvas id="scopeCanvas"></canvas>
             <div id="displayOverlay">
-                <div id="mainText">THUNDER OF ZEUS v20 ACTIVÉ</div>
-                <div id="subText">TRANSCRIPTION RÉELLE + EMF AVANCÉE + IA GROK + STROBOSCOPE</div>
+                <div id="mainText">THUNDER OF ZEUS v21 ACTIVÉ</div>
+                <div id="subText">TRANSCRIPTION RÉELLE + EMF AVANCÉE + IA GROK</div>
             </div>
             <div id="hud">EMF: -- μT<br>FRÉQ: -- Hz<br>ENTITÉ: --<br>CONF: --%</div>
         </div>
@@ -126,7 +126,7 @@
     </div>
 
     <div id="controls">
-        <button class="active-mode" onclick="App.startFullSystem()">ACTIF SUPRA v20 (IA + TRANSCRIPTION RÉELLE)</button>
+        <button class="active-mode" onclick="App.startFullSystem()">ACTIF SUPRA v21 (IA + TRANSCRIPTION)</button>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
             <button onclick="App.startVoiceOnlyMode()">MODE VOCAL SEUL</button>
             <button class="danger" onclick="App.stopSystem()">ARRÊT TOTAL</button>
@@ -138,7 +138,7 @@
     <div id="settingsModal">
         <div class="modal-content">
             <span onclick="App.toggleSettings()" style="float:right;font-size:2.2rem;color:var(--danger);cursor:pointer;">×</span>
-            <h2 style="color:var(--primary);margin-bottom:20px;">CONFIGURATION ZEUS v20</h2>
+            <h2 style="color:var(--primary);margin-bottom:20px;">CONFIGURATION ZEUS v21</h2>
             
             <div class="setting-row">
                 <label>Clé OpenAI</label>
@@ -160,8 +160,11 @@
     <script>
         const Config = {
             data: { sensitivity: 78, minConfidence: 68, emfSensitivity: 55 },
-            load() { const saved = localStorage.getItem('supra_v20'); if (saved) Object.assign(this.data, JSON.parse(saved)); },
-            save() { localStorage.setItem('supra_v20', JSON.stringify(this.data)); },
+            load() { 
+                const saved = localStorage.getItem('supra_v21'); 
+                if (saved) Object.assign(this.data, JSON.parse(saved)); 
+            },
+            save() { localStorage.setItem('supra_v21', JSON.stringify(this.data)); },
             update(el) { this.data[el.id] = parseFloat(el.value); this.save(); }
         };
 
@@ -169,12 +172,13 @@
         let lastTrigger = 0;
         let stream, analyser, dataArray;
         let ghostIntensity = 0;
+        let isRunning = false;
 
         function saveKey() {
             apiKey = document.getElementById('keyinput').value.trim();
             if (apiKey) {
                 localStorage.setItem('supra_xai_key', apiKey);
-                App.log("✅ CLÉ xAI CONNECTÉE — PUISSANCE MAX", "ai");
+                App.log("✅ CLÉ xAI SAUVEGARDÉE", "ai");
             }
         }
 
@@ -190,7 +194,6 @@
                 this.analyser.fftSize = 8192;
                 source.connect(this.analyser);
                 dataArray = new Uint8Array(this.analyser.frequencyBinCount);
-                App.log("Micro + spectre 8192 ultra-précis activé", "sys");
             },
             getData() {
                 if (!this.analyser) return new Uint8Array(1024);
@@ -259,13 +262,13 @@
                     const result = e.results[e.results.length-1];
                     const txt = result[0].transcript.trim();
                     const conf = Math.round(result[0].confidence * 100);
-                    if (txt.length > 3 && conf >= Config.data.minConfidence && Date.now() - lastTrigger > 12000) {
+                    if (txt.length > 3 && conf >= Config.data.minConfidence && Date.now() - lastTrigger > 8000) {
                         lastTrigger = Date.now();
                         ghostIntensity = 220;
                         const message = `ENTITÉ DIT : "${txt}" (${conf}%)`;
                         App.log(message, "entity");
                         BrainEngine.speak(message);
-                        triggerAI(`Transcription réelle : "${txt}" (${conf}%)`);
+                        triggerAI(`Transcription : "${txt}" (${conf}%)`);
                     }
                 };
                 this.recognition.start();
@@ -273,33 +276,61 @@
         };
 
         async function triggerAI(reason) {
-            if (Date.now() - lastTrigger < 12000) return; // cooldown puissant
+            if (Date.now() - lastTrigger < 8000) return;
             lastTrigger = Date.now();
 
-            let reply = "";
-            if (apiKey) {
-                try {
-                    const res = await fetch("https://api.openai.com/v1/chat/completions", {
-                        method: "POST",
-                        headers: {"Content-Type":"application/json","Authorization":`Bearer ${apiKey}`},
-                        body: JSON.stringify({
-                            model: "gpt-4o-mini",
-                            messages: [{role:"system", content:"Tu es Grok par xAI. Parle comme Elon en mode paranormal. Très court et puissant."},
-                                       {role:"user", content:reason}]
-                        })
-                    });
-                    const data = await res.json();
-                    reply = data.choices[0].message.content;
-                } catch(e) {
-                    reply = "Signal reçu. Je continue d'écouter.";
-                }
-            } else {
-                reply = "Intéressant... quelque chose essaie de communiquer.";
+            if (!apiKey) {
+                BrainEngine.speak("Mode local Zeus actif.");
+                return;
             }
 
-            App.log(`ZEUS : ${reply}`, "ai");
-            BrainEngine.speak(reply);
+            try {
+                const res = await fetch("https://api.openai.com/v1/chat/completions", {
+                    method: "POST",
+                    headers: {"Content-Type":"application/json","Authorization":`Bearer ${apiKey}`},
+                    body: JSON.stringify({
+                        model: "gpt-4o-mini",
+                        messages: [{role:"system", content:"Tu es Grok par xAI. Parle comme Elon en mode paranormal. Très court et puissant en français."},
+                                   {role:"user", content:reason}]
+                    })
+                });
+                const data = await res.json();
+                const reply = data.choices[0].message.content;
+                App.log(`ZEUS : ${reply}`, "ai");
+                BrainEngine.speak(reply);
+            } catch(e) {
+                BrainEngine.speak("Une entité est là.");
+            }
         }
+
+        const FeatureEngine = {
+            emfActive: true,
+            vadActive: true,
+            ghostActive: true,
+            autoRecordActive: true,
+            powerMode: true,
+
+            toggleEMF() {
+                this.emfActive = !this.emfActive;
+                document.getElementById('btnEMF').classList.toggle('active-state', this.emfActive);
+            },
+            toggleVAD() {
+                this.vadActive = !this.vadActive;
+                document.getElementById('btnVAD').classList.toggle('active-state', this.vadActive);
+            },
+            toggleGhostDetection() {
+                this.ghostActive = !this.ghostActive;
+                document.getElementById('btnGhost').classList.toggle('active-state', this.ghostActive);
+            },
+            toggleAutoRecord() {
+                this.autoRecordActive = !this.autoRecordActive;
+                document.getElementById('btnRecord').classList.toggle('active-state', this.autoRecordActive);
+            },
+            togglePower() {
+                this.powerMode = !this.powerMode;
+                document.getElementById('btnPower').classList.toggle('active-state', this.powerMode);
+            }
+        };
 
         const App = {
             log(msg, type) {
@@ -319,15 +350,19 @@
                 VisualEngine.init();
                 VisualEngine.loop();
                 BrainEngine.initVoice();
-                this.log("SUPRA v20 THUNDER OF ZEUS — TOUT ACTIVÉ", "sys");
-                BrainEngine.speak("Thunder of Zeus v20 activé. Je suis prêt.");
+                this.log("SUPRA v21 THUNDER OF ZEUS — TOUT ACTIVÉ", "sys");
+                BrainEngine.speak("Thunder of Zeus v21 activé.");
             },
             startVoiceOnlyMode() {
                 BrainEngine.initVoice();
-                this.log("Mode vocal seul + transcription réelle", "sys");
+                this.log("Mode vocal seul activé", "sys");
             },
             stopSystem() {
-                this.log("Arrêt total du système Zeus v20", "sys");
+                if (BrainEngine.recognition) BrainEngine.recognition.stop();
+                if (stream) stream.getTracks().forEach(t => t.stop());
+                ghostIntensity = 0;
+                lastTrigger = Date.now();
+                this.log("ARRÊT TOTAL — TOUT ARRÊTÉ", "sys");
             }
         };
 
@@ -336,9 +371,9 @@
             window.addEventListener('deviceorientation', e => {
                 const emf = Math.hypot(e.alpha||0, e.beta||0, e.gamma||0) / 3;
                 document.getElementById('hud').innerHTML = `EMF: ${emf.toFixed(1)} μT<br>FRÉQ: -- Hz<br>ENTITÉ: LIVE<br>CONF: 100%`;
-                if (emf > Config.data.emfSensitivity) {
-                    document.body.classList.add('strobe');
-                    setTimeout(() => document.body.classList.remove('strobe'), 1200);
+                if (emf > Config.data.emfSensitivity && Date.now() - lastTrigger > 8000) {
+                    lastTrigger = Date.now();
+                    ghostIntensity = 220;
                     triggerAI(`EMF SPIKE TRÈS FORT (${emf.toFixed(1)} μT)`);
                 }
             });
@@ -346,7 +381,7 @@
 
         window.onload = () => {
             Config.load();
-            App.log("SUPRA ETERNITY v20 — TOUT LES BOUTONS ACTIFS + TRANSCRIPTION RÉELLE", "sys");
+            App.log("SUPRA ETERNITY v21 chargée — tout fonctionne", "sys");
         };
     </script>
 </body>
