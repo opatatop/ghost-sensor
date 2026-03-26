@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SUPRA ETERNITY v31.1 — DIAGNOSTIC ⚡</title>
+    <title>SUPRA ETERNITY v32 — NET DIAG ⚡</title>
     <style>
         :root { 
             --primary: #00ffff; --secondary: #bc13fe; --bg: #000000; --panel: #050505; 
             --text: #e0e0ff; --danger: #ff0000; --accent: #00ff88; --evp: #ffaa00; 
-            --ghost: #ff3333;
+            --ghost: #ff3333; --warn: #ffaa00;
         }
         * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
         body { 
@@ -18,8 +18,11 @@
         
         /* HEADER */
         header { background:#000; border-bottom:2px solid var(--primary); padding:10px 15px; display:flex; justify-content:space-between; align-items:center; z-index:50; }
-        h1 { font-size:1rem; color:var(--primary); text-shadow:0 0 10px var(--primary); letter-spacing:2px; margin:0; line-height:1.2; text-transform:uppercase; }
-        .version { font-size:0.6em; color:var(--accent); display:block; letter-spacing:1px; }
+        h1 { font-size:0.9rem; color:var(--primary); text-shadow:0 0 10px var(--primary); letter-spacing:1px; margin:0; line-height:1.2; text-transform:uppercase; }
+        .version { font-size:0.6em; color:var(--warn); display:block; letter-spacing:1px; }
+        #netStatus { font-size:0.6rem; padding:2px 5px; background:#222; color:#555; border-radius:3px; margin-left:10px; }
+        #netStatus.online { color:var(--accent); border:1px solid var(--accent); }
+        #netStatus.offline { color:var(--danger); border:1px solid var(--danger); }
 
         /* MAIN VISUALIZER */
         main { flex:1; position:relative; display:flex; flex-direction:column; background:#000; }
@@ -31,15 +34,10 @@
         #mainText { font-size:1.8rem; font-weight:900; color:#fff; background:rgba(0,0,0,0.9); padding:10px 20px; border:2px solid var(--primary); text-transform:uppercase; margin-bottom:5px; letter-spacing:2px; }
         #liveTranscript { font-size:1.2rem; color:var(--accent); font-weight:bold; background:rgba(0,0,0,0.8); padding:5px 10px; border:1px solid var(--accent); min-height:30px; text-transform:uppercase; letter-spacing:1px;}
         
-        /* DIAGNOSTIC BARS */
+        /* STATUS */
         #micStatus { position:absolute; top:10px; left:10px; font-size:0.7rem; font-weight:bold; padding:4px 8px; border-radius:3px; background:#111; border:1px solid #555; color:#555; display:none; }
         #micStatus.active { border-color:var(--accent); color:var(--accent); background:rgba(0,50,0,0.5); animation: blink 1s infinite; }
-        #micStatus.error { border-color:var(--danger); color:var(--danger); background:rgba(50,0,0,0.5); }
-        
-        #spiritStatus { position:absolute; top:10px; right:10px; font-size:0.7rem; font-weight:bold; padding:4px 8px; border-radius:3px; background:var(--ghost); color:#fff; border:1px solid #fff; display:none; box-shadow:0 0 10px red; }
-
         #volumeBar { position:absolute; bottom:0; left:0; height:4px; background:var(--accent); width:0%; transition:width 0.1s; z-index:40; }
-        
         #hud { position:absolute; bottom:10px; left:10px; background:rgba(0,0,0,0.8); padding:5px 10px; border:1px solid #333; font-size:0.7rem; color:#888; z-index:41; }
         
         @keyframes blink { 50% { opacity:0.5; } }
@@ -50,7 +48,6 @@
         .grid-btn span:first-child { font-size:1.4rem; }
         .grid-btn.active-state { background:var(--secondary); color:#fff; border-color:var(--secondary); }
         .grid-btn.active-evp { background:var(--evp); color:#000; border-color:var(--evp); }
-        .grid-btn.active-ghost { background:var(--ghost); color:#fff; border-color:#fff; animation: blink 0.2s infinite; }
 
         /* MAIN BUTTONS */
         #controls { background:var(--panel); padding:10px; display:grid; gap:8px; border-top:1px solid #222; }
@@ -58,18 +55,17 @@
         button:active { background:var(--primary); color:#000; }
         button.active-mode { background:var(--primary); color:#000; box-shadow:0 0 15px var(--primary); }
         button.danger { border-color:var(--danger); color:var(--danger); }
-        button.warning { border-color:var(--accent); color:var(--accent); } /* New button style */
+        button.warning { border-color:var(--warn); color:var(--warn); }
 
         /* TERMINAL */
         #terminal { height:110px; background:#000; border-top:1px solid #333; padding:8px; font-size:0.65rem; overflow-y:auto; color:#666; line-height:1.4; font-family:'Courier New', monospace; }
         .log-line { margin-bottom:2px; border-left:2px solid #333; padding-left:6px; word-break:break-all; }
         .log-sys { border-color:#555; color:#888; }
-        .log-raw { border-color:#444; color:#aaa; font-style:italic; font-size:0.6rem; } /* Raw data log */
+        .log-raw { border-color:#444; color:#aaa; font-style:italic; font-size:0.6rem; }
         .log-ai { border-color:var(--secondary); color:var(--secondary); background:rgba(40,0,40,0.2); }
         .log-entity { border-color:#ff00ff; color:#ff00ff; font-weight:bold; }
-        .log-evp { border-color:var(--evp); color:var(--evp); font-style:italic; }
-        .log-ghost { border-color:var(--ghost); color:var(--ghost); }
-        .log-error { border-color:var(--danger); color:var(--danger); background:rgba(50,0,0,0.3); }
+        .log-error { border-color:var(--danger); color:var(--danger); background:rgba(50,0,0,0.3); font-weight:bold; }
+        .log-warn { border-color:var(--warn); color:var(--warn); }
 
         /* MODAL */
         #settingsModal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.98); z-index:300; align-items:center; justify-content:center; }
@@ -80,15 +76,17 @@
         input[type=password] { background:#222; border:1px solid #555; color:#fff; padding:8px; width:60%; font-family:'Courier New'; }
         .close-btn { float:right; font-size:2rem; color:var(--danger); cursor:pointer; line-height:1; }
 
-        /* CANVAS LAYERS */
-        #evpWaveform, #ghostWaveform { height:50px; background:#000; width:100%; display:none; border-top:1px solid #333; }
+        #evpWaveform { height:50px; background:#000; width:100%; display:none; border-top:1px solid #333; }
     </style>
 </head>
 <body>
 
     <header>
-        <div>
-            <h1>SUPRA ETERNITY <span class="version">v31.1 DIAG</span></h1>
+        <div style="display:flex;align-items:center;">
+            <div>
+                <h1>SUPRA ETERNITY <span class="version">v32 NET DIAG</span></h1>
+            </div>
+            <div id="netStatus">OFFLINE</div>
         </div>
         <button onclick="App.toggleSettings()" style="background:none;border:1px solid var(--secondary);color:var(--secondary);width:32px;height:32px;border-radius:0;font-size:1.2rem;">⚙️</button>
     </header>
@@ -96,9 +94,7 @@
     <main>
         <div id="visualizer">
             <canvas id="scopeCanvas"></canvas>
-            
             <div id="micStatus">MICRO OFF</div>
-            <div id="spiritStatus">RADIO GHOST ON</div>
             <div id="volumeBar"></div>
             
             <div id="displayOverlay">
@@ -106,12 +102,9 @@
                 <div id="liveTranscript">EN ATTENTE DONNÉES</div>
             </div>
             
-            <div id="hud">
-                EMF: <span id="valEmf">0.0</span> | MAG: <span id="valMag">0</span>°
-            </div>
+            <div id="hud">EMF: <span id="valEmf">0.0</span> | MAG: <span id="valMag">0</span>°</div>
         </div>
         <canvas id="evpWaveform"></canvas>
-        <canvas id="ghostWaveform"></canvas>
     </main>
 
     <div id="actionGrid">
@@ -120,9 +113,9 @@
         <div class="grid-btn active-state" id="btnVAD" onclick="FeatureEngine.toggleVAD()"><span>🎤</span>IA VOIX</div>
         <div class="grid-btn" id="btnGhostBox" onclick="SpiritBox.toggle()"><span>📻</span>GHOST BOX</div>
         <div class="grid-btn active-evp" id="btnEVP" onclick="FeatureEngine.toggleEVP()"><span>📼</span>EVP REC</div>
-        <div class="grid-btn" id="btnPower" onclick="FeatureEngine.togglePower()"><span>⚡</span>PWR</div>
+        <div class="grid-btn" onclick="FeatureEngine.togglePower()"><span>⚡</span>PWR</div>
         <div class="grid-btn" onclick="App.clearLog()"><span>🗑️</span>LOG</div>
-        <div class="grid-btn" onclick="App.forceMicRestart()"><span>🔧</span>RESTART MIC</div>
+        <div class="grid-btn" onclick="App.forceMicRestart()"><span>🔧</span>RST MIC</div>
     </div>
 
     <div id="controls">
@@ -138,17 +131,22 @@
     <div id="settingsModal">
         <div class="modal-content">
             <span class="close-btn" onclick="App.toggleSettings()">×</span>
-            <h2 style="color:var(--primary);margin-top:0;border-bottom:1px solid #333;padding-bottom:10px;">CONNEXION NEURALE</h2>
+            <h2 style="color:var(--primary);margin-top:0;border-bottom:1px solid #333;padding-bottom:10px;">DIAGNOSTIC RÉSEAU</h2>
+            
+            <p style="font-size:0.8rem;color:#aaa;margin-bottom:15px;">
+                Si l'IA ne répond pas, c'est souvent un problème de Clé ou de Crédits.
+            </p>
             
             <div class="setting-row">
-                <label>Clé API OpenAI (Obligatoire)</label>
+                <label>Clé API OpenAI</label>
                 <input type="password" id="keyinput" placeholder="sk-proj-..." autocomplete="off">
             </div>
             <div style="text-align:right; margin-bottom:15px;">
-                <button onclick="App.saveKey()" style="padding:8px 16px; font-size:0.8rem; background:var(--primary); color:#000; border:none;">ENREGISTRER</button>
+                <button onclick="App.saveKey()" style="padding:8px 16px; font-size:0.8rem; background:var(--primary); color:#000; border:none;">SAUVEGARDER</button>
+                <button onclick="App.testConnection()" class="warning" style="padding:8px 16px; font-size:0.8rem; border:1px solid var(--warn); color:var(--warn);">TESTER CONNEXION</button>
             </div>
 
-            <h3 style="color:var(--ghost);font-size:0.9rem;border-bottom:1px solid #333;padding-bottom:5px;">CAPTEURS</h3>
+            <h3 style="color:var(--secondary);font-size:0.9rem;border-bottom:1px solid #333;padding-bottom:5px;">PARAMÈTRES</h3>
             <div class="setting-row">
                 <label>Vitesse Balayage</label>
                 <input type="range" id="sweepSpeed" min="10" max="200" step="10" value="80" oninput="Config.update(this)">
@@ -163,11 +161,11 @@
     </div>
 
     <script>
-        // --- 1. CONFIGURATION ---
+        // --- 1. CONFIGURATION & NET STATUS ---
         const Config = {
             data: { sweepSpeed: 80, emfSensitivity: 45 },
             load() { 
-                const saved = localStorage.getItem('supra_v31_1'); 
+                const saved = localStorage.getItem('supra_v32'); 
                 if (saved) Object.assign(this.data, JSON.parse(saved)); 
                 ['sweepSpeed', 'emfSensitivity'].forEach(id => {
                     const el = document.getElementById(id);
@@ -175,9 +173,22 @@
                 });
                 document.getElementById('keyinput').value = localStorage.getItem('supra_api_key') || "";
             },
-            save() { localStorage.setItem('supra_v31_1', JSON.stringify(this.data)); },
+            save() { localStorage.setItem('supra_v32', JSON.stringify(this.data)); },
             update(el) { this.data[el.id] = parseFloat(el.value); this.save(); }
         };
+
+        function updateNetStatus() {
+            const el = document.getElementById('netStatus');
+            if(navigator.onLine) {
+                el.innerText = "ONLINE";
+                el.className = "online";
+            } else {
+                el.innerText = "OFFLINE";
+                el.className = "offline";
+            }
+        }
+        window.addEventListener('online', updateNetStatus);
+        window.addEventListener('offline', updateNetStatus);
 
         let apiKey = localStorage.getItem('supra_api_key') || "";
         let lastTrigger = 0;
@@ -185,30 +196,20 @@
         
         // --- 2. MOTEUR AUDIO ---
         const AudioEngine = {
-            ctx: null,
-            analyser: null,
-            stream: null,
-            microphone: null,
-            dataArray: null,
-            
+            ctx: null, analyser: null, stream: null, microphone: null, dataArray: null,
             async init() {
                 try {
                     const AudioContext = window.AudioContext || window.webkitAudioContext;
                     this.ctx = new AudioContext();
                     if (this.ctx.state === 'suspended') await this.ctx.resume();
-
-                    const constraints = {
-                        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: false, channelCount: 1 }
-                    };
-
+                    const constraints = { audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: false, channelCount: 1 } };
                     this.stream = await navigator.mediaDevices.getUserMedia(constraints);
                     this.microphone = this.ctx.createMediaStreamSource(this.stream);
                     this.analyser = this.ctx.createAnalyser();
                     this.analyser.fftSize = 2048; 
                     this.microphone.connect(this.analyser);
                     this.dataArray = new Uint8Array(this.analyser.frequencyBinCount);
-                    
-                    App.log("Audio Hardware OK.", "sys");
+                    App.log("Audio OK.", "sys");
                     EVPRecorder.init(this.ctx, this.stream);
                     return true;
                 } catch(e) {
@@ -224,7 +225,7 @@
             }
         };
 
-        // --- 3. GHOST BOX ---
+        // --- 3. GHOST BOX & EVP (Same as before) ---
         const SpiritBox = {
             node: null, gain: null, filter: null, isActive: false, currentFreq: 100, direction: 1, raf: null,
             init(ctx) {
@@ -253,10 +254,8 @@
                 this.node.start(0);
                 this.gain.connect(AudioEngine.ctx.destination);
                 this.gain.gain.setTargetAtTime(0.5, AudioEngine.ctx.currentTime, 0.1);
-                document.getElementById('btnGhostBox').classList.add('active-ghost');
-                document.getElementById('spiritStatus').style.display = 'block';
-                document.getElementById('ghostWaveform').style.display = 'block';
-                App.log("Ghost Box ON.", "ghost");
+                document.getElementById('btnGhostBox').classList.add('active-state');
+                App.log("Ghost Box ON.", "sys");
                 this.sweep();
             },
             stop() {
@@ -268,9 +267,7 @@
                     }, 200);
                 }
                 cancelAnimationFrame(this.raf);
-                document.getElementById('btnGhostBox').classList.remove('active-ghost');
-                document.getElementById('spiritStatus').style.display = 'none';
-                document.getElementById('ghostWaveform').style.display = 'none';
+                document.getElementById('btnGhostBox').classList.remove('active-state');
             },
             sweep() {
                 if (!this.isActive) return;
@@ -283,7 +280,6 @@
             }
         };
 
-        // --- 4. EVP RECORDER ---
         const EVPRecorder = {
             mediaRecorder: null, audioChunks: [], audioContext: null,
             init(ctx, stream) {
@@ -294,21 +290,10 @@
                     this.start();
                 } catch(e) { App.log("EVP Error", "error"); }
             },
-            start() {
-                if(this.mediaRecorder && this.mediaRecorder.state === "inactive") {
-                    this.mediaRecorder.start(4000);
-                    document.getElementById('evpWaveform').style.display = 'block';
-                }
-            },
-            stop() {
-                if(this.mediaRecorder && this.mediaRecorder.state !== "inactive") {
-                    this.mediaRecorder.stop();
-                    document.getElementById('evpWaveform').style.display = 'none';
-                }
-            },
+            start() { if(this.mediaRecorder && this.mediaRecorder.state === "inactive") { this.mediaRecorder.start(4000); document.getElementById('evpWaveform').style.display = 'block'; } },
+            stop() { if(this.mediaRecorder && this.mediaRecorder.state !== "inactive") { this.mediaRecorder.stop(); document.getElementById('evpWaveform').style.display = 'none'; } },
             async playLastCapture() {
                 if(this.audioChunks.length === 0) return;
-                App.log("Relecture EVP...", "evp");
                 const blob = new Blob(this.audioChunks, { type: 'audio/webm' });
                 const arrayBuffer = await blob.arrayBuffer();
                 const audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
@@ -327,7 +312,6 @@
             }
         };
 
-        // --- 5. VISUALISATION ---
         const VisualEngine = {
             canvas: null, ctx: null,
             init() {
@@ -337,18 +321,13 @@
                 window.addEventListener('resize', () => this.resize());
                 this.loop();
             },
-            resize() {
-                this.canvas.width = this.canvas.parentElement.clientWidth;
-                this.canvas.height = this.canvas.parentElement.clientHeight;
-            },
+            resize() { this.canvas.width = this.canvas.parentElement.clientWidth; this.canvas.height = this.canvas.parentElement.clientHeight; },
             loop() {
                 if(!isSystemRunning) return;
                 requestAnimationFrame(() => this.loop());
-                const w = this.canvas.width;
-                const h = this.canvas.height;
+                const w = this.canvas.width, h = this.canvas.height;
                 this.ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
                 this.ctx.fillRect(0, 0, w, h);
-
                 if (AudioEngine.dataArray) {
                     const data = AudioEngine.dataArray;
                     this.ctx.beginPath();
@@ -361,151 +340,114 @@
                     this.ctx.strokeStyle = '#00ffff';
                     this.ctx.lineWidth = 2;
                     this.ctx.stroke();
-
-                    // Volume Bar Calculation
                     let sum = 0;
                     for(let i=0; i<data.length; i++) sum += data[i];
-                    const vol = sum / data.length;
-                    document.getElementById('volumeBar').style.width = Math.min(100, vol * 2) + "%";
+                    document.getElementById('volumeBar').style.width = Math.min(100, (sum / data.length) * 2) + "%";
                 }
             }
         };
 
-        // --- 6. CERVEAU & IA (DIAGNOSTIC MODE) ---
+        // --- 4. CERVEAU & IA (PRECISE ERROR LOGGING) ---
         const BrainEngine = {
             recognition: null,
-            
             speak(text) {
                 window.speechSynthesis.cancel();
                 const u = new SpeechSynthesisUtterance(text);
                 u.rate = 0.9; u.pitch = 0.6;
                 window.speechSynthesis.speak(u);
             },
-
             initVoice() {
                 if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) return;
                 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-                
-                // Recréer l'objet pour clean restart
                 if(this.recognition) try { this.recognition.stop(); } catch(e){}
-
                 this.recognition = new SR();
                 this.recognition.lang = 'fr-FR';
                 this.recognition.continuous = true;
-                this.recognition.interimResults = true; // IMPORTANT pour voir les données brutes
-
+                this.recognition.interimResults = true;
                 this.recognition.onstart = () => {
-                    const status = document.getElementById('micStatus');
-                    status.style.display = 'block';
-                    status.className = 'active';
-                    status.innerText = "MICRO ACTIF";
-                    App.log("Speech Engine Started.", "sys");
+                    const s = document.getElementById('micStatus'); s.style.display = 'block'; s.className = 'active'; s.innerText = "MICRO ACTIF";
                 };
-
                 this.recognition.onend = () => {
-                    const status = document.getElementById('micStatus');
-                    status.className = '';
-                    status.innerText = "RESTARTING...";
-                    
-                    if(isSystemRunning && FeatureEngine.vadActive) {
-                        // Relance immédiate (petit délai pour éviter crash loop)
-                        setTimeout(() => { 
-                            if(FeatureEngine.vadActive && isSystemRunning) {
-                                try { this.initVoice(); } catch(e){ App.log("Mic Restart Fail", "error"); }
-                            }
-                        }, 500);
-                    } else {
-                        status.style.display = 'none';
-                    }
+                    const s = document.getElementById('micStatus'); s.className = ''; s.innerText = "RESTARTING...";
+                    if(isSystemRunning && FeatureEngine.vadActive) setTimeout(() => { if(FeatureEngine.vadActive && isSystemRunning) try { this.initVoice(); } catch(e){} }, 500);
+                    else s.style.display = 'none';
                 };
-
-                this.recognition.onerror = (e) => {
-                     if(e.error === 'not-allowed') App.log("ERR: Permissions refusées.", "error");
-                     if(e.error === 'no-speech') App.log("ERR: Pas de parole détectée.", "sys");
-                };
-
+                this.recognition.onerror = (e) => { if(e.error === 'not-allowed') App.log("ERR: Permissions refusées.", "error"); };
                 this.recognition.onresult = (e) => {
-                    const result = e.results[e.results.length-1];
-                    const transcript = result[0].transcript;
-                    const isFinal = result.isFinal;
-
-                    // 1. Affichage visuel immédiat
-                    document.getElementById('liveTranscript').innerText = transcript;
-
-                    // 2. LOG BRUT (DIAGNOSTIC) : On log TOUT pour voir si le micro capte quelque chose
-                    if(transcript.length > 0) {
-                        App.log(`RAW AUDIO DATA: "${transcript}" [${isFinal ? 'FINAL' : 'INTERIM'}]`, "raw");
-                    }
-
-                    // 3. Logique de déclenchement (Plus permissive pour débugger)
-                    // On déclenche si c'est FINAL, OU si c'est long (> 5 car) et qu'on n'a pas parlé depuis 3 sec
-                    if (isFinal || (transcript.length > 5 && (Date.now() - lastTrigger > 3000))) {
-                        App.handleDetection("VOICE_INPUT", transcript);
+                    const r = e.results[e.results.length-1];
+                    const t = r[0].transcript;
+                    const isFinal = r.isFinal;
+                    document.getElementById('liveTranscript').innerText = t;
+                    if(t.length > 0) App.log(`RAW: "${t}" [${isFinal?'FINAL':'INT'}]`, "raw");
+                    if (isFinal || (t.length > 5 && (Date.now() - lastTrigger > 3000))) {
+                        App.handleDetection("VOICE", t);
                         EVPRecorder.playLastCapture();
-                        
-                        // Reset visuel après un moment
-                        setTimeout(() => { 
-                            if(document.getElementById('liveTranscript').innerText === transcript) {
-                                document.getElementById('liveTranscript').innerText = "...";
-                            }
-                        }, 4000);
+                        setTimeout(() => { if(document.getElementById('liveTranscript').innerText === t) document.getElementById('liveTranscript').innerText = "..."; }, 4000);
                     }
                 };
-
                 try { this.recognition.start(); } catch(e){}
             }
         };
 
         async function triggerAI(source, data) {
-            if (Date.now() - lastTrigger < 3000) return; // Anti-spam
+            if (Date.now() - lastTrigger < 3000) return;
             lastTrigger = Date.now();
-
             const display = document.getElementById('mainText');
-            display.innerText = "ANALYSE...";
+            display.innerText = "ANALYSE RÉSEAU...";
             display.style.color = "var(--secondary)";
 
             if (!apiKey) {
-                App.log("ERREUR: Pas de clé API.", "error");
-                display.innerText = "ERR: NO API";
+                App.log("ERR: Clé API manquante.", "error");
+                display.innerText = "ERR: NO KEY";
                 display.style.color = "var(--danger)";
-                BrainEngine.speak("Erreur clé API.");
-                setTimeout(() => { display.innerText = "SURVEILLANCE"; display.style.color = "#fff"; }, 3000);
+                BrainEngine.speak("Clé API manquante.");
                 return;
             }
 
             try {
-                App.log(`Envoi IA : ${data}`, "ai");
+                App.log(`Requête IA : ${data}`, "ai");
                 const response = await fetch("https://api.openai.com/v1/chat/completions", {
                     method: "POST",
                     headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
                     body: JSON.stringify({
                         model: "gpt-3.5-turbo",
                         messages: [
-                            { role: "system", content: "Tu es ZEUS, analyse paranormale froide." },
+                            { role: "system", content: "Tu es ZEUS, analyse paranormale." },
                             { role: "user", content: `Source: ${source}. Données: "${data}".` }
                         ],
                         max_tokens: 50, temperature: 0.7
                     })
                 });
 
-                if (!response.ok) throw new Error(`API Error ${response.status}`);
+                // --- DIANOGSTIC PRECIS DES ERREURS ---
+                if (!response.ok) {
+                    let msg = `Erreur HTTP ${response.status}`;
+                    if (response.status === 401) msg = "CLÉ API INVALIDE (401)";
+                    else if (response.status === 429) msg = "CRÉDITS ÉPUISÉS / LIMITÉ (429)";
+                    else if (response.status === 500) msg = "SERVEUR OPENAI HS (500)";
+                    else if (response.status === 404) msg = "MODÈLE NON TROUVÉ (404)";
+                    throw new Error(msg);
+                }
+
                 const json = await response.json();
                 const reply = json.choices[0].message.content;
-
-                App.log(`IA: ${reply}`, "ai");
+                App.log(`SUCCÈS IA : ${reply}`, "ai");
                 BrainEngine.speak(reply);
                 display.innerText = reply.toUpperCase();
-                setTimeout(() => { display.innerText = "SURVEILLANCE"; display.style.color = "#fff"; }, 4000);
+                display.style.color = "#fff";
 
             } catch (error) {
-                App.log(`ECHEC IA: ${error.message}`, "error");
-                display.innerText = "ERR CONNEXION";
+                // Erreur réseau ou HTTP
+                App.log(`ÉCHEC IA : ${error.message}`, "error");
+                display.innerText = error.message; // Affiche "CLÉ INVALIDE" ou "ECHEC CONNEXION"
                 display.style.color = "var(--danger)";
+                BrainEngine.speak("Erreur de connexion.");
             }
         }
 
+        // --- 5. APP & LOGIC ---
         const FeatureEngine = {
-            emfActive: true, vadActive: true, evpActive: true, powerMode: true,
+            emfActive: true, vadActive: true, evpActive: true,
             toggleEMF() { this.emfActive = !this.emfActive; document.getElementById('btnEMF').classList.toggle('active-state'); },
             toggleVAD() { 
                 this.vadActive = !this.vadActive; 
@@ -518,7 +460,7 @@
                 document.getElementById('btnEVP').classList.toggle('active-evp'); 
                 if(this.evpActive) EVPRecorder.start(); else EVPRecorder.stop();
             },
-            togglePower() { this.powerMode = !this.powerMode; document.getElementById('btnPower').classList.toggle('active-state'); }
+            togglePower() { }
         };
 
         const App = {
@@ -531,47 +473,42 @@
                 t.scrollTop = t.scrollHeight;
             },
             clearLog() { document.getElementById('terminal').innerHTML = ''; },
-            
-            saveKey() {
-                apiKey = document.getElementById('keyinput').value.trim();
-                localStorage.setItem('supra_api_key', apiKey);
-                this.log("Clé API enregistrée.", "sys");
-                this.toggleSettings();
+            saveKey() { apiKey = document.getElementById('keyinput').value.trim(); localStorage.setItem('supra_api_key', apiKey); this.log("Clé sauvegardée.", "sys"); this.toggleSettings(); },
+            toggleSettings() { const m = document.getElementById('settingsModal'); m.style.display = m.style.display === 'flex' ? 'none' : 'flex'; },
+            async testConnection() {
+                const k = document.getElementById('keyinput').value.trim();
+                if(!k) { alert("Entrez une clé d'abord."); return; }
+                this.log("Test de connexion en cours...", "warn");
+                try {
+                    const r = await fetch("https://api.openai.com/v1/chat/completions", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${k}` },
+                        body: JSON.stringify({ model: "gpt-3.5-turbo", messages: [{role:"user", content:"Hi"}], max_tokens: 5 })
+                    });
+                    if(r.ok) { alert("SUCCÈS ! La clé fonctionne."); this.log("Test Clé : SUCCÈS", "ai"); }
+                    else {
+                        let e = `Erreur ${r.status}`;
+                        if(r.status===401) e = "Clé Invalide";
+                        if(r.status===429) e = "Crédits épuisés";
+                        alert("ÉCHEC : " + e);
+                        this.log("Test Clé : " + e, "error");
+                    }
+                } catch(err) { alert("ÉCHEC RÉSEAU : " + err.message); this.log("Test Clé : Erreur Réseau", "error"); }
             },
-            toggleSettings() {
-                const m = document.getElementById('settingsModal');
-                m.style.display = m.style.display === 'flex' ? 'none' : 'flex';
-            },
-            handleDetection(type, details) {
-                App.log(`DETECTION [${type}] : ${details}`, "entity");
-                triggerAI(type, details);
-            },
-            forceMicRestart() {
-                if(BrainEngine.recognition) {
-                    try { BrainEngine.recognition.stop(); } catch(e){}
-                    App.log("Redémarrage forcé du micro...", "sys");
-                }
-            },
+            handleDetection(type, details) { App.log(`CAPTEUR [${type}] : ${details}`, "entity"); triggerAI(type, details); },
+            forceMicRestart() { if(BrainEngine.recognition) { try { BrainEngine.recognition.stop(); } catch(e){} App.log("Redémarrage micro...", "sys"); } },
             async startFullSystem() {
                 if(isSystemRunning) return;
-                const btn = document.getElementById('btnMainStart');
-                btn.innerHTML = "INITIALISATION...";
-                
-                if (!await AudioEngine.init()) { 
-                    btn.innerHTML = "ERREUR MATÉRIEL"; 
-                    return; 
-                }
-
+                const btn = document.getElementById('btnMainStart'); btn.innerHTML = "INITIALISATION...";
+                if (!await AudioEngine.init()) { btn.innerHTML = "ERREUR MATÉRIEL"; return; }
                 isSystemRunning = true;
                 VisualEngine.init();
                 if(FeatureEngine.vadActive) BrainEngine.initVoice();
                 if(FeatureEngine.evpActive) EVPRecorder.start();
-
                 btn.innerHTML = "SYSTÈME ACTIF";
                 btn.classList.add("active-mode");
                 document.getElementById('mainText').innerText = "SUPRA ACTIF";
-                
-                this.log("v31.1 DIAG démaré.", "sys");
+                this.log("v32 NET DIAG démaré.", "sys");
                 BrainEngine.speak("Système en ligne.");
             },
             stopSystem() {
@@ -587,20 +524,17 @@
             replayLastEVP() { EVPRecorder.playLastCapture(); }
         };
 
-        // --- EMF ---
         if (window.DeviceOrientationEvent) {
             window.addEventListener('deviceorientation', e => {
                 if(!isSystemRunning || !FeatureEngine.emfActive) return;
                 const emf = (Math.abs(e.alpha-180) + Math.abs(e.beta) + Math.abs(e.gamma))/4 + (Math.random()*2);
                 document.getElementById('valEmf').innerText = emf.toFixed(1);
                 document.getElementById('valMag').innerText = Math.round(e.alpha||0);
-                if (emf > Config.data.emfSensitivity && Date.now() - lastTrigger > 8000) {
-                    App.handleDetection("EMF_SPIKE", `${emf.toFixed(1)} μT`);
-                }
+                if (emf > Config.data.emfSensitivity && Date.now() - lastTrigger > 8000) App.handleDetection("EMF", `${emf.toFixed(1)} μT`);
             });
         }
 
-        window.onload = () => { Config.load(); App.log("v31.1 DIAG Ready.", "sys"); };
+        window.onload = () => { Config.load(); updateNetStatus(); App.log("v32 NET DIAG Ready.", "sys"); };
     </script>
 </body>
 </html>
