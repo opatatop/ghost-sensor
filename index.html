@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SUPRA ETERNITY v37 — FINAL HELP ⚡</title>
+    <title>SUPRA ETERNITY v39 — DNS FLUSH ⚡</title>
     <style>
         :root { 
             --primary: #00ffff; --secondary: #bc13fe; --bg: #000000; --panel: #0a0a20; 
@@ -26,8 +26,8 @@
         canvas { width:100%; height:100%; display:block; }
 
         #displayOverlay { position:absolute; top:15%; left:50%; transform:translateX(-50%); text-align:center; pointer-events:none; z-index:30; width:95%; }
-        #mainText { font-size:2rem; font-weight:900; color:#fff; background:rgba(0,0,0,0.9); padding:15px; border:3px solid var(--primary); text-transform:uppercase; margin-bottom:10px; letter-spacing:2px; min-height:60px; display:flex; align-items:center; justify-content:center; text-align:center;}
-        #liveTranscript { font-size:1.4rem; color:var(--accent); font-weight:900; background:rgba(0,0,0,0.9); padding:10px; border:2px solid var(--accent); min-height:40px; text-transform:uppercase; letter-spacing:1px;}
+        #mainText { font-size:1.8rem; font-weight:900; color:#fff; background:rgba(0,0,0,0.9); padding:15px; border:3px solid var(--primary); text-transform:uppercase; margin-bottom:10px; letter-spacing:2px; min-height:60px; display:flex; align-items:center; justify-content:center; text-align:center;}
+        #liveTranscript { font-size:1.2rem; color:var(--accent); font-weight:900; background:rgba(0,0,0,0.9); padding:10px; border:2px solid var(--accent); min-height:40px; text-transform:uppercase; letter-spacing:1px;}
         
         #micStatus { position:absolute; top:10px; left:10px; font-size:0.8rem; font-weight:bold; padding:5px 10px; border-radius:3px; background:#111; border:1px solid #555; color:#555; display:none; }
         #micStatus.active { border-color:var(--accent); color:var(--accent); background:rgba(0,50,0,0.5); animation: blink 0.5s infinite; }
@@ -102,7 +102,7 @@
 
     <header>
         <div>
-            <h1>SUPRA ETERNITY <span class="version">v37 FINAL</span></h1>
+            <h1>SUPRA ETERNITY <span class="version">v39 DNS</span></h1>
         </div>
         <button onclick="App.toggleSettings()" style="background:none;border:1px solid var(--secondary);color:var(--secondary);width:32px;height:32px;border-radius:0;font-size:1.2rem;">⚙️</button>
     </header>
@@ -148,12 +148,13 @@
     <div id="settingsModal">
         <div class="modal-content">
             <span class="close-btn" onclick="App.toggleSettings()">×</span>
-            <h2 style="color:var(--primary);margin-top:0;border-bottom:1px solid #333;padding-bottom:10px;">CONFIGURATION FINALE</h2>
+            <h2 style="color:var(--primary);margin-top:0;border-bottom:1px solid #333;padding-bottom:10px;">DIAGNOSTIC FINAL</h2>
             
-            <p style="font-size:0.8rem;color:#aaa;margin-bottom:15px;">
-                <strong>SI "BLOQUÉ" APPARAIT :</strong><br>
-                Allez dans AdGuard > Protection > DNS > Exclusions.<br>
-                Ajoutez le domaine : <code>api.openai.com</code>
+            <p style="font-size:0.85rem;color:#aaa;margin-bottom:15px; background:#220000; padding:10px; border:1px solid red;">
+                <strong>IMPORTANT : Si tout est bloqué :</strong><br>
+                1. Désactivez AdGuard.<br>
+                2. <strong>REDÉMARREZ VOTRE TÉLÉPHONE</strong> (Pour vider le cache DNS).<br>
+                3. Utilisez le bouton "TEST RESEAU" ci-dessous.
             </p>
             
             <div class="setting-row">
@@ -162,6 +163,10 @@
             </div>
             <div style="text-align:right; margin-bottom:15px;">
                 <button onclick="App.saveKey()" style="padding:8px 16px; font-size:0.8rem; background:var(--primary); color:#000; border:none;">SAUVEGARDER</button>
+            </div>
+
+            <div style="text-align:center; margin-bottom:15px;">
+                <button onclick="App.testNetwork()" class="retry" style="width:100%; padding:12px;">🔍 TEST RESEAU & CLE</button>
             </div>
 
             <button style="width:100%;margin-top:20px;" onclick="App.toggleSettings()">FERMER</button>
@@ -173,7 +178,7 @@
         const Config = {
             data: { sweepSpeed: 80, emfSensitivity: 45 },
             load() { 
-                const saved = localStorage.getItem('supra_v37'); 
+                const saved = localStorage.getItem('supra_v39'); 
                 if (saved) Object.assign(this.data, JSON.parse(saved)); 
                 ['sweepSpeed', 'emfSensitivity'].forEach(id => {
                     const el = document.getElementById(id);
@@ -181,7 +186,7 @@
                 });
                 document.getElementById('keyinput').value = localStorage.getItem('supra_api_key') || "";
             },
-            save() { localStorage.setItem('supra_v37', JSON.stringify(this.data)); },
+            save() { localStorage.setItem('supra_v39', JSON.stringify(this.data)); },
             update(el) { this.data[el.id] = parseFloat(el.value); this.save(); }
         };
 
@@ -421,8 +426,8 @@
 
                 if (!response.ok) {
                     let msg = `Erreur ${response.status}`;
-                    if (response.status === 401) msg = "CLÉ INVALIDE";
-                    else if (response.status === 429) msg = "CRÉDITS ÉPUISÉS";
+                    if (response.status === 401) msg = "CLÉ INVALIDE (401)";
+                    else if (response.status === 429) msg = "CRÉDITS ÉPUISÉS (429)";
                     throw new Error(msg);
                 }
 
@@ -436,8 +441,8 @@
             } catch (error) {
                 let errMsg = error.message;
                 if (error instanceof TypeError && errMsg === "Failed to fetch") {
-                    errMsg = "ADGUARD BLOQUE - AJOUTEZ api.openai.com AUX EXCLUSIONS";
-                    App.log("TIP: AdGuard > Protection > DNS > Exclusions. Ajoutez: api.openai.com", "warn");
+                    errMsg = "BLOQUÉ (DNS OU CLE)";
+                    App.log("TIP: Redémarrez le téléphone pour vider le cache DNS.", "error");
                 }
                 
                 App.log(`ECHEC IA: ${errMsg}`, "error");
@@ -474,6 +479,26 @@
             clearLog() { document.getElementById('terminal').innerHTML = ''; },
             saveKey() { apiKey = document.getElementById('keyinput').value.trim(); localStorage.setItem('supra_api_key', apiKey); this.log("Clé sauvegardée.", "sys"); this.toggleSettings(); },
             toggleSettings() { const m = document.getElementById('settingsModal'); m.style.display = m.style.display === 'flex' ? 'none' : 'flex'; },
+            async testNetwork() {
+                const k = document.getElementById('keyinput').value.trim();
+                if(!k) { alert("Entrez une clé d'abord"); return; }
+                this.log("Test réseau en cours (Modèles)...", "sys");
+                try {
+                    const r = await fetch("https://api.openai.com/v1/models", {
+                        headers: { "Authorization": `Bearer ${k}` }
+                    });
+                    if(r.ok) {
+                        alert("SUCCÈS ! La connexion vers OpenAI fonctionne. Le problème vient du système.");
+                        this.log("Test RESEAU: SUCCÈS", "ai");
+                    } else {
+                        alert("ERREUR " + r.status);
+                        this.log("Test RESEAU: Erreur " + r.status, "error");
+                    }
+                } catch(e) {
+                    alert("ECHEC: " + e.message);
+                    this.log("Test RESEAU: Failed to fetch", "error");
+                }
+            },
             handleDetection(type, details) { App.log(`CAPTEUR [${type}] : ${details}`, "entity"); triggerAI(type, details); },
             async startFullSystem() {
                 if(isSystemRunning) return;
@@ -486,7 +511,7 @@
                 btn.innerHTML = "SYSTÈME ACTIF";
                 btn.classList.add("active-mode");
                 document.getElementById('mainText').innerText = "SUPRA ACTIF";
-                this.log("v37 FINAL démaré.", "sys");
+                this.log("v39 DNS FLUSH démaré.", "sys");
                 BrainEngine.speak("Système en ligne.");
             },
             stopSystem() {
@@ -522,7 +547,7 @@
             });
         }
 
-        window.onload = () => { Config.load(); App.log("v37 FINAL Ready.", "sys"); };
+        window.onload = () => { Config.load(); App.log("v39 DNS FLUSH Ready.", "sys"); };
     </script>
 </body>
 </html>
