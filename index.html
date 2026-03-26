@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SUPRA ETERNITY v31 — HARD REALITY ⚡</title>
+    <title>SUPRA ETERNITY v31.1 — DIAGNOSTIC ⚡</title>
     <style>
         :root { 
             --primary: #00ffff; --secondary: #bc13fe; --bg: #000000; --panel: #050505; 
@@ -19,7 +19,7 @@
         /* HEADER */
         header { background:#000; border-bottom:2px solid var(--primary); padding:10px 15px; display:flex; justify-content:space-between; align-items:center; z-index:50; }
         h1 { font-size:1rem; color:var(--primary); text-shadow:0 0 10px var(--primary); letter-spacing:2px; margin:0; line-height:1.2; text-transform:uppercase; }
-        .version { font-size:0.6em; color:var(--danger); display:block; letter-spacing:1px; }
+        .version { font-size:0.6em; color:var(--accent); display:block; letter-spacing:1px; }
 
         /* MAIN VISUALIZER */
         main { flex:1; position:relative; display:flex; flex-direction:column; background:#000; }
@@ -28,17 +28,19 @@
 
         /* OVERLAYS */
         #displayOverlay { position:absolute; top:20%; left:50%; transform:translateX(-50%); text-align:center; pointer-events:none; z-index:30; width:95%; }
-        #mainText { font-size:2rem; font-weight:900; color:#fff; background:rgba(0,0,0,0.9); padding:15px 20px; border:3px solid var(--primary); text-transform:uppercase; text-shadow:0 0 10px var(--primary); margin-bottom:10px; letter-spacing:2px; }
-        #liveTranscript { font-size:1.1rem; color:var(--accent); font-weight:bold; background:rgba(0,0,0,0.7); padding:5px 10px; border:1px solid var(--accent); min-height:30px; margin-top:5px; text-transform:uppercase; letter-spacing:1px;}
+        #mainText { font-size:1.8rem; font-weight:900; color:#fff; background:rgba(0,0,0,0.9); padding:10px 20px; border:2px solid var(--primary); text-transform:uppercase; margin-bottom:5px; letter-spacing:2px; }
+        #liveTranscript { font-size:1.2rem; color:var(--accent); font-weight:bold; background:rgba(0,0,0,0.8); padding:5px 10px; border:1px solid var(--accent); min-height:30px; text-transform:uppercase; letter-spacing:1px;}
         
-        /* STATUS INDICATORS */
+        /* DIAGNOSTIC BARS */
         #micStatus { position:absolute; top:10px; left:10px; font-size:0.7rem; font-weight:bold; padding:4px 8px; border-radius:3px; background:#111; border:1px solid #555; color:#555; display:none; }
         #micStatus.active { border-color:var(--accent); color:var(--accent); background:rgba(0,50,0,0.5); animation: blink 1s infinite; }
         #micStatus.error { border-color:var(--danger); color:var(--danger); background:rgba(50,0,0,0.5); }
         
         #spiritStatus { position:absolute; top:10px; right:10px; font-size:0.7rem; font-weight:bold; padding:4px 8px; border-radius:3px; background:var(--ghost); color:#fff; border:1px solid #fff; display:none; box-shadow:0 0 10px red; }
 
-        #hud { position:absolute; bottom:10px; left:10px; background:rgba(0,0,0,0.8); padding:5px 10px; border:1px solid #333; font-size:0.7rem; color:#888; }
+        #volumeBar { position:absolute; bottom:0; left:0; height:4px; background:var(--accent); width:0%; transition:width 0.1s; z-index:40; }
+        
+        #hud { position:absolute; bottom:10px; left:10px; background:rgba(0,0,0,0.8); padding:5px 10px; border:1px solid #333; font-size:0.7rem; color:#888; z-index:41; }
         
         @keyframes blink { 50% { opacity:0.5; } }
 
@@ -56,12 +58,13 @@
         button:active { background:var(--primary); color:#000; }
         button.active-mode { background:var(--primary); color:#000; box-shadow:0 0 15px var(--primary); }
         button.danger { border-color:var(--danger); color:var(--danger); }
-        button.danger:active { background:var(--danger); color:#fff; }
+        button.warning { border-color:var(--accent); color:var(--accent); } /* New button style */
 
         /* TERMINAL */
-        #terminal { height:100px; background:#000; border-top:1px solid #333; padding:8px; font-size:0.65rem; overflow-y:auto; color:#666; line-height:1.4; font-family:'Courier New', monospace; }
-        .log-line { margin-bottom:2px; border-left:2px solid #333; padding-left:6px; }
+        #terminal { height:110px; background:#000; border-top:1px solid #333; padding:8px; font-size:0.65rem; overflow-y:auto; color:#666; line-height:1.4; font-family:'Courier New', monospace; }
+        .log-line { margin-bottom:2px; border-left:2px solid #333; padding-left:6px; word-break:break-all; }
         .log-sys { border-color:#555; color:#888; }
+        .log-raw { border-color:#444; color:#aaa; font-style:italic; font-size:0.6rem; } /* Raw data log */
         .log-ai { border-color:var(--secondary); color:var(--secondary); background:rgba(40,0,40,0.2); }
         .log-entity { border-color:#ff00ff; color:#ff00ff; font-weight:bold; }
         .log-evp { border-color:var(--evp); color:var(--evp); font-style:italic; }
@@ -85,7 +88,7 @@
 
     <header>
         <div>
-            <h1>SUPRA ETERNITY <span class="version">v31 REALITY</span></h1>
+            <h1>SUPRA ETERNITY <span class="version">v31.1 DIAG</span></h1>
         </div>
         <button onclick="App.toggleSettings()" style="background:none;border:1px solid var(--secondary);color:var(--secondary);width:32px;height:32px;border-radius:0;font-size:1.2rem;">⚙️</button>
     </header>
@@ -96,10 +99,11 @@
             
             <div id="micStatus">MICRO OFF</div>
             <div id="spiritStatus">RADIO GHOST ON</div>
+            <div id="volumeBar"></div>
             
             <div id="displayOverlay">
                 <div id="mainText">SYSTÈME ARRÊTÉ</div>
-                <div id="liveTranscript">EN ATTENTE DE DONNÉES</div>
+                <div id="liveTranscript">EN ATTENTE DONNÉES</div>
             </div>
             
             <div id="hud">
@@ -118,10 +122,11 @@
         <div class="grid-btn active-evp" id="btnEVP" onclick="FeatureEngine.toggleEVP()"><span>📼</span>EVP REC</div>
         <div class="grid-btn" id="btnPower" onclick="FeatureEngine.togglePower()"><span>⚡</span>PWR</div>
         <div class="grid-btn" onclick="App.clearLog()"><span>🗑️</span>LOG</div>
+        <div class="grid-btn" onclick="App.forceMicRestart()"><span>🔧</span>RESTART MIC</div>
     </div>
 
     <div id="controls">
-        <button class="active-mode" id="btnMainStart" onclick="App.startFullSystem()">INITIALISER LE SYSTÈME</button>
+        <button class="active-mode" id="btnMainStart" onclick="App.startFullSystem()">INITIALISER SYSTÈME</button>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;">
             <button onclick="App.replayLastEVP()">⏪ REJOUER EVP</button>
             <button class="danger" onclick="App.stopSystem()">ARRÊTER</button>
@@ -135,30 +140,22 @@
             <span class="close-btn" onclick="App.toggleSettings()">×</span>
             <h2 style="color:var(--primary);margin-top:0;border-bottom:1px solid #333;padding-bottom:10px;">CONNEXION NEURALE</h2>
             
-            <p style="font-size:0.8rem;color:#888;margin-bottom:15px;">
-                MODE RÉEL ACTIVÉ. Sans clé API valide, le système ne générera pas de réponse.
-            </p>
-            
             <div class="setting-row">
-                <label>Clé API OpenAI</label>
+                <label>Clé API OpenAI (Obligatoire)</label>
                 <input type="password" id="keyinput" placeholder="sk-proj-..." autocomplete="off">
             </div>
             <div style="text-align:right; margin-bottom:15px;">
                 <button onclick="App.saveKey()" style="padding:8px 16px; font-size:0.8rem; background:var(--primary); color:#000; border:none;">ENREGISTRER</button>
             </div>
 
-            <h3 style="color:var(--ghost);font-size:0.9rem;border-bottom:1px solid #333;padding-bottom:5px;">PARAMÈTRES CAPTEURS</h3>
+            <h3 style="color:var(--ghost);font-size:0.9rem;border-bottom:1px solid #333;padding-bottom:5px;">CAPTEURS</h3>
             <div class="setting-row">
-                <label>Vitesse Balayage (Ghost Box)</label>
+                <label>Vitesse Balayage</label>
                 <input type="range" id="sweepSpeed" min="10" max="200" step="10" value="80" oninput="Config.update(this)">
             </div>
             <div class="setting-row">
                 <label>Seuil EMF (μT)</label>
                 <input type="range" id="emfSensitivity" min="10" max="90" step="5" value="45" oninput="Config.update(this)">
-            </div>
-            <div class="setting-row">
-                <label>Filtre EVP (Hz)</label>
-                <input type="range" id="evpFilter" min="100" max="2000" step="50" value="600" oninput="Config.update(this)">
             </div>
 
             <button style="width:100%;margin-top:20px;" onclick="App.toggleSettings()">FERMER</button>
@@ -168,18 +165,17 @@
     <script>
         // --- 1. CONFIGURATION ---
         const Config = {
-            data: { sweepSpeed: 80, emfSensitivity: 45, evpFilter: 600 },
+            data: { sweepSpeed: 80, emfSensitivity: 45 },
             load() { 
-                const saved = localStorage.getItem('supra_v31'); 
+                const saved = localStorage.getItem('supra_v31_1'); 
                 if (saved) Object.assign(this.data, JSON.parse(saved)); 
-                // UI Sync
-                ['sweepSpeed', 'emfSensitivity', 'evpFilter'].forEach(id => {
+                ['sweepSpeed', 'emfSensitivity'].forEach(id => {
                     const el = document.getElementById(id);
                     if(el) el.value = this.data[id];
                 });
                 document.getElementById('keyinput').value = localStorage.getItem('supra_api_key') || "";
             },
-            save() { localStorage.setItem('supra_v31', JSON.stringify(this.data)); },
+            save() { localStorage.setItem('supra_v31_1', JSON.stringify(this.data)); },
             update(el) { this.data[el.id] = parseFloat(el.value); this.save(); }
         };
 
@@ -187,7 +183,7 @@
         let lastTrigger = 0;
         let isSystemRunning = false;
         
-        // --- 2. MOTEUR AUDIO (REALME FIX) ---
+        // --- 2. MOTEUR AUDIO ---
         const AudioEngine = {
             ctx: null,
             analyser: null,
@@ -212,7 +208,7 @@
                     this.microphone.connect(this.analyser);
                     this.dataArray = new Uint8Array(this.analyser.frequencyBinCount);
                     
-                    App.log("Audio hardware connecté.", "sys");
+                    App.log("Audio Hardware OK.", "sys");
                     EVPRecorder.init(this.ctx, this.stream);
                     return true;
                 } catch(e) {
@@ -228,68 +224,45 @@
             }
         };
 
-        // --- 3. GHOST BOX (REAL DIGITAL SWEEP) ---
+        // --- 3. GHOST BOX ---
         const SpiritBox = {
-            node: null,
-            gain: null,
-            filter: null,
-            isActive: false,
-            currentFreq: 100,
-            direction: 1,
-            raf: null,
-
+            node: null, gain: null, filter: null, isActive: false, currentFreq: 100, direction: 1, raf: null,
             init(ctx) {
                 if(!ctx) return;
-                // Création de bruit blanc statique
                 const bufferSize = 2 * ctx.sampleRate;
                 const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
                 const data = buffer.getChannelData(0);
-                for (let i = 0; i < bufferSize; i++) {
-                    // Bruit blanc + quelques crêtes aléatoires pour simuler interférences
-                    data[i] = (Math.random() * 2 - 1) * (Math.random() > 0.99 ? 2.0 : 0.8); 
-                }
-
+                for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1) * (Math.random() > 0.99 ? 2.0 : 0.8);
                 this.node = ctx.createBufferSource();
                 this.node.buffer = buffer;
                 this.node.loop = true;
-
                 this.filter = ctx.createBiquadFilter();
                 this.filter.type = 'bandpass';
                 this.filter.frequency.value = this.currentFreq;
-                this.filter.Q.value = 5; // Bande étroite pour effet radio
-
+                this.filter.Q.value = 5;
                 this.gain = ctx.createGain();
-                this.gain.gain.value = 0.0; // Start muted
-
+                this.gain.gain.value = 0.0;
                 this.node.connect(this.filter);
                 this.filter.connect(this.gain);
             },
-
-            toggle() {
-                if (this.isActive) this.stop();
-                else this.start();
-            },
-
+            toggle() { if (this.isActive) this.stop(); else this.start(); },
             start() {
                 if (!AudioEngine.ctx) return;
                 if (!this.node) this.init(AudioEngine.ctx);
-                
                 this.isActive = true;
                 this.node.start(0);
                 this.gain.connect(AudioEngine.ctx.destination);
-                this.gain.gain.setTargetAtTime(0.5, AudioEngine.ctx.currentTime, 0.1); // Fade in
-                
+                this.gain.gain.setTargetAtTime(0.5, AudioEngine.ctx.currentTime, 0.1);
                 document.getElementById('btnGhostBox').classList.add('active-ghost');
                 document.getElementById('spiritStatus').style.display = 'block';
                 document.getElementById('ghostWaveform').style.display = 'block';
-                App.log("Ghost Box : Balayage spectral actif.", "ghost");
+                App.log("Ghost Box ON.", "ghost");
                 this.sweep();
             },
-
             stop() {
                 this.isActive = false;
                 if (this.gain) {
-                    this.gain.gain.setTargetAtTime(0, AudioEngine.ctx.currentTime, 0.1); // Fade out
+                    this.gain.gain.setTargetAtTime(0, AudioEngine.ctx.currentTime, 0.1);
                     setTimeout(() => {
                         if(this.node) { try { this.node.stop(); } catch(e){} this.gain.disconnect(); }
                     }, 200);
@@ -299,72 +272,54 @@
                 document.getElementById('spiritStatus').style.display = 'none';
                 document.getElementById('ghostWaveform').style.display = 'none';
             },
-
             sweep() {
                 if (!this.isActive) return;
-                
-                // Balayage logarithmique plus naturel pour une radio
                 const speed = Config.data.sweepSpeed;
                 this.currentFreq *= (1 + (this.direction * (speed * 0.001)));
-
                 if (this.currentFreq > 5000) { this.direction = -1; }
                 if (this.currentFreq < 100) { this.direction = 1; }
-
                 this.filter.frequency.setTargetAtTime(this.currentFreq, AudioEngine.ctx.currentTime, 0.05);
-                
                 this.raf = requestAnimationFrame(() => this.sweep());
             }
         };
 
-        // --- 4. EVP RECORDER (REAL AUDIO BUFFER) ---
+        // --- 4. EVP RECORDER ---
         const EVPRecorder = {
-            mediaRecorder: null,
-            audioChunks: [],
-            audioContext: null,
-
+            mediaRecorder: null, audioChunks: [], audioContext: null,
             init(ctx, stream) {
                 this.audioContext = ctx;
                 try {
                     this.mediaRecorder = new MediaRecorder(stream);
                     this.mediaRecorder.ondataavailable = (e) => { this.audioChunks = [e.data]; };
                     this.start();
-                } catch(e) { App.log("EVP Init Error", "error"); }
+                } catch(e) { App.log("EVP Error", "error"); }
             },
-
             start() {
                 if(this.mediaRecorder && this.mediaRecorder.state === "inactive") {
-                    this.mediaRecorder.start(4000); // Buffer de 4 secondes
+                    this.mediaRecorder.start(4000);
                     document.getElementById('evpWaveform').style.display = 'block';
                 }
             },
-
             stop() {
                 if(this.mediaRecorder && this.mediaRecorder.state !== "inactive") {
                     this.mediaRecorder.stop();
                     document.getElementById('evpWaveform').style.display = 'none';
                 }
             },
-
             async playLastCapture() {
                 if(this.audioChunks.length === 0) return;
-                App.log("Analyse spectrale brute en cours...", "evp");
-                
+                App.log("Relecture EVP...", "evp");
                 const blob = new Blob(this.audioChunks, { type: 'audio/webm' });
                 const arrayBuffer = await blob.arrayBuffer();
                 const audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
                 const source = this.audioContext.createBufferSource();
                 source.buffer = audioBuffer;
-                
-                // Effet de ralentissement pour analyse (Paranormal style)
-                source.playbackRate.value = 0.85; 
-                
+                source.playbackRate.value = 0.85;
                 const filter = this.audioContext.createBiquadFilter();
                 filter.type = 'lowpass';
-                filter.frequency.value = Config.data.evpFilter;
-
+                filter.frequency.value = 600;
                 const gain = this.audioContext.createGain();
-                gain.gain.value = 2.0; // Boost car l'audio est souvent faible
-
+                gain.gain.value = 2.0;
                 source.connect(filter);
                 filter.connect(gain);
                 gain.connect(this.audioContext.destination);
@@ -374,8 +329,7 @@
 
         // --- 5. VISUALISATION ---
         const VisualEngine = {
-            canvas: null,
-            ctx: null,
+            canvas: null, ctx: null,
             init() {
                 this.canvas = document.getElementById('scopeCanvas');
                 this.ctx = this.canvas.getContext('2d');
@@ -407,11 +361,17 @@
                     this.ctx.strokeStyle = '#00ffff';
                     this.ctx.lineWidth = 2;
                     this.ctx.stroke();
+
+                    // Volume Bar Calculation
+                    let sum = 0;
+                    for(let i=0; i<data.length; i++) sum += data[i];
+                    const vol = sum / data.length;
+                    document.getElementById('volumeBar').style.width = Math.min(100, vol * 2) + "%";
                 }
             }
         };
 
-        // --- 6. CERVEAU & IA (STRICT NO-SIMULATION) ---
+        // --- 6. CERVEAU & IA (DIAGNOSTIC MODE) ---
         const BrainEngine = {
             recognition: null,
             
@@ -425,40 +385,70 @@
             initVoice() {
                 if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) return;
                 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+                
+                // Recréer l'objet pour clean restart
+                if(this.recognition) try { this.recognition.stop(); } catch(e){}
+
                 this.recognition = new SR();
                 this.recognition.lang = 'fr-FR';
                 this.recognition.continuous = true;
-                this.recognition.interimResults = true; 
+                this.recognition.interimResults = true; // IMPORTANT pour voir les données brutes
 
                 this.recognition.onstart = () => {
                     const status = document.getElementById('micStatus');
                     status.style.display = 'block';
                     status.className = 'active';
-                    status.innerText = "MIKRO ACTIF";
+                    status.innerText = "MICRO ACTIF";
+                    App.log("Speech Engine Started.", "sys");
                 };
 
                 this.recognition.onend = () => {
+                    const status = document.getElementById('micStatus');
+                    status.className = '';
+                    status.innerText = "RESTARTING...";
+                    
                     if(isSystemRunning && FeatureEngine.vadActive) {
-                        setTimeout(() => { if(FeatureEngine.vadActive) this.recognition.start(); }, 1000);
+                        // Relance immédiate (petit délai pour éviter crash loop)
+                        setTimeout(() => { 
+                            if(FeatureEngine.vadActive && isSystemRunning) {
+                                try { this.initVoice(); } catch(e){ App.log("Mic Restart Fail", "error"); }
+                            }
+                        }, 500);
                     } else {
-                        document.getElementById('micStatus').style.display = 'none';
+                        status.style.display = 'none';
                     }
                 };
 
                 this.recognition.onerror = (e) => {
-                     if(e.error === 'not-allowed') App.log("ERR: Permissions micro refusées.", "error");
+                     if(e.error === 'not-allowed') App.log("ERR: Permissions refusées.", "error");
+                     if(e.error === 'no-speech') App.log("ERR: Pas de parole détectée.", "sys");
                 };
 
                 this.recognition.onresult = (e) => {
                     const result = e.results[e.results.length-1];
                     const transcript = result[0].transcript;
+                    const isFinal = result.isFinal;
+
+                    // 1. Affichage visuel immédiat
                     document.getElementById('liveTranscript').innerText = transcript;
 
-                    if (result.isFinal) {
-                        // Détection vocale réelle
+                    // 2. LOG BRUT (DIAGNOSTIC) : On log TOUT pour voir si le micro capte quelque chose
+                    if(transcript.length > 0) {
+                        App.log(`RAW AUDIO DATA: "${transcript}" [${isFinal ? 'FINAL' : 'INTERIM'}]`, "raw");
+                    }
+
+                    // 3. Logique de déclenchement (Plus permissive pour débugger)
+                    // On déclenche si c'est FINAL, OU si c'est long (> 5 car) et qu'on n'a pas parlé depuis 3 sec
+                    if (isFinal || (transcript.length > 5 && (Date.now() - lastTrigger > 3000))) {
                         App.handleDetection("VOICE_INPUT", transcript);
                         EVPRecorder.playLastCapture();
-                        setTimeout(() => document.getElementById('liveTranscript').innerText = "...", 4000);
+                        
+                        // Reset visuel après un moment
+                        setTimeout(() => { 
+                            if(document.getElementById('liveTranscript').innerText === transcript) {
+                                document.getElementById('liveTranscript').innerText = "...";
+                            }
+                        }, 4000);
                     }
                 };
 
@@ -466,35 +456,33 @@
             }
         };
 
-        // --- FONCTION IA STRICTE ---
         async function triggerAI(source, data) {
-            if (Date.now() - lastTrigger < 4000) return;
+            if (Date.now() - lastTrigger < 3000) return; // Anti-spam
             lastTrigger = Date.now();
 
             const display = document.getElementById('mainText');
-            display.innerText = "TRAITMENT DONNÉES...";
+            display.innerText = "ANALYSE...";
             display.style.color = "var(--secondary)";
 
-            // VÉRIFICATION CLÉ OBLIGATOIRE
             if (!apiKey) {
-                App.log("ERREUR CRITIQUE: Aucune clé API OpenAI détectée. Analyse impossible.", "error");
-                display.innerText = "ERR: NO API KEY";
+                App.log("ERREUR: Pas de clé API.", "error");
+                display.innerText = "ERR: NO API";
                 display.style.color = "var(--danger)";
-                BrainEngine.speak("Erreur système. Clé API manquante.");
-                setTimeout(() => { display.innerText = "ATTENTE"; display.style.color = "#fff"; }, 3000);
+                BrainEngine.speak("Erreur clé API.");
+                setTimeout(() => { display.innerText = "SURVEILLANCE"; display.style.color = "#fff"; }, 3000);
                 return;
             }
 
             try {
-                App.log(`Envoi données vers IA : ${source}`, "ai");
+                App.log(`Envoi IA : ${data}`, "ai");
                 const response = await fetch("https://api.openai.com/v1/chat/completions", {
                     method: "POST",
                     headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
                     body: JSON.stringify({
                         model: "gpt-3.5-turbo",
                         messages: [
-                            { role: "system", content: "Tu es ZEUS, un système d'analyse paranormale froid et analytique. Tu réponds uniquement basé sur les données fournies. Pas de simulation." },
-                            { role: "user", content: `Source: ${source}. Données: "${data}". Analyse scientifique et paranormale.` }
+                            { role: "system", content: "Tu es ZEUS, analyse paranormale froide." },
+                            { role: "user", content: `Source: ${source}. Données: "${data}".` }
                         ],
                         max_tokens: 50, temperature: 0.7
                     })
@@ -504,19 +492,18 @@
                 const json = await response.json();
                 const reply = json.choices[0].message.content;
 
-                App.log(`RÉPONSE IA : ${reply}`, "ai");
+                App.log(`IA: ${reply}`, "ai");
                 BrainEngine.speak(reply);
                 display.innerText = reply.toUpperCase();
                 setTimeout(() => { display.innerText = "SURVEILLANCE"; display.style.color = "#fff"; }, 4000);
 
             } catch (error) {
-                App.log(`ÉCHEC CONNEXION IA : ${error.message}`, "error");
-                display.innerText = "CONNEXION PERDUE";
+                App.log(`ECHEC IA: ${error.message}`, "error");
+                display.innerText = "ERR CONNEXION";
                 display.style.color = "var(--danger)";
             }
         }
 
-        // --- 7. LOGIQUE APP ---
         const FeatureEngine = {
             emfActive: true, vadActive: true, evpActive: true, powerMode: true,
             toggleEMF() { this.emfActive = !this.emfActive; document.getElementById('btnEMF').classList.toggle('active-state'); },
@@ -524,6 +511,7 @@
                 this.vadActive = !this.vadActive; 
                 document.getElementById('btnVAD').classList.toggle('active-state');
                 if(this.vadActive && isSystemRunning) BrainEngine.initVoice();
+                else if(BrainEngine.recognition) { BrainEngine.recognition.stop(); document.getElementById('micStatus').style.display='none'; }
             },
             toggleEVP() { 
                 this.evpActive = !this.evpActive; 
@@ -555,8 +543,14 @@
                 m.style.display = m.style.display === 'flex' ? 'none' : 'flex';
             },
             handleDetection(type, details) {
-                App.log(`CAPTEUR [${type}] : ${details}`, "entity");
+                App.log(`DETECTION [${type}] : ${details}`, "entity");
                 triggerAI(type, details);
+            },
+            forceMicRestart() {
+                if(BrainEngine.recognition) {
+                    try { BrainEngine.recognition.stop(); } catch(e){}
+                    App.log("Redémarrage forcé du micro...", "sys");
+                }
             },
             async startFullSystem() {
                 if(isSystemRunning) return;
@@ -577,28 +571,23 @@
                 btn.classList.add("active-mode");
                 document.getElementById('mainText').innerText = "SUPRA ACTIF";
                 
-                this.log("Système v31 initialisé. Mode Réel.", "sys");
-                if(!apiKey) {
-                    this.log("ATTENTION: Aucune clé API. L'IA ne fonctionnera pas.", "error");
-                    BrainEngine.speak("Système en ligne. Attention, réseau neuronal déconnecté.");
-                } else {
-                    BrainEngine.speak("Système en ligne. Réseau neuronal connecté.");
-                }
+                this.log("v31.1 DIAG démaré.", "sys");
+                BrainEngine.speak("Système en ligne.");
             },
             stopSystem() {
                 isSystemRunning = false;
                 AudioEngine.stop();
                 if(BrainEngine.recognition) BrainEngine.recognition.stop();
                 window.speechSynthesis.cancel();
-                document.getElementById('btnMainStart').innerHTML = "INITIALISER LE SYSTÈME";
+                document.getElementById('btnMainStart').innerHTML = "INITIALISER SYSTÈME";
                 document.getElementById('btnMainStart').classList.remove("active-mode");
                 document.getElementById('mainText').innerText = "ARRÊTÉ";
-                this.log("Arrêt système.", "sys");
+                this.log("Arrêt.", "sys");
             },
             replayLastEVP() { EVPRecorder.playLastCapture(); }
         };
 
-        // --- 8. EMF SENSOR ---
+        // --- EMF ---
         if (window.DeviceOrientationEvent) {
             window.addEventListener('deviceorientation', e => {
                 if(!isSystemRunning || !FeatureEngine.emfActive) return;
@@ -606,12 +595,12 @@
                 document.getElementById('valEmf').innerText = emf.toFixed(1);
                 document.getElementById('valMag').innerText = Math.round(e.alpha||0);
                 if (emf > Config.data.emfSensitivity && Date.now() - lastTrigger > 8000) {
-                    App.handleDetection("EMF_SPIKE", `${emf.toFixed(1)} micro-Teslas`);
+                    App.handleDetection("EMF_SPIKE", `${emf.toFixed(1)} μT`);
                 }
             });
         }
 
-        window.onload = () => { Config.load(); App.log("SUPRA v31 Ready.", "sys"); };
+        window.onload = () => { Config.load(); App.log("v31.1 DIAG Ready.", "sys"); };
     </script>
 </body>
 </html>
