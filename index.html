@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SUPRA ETERNITY v35 — HYPER SENSITIVE ⚡</title>
+    <title>SUPRA ETERNITY v36 — FORCE RETRY ⚡</title>
     <style>
         :root { 
             --primary: #00ffff; --secondary: #bc13fe; --bg: #000000; --panel: #0a0a20; 
@@ -28,10 +28,9 @@
         #visualizer { flex:1; position:relative; overflow:hidden; border-bottom:1px solid #222; min-height: 150px; }
         canvas { width:100%; height:100%; display:block; }
 
-        /* Texte ENORME pour voir si ça marche */
         #displayOverlay { position:absolute; top:15%; left:50%; transform:translateX(-50%); text-align:center; pointer-events:none; z-index:30; width:95%; }
-        #mainText { font-size:2rem; font-weight:900; color:#fff; background:rgba(0,0,0,0.9); padding:15px; border:3px solid var(--primary); text-transform:uppercase; margin-bottom:10px; letter-spacing:2px; min-height:60px; display:flex; align-items:center; justify-content:center;}
-        #liveTranscript { font-size:1.5rem; color:var(--accent); font-weight:900; background:rgba(0,0,0,0.9); padding:10px; border:2px solid var(--accent); min-height:40px; text-transform:uppercase; letter-spacing:1px;}
+        #mainText { font-size:1.8rem; font-weight:900; color:#fff; background:rgba(0,0,0,0.9); padding:15px; border:3px solid var(--primary); text-transform:uppercase; margin-bottom:10px; letter-spacing:2px; min-height:60px; display:flex; align-items:center; justify-content:center;}
+        #liveTranscript { font-size:1.2rem; color:var(--accent); font-weight:900; background:rgba(0,0,0,0.9); padding:10px; border:2px solid var(--accent); min-height:40px; text-transform:uppercase; letter-spacing:1px;}
         
         #micStatus { position:absolute; top:10px; left:10px; font-size:0.8rem; font-weight:bold; padding:5px 10px; border-radius:3px; background:#111; border:1px solid #555; color:#555; display:none; }
         #micStatus.active { border-color:var(--accent); color:var(--accent); background:rgba(0,50,0,0.5); animation: blink 0.5s infinite; }
@@ -51,6 +50,7 @@
         button:active { background:var(--primary); color:#000; }
         button.active-mode { background:var(--primary); color:#000; box-shadow:0 0 15px var(--primary); }
         button.danger { border-color:var(--danger); color:var(--danger); }
+        button.retry { border-color:var(--accent); color:var(--accent); } /* New Retry Button Style */
 
         #terminal { 
             height: 150px; 
@@ -71,7 +71,6 @@
         .log-ai { border-color:var(--secondary); color:var(--secondary); background:rgba(40,0,40,0.2); }
         .log-entity { border-color:ff00ff; color:ff00ff; font-weight:bold; }
         .log-error { border-color:var(--danger); color:var(--danger); background:rgba(50,0,0,0.3); font-weight:bold; }
-        .log-warn { border-color:var(--warn); color:var(--warn); }
 
         #settingsModal { 
             display:none; 
@@ -100,17 +99,6 @@
         .close-btn { float:right; font-size:2rem; color:var(--danger); cursor:pointer; line-height:1; }
 
         #evpWaveform { height:50px; background:#000; width:100%; display:none; border-top:1px solid #333; }
-        
-        .adguard-warning {
-            background:rgba(255, 0, 0, 0.3);
-            border: 2px solid var(--danger);
-            padding: 15px;
-            margin-bottom: 15px;
-            font-size: 0.9rem;
-            color: #fff;
-            text-align: center;
-            font-weight: bold;
-        }
     </style>
 </head>
 <body>
@@ -118,7 +106,7 @@
     <header>
         <div style="display:flex;align-items:center;">
             <div>
-                <h1>SUPRA ETERNITY <span class="version">v35 HYPER</span></h1>
+                <h1>SUPRA ETERNITY <span class="version">v36 RETRY</span></h1>
             </div>
             <div id="netStatus">OFFLINE</div>
         </div>
@@ -153,8 +141,12 @@
     <div id="controls">
         <button class="active-mode" id="btnMainStart" onclick="App.startFullSystem()">INITIALISER SYSTÈME</button>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;">
+            <!-- NOUVEAU BOUTON RELANCE -->
+            <button class="retry" onclick="App.forceRetry()">🔄 RELANCE IA</button>
             <button onclick="App.replayLastEVP()">⏪ REJOUER EVP</button>
-            <button class="danger" onclick="App.stopSystem()">ARRÊTER</button>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr;gap:5px;">
+             <button class="danger" onclick="App.stopSystem()">ARRÊTER</button>
         </div>
     </div>
 
@@ -163,13 +155,11 @@
     <div id="settingsModal">
         <div class="modal-content">
             <span class="close-btn" onclick="App.toggleSettings()">×</span>
-            <h2 style="color:var(--primary);margin-top:0;border-bottom:1px solid #333;padding-bottom:10px;">DIAGNOSTIC FINAL</h2>
+            <h2 style="color:var(--primary);margin-top:0;border-bottom:1px solid #333;padding-bottom:10px;">CONFIGURATION IA</h2>
             
-            <div class="adguard-warning">
-                ⚠️ SI VOUS AVEZ "ADGUARD" OU "NETGUARD" ⚠️<br>
-                Mettez l'application en <strong>PAUSE</strong>.<br>
-                Sinon l'IA ne JAMAIS répondra.
-            </div>
+            <p style="font-size:0.8rem;color:#aaa;margin-bottom:15px;">
+                Si "BLOQUÉ" s'affiche, utilisez le bouton <strong>🔄 RELANCE IA</strong> pour contourner le blocage temporaire.
+            </p>
             
             <div class="setting-row">
                 <label>Clé API OpenAI</label>
@@ -177,16 +167,6 @@
             </div>
             <div style="text-align:right; margin-bottom:15px;">
                 <button onclick="App.saveKey()" style="padding:8px 16px; font-size:0.8rem; background:var(--primary); color:#000; border:none;">SAUVEGARDER</button>
-            </div>
-
-            <h3 style="color:var(--secondary);font-size:0.9rem;border-bottom:1px solid #333;padding-bottom:5px;">PARAMÈTRES</h3>
-            <div class="setting-row">
-                <label>Vitesse Balayage</label>
-                <input type="range" id="sweepSpeed" min="10" max="200" step="10" value="80" oninput="Config.update(this)">
-            </div>
-            <div class="setting-row">
-                <label>Seuil EMF (μT)</label>
-                <input type="range" id="emfSensitivity" min="10" max="90" step="5" value="45" oninput="Config.update(this)">
             </div>
 
             <button style="width:100%;margin-top:20px;" onclick="App.toggleSettings()">FERMER</button>
@@ -198,7 +178,7 @@
         const Config = {
             data: { sweepSpeed: 80, emfSensitivity: 45 },
             load() { 
-                const saved = localStorage.getItem('supra_v35'); 
+                const saved = localStorage.getItem('supra_v36'); 
                 if (saved) Object.assign(this.data, JSON.parse(saved)); 
                 ['sweepSpeed', 'emfSensitivity'].forEach(id => {
                     const el = document.getElementById(id);
@@ -206,7 +186,7 @@
                 });
                 document.getElementById('keyinput').value = localStorage.getItem('supra_api_key') || "";
             },
-            save() { localStorage.setItem('supra_v35', JSON.stringify(this.data)); },
+            save() { localStorage.setItem('supra_v36', JSON.stringify(this.data)); },
             update(el) { this.data[el.id] = parseFloat(el.value); this.save(); }
         };
 
@@ -221,6 +201,7 @@
         let apiKey = localStorage.getItem('supra_api_key') || "";
         let lastTrigger = 0;
         let isSystemRunning = false;
+        let lastTranscript = ""; // Stocker le dernier texte pour le retry
         
         // --- 2. MOTEUR AUDIO ---
         const AudioEngine = {
@@ -376,7 +357,7 @@
             }
         };
 
-        // --- 5. CERVEAU & IA (HYPER SENSITIVE) ---
+        // --- 5. CERVEAU & IA ---
         const BrainEngine = {
             recognition: null,
             speak(text) {
@@ -408,10 +389,10 @@
                     const isFinal = r.isFinal;
                     
                     document.getElementById('liveTranscript').innerText = t;
-                    if(t.length > 0) App.log(`MICRO ENTEND: "${t}"`, "raw");
+                    if(t.length > 0) App.log(`MICRO: "${t}"`, "raw");
 
-                    // TRIGGER HYPER AGRESSIF (2 lettres min, cooldown 2sec)
                     if (isFinal || (t.length > 2 && (Date.now() - lastTrigger > 2000))) {
+                        lastTranscript = t; // On sauvegarde pour le bouton retry
                         App.handleDetection("VOICE", t);
                         EVPRecorder.playLastCapture();
                         setTimeout(() => { if(document.getElementById('liveTranscript').innerText === t) document.getElementById('liveTranscript').innerText = "..."; }, 4000);
@@ -422,7 +403,7 @@
         };
 
         async function triggerAI(source, data) {
-            if (Date.now() - lastTrigger < 2000) return; // Cooldown court
+            if (Date.now() - lastTrigger < 2000) return;
             lastTrigger = Date.now();
             const display = document.getElementById('mainText');
             display.innerText = "ENVOI IA...";
@@ -468,8 +449,8 @@
             } catch (error) {
                 let errMsg = error.message;
                 if (error instanceof TypeError && errMsg === "Failed to fetch") {
-                    errMsg = "ADGUARD/VPN BLOQUE LA REPONSE";
-                    App.log("MICRO MARCHE MAIS ADGUARD BLOQUE LA REPONSE IA !", "warn");
+                    errMsg = "ADGUARD BLOQUE - CLIQUEZ RELANCE";
+                    App.log("ECHEC: ADGUID/VPN BLOQUE LA REPONSE", "error");
                 }
                 
                 App.log(`ECHEC IA: ${errMsg}`, "error");
@@ -518,7 +499,7 @@
                 btn.innerHTML = "SYSTÈME ACTIF";
                 btn.classList.add("active-mode");
                 document.getElementById('mainText').innerText = "SUPRA ACTIF";
-                this.log("v35 HYPER démaré.", "sys");
+                this.log("v36 RETRY démaré.", "sys");
                 BrainEngine.speak("Système en ligne. Parlez.");
             },
             stopSystem() {
@@ -531,7 +512,19 @@
                 document.getElementById('mainText').innerText = "ARRÊTÉ";
                 this.log("Arrêt.", "sys");
             },
-            replayLastEVP() { EVPRecorder.playLastCapture(); }
+            replayLastEVP() { EVPRecorder.playLastCapture(); },
+            // Nouvelle fonction Force Retry
+            forceRetry() {
+                const text = document.getElementById('liveTranscript').innerText;
+                if(text && text !== "..." && text !== "PARLEZ MAINTENANT") {
+                    this.log("Tentative de relance manuelle...", "warn");
+                    // On contourne le cooldown pour le retry manuel
+                    lastTrigger = 0; 
+                    triggerAI("RETRY_MANUEL", text);
+                } else {
+                    this.log("Aucun texte à relancer.", "warn");
+                }
+            }
         };
 
         if (window.DeviceOrientationEvent) {
@@ -544,7 +537,8 @@
             });
         }
 
-        window.onload = () => { Config.load(); updateNetStatus(); App.log("v35 HYPER Ready.", "sys"); };
+        window.onload = () => { Config.load(); updateNetStatus(); App.log("v36 RETRY Ready.", "sys"); };
     </script>
 </body>
+    
 </html>
