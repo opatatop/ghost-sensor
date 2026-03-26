@@ -3,38 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SUPRA ETERNITY v32 — NET DIAG ⚡</title>
+    <title>SUPRA ETERNITY v34 — ADGUARD FIX ⚡</title>
     <style>
         :root { 
-            --primary: #00ffff; --secondary: #bc13fe; --bg: #000000; --panel: #050505; 
-            --text: #e0e0ff; --danger: #ff0000; --accent: #00ff88; --evp: #ffaa00; 
-            --ghost: #ff3333; --warn: #ffaa00;
+            --primary: #00ffff; --secondary: #bc13fe; --bg: #050510; --panel: #0a0a20; 
+            --text: #e0e0ff; --danger: #ff3333; --accent: #00ff88; --evp: #ffaa00; 
         }
         * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
+        
         body { 
             margin:0; padding:0; font-family:'Courier New',monospace; background:var(--bg); 
-            color:var(--text); display:flex; flex-direction:column; height:100vh; overflow:hidden;
+            color:var(--text); display:flex; flex-direction:column; height:100vh; 
+            overflow: hidden; 
         }
         
-        /* HEADER */
-        header { background:#000; border-bottom:2px solid var(--primary); padding:10px 15px; display:flex; justify-content:space-between; align-items:center; z-index:50; }
-        h1 { font-size:0.9rem; color:var(--primary); text-shadow:0 0 10px var(--primary); letter-spacing:1px; margin:0; line-height:1.2; text-transform:uppercase; }
-        .version { font-size:0.6em; color:var(--warn); display:block; letter-spacing:1px; }
+        header { background:#000; border-bottom:2px solid var(--primary); padding:10px 15px; display:flex; justify-content:space-between; align-items:center; z-index:50; flex-shrink: 0; }
+        h1 { font-size:1rem; color:var(--primary); text-shadow:0 0 10px var(--primary); letter-spacing:2px; margin:0; line-height:1.2; text-transform:uppercase; }
+        .version { font-size:0.6em; color:var(--accent); display:block; letter-spacing:1px; }
         #netStatus { font-size:0.6rem; padding:2px 5px; background:#222; color:#555; border-radius:3px; margin-left:10px; }
         #netStatus.online { color:var(--accent); border:1px solid var(--accent); }
         #netStatus.offline { color:var(--danger); border:1px solid var(--danger); }
 
-        /* MAIN VISUALIZER */
-        main { flex:1; position:relative; display:flex; flex-direction:column; background:#000; }
-        #visualizer { flex:1; position:relative; overflow:hidden; border-bottom:1px solid #222; }
+        main { flex:1; position:relative; display:flex; flex-direction:column; background:#000; overflow:hidden; min-height: 0; }
+        #visualizer { flex:1; position:relative; overflow:hidden; border-bottom:1px solid #222; min-height: 150px; }
         canvas { width:100%; height:100%; display:block; }
 
-        /* OVERLAYS */
         #displayOverlay { position:absolute; top:20%; left:50%; transform:translateX(-50%); text-align:center; pointer-events:none; z-index:30; width:95%; }
         #mainText { font-size:1.8rem; font-weight:900; color:#fff; background:rgba(0,0,0,0.9); padding:10px 20px; border:2px solid var(--primary); text-transform:uppercase; margin-bottom:5px; letter-spacing:2px; }
         #liveTranscript { font-size:1.2rem; color:var(--accent); font-weight:bold; background:rgba(0,0,0,0.8); padding:5px 10px; border:1px solid var(--accent); min-height:30px; text-transform:uppercase; letter-spacing:1px;}
         
-        /* STATUS */
         #micStatus { position:absolute; top:10px; left:10px; font-size:0.7rem; font-weight:bold; padding:4px 8px; border-radius:3px; background:#111; border:1px solid #555; color:#555; display:none; }
         #micStatus.active { border-color:var(--accent); color:var(--accent); background:rgba(0,50,0,0.5); animation: blink 1s infinite; }
         #volumeBar { position:absolute; bottom:0; left:0; height:4px; background:var(--accent); width:0%; transition:width 0.1s; z-index:40; }
@@ -42,34 +39,59 @@
         
         @keyframes blink { 50% { opacity:0.5; } }
 
-        /* CONTROLS GRID */
-        #actionGrid { display:grid; grid-template-columns:repeat(4, 1fr); gap:4px; padding:8px; background:var(--panel); border-top:1px solid #333; }
-        .grid-btn { background:#0a0a0a; border:1px solid #333; color:#666; padding:12px 2px; border-radius:0; text-align:center; font-size:0.6rem; cursor:pointer; transition:all 0.1s; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px; }
-        .grid-btn span:first-child { font-size:1.4rem; }
+        #actionGrid { display:grid; grid-template-columns:repeat(4, 1fr); gap:4px; padding:8px; background:var(--panel); border-top:1px solid #333; flex-shrink: 0; }
+        .grid-btn { background:#0a0a0a; border:1px solid #333; color:#666; padding:10px 2px; border-radius:0; text-align:center; font-size:0.6rem; cursor:pointer; transition:all 0.1s; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px; }
+        .grid-btn span:first-child { font-size:1.2rem; }
         .grid-btn.active-state { background:var(--secondary); color:#fff; border-color:var(--secondary); }
         .grid-btn.active-evp { background:var(--evp); color:#000; border-color:var(--evp); }
 
-        /* MAIN BUTTONS */
-        #controls { background:var(--panel); padding:10px; display:grid; gap:8px; border-top:1px solid #222; }
+        #controls { background:var(--panel); padding:10px; display:grid; gap:8px; border-top:1px solid #222; flex-shrink: 0; }
         button { background:#000; border:1px solid var(--primary); color:var(--primary); padding:15px; font-size:0.9rem; font-weight:bold; cursor:pointer; text-transform:uppercase; letter-spacing:1px; font-family:'Courier New'; }
         button:active { background:var(--primary); color:#000; }
         button.active-mode { background:var(--primary); color:#000; box-shadow:0 0 15px var(--primary); }
         button.danger { border-color:var(--danger); color:var(--danger); }
-        button.warning { border-color:var(--warn); color:var(--warn); }
 
-        /* TERMINAL */
-        #terminal { height:110px; background:#000; border-top:1px solid #333; padding:8px; font-size:0.65rem; overflow-y:auto; color:#666; line-height:1.4; font-family:'Courier New', monospace; }
-        .log-line { margin-bottom:2px; border-left:2px solid #333; padding-left:6px; word-break:break-all; }
+        #terminal { 
+            height: 150px; 
+            background:#000; 
+            border-top:1px solid #333; 
+            padding:10px; 
+            font-size:0.7rem; 
+            overflow-y: auto; 
+            color:#666; 
+            line-height:1.4; 
+            font-family:'Courier New', monospace; 
+            flex-shrink: 0;
+            -webkit-overflow-scrolling: touch; 
+        }
+        .log-line { margin-bottom:4px; border-left:2px solid #333; padding-left:6px; word-break:break-all; }
         .log-sys { border-color:#555; color:#888; }
-        .log-raw { border-color:#444; color:#aaa; font-style:italic; font-size:0.6rem; }
+        .log-raw { border-color:#444; color:#aaa; font-style:italic; font-size:0.65rem; }
         .log-ai { border-color:var(--secondary); color:var(--secondary); background:rgba(40,0,40,0.2); }
         .log-entity { border-color:#ff00ff; color:#ff00ff; font-weight:bold; }
         .log-error { border-color:var(--danger); color:var(--danger); background:rgba(50,0,0,0.3); font-weight:bold; }
         .log-warn { border-color:var(--warn); color:var(--warn); }
 
-        /* MODAL */
-        #settingsModal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.98); z-index:300; align-items:center; justify-content:center; }
-        .modal-content { width:95%; max-width:500px; background:#111; border:2px solid var(--secondary); padding:20px; box-shadow:0 0 30px rgba(188,19,254,0.2); }
+        #settingsModal { 
+            display:none; 
+            position:fixed; 
+            inset:0; 
+            background:rgba(0,0,0,0.95); 
+            z-index:300; 
+            align-items:center; 
+            justify-content:center; 
+        }
+        .modal-content { 
+            width:95%; 
+            max-width:500px; 
+            background:#111; 
+            border:2px solid var(--secondary); 
+            padding:20px; 
+            box-shadow:0 0 30px rgba(188,19,254,0.2);
+            max-height: 90vh; 
+            overflow-y: auto; 
+            -webkit-overflow-scrolling: touch;
+        }
         .setting-row { display:flex; justify-content:space-between; align-items:center; margin:15px 0; border-bottom:1px solid #333; padding-bottom:10px; }
         label { font-size:0.9rem; color:#ddd; }
         input[type=range] { accent-color:var(--secondary); width:50%; }
@@ -77,6 +99,15 @@
         .close-btn { float:right; font-size:2rem; color:var(--danger); cursor:pointer; line-height:1; }
 
         #evpWaveform { height:50px; background:#000; width:100%; display:none; border-top:1px solid #333; }
+        
+        .adguard-warning {
+            background:rgba(255, 50, 50, 0.2);
+            border: 1px solid var(--danger);
+            padding: 10px;
+            margin-bottom: 15px;
+            font-size: 0.8rem;
+            color: #ffcccc;
+        }
     </style>
 </head>
 <body>
@@ -84,7 +115,7 @@
     <header>
         <div style="display:flex;align-items:center;">
             <div>
-                <h1>SUPRA ETERNITY <span class="version">v32 NET DIAG</span></h1>
+                <h1>SUPRA ETERNITY <span class="version">v34 NO-ADBLOCK</span></h1>
             </div>
             <div id="netStatus">OFFLINE</div>
         </div>
@@ -113,9 +144,7 @@
         <div class="grid-btn active-state" id="btnVAD" onclick="FeatureEngine.toggleVAD()"><span>🎤</span>IA VOIX</div>
         <div class="grid-btn" id="btnGhostBox" onclick="SpiritBox.toggle()"><span>📻</span>GHOST BOX</div>
         <div class="grid-btn active-evp" id="btnEVP" onclick="FeatureEngine.toggleEVP()"><span>📼</span>EVP REC</div>
-        <div class="grid-btn" onclick="FeatureEngine.togglePower()"><span>⚡</span>PWR</div>
-        <div class="grid-btn" onclick="App.clearLog()"><span>🗑️</span>LOG</div>
-        <div class="grid-btn" onclick="App.forceMicRestart()"><span>🔧</span>RST MIC</div>
+        <div class="grid-btn" onclick="App.clearLog()"><span>🗑️</span>CLEAR</div>
     </div>
 
     <div id="controls">
@@ -131,11 +160,16 @@
     <div id="settingsModal">
         <div class="modal-content">
             <span class="close-btn" onclick="App.toggleSettings()">×</span>
-            <h2 style="color:var(--primary);margin-top:0;border-bottom:1px solid #333;padding-bottom:10px;">DIAGNOSTIC RÉSEAU</h2>
+            <h2 style="color:var(--primary);margin-top:0;border-bottom:1px solid #333;padding-bottom:10px;">CONFIGURATION IA</h2>
             
-            <p style="font-size:0.8rem;color:#aaa;margin-bottom:15px;">
-                Si l'IA ne répond pas, c'est souvent un problème de Clé ou de Crédits.
-            </p>
+            <!-- ADGUARD WARNING BOX -->
+            <div class="adguard-warning">
+                <strong>⚠️ ERREUR "FAILED TO FETCH" ?</strong><br>
+                Si vous utilisez <strong>AdGuard, NetGuard ou un VPN</strong> :<br>
+                1. Mettez-les en <strong>PAUSE</strong>.<br>
+                2. Ou ajoutez <code>api.openai.com</code> à leur liste blanche.<br>
+                Android 15 bloque sinon la connexion.
+            </div>
             
             <div class="setting-row">
                 <label>Clé API OpenAI</label>
@@ -143,7 +177,6 @@
             </div>
             <div style="text-align:right; margin-bottom:15px;">
                 <button onclick="App.saveKey()" style="padding:8px 16px; font-size:0.8rem; background:var(--primary); color:#000; border:none;">SAUVEGARDER</button>
-                <button onclick="App.testConnection()" class="warning" style="padding:8px 16px; font-size:0.8rem; border:1px solid var(--warn); color:var(--warn);">TESTER CONNEXION</button>
             </div>
 
             <h3 style="color:var(--secondary);font-size:0.9rem;border-bottom:1px solid #333;padding-bottom:5px;">PARAMÈTRES</h3>
@@ -161,11 +194,11 @@
     </div>
 
     <script>
-        // --- 1. CONFIGURATION & NET STATUS ---
+        // --- 1. CONFIGURATION ---
         const Config = {
             data: { sweepSpeed: 80, emfSensitivity: 45 },
             load() { 
-                const saved = localStorage.getItem('supra_v32'); 
+                const saved = localStorage.getItem('supra_v34'); 
                 if (saved) Object.assign(this.data, JSON.parse(saved)); 
                 ['sweepSpeed', 'emfSensitivity'].forEach(id => {
                     const el = document.getElementById(id);
@@ -173,19 +206,14 @@
                 });
                 document.getElementById('keyinput').value = localStorage.getItem('supra_api_key') || "";
             },
-            save() { localStorage.setItem('supra_v32', JSON.stringify(this.data)); },
+            save() { localStorage.setItem('supra_v34', JSON.stringify(this.data)); },
             update(el) { this.data[el.id] = parseFloat(el.value); this.save(); }
         };
 
         function updateNetStatus() {
             const el = document.getElementById('netStatus');
-            if(navigator.onLine) {
-                el.innerText = "ONLINE";
-                el.className = "online";
-            } else {
-                el.innerText = "OFFLINE";
-                el.className = "offline";
-            }
+            el.innerText = navigator.onLine ? "ONLINE" : "OFFLINE";
+            el.className = navigator.onLine ? "online" : "offline";
         }
         window.addEventListener('online', updateNetStatus);
         window.addEventListener('offline', updateNetStatus);
@@ -209,7 +237,7 @@
                     this.analyser.fftSize = 2048; 
                     this.microphone.connect(this.analyser);
                     this.dataArray = new Uint8Array(this.analyser.frequencyBinCount);
-                    App.log("Audio OK.", "sys");
+                    App.log("Audio Hardware OK.", "sys");
                     EVPRecorder.init(this.ctx, this.stream);
                     return true;
                 } catch(e) {
@@ -225,7 +253,7 @@
             }
         };
 
-        // --- 3. GHOST BOX & EVP (Same as before) ---
+        // --- 3. GHOST BOX ---
         const SpiritBox = {
             node: null, gain: null, filter: null, isActive: false, currentFreq: 100, direction: 1, raf: null,
             init(ctx) {
@@ -280,6 +308,7 @@
             }
         };
 
+        // --- 4. EVP ---
         const EVPRecorder = {
             mediaRecorder: null, audioChunks: [], audioContext: null,
             init(ctx, stream) {
@@ -347,7 +376,7 @@
             }
         };
 
-        // --- 4. CERVEAU & IA (PRECISE ERROR LOGGING) ---
+        // --- 5. CERVEAU & IA ---
         const BrainEngine = {
             recognition: null,
             speak(text) {
@@ -393,7 +422,7 @@
             if (Date.now() - lastTrigger < 3000) return;
             lastTrigger = Date.now();
             const display = document.getElementById('mainText');
-            display.innerText = "ANALYSE RÉSEAU...";
+            display.innerText = "CONNEXION...";
             display.style.color = "var(--secondary)";
 
             if (!apiKey) {
@@ -405,7 +434,7 @@
             }
 
             try {
-                App.log(`Requête IA : ${data}`, "ai");
+                App.log(`Envoi vers IA...`, "ai");
                 const response = await fetch("https://api.openai.com/v1/chat/completions", {
                     method: "POST",
                     headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
@@ -419,33 +448,34 @@
                     })
                 });
 
-                // --- DIANOGSTIC PRECIS DES ERREURS ---
                 if (!response.ok) {
-                    let msg = `Erreur HTTP ${response.status}`;
-                    if (response.status === 401) msg = "CLÉ API INVALIDE (401)";
-                    else if (response.status === 429) msg = "CRÉDITS ÉPUISÉS / LIMITÉ (429)";
-                    else if (response.status === 500) msg = "SERVEUR OPENAI HS (500)";
-                    else if (response.status === 404) msg = "MODÈLE NON TROUVÉ (404)";
+                    let msg = `Erreur ${response.status}`;
+                    if (response.status === 401) msg = "CLÉ INVALIDE (401)";
+                    else if (response.status === 429) msg = "CRÉDITS ÉPUISÉS (429)";
                     throw new Error(msg);
                 }
 
                 const json = await response.json();
                 const reply = json.choices[0].message.content;
-                App.log(`SUCCÈS IA : ${reply}`, "ai");
+                App.log(`IA: ${reply}`, "ai");
                 BrainEngine.speak(reply);
                 display.innerText = reply.toUpperCase();
                 display.style.color = "#fff";
 
             } catch (error) {
-                // Erreur réseau ou HTTP
-                App.log(`ÉCHEC IA : ${error.message}`, "error");
-                display.innerText = error.message; // Affiche "CLÉ INVALIDE" ou "ECHEC CONNEXION"
+                // Message spécifique pour AdGuard/VPN
+                let errMsg = error.message;
+                if (error instanceof TypeError && errMsg === "Failed to fetch") {
+                    errMsg = "BLOQUÉ PAR ADGUARD/VPN";
+                    App.log("TIP: Désactivez AdGuard ou ajoutez api.openai.com à la liste blanche.", "warn");
+                }
+                
+                App.log(`ECHEC IA: ${errMsg}`, "error");
+                display.innerText = "ERR RESEAU";
                 display.style.color = "var(--danger)";
-                BrainEngine.speak("Erreur de connexion.");
             }
         }
 
-        // --- 5. APP & LOGIC ---
         const FeatureEngine = {
             emfActive: true, vadActive: true, evpActive: true,
             toggleEMF() { this.emfActive = !this.emfActive; document.getElementById('btnEMF').classList.toggle('active-state'); },
@@ -459,8 +489,7 @@
                 this.evpActive = !this.evpActive; 
                 document.getElementById('btnEVP').classList.toggle('active-evp'); 
                 if(this.evpActive) EVPRecorder.start(); else EVPRecorder.stop();
-            },
-            togglePower() { }
+            }
         };
 
         const App = {
@@ -475,28 +504,7 @@
             clearLog() { document.getElementById('terminal').innerHTML = ''; },
             saveKey() { apiKey = document.getElementById('keyinput').value.trim(); localStorage.setItem('supra_api_key', apiKey); this.log("Clé sauvegardée.", "sys"); this.toggleSettings(); },
             toggleSettings() { const m = document.getElementById('settingsModal'); m.style.display = m.style.display === 'flex' ? 'none' : 'flex'; },
-            async testConnection() {
-                const k = document.getElementById('keyinput').value.trim();
-                if(!k) { alert("Entrez une clé d'abord."); return; }
-                this.log("Test de connexion en cours...", "warn");
-                try {
-                    const r = await fetch("https://api.openai.com/v1/chat/completions", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${k}` },
-                        body: JSON.stringify({ model: "gpt-3.5-turbo", messages: [{role:"user", content:"Hi"}], max_tokens: 5 })
-                    });
-                    if(r.ok) { alert("SUCCÈS ! La clé fonctionne."); this.log("Test Clé : SUCCÈS", "ai"); }
-                    else {
-                        let e = `Erreur ${r.status}`;
-                        if(r.status===401) e = "Clé Invalide";
-                        if(r.status===429) e = "Crédits épuisés";
-                        alert("ÉCHEC : " + e);
-                        this.log("Test Clé : " + e, "error");
-                    }
-                } catch(err) { alert("ÉCHEC RÉSEAU : " + err.message); this.log("Test Clé : Erreur Réseau", "error"); }
-            },
             handleDetection(type, details) { App.log(`CAPTEUR [${type}] : ${details}`, "entity"); triggerAI(type, details); },
-            forceMicRestart() { if(BrainEngine.recognition) { try { BrainEngine.recognition.stop(); } catch(e){} App.log("Redémarrage micro...", "sys"); } },
             async startFullSystem() {
                 if(isSystemRunning) return;
                 const btn = document.getElementById('btnMainStart'); btn.innerHTML = "INITIALISATION...";
@@ -508,7 +516,7 @@
                 btn.innerHTML = "SYSTÈME ACTIF";
                 btn.classList.add("active-mode");
                 document.getElementById('mainText').innerText = "SUPRA ACTIF";
-                this.log("v32 NET DIAG démaré.", "sys");
+                this.log("v34 NO-ADBLOCK démaré.", "sys");
                 BrainEngine.speak("Système en ligne.");
             },
             stopSystem() {
@@ -534,7 +542,7 @@
             });
         }
 
-        window.onload = () => { Config.load(); updateNetStatus(); App.log("v32 NET DIAG Ready.", "sys"); };
+        window.onload = () => { Config.load(); updateNetStatus(); App.log("v34 NO-ADBLOCK Ready.", "sys"); };
     </script>
 </body>
 </html>
