@@ -3,551 +3,564 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SUPRA ETERNITY v39 — DNS FLUSH ⚡</title>
+    <title>SUPRA LAB v35 — HARDWARE INTERFACE</title>
     <style>
         :root { 
-            --primary: #00ffff; --secondary: #bc13fe; --bg: #000000; --panel: #0a0a20; 
-            --text: #e0e0ff; --danger: #ff0000; --accent: #00ff00; --evp: #ffaa00; 
+            --primary: #00ff41; /* Vert Labo */
+            --secondary: #008f11; 
+            --bg: #050505; --panel: #0a0a0a; 
+            --text: #cccccc; --danger: #ff3333; --warn: #ffcc00; 
+            --grid: #1a1a1a;
         }
         * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
         
         body { 
-            margin:0; padding:0; font-family:'Courier New',monospace; background:var(--bg); 
-            color:var(--text); display:flex; flex-direction:column; height:100vh; 
-            overflow: hidden; 
+            margin:0; padding:0; font-family:'Consolas','Monaco',monospace; background:var(--bg); 
+            color:var(--text); display:flex; flex-direction:column; height:100vh; overflow: hidden;
         }
         
-        header { background:#000; border-bottom:2px solid var(--primary); padding:10px 15px; display:flex; justify-content:space-between; align-items:center; z-index:50; flex-shrink: 0; }
-        h1 { font-size:1rem; color:var(--primary); text-shadow:0 0 10px var(--primary); letter-spacing:1px; margin:0; text-transform:uppercase; }
-        .version { font-size:0.6em; color:var(--accent); display:block; }
+        /* HEADER LABO */
+        header { background:#000; border-bottom:2px solid var(--primary); padding:8px 10px; display:flex; justify-content:space-between; align-items:center; z-index:50; flex-shrink: 0; }
+        h1 { font-size:0.9rem; color:var(--primary); letter-spacing:1px; margin:0; text-transform:uppercase; font-weight:bold; }
+        .version { font-size:0.6em; color:var(--warn); display:block; letter-spacing:1px; }
+        
+        #netStatus { font-size:0.65rem; padding:2px 6px; background:#111; border:1px solid #333; color:#555; font-family:monospace; }
+        #netStatus.ok { border-color:var(--primary); color:var(--primary); }
+        #netStatus.fail { border-color:var(--danger); color:var(--danger); animation: blink 1s infinite; }
 
-        main { flex:1; position:relative; display:flex; flex-direction:column; background:#000; overflow:hidden; min-height: 0; }
-        #visualizer { flex:1; position:relative; overflow:hidden; border-bottom:1px solid #222; min-height: 150px; }
+        /* MAIN SCOPE AREA */
+        main { flex:1; position:relative; display:flex; flex-direction:column; background:var(--bg); overflow:hidden; }
+        
+        /* OSCILOSCOPE VIEW (NOUVEAU) */
+        #scopeContainer { flex:1; position:relative; border-bottom:1px solid #333; background: repeating-linear-gradient(0deg, transparent, transparent 19px, #111 20px), repeating-linear-gradient(90deg, transparent, transparent 19px, #111 20px); }
         canvas { width:100%; height:100%; display:block; }
 
-        #displayOverlay { position:absolute; top:15%; left:50%; transform:translateX(-50%); text-align:center; pointer-events:none; z-index:30; width:95%; }
-        #mainText { font-size:1.8rem; font-weight:900; color:#fff; background:rgba(0,0,0,0.9); padding:15px; border:3px solid var(--primary); text-transform:uppercase; margin-bottom:10px; letter-spacing:2px; min-height:60px; display:flex; align-items:center; justify-content:center; text-align:center;}
-        #liveTranscript { font-size:1.2rem; color:var(--accent); font-weight:900; background:rgba(0,0,0,0.9); padding:10px; border:2px solid var(--accent); min-height:40px; text-transform:uppercase; letter-spacing:1px;}
+        /* TECHNICAL OVERLAYS */
+        #techOverlay { position:absolute; top:5px; left:5px; right:5px; display:flex; justify-content:space-between; pointer-events:none; font-size:0.6rem; color:var(--primary); opacity:0.7; font-family:monospace; }
+        .data-block { background:rgba(0,0,0,0.5); padding:2px 4px; border:1px solid var(--primary); }
+
+        #mainText { position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); text-align:center; pointer-events:none; z-index:30; width:90%; }
+        #statusLine { font-size:1.5rem; color:var(--primary); text-shadow:0 0 5px var(--primary); background:rgba(0,0,0,0.8); padding:5px 10px; border:1px solid var(--primary); display:inline-block; }
+        #subLine { font-size:0.8rem; color:var(--warn); margin-top:5px; background:rgba(0,0,0,0.8); padding:2px 5px; display:inline-block; letter-spacing:1px; }
+
+        /* CONTROLS - TECH STYLE */
+        #controlDeck { background:var(--panel); border-top:2px solid #333; padding:8px; flex-shrink: 0; display:flex; flex-direction:column; gap:5px; }
         
-        #micStatus { position:absolute; top:10px; left:10px; font-size:0.8rem; font-weight:bold; padding:5px 10px; border-radius:3px; background:#111; border:1px solid #555; color:#555; display:none; }
-        #micStatus.active { border-color:var(--accent); color:var(--accent); background:rgba(0,50,0,0.5); animation: blink 0.5s infinite; }
-        #volumeBar { position:absolute; bottom:0; left:0; height:5px; background:var(--accent); width:0%; transition:width 0.1s; z-index:40; }
-        #hud { position:absolute; bottom:10px; left:10px; background:rgba(0,0,0,0.8); padding:5px 10px; border:1px solid #333; font-size:0.7rem; color:#888; z-index:41; }
+        .dial-row { display:flex; gap:5px; justify-content:space-between; }
         
-        @keyframes blink { 50% { opacity:0.5; } }
+        button { 
+            background:#111; border:1px solid #333; color:#666; padding:12px; 
+            font-family:'Consolas',monospace; font-size:0.75rem; font-weight:bold; cursor:pointer; 
+            text-transform:uppercase; letter-spacing:1px; position:relative; overflow:hidden;
+            flex:1;
+        }
+        button::before { content:''; position:absolute; top:0; left:0; width:2px; height:100%; background:#333; }
+        button:active { background:#222; }
+        
+        button.active-state { background:var(--primary); color:#000; border-color:var(--primary); box-shadow:0 0 10px rgba(0,255,65,0.2); }
+        button.active-state::before { background:#000; }
+        
+        button.danger { color:var(--danger); border-color:#522; }
+        button.danger:active { background:var(--danger); color:#000; }
 
-        #actionGrid { display:grid; grid-template-columns:repeat(4, 1fr); gap:4px; padding:8px; background:var(--panel); border-top:1px solid #333; flex-shrink: 0; }
-        .grid-btn { background:#0a0a0a; border:1px solid #333; color:#666; padding:10px 2px; border-radius:0; text-align:center; font-size:0.6rem; cursor:pointer; transition:all 0.1s; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px; }
-        .grid-btn span:first-child { font-size:1.2rem; }
-        .grid-btn.active-state { background:var(--secondary); color:#fff; border-color:var(--secondary); }
-        .grid-btn.active-evp { background:var(--evp); color:#000; border-color:var(--evp); }
-
-        #controls { background:var(--panel); padding:10px; display:grid; gap:8px; border-top:1px solid #222; flex-shrink: 0; }
-        button { background:#000; border:1px solid var(--primary); color:var(--primary); padding:15px; font-size:0.9rem; font-weight:bold; cursor:pointer; text-transform:uppercase; letter-spacing:1px; font-family:'Courier New'; }
-        button:active { background:var(--primary); color:#000; }
-        button.active-mode { background:var(--primary); color:#000; box-shadow:0 0 15px var(--primary); }
-        button.danger { border-color:var(--danger); color:var(--danger); }
-        button.retry { border-color:var(--accent); color:var(--accent); }
-
+        /* TERMINAL - HEX DUMP STYLE */
         #terminal { 
-            height: 150px; 
-            background:#000; 
-            border-top:1px solid #333; 
-            padding:10px; 
-            font-size:0.75rem; 
-            overflow-y: auto; 
-            color:#666; 
-            line-height:1.4; 
-            font-family:'Courier New', monospace; 
-            flex-shrink: 0;
-            -webkit-overflow-scrolling: touch; 
+            height: 120px; background:#000; border-top:1px solid #333; 
+            padding:5px; font-size:0.65rem; color:#555; 
+            overflow-y: auto; font-family:'Consolas',monospace; line-height:1.2;
+            flex-shrink: 0; -webkit-overflow-scrolling: touch;
         }
-        .log-line { margin-bottom:4px; border-left:2px solid #333; padding-left:6px; word-break:break-all; }
-        .log-sys { border-color:#555; color:#888; }
-        .log-raw { border-color:#444; color:#aaa; font-style:italic; font-size:0.7rem; }
-        .log-ai { border-color:var(--secondary); color:var(--secondary); background:rgba(40,0,40,0.2); }
-        .log-entity { border-color:ff00ff; color:ff00ff; font-weight:bold; }
-        .log-error { border-color:var(--danger); color:var(--danger); background:rgba(50,0,0,0.3); font-weight:bold; }
+        .log-line { margin-bottom:2px; display:flex; }
+        .ts { color:#444; margin-right:8px; min-width:60px; }
+        .msg { word-break:break-all; }
+        .log-sys .msg { color:#888; }
+        .log-data .msg { color:var(--primary); }
+        .log-warn .msg { color:var(--warn); }
+        .log-err .msg { color:var(--danger); font-weight:bold; }
+        .log-ai .msg { color:var(--secondary); font-style:italic; }
 
-        #settingsModal { 
-            display:none; 
-            position:fixed; 
-            inset:0; 
-            background:rgba(0,0,0,0.98); 
-            z-index:300; 
-            align-items:center; 
-            justify-content:center; 
-        }
-        .modal-content { 
-            width:95%; 
-            max-width:500px; 
-            background:#111; 
-            border:2px solid var(--secondary); 
-            padding:20px; 
-            box-shadow:0 0 30px rgba(188,19,254,0.2);
-            max-height: 90vh; 
-            overflow-y: auto; 
-            -webkit-overflow-scrolling: touch;
-        }
+        /* MODAL */
+        #settingsModal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.95); z-index:300; align-items:center; justify-content:center; }
+        .modal-content { width:95%; max-width:500px; background:#0f0f0f; border:1px solid var(--primary); padding:20px; max-height:90vh; overflow-y:auto; -webkit-overflow-scrolling:touch; }
         .setting-row { display:flex; justify-content:space-between; align-items:center; margin:15px 0; border-bottom:1px solid #333; padding-bottom:10px; }
-        label { font-size:0.9rem; color:#ddd; }
-        input[type=range] { accent-color:var(--secondary); width:50%; }
-        input[type=password] { background:#222; border:1px solid #555; color:#fff; padding:8px; width:60%; font-family:'Courier New'; }
-        .close-btn { float:right; font-size:2rem; color:var(--danger); cursor:pointer; line-height:1; }
+        label { font-size:0.85rem; color:#ccc; font-family:'Consolas',monospace; text-transform:uppercase; }
+        input[type=range] { accent-color:var(--primary); width:50%; }
+        input[type=password] { background:#222; border:1px solid #555; color:var(--primary); padding:8px; width:60%; font-family:'Consolas',monospace; }
+        .close-btn { float:right; font-size:1.5rem; color:var(--danger); cursor:pointer; line-height:1; }
 
-        #evpWaveform { height:50px; background:#000; width:100%; display:none; border-top:1px solid #333; }
+        .test-btn { width:100%; background:var(--warn); color:#000; border:none; padding:10px; margin-top:10px; font-weight:bold; cursor:pointer; }
+
+        @keyframes blink { 50% { opacity:0.4; } }
     </style>
 </head>
 <body>
 
     <header>
         <div>
-            <h1>SUPRA ETERNITY <span class="version">v39 DNS</span></h1>
+            <h1>SUPRA LAB <span class="version">v35 HARDWARE</span></h1>
         </div>
-        <button onclick="App.toggleSettings()" style="background:none;border:1px solid var(--secondary);color:var(--secondary);width:32px;height:32px;border-radius:0;font-size:1.2rem;">⚙️</button>
+        <div id="netStatus">NET: UNK</div>
     </header>
 
     <main>
-        <div id="visualizer">
-            <canvas id="scopeCanvas"></canvas>
-            <div id="micStatus">MICRO ACTIF</div>
-            <div id="volumeBar"></div>
+        <div id="scopeContainer">
+            <canvas id="mainCanvas"></canvas>
             
-            <div id="displayOverlay">
-                <div id="mainText">SYSTÈME ARRÊTÉ</div>
-                <div id="liveTranscript">PARLEZ MAINTENANT</div>
+            <div id="techOverlay">
+                <div class="data-block">FFT: 2048</div>
+                <div class="data-block">SR: 48kHz</div>
             </div>
-            
-            <div id="hud">EMF: <span id="valEmf">0.0</span> | MAG: <span id="valMag">0</span>°</div>
+
+            <div id="mainText">
+                <div id="statusLine">STANDBY</div>
+                <div id="subLine">WAITING FOR INPUT...</div>
+            </div>
         </div>
-        <canvas id="evpWaveform"></canvas>
     </main>
 
-    <div id="actionGrid">
-        <div class="grid-btn" onclick="App.toggleSettings()"><span>⚙️</span>CONFIG</div>
-        <div class="grid-btn active-state" id="btnEMF" onclick="FeatureEngine.toggleEMF()"><span>📡</span>EMF</div>
-        <div class="grid-btn active-state" id="btnVAD" onclick="FeatureEngine.toggleVAD()"><span>🎤</span>IA VOIX</div>
-        <div class="grid-btn" id="btnGhostBox" onclick="SpiritBox.toggle()"><span>📻</span>GHOST BOX</div>
-        <div class="grid-btn active-evp" id="btnEVP" onclick="FeatureEngine.toggleEVP()"><span>📼</span>EVP REC</div>
-        <div class="grid-btn" onclick="App.clearLog()"><span>🗑️</span>CLEAR</div>
-    </div>
-
-    <div id="controls">
-        <button class="active-mode" id="btnMainStart" onclick="App.startFullSystem()">INITIALISER SYSTÈME</button>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;">
-            <button class="retry" onclick="App.forceRetry()">🔄 RELANCE IA</button>
-            <button onclick="App.replayLastEVP()">⏪ REJOUER EVP</button>
+    <div id="controlDeck">
+        <!-- Rangée 1: Capteurs -->
+        <div class="dial-row">
+            <button id="btnMic" onclick="Lab.toggleMic()">MIC INPUT</button>
+            <button id="btnBox" onclick="SpiritBox.toggle()">LINEAR SWEEP</button>
+            <button id="btnEVP" onclick="Lab.toggleEVP()">AUDIO BUFFER</button>
+            <button onclick="Lab.clearLog()">CLR LOG</button>
         </div>
-        <div style="display:grid;grid-template-columns:1fr;gap:5px;">
-             <button class="danger" onclick="App.stopSystem()">ARRÊTER</button>
+        <!-- Rangée 2: Système -->
+        <div class="dial-row">
+            <button class="active-mode" id="btnStart" onclick="Lab.startSystem()">INIT SYSTEM</button>
+            <button class="danger" onclick="Lab.stopSystem()">HALT</button>
+            <button onclick="Lab.toggleSettings()">CONFIG</button>
+            <button onclick="Lab.runDiagnostics()" style="color:var(--warn)">NET DIAG</button>
         </div>
     </div>
 
-    <div id="terminal"></div>
+    <div id="terminal">
+        <!-- Logs will appear here -->
+    </div>
 
     <div id="settingsModal">
         <div class="modal-content">
-            <span class="close-btn" onclick="App.toggleSettings()">×</span>
-            <h2 style="color:var(--primary);margin-top:0;border-bottom:1px solid #333;padding-bottom:10px;">DIAGNOSTIC FINAL</h2>
+            <span class="close-btn" onclick="Lab.toggleSettings()">×</span>
+            <h2 style="color:var(--primary);margin-top:0;text-transform:uppercase;font-size:1.1rem;">System Configuration</h2>
             
-            <p style="font-size:0.85rem;color:#aaa;margin-bottom:15px; background:#220000; padding:10px; border:1px solid red;">
-                <strong>IMPORTANT : Si tout est bloqué :</strong><br>
-                1. Désactivez AdGuard.<br>
-                2. <strong>REDÉMARREZ VOTRE TÉLÉPHONE</strong> (Pour vider le cache DNS).<br>
-                3. Utilisez le bouton "TEST RESEAU" ci-dessous.
+            <p style="font-size:0.75rem;color:#888;margin-bottom:15px;">
+                HARDWARE INTERFACE MODE. No simulation. Raw sensor data only.
             </p>
             
             <div class="setting-row">
-                <label>Clé API OpenAI</label>
-                <input type="password" id="keyinput" placeholder="sk-proj-..." autocomplete="off">
+                <label>OpenAI API Key</label>
+                <input type="password" id="apiKeyInput" placeholder="sk-proj-...">
             </div>
             <div style="text-align:right; margin-bottom:15px;">
-                <button onclick="App.saveKey()" style="padding:8px 16px; font-size:0.8rem; background:var(--primary); color:#000; border:none;">SAUVEGARDER</button>
+                <button onclick="Lab.saveKey()" style="padding:5px 10px; font-size:0.7rem; background:var(--primary); color:#000; border:none;">SAVE CONFIG</button>
             </div>
 
-            <div style="text-align:center; margin-bottom:15px;">
-                <button onclick="App.testNetwork()" class="retry" style="width:100%; padding:12px;">🔍 TEST RESEAU & CLE</button>
+            <h3 style="color:var(--primary);font-size:0.8rem;border-bottom:1px solid #333;padding-bottom:5px;margin-bottom:10px;">Signal Processing</h3>
+            <div class="setting-row">
+                <label>Sweep Rate (Hz/s)</label>
+                <input type="range" id="sweepRate" min="50" max="500" step="10" value="200" oninput="Lab.updateConfig(this)">
+            </div>
+            <div class="setting-row">
+                <label>Buffer Size (ms)</label>
+                <input type="range" id="bufferSize" min="1000" max="10000" step="500" value="4000" oninput="Lab.updateConfig(this)">
             </div>
 
-            <button style="width:100%;margin-top:20px;" onclick="App.toggleSettings()">FERMER</button>
+            <button class="test-btn" onclick="Lab.runDiagnostics()">RUN FULL NETWORK DIAGNOSTIC</button>
+            <div id="diagResult" style="margin-top:10px; font-size:0.75rem; color:#aaa;"></div>
+
+            <button style="width:100%;margin-top:20px;" onclick="Lab.toggleSettings()">CLOSE PANEL</button>
         </div>
     </div>
 
     <script>
-        // --- 1. CONFIGURATION ---
-        const Config = {
-            data: { sweepSpeed: 80, emfSensitivity: 45 },
-            load() { 
-                const saved = localStorage.getItem('supra_v39'); 
-                if (saved) Object.assign(this.data, JSON.parse(saved)); 
-                ['sweepSpeed', 'emfSensitivity'].forEach(id => {
-                    const el = document.getElementById(id);
-                    if(el) el.value = this.data[id];
-                });
-                document.getElementById('keyinput').value = localStorage.getItem('supra_api_key') || "";
-            },
-            save() { localStorage.setItem('supra_v39', JSON.stringify(this.data)); },
-            update(el) { this.data[el.id] = parseFloat(el.value); this.save(); }
+        // --- CONFIG & STATE ---
+        const State = {
+            active: false,
+            mic: false,
+            box: false,
+            evp: false,
+            apiKey: localStorage.getItem('supra_v35_key') || "",
+            config: { sweepRate: 200, bufferSize: 4000 },
+            lastTrigger: 0
         };
 
-        let apiKey = localStorage.getItem('supra_api_key') || "";
-        let lastTrigger = 0;
-        let isSystemRunning = false;
-        let lastTranscript = "";
-        
-        // --- 2. MOTEUR AUDIO ---
-        const AudioEngine = {
-            ctx: null, analyser: null, stream: null, microphone: null, dataArray: null,
+        // --- AUDIO CORE (REAL) ---
+        const AudioCore = {
+            ctx: null,
+            analyser: null,
+            micStream: null,
+            micNode: null,
+            buffer: [], // Audio buffer for EVP
+            isRecording: false,
+            
             async init() {
                 try {
                     const AudioContext = window.AudioContext || window.webkitAudioContext;
                     this.ctx = new AudioContext();
                     if (this.ctx.state === 'suspended') await this.ctx.resume();
-                    const constraints = { audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: false, channelCount: 1 } };
-                    this.stream = await navigator.mediaDevices.getUserMedia(constraints);
-                    this.microphone = this.ctx.createMediaStreamSource(this.stream);
+
+                    // Get Microphone
+                    const stream = await navigator.mediaDevices.getUserMedia({ 
+                        audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false, channelCount: 1 } 
+                    });
+                    this.micStream = stream;
+                    this.micNode = this.ctx.createMediaStreamSource(stream);
                     this.analyser = this.ctx.createAnalyser();
-                    this.analyser.fftSize = 2048; 
-                    this.microphone.connect(this.analyser);
-                    this.dataArray = new Uint8Array(this.analyser.frequencyBinCount);
-                    App.log("Audio OK.", "sys");
-                    EVPRecorder.init(this.ctx, this.stream);
+                    this.analyser.fftSize = 2048;
+                    this.analyser.smoothingTimeConstant = 0.5;
+                    this.micNode.connect(this.analyser);
+                    
+                    Lab.log("AUDIO HW: INITIALIZED (RAW)", "sys");
+                    this.startBufferCapture(stream);
                     return true;
-                } catch(e) {
-                    App.log("ERR MICRO: " + e.name, "error");
+                } catch (e) {
+                    Lab.log("AUDIO HW: FAILED - " + e.name, "err");
                     return false;
                 }
             },
+            
+            startBufferCapture(stream) {
+                // Simple circular buffer logic using MediaRecorder
+                if (this.recorder) this.recorder.stop();
+                try {
+                    this.recorder = new MediaRecorder(stream);
+                    this.chunks = [];
+                    this.recorder.ondataavailable = e => { this.chunks = [e.data]; }; // Keep only last chunk
+                    this.recorder.start(State.config.bufferSize);
+                    this.isRecording = true;
+                } catch(e) { Lab.log("BUFFER CAPTURE: NOT SUPPORTED", "warn"); }
+            },
+
+            getWaveformData() {
+                if(!this.analyser) return new Uint8Array(0);
+                const data = new Uint8Array(this.analyser.fftSize);
+                this.analyser.getByteTimeDomainData(data); // Oscilloscope data
+                return data;
+            },
+
+            getFFTData() {
+                if(!this.analyser) return new Uint8Array(0);
+                const data = new Uint8Array(this.analyser.frequencyBinCount);
+                this.analyser.getByteFrequencyData(data); // Bar data
+                return data;
+            },
+
             stop() {
-                if(this.stream) this.stream.getTracks().forEach(t => t.stop());
+                if(this.micStream) this.micStream.getTracks().forEach(t => t.stop());
                 if(this.ctx) this.ctx.close();
-                EVPRecorder.stop();
-                SpiritBox.stop();
+                if(this.recorder) this.recorder.stop();
+                this.isRecording = false;
             }
         };
 
-        // --- 3. GHOST BOX ---
+        // --- GHOST BOX (LINEAR SWEEP) ---
         const SpiritBox = {
-            node: null, gain: null, filter: null, isActive: false, currentFreq: 100, direction: 1, raf: null,
-            init(ctx) {
-                if(!ctx) return;
-                const bufferSize = 2 * ctx.sampleRate;
-                const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+            node: null, filter: null, gain: null,
+            active: false, currentFreq: 100, direction: 1, raf: null,
+
+            start() {
+                if(!AudioCore.ctx) return;
+                this.init();
+                this.node.start(0);
+                this.gain.connect(AudioCore.ctx.destination);
+                this.active = true;
+                document.getElementById('btnBox').classList.add('active-state');
+                Lab.log("GHOST BOX: LINEAR SWEEP START", "sys");
+                this.sweep();
+            },
+
+            stop() {
+                this.active = false;
+                if(this.gain) this.gain.disconnect();
+                cancelAnimationFrame(this.raf);
+                document.getElementById('btnBox').classList.remove('active-state');
+            },
+
+            init() {
+                // Create White Noise
+                const bufferSize = 2 * AudioCore.ctx.sampleRate;
+                const buffer = AudioCore.ctx.createBuffer(1, bufferSize, AudioCore.ctx.sampleRate);
                 const data = buffer.getChannelData(0);
-                for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1) * (Math.random() > 0.99 ? 2.0 : 0.8);
-                this.node = ctx.createBufferSource();
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = (Math.random() * 2 - 1); // Pure White Noise
+                }
+                this.node = AudioCore.ctx.createBufferSource();
                 this.node.buffer = buffer;
                 this.node.loop = true;
-                this.filter = ctx.createBiquadFilter();
+
+                // Bandpass Filter
+                this.filter = AudioCore.ctx.createBiquadFilter();
                 this.filter.type = 'bandpass';
-                this.filter.frequency.value = this.currentFreq;
-                this.filter.Q.value = 5;
-                this.gain = ctx.createGain();
-                this.gain.gain.value = 0.0;
+                this.filter.Q.value = 1.0; // Wide band for "Radio" feel
+
+                this.gain = AudioCore.ctx.createGain();
+                this.gain.gain.value = 0.3;
+
                 this.node.connect(this.filter);
                 this.filter.connect(this.gain);
             },
-            toggle() { if (this.isActive) this.stop(); else this.start(); },
-            start() {
-                if (!AudioEngine.ctx) return;
-                if (!this.node) this.init(AudioEngine.ctx);
-                this.isActive = true;
-                this.node.start(0);
-                this.gain.connect(AudioEngine.ctx.destination);
-                this.gain.gain.setTargetAtTime(0.5, AudioEngine.ctx.currentTime, 0.1);
-                document.getElementById('btnGhostBox').classList.add('active-state');
-                App.log("Ghost Box ON.", "sys");
-                this.sweep();
-            },
-            stop() {
-                this.isActive = false;
-                if (this.gain) {
-                    this.gain.gain.setTargetAtTime(0, AudioEngine.ctx.currentTime, 0.1);
-                    setTimeout(() => {
-                        if(this.node) { try { this.node.stop(); } catch(e){} this.gain.disconnect(); }
-                    }, 200);
-                }
-                cancelAnimationFrame(this.raf);
-                document.getElementById('btnGhostBox').classList.remove('active-state');
-            },
+
+            toggle() { this.active ? this.stop() : this.start(); },
+
             sweep() {
-                if (!this.isActive) return;
-                const speed = Config.data.sweepSpeed;
-                this.currentFreq *= (1 + (this.direction * (speed * 0.001)));
-                if (this.currentFreq > 5000) { this.direction = -1; }
-                if (this.currentFreq < 100) { this.direction = 1; }
-                this.filter.frequency.setTargetAtTime(this.currentFreq, AudioEngine.ctx.currentTime, 0.05);
+                if(!this.active) return;
+                // Linear sweep logic
+                const speed = State.config.sweepRate; 
+                this.currentFreq += (this.direction * speed);
+                
+                if(this.currentFreq > 5000) this.direction = -1;
+                if(this.currentFreq < 100) this.direction = 1;
+
+                this.filter.frequency.setValueAtTime(this.currentFreq, AudioCore.ctx.currentTime);
                 this.raf = requestAnimationFrame(() => this.sweep());
             }
         };
 
-        // --- 4. EVP ---
-        const EVPRecorder = {
-            mediaRecorder: null, audioChunks: [], audioContext: null,
-            init(ctx, stream) {
-                this.audioContext = ctx;
-                try {
-                    this.mediaRecorder = new MediaRecorder(stream);
-                    this.mediaRecorder.ondataavailable = (e) => { this.audioChunks = [e.data]; };
-                    this.start();
-                } catch(e) { App.log("EVP Error", "error"); }
-            },
-            start() { if(this.mediaRecorder && this.mediaRecorder.state === "inactive") { this.mediaRecorder.start(4000); document.getElementById('evpWaveform').style.display = 'block'; } },
-            stop() { if(this.mediaRecorder && this.mediaRecorder.state !== "inactive") { this.mediaRecorder.stop(); document.getElementById('evpWaveform').style.display = 'none'; } },
-            async playLastCapture() {
-                if(this.audioChunks.length === 0) return;
-                const blob = new Blob(this.audioChunks, { type: 'audio/webm' });
-                const arrayBuffer = await blob.arrayBuffer();
-                const audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
-                const source = this.audioContext.createBufferSource();
-                source.buffer = audioBuffer;
-                source.playbackRate.value = 0.85;
-                const filter = this.audioContext.createBiquadFilter();
-                filter.type = 'lowpass';
-                filter.frequency.value = 600;
-                const gain = this.audioContext.createGain();
-                gain.gain.value = 2.0;
-                source.connect(filter);
-                filter.connect(gain);
-                gain.connect(this.audioContext.destination);
-                source.start(0);
-            }
-        };
-
-        const VisualEngine = {
+        // --- VISUALIZER ENGINE (OSCILLOSCOPE + FFT) ---
+        const Scope = {
             canvas: null, ctx: null,
             init() {
-                this.canvas = document.getElementById('scopeCanvas');
+                this.canvas = document.getElementById('mainCanvas');
                 this.ctx = this.canvas.getContext('2d');
                 this.resize();
                 window.addEventListener('resize', () => this.resize());
                 this.loop();
             },
-            resize() { this.canvas.width = this.canvas.parentElement.clientWidth; this.canvas.height = this.canvas.parentElement.clientHeight; },
+            resize() {
+                this.canvas.width = this.canvas.parentElement.clientWidth;
+                this.canvas.height = this.canvas.parentElement.clientHeight;
+            },
             loop() {
-                if(!isSystemRunning) return;
+                if(!State.active) return;
                 requestAnimationFrame(() => this.loop());
-                const w = this.canvas.width, h = this.canvas.height;
-                this.ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+
+                const w = this.canvas.width;
+                const h = this.canvas.height;
+                
+                // Clear with fade
+                this.ctx.fillStyle = 'rgba(5, 5, 5, 0.2)';
                 this.ctx.fillRect(0, 0, w, h);
-                if (AudioEngine.dataArray) {
-                    const data = AudioEngine.dataArray;
-                    this.ctx.beginPath();
-                    this.ctx.moveTo(0, h);
-                    for (let i = 0; i < data.length; i++) {
-                        const v = data[i] / 255;
-                        const y = h - (v * h);
-                        this.ctx.lineTo(i * (w / data.length), y);
-                    }
-                    this.ctx.strokeStyle = '#00ffff';
-                    this.ctx.lineWidth = 2;
-                    this.ctx.stroke();
-                    let sum = 0;
-                    for(let i=0; i<data.length; i++) sum += data[i];
-                    document.getElementById('volumeBar').style.width = Math.min(100, (sum / data.length) * 2) + "%";
+
+                // 1. Draw Oscilloscope (Waveform)
+                const waveData = AudioCore.getWaveformData();
+                this.ctx.lineWidth = 2;
+                this.ctx.strokeStyle = '#00ff41';
+                this.ctx.beginPath();
+                const sliceWidth = w * 1.0 / waveData.length;
+                let x = 0;
+                for(let i = 0; i < waveData.length; i++) {
+                    const v = waveData[i] / 128.0; // 128 is zero
+                    const y = v * h / 2;
+                    if(i === 0) this.ctx.moveTo(x, y);
+                    else this.ctx.lineTo(x, y);
+                    x += sliceWidth;
+                }
+                this.ctx.stroke();
+
+                // 2. Draw Frequency Bars (Background overlay)
+                const fftData = AudioCore.getFFTData();
+                this.ctx.fillStyle = 'rgba(0, 143, 17, 0.3)';
+                const barWidth = (w / fftData.length) * 2.5;
+                let bx = 0;
+                for(let i = 0; i < fftData.length; i++) {
+                    const barHeight = (fftData[i] / 255) * h;
+                    this.ctx.fillRect(bx, h - barHeight, barWidth, barHeight);
+                    bx += barWidth + 1;
                 }
             }
         };
 
-        // --- 5. CERVEAU & IA ---
-        const BrainEngine = {
+        // --- MAIN LOGIC ---
+        const Lab = {
             recognition: null,
-            speak(text) {
-                window.speechSynthesis.cancel();
-                const u = new SpeechSynthesisUtterance(text);
-                u.rate = 0.9; u.pitch = 0.6;
-                window.speechSynthesis.speak(u);
+
+            log(msg, type="sys") {
+                const t = document.getElementById('terminal');
+                const d = document.createElement('div');
+                d.className = 'log-line log-' + type;
+                const ts = new Date().toLocaleTimeString('fr-FR', {hour12:false, hour:"2-digit", minute:"2-digit", second:"2-digit"});
+                d.innerHTML = `<span class="ts">[${ts}]</span><span class="msg">${msg}</span>`;
+                t.appendChild(d);
+                t.scrollTop = t.scrollHeight;
             },
+
+            clearLog() { document.getElementById('terminal').innerHTML = ''; },
+
+            updateConfig(el) {
+                State.config[el.id] = parseFloat(el.value);
+            },
+
+            saveKey() {
+                State.apiKey = document.getElementById('apiKeyInput').value.trim();
+                localStorage.setItem('supra_v35_key', State.apiKey);
+                this.log("CONFIG: KEY SAVED TO LOCAL STORAGE", "sys");
+                this.toggleSettings();
+            },
+
+            toggleSettings() {
+                const m = document.getElementById('settingsModal');
+                m.style.display = m.style.display === 'flex' ? 'none' : 'flex';
+                if(m.style.display === 'flex') {
+                    document.getElementById('apiKeyInput').value = State.apiKey;
+                    document.getElementById('diagResult').innerText = "";
+                }
+            },
+
+            async startSystem() {
+                if(State.active) return;
+                
+                this.log("SYS: INITIALIZING SEQUENCE...", "sys");
+                const ok = await AudioCore.init();
+                if(!ok) {
+                    this.log("SYS: CRITICAL HARDWARE FAILURE", "err");
+                    document.getElementById('statusLine').innerText = "HW ERROR";
+                    document.getElementById('statusLine').style.color = "var(--danger)";
+                    return;
+                }
+
+                State.active = true;
+                Scope.init();
+                this.initVoice();
+                
+                document.getElementById('btnStart').classList.add('active-mode');
+                document.getElementById('statusLine').innerText = "SYSTEM ACTIVE";
+                document.getElementById('statusLine').style.color = "var(--primary)";
+                
+                this.speak("System Online. Monitoring.");
+            },
+
+            stopSystem() {
+                State.active = false;
+                AudioCore.stop();
+                if(this.recognition) this.recognition.stop();
+                SpiritBox.stop();
+                window.speechSynthesis.cancel();
+
+                document.getElementById('btnStart').classList.remove('active-mode');
+                document.getElementById('statusLine').innerText = "HALTED";
+                document.getElementById('statusLine').style.color = "var(--danger)";
+                this.log("SYS: SHUTDOWN COMPLETE", "sys");
+            },
+
+            toggleMic() { State.mic = !State.mic; document.getElementById('btnMic').classList.toggle('active-state'); },
+            toggleEVP() { State.evp = !State.evp; document.getElementById('btnEVP').classList.toggle('active-state'); },
+
+            // --- VOICE RECOGNITION (RAW) ---
             initVoice() {
-                if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) return;
                 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-                if(this.recognition) try { this.recognition.stop(); } catch(e){}
+                if(!SR) { this.log("VOICE: MODULE NOT FOUND", "warn"); return; }
+                
                 this.recognition = new SR();
                 this.recognition.lang = 'fr-FR';
                 this.recognition.continuous = true;
                 this.recognition.interimResults = true;
-                this.recognition.onstart = () => {
-                    const s = document.getElementById('micStatus'); s.style.display = 'block'; s.className = 'active'; 
-                };
-                this.recognition.onend = () => {
-                    const s = document.getElementById('micStatus'); s.className = ''; 
-                    if(isSystemRunning && FeatureEngine.vadActive) setTimeout(() => { if(FeatureEngine.vadActive && isSystemRunning) try { this.initVoice(); } catch(e){} }, 500);
-                    else s.style.display = 'none';
-                };
-                this.recognition.onerror = (e) => { if(e.error === 'not-allowed') App.log("ERR: Permissions refusées.", "error"); };
+
                 this.recognition.onresult = (e) => {
-                    const r = e.results[e.results.length-1];
-                    const t = r[0].transcript;
-                    const isFinal = r.isFinal;
-                    
-                    document.getElementById('liveTranscript').innerText = t;
-                    if(t.length > 0) App.log(`MICRO: "${t}"`, "raw");
-
-                    if (isFinal || (t.length > 2 && (Date.now() - lastTrigger > 2000))) {
-                        lastTranscript = t; 
-                        App.handleDetection("VOICE", t);
-                        EVPRecorder.playLastCapture();
-                        setTimeout(() => { if(document.getElementById('liveTranscript').innerText === t) document.getElementById('liveTranscript').innerText = "..."; }, 4000);
+                    const result = e.results[e.results.length-1];
+                    const txt = result[0].transcript.trim();
+                    if(txt.length > 0) {
+                        document.getElementById('subLine').innerText = "RX: " + txt.toUpperCase();
+                        if(result.isFinal) {
+                            this.log(`VOICE DATA: "${txt}"`, "data");
+                            this.triggerAI(txt);
+                        }
                     }
                 };
+
+                this.recognition.onend = () => { if(State.active) this.recognition.start(); };
                 try { this.recognition.start(); } catch(e){}
-            }
-        };
-
-        async function triggerAI(source, data) {
-            if (Date.now() - lastTrigger < 2000) return;
-            lastTrigger = Date.now();
-            const display = document.getElementById('mainText');
-            display.innerText = "ENVOI IA...";
-            display.style.color = "var(--secondary)";
-
-            if (!apiKey) {
-                App.log("ERR: Clé API manquante.", "error");
-                display.innerText = "ERR: NO KEY";
-                display.style.color = "var(--danger)";
-                BrainEngine.speak("Clé API manquante.");
-                return;
-            }
-
-            try {
-                App.log(`>> Envoi vers OpenAI...`, "ai");
-                const response = await fetch("https://api.openai.com/v1/chat/completions", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
-                    body: JSON.stringify({
-                        model: "gpt-3.5-turbo",
-                        messages: [
-                            { role: "system", content: "Tu es ZEUS. Réponds en moins de 20 mots." },
-                            { role: "user", content: `J'ai dit: "${data}". Analyse.` }
-                        ],
-                        max_tokens: 50, temperature: 0.7
-                    })
-                });
-
-                if (!response.ok) {
-                    let msg = `Erreur ${response.status}`;
-                    if (response.status === 401) msg = "CLÉ INVALIDE (401)";
-                    else if (response.status === 429) msg = "CRÉDITS ÉPUISÉS (429)";
-                    throw new Error(msg);
-                }
-
-                const json = await response.json();
-                const reply = json.choices[0].message.content;
-                App.log(`REPONSE IA: ${reply}`, "ai");
-                BrainEngine.speak(reply);
-                display.innerText = reply.toUpperCase();
-                display.style.color = "#fff";
-
-            } catch (error) {
-                let errMsg = error.message;
-                if (error instanceof TypeError && errMsg === "Failed to fetch") {
-                    errMsg = "BLOQUÉ (DNS OU CLE)";
-                    App.log("TIP: Redémarrez le téléphone pour vider le cache DNS.", "error");
-                }
-                
-                App.log(`ECHEC IA: ${errMsg}`, "error");
-                display.innerText = "BLOQUÉ";
-                display.style.color = "var(--danger)";
-            }
-        }
-
-        const FeatureEngine = {
-            emfActive: true, vadActive: true, evpActive: true,
-            toggleEMF() { this.emfActive = !this.emfActive; document.getElementById('btnEMF').classList.toggle('active-state'); },
-            toggleVAD() { 
-                this.vadActive = !this.vadActive; 
-                document.getElementById('btnVAD').classList.toggle('active-state');
-                if(this.vadActive && isSystemRunning) BrainEngine.initVoice();
-                else if(BrainEngine.recognition) { BrainEngine.recognition.stop(); document.getElementById('micStatus').style.display='none'; }
             },
-            toggleEVP() { 
-                this.evpActive = !this.evpActive; 
-                document.getElementById('btnEVP').classList.toggle('active-evp'); 
-                if(this.evpActive) EVPRecorder.start(); else EVPRecorder.stop();
-            }
-        };
 
-        const App = {
-            log(msg, type) {
-                const t = document.getElementById('terminal');
-                const d = document.createElement('div');
-                d.className = 'log-line log-' + type;
-                d.innerText = `[${new Date().toLocaleTimeString('fr-FR')}] ${msg}`;
-                t.appendChild(d);
-                t.scrollTop = t.scrollHeight;
-            },
-            clearLog() { document.getElementById('terminal').innerHTML = ''; },
-            saveKey() { apiKey = document.getElementById('keyinput').value.trim(); localStorage.setItem('supra_api_key', apiKey); this.log("Clé sauvegardée.", "sys"); this.toggleSettings(); },
-            toggleSettings() { const m = document.getElementById('settingsModal'); m.style.display = m.style.display === 'flex' ? 'none' : 'flex'; },
-            async testNetwork() {
-                const k = document.getElementById('keyinput').value.trim();
-                if(!k) { alert("Entrez une clé d'abord"); return; }
-                this.log("Test réseau en cours (Modèles)...", "sys");
-                try {
-                    const r = await fetch("https://api.openai.com/v1/models", {
-                        headers: { "Authorization": `Bearer ${k}` }
-                    });
-                    if(r.ok) {
-                        alert("SUCCÈS ! La connexion vers OpenAI fonctionne. Le problème vient du système.");
-                        this.log("Test RESEAU: SUCCÈS", "ai");
-                    } else {
-                        alert("ERREUR " + r.status);
-                        this.log("Test RESEAU: Erreur " + r.status, "error");
-                    }
-                } catch(e) {
-                    alert("ECHEC: " + e.message);
-                    this.log("Test RESEAU: Failed to fetch", "error");
-                }
-            },
-            handleDetection(type, details) { App.log(`CAPTEUR [${type}] : ${details}`, "entity"); triggerAI(type, details); },
-            async startFullSystem() {
-                if(isSystemRunning) return;
-                const btn = document.getElementById('btnMainStart'); btn.innerHTML = "INITIALISATION...";
-                if (!await AudioEngine.init()) { btn.innerHTML = "ERREUR MATÉRIEL"; return; }
-                isSystemRunning = true;
-                VisualEngine.init();
-                if(FeatureEngine.vadActive) BrainEngine.initVoice();
-                if(FeatureEngine.evpActive) EVPRecorder.start();
-                btn.innerHTML = "SYSTÈME ACTIF";
-                btn.classList.add("active-mode");
-                document.getElementById('mainText').innerText = "SUPRA ACTIF";
-                this.log("v39 DNS FLUSH démaré.", "sys");
-                BrainEngine.speak("Système en ligne.");
-            },
-            stopSystem() {
-                isSystemRunning = false;
-                AudioEngine.stop();
-                if(BrainEngine.recognition) BrainEngine.recognition.stop();
+            speak(text) {
                 window.speechSynthesis.cancel();
-                document.getElementById('btnMainStart').innerHTML = "INITIALISER SYSTÈME";
-                document.getElementById('btnMainStart').classList.remove("active-mode");
-                document.getElementById('mainText').innerText = "ARRÊTÉ";
-                this.log("Arrêt.", "sys");
+                const u = new SpeechSynthesisUtterance(text);
+                u.rate = 0.9; u.pitch = 0.5;
+                window.speechSynthesis.speak(u);
             },
-            replayLastEVP() { EVPRecorder.playLastCapture(); },
-            forceRetry() {
-                const text = document.getElementById('liveTranscript').innerText;
-                if(text && text !== "..." && text !== "PARLEZ MAINTENANT") {
-                    this.log("Tentative relance...", "warn");
-                    lastTrigger = 0; 
-                    triggerAI("RETRY_MANUEL", text);
-                } else {
-                    this.log("Aucun texte à relancer.", "warn");
+
+            // --- AI CONNECTION (REAL) ---
+            async triggerAI(data) {
+                if(Date.now() - State.lastTrigger < 3000) return;
+                State.lastTrigger = Date.now();
+                
+                if(!State.apiKey) {
+                    this.log("AI: NO KEY PROVIDED - SKIPPING", "warn");
+                    return;
+                }
+
+                document.getElementById('statusLine').innerText = "PROCESSING...";
+                
+                try {
+                    const res = await fetch("https://api.openai.com/v1/chat/completions", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${State.apiKey}` },
+                        body: JSON.stringify({
+                            model: "gpt-3.5-turbo",
+                            messages: [{role:"system", content:"You are a cold paranormal data analyst. Reply in under 20 words."}, {role:"user", content:`Analyze input: ${data}`}],
+                            max_tokens: 40
+                        })
+                    });
+
+                    if(!res.ok) throw new Error(`HTTP ${res.status}`);
+                    const json = await res.json();
+                    const reply = json.choices[0].message.content;
+                    
+                    this.log(`AI RESPONSE: ${reply}`, "ai");
+                    this.speak(reply);
+                    document.getElementById('statusLine').innerText = reply.toUpperCase();
+                } catch(e) {
+                    this.log(`AI ERROR: ${e.message}`, "err");
+                    document.getElementById('statusLine').innerText = "NET ERROR";
+                    // NO FALLBACK SIMULATION. STRICT MODE.
+                }
+            },
+
+            // --- NETWORK DIAGNOSTIC ---
+            async runDiagnostics() {
+                const out = document.getElementById('diagResult');
+                out.innerHTML = "RUNNING DIAGNOSTICS...<br>";
+                
+                // Test 1: Google (General Internet)
+                out.innerHTML += "1. PINGING GOOGLE.COM...";
+                try {
+                    await fetch("https://www.google.com", {mode: 'no-cors', cache: 'no-store'});
+                    out.innerHTML += " <span style='color:var(--primary)'>OK</span><br>";
+                } catch(e) {
+                    out.innerHTML += ` <span style='color:var(--danger)'>FAIL (${e.name})</span><br>`;
+                    out.innerHTML += "DIAGNOSIS: TOTAL INTERNET LOSS. CHECK DATA CONNECTION.";
+                    return;
+                }
+
+                // Test 2: OpenAI (Target)
+                out.innerHTML += "2. PINGING API.OPENAI.COM...";
+                try {
+                    const controller = new AbortController();
+                    const id = setTimeout(() => controller.abort(), 5000); // 5s timeout
+                    await fetch("https://api.openai.com/v1/models", { 
+                        method: "GET", 
+                        signal: controller.signal,
+                        headers: { "Authorization": `Bearer ${State.apiKey || 'test'}` }
+                    });
+                    clearTimeout(id);
+                    out.innerHTML += " <span style='color:var(--primary)'>OK</span><br>";
+                    out.innerHTML += "CONCLUSION: NETWORK IS STABLE. ISSUE IS LIKELY AUTH OR FIREWALL.";
+                } catch(e) {
+                    clearTimeout(id);
+                    out.innerHTML += ` <span style='color:var(--danger)'>FAIL</span><br>`;
+                    if(e.name === 'AbortError') out.innerHTML += "DIAGNOSIS: TIMEOUT. CARRIER FIREWALL BLOCKING API.<br>";
+                    else if(e.message.includes('401')) out.innerHTML += "DIAGNOSIS: INVALID API KEY.<br>";
+                    else out.innerHTML += `DIAGNOSIS: ${e.message}<br>`;
+                    out.innerHTML += "<strong>RECOMMENDATION: USE VPN OR CONTACT CARRIER.</strong>";
                 }
             }
         };
 
-        if (window.DeviceOrientationEvent) {
-            window.addEventListener('deviceorientation', e => {
-                if(!isSystemRunning || !FeatureEngine.emfActive) return;
-                const emf = (Math.abs(e.alpha-180) + Math.abs(e.beta) + Math.abs(e.gamma))/4 + (Math.random()*2);
-                document.getElementById('valEmf').innerText = emf.toFixed(1);
-                document.getElementById('valMag').innerText = Math.round(e.alpha||0);
-                if (emf > Config.data.emfSensitivity && Date.now() - lastTrigger > 8000) App.handleDetection("EMF", `${emf.toFixed(1)} μT`);
-            });
-        }
+        // Boot
+        window.onload = () => {
+            Lab.log("SUPRA LAB v35. BOOT SEQUENCE COMPLETE.", "sys");
+        };
 
-        window.onload = () => { Config.load(); App.log("v39 DNS FLUSH Ready.", "sys"); };
     </script>
 </body>
 </html>
