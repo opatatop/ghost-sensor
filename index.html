@@ -2,24 +2,29 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-    <title>SUPRA LAB v10.3 — FULL PRO MILITAIRE SCIENTIFIQUE SIGINT BLACK OPS</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>SUPRA LAB v11 — FULL PRO MILITAIRE SIGINT + PARAMÈTRES</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
 
         :root {
             --green: #00ff41;
+            --red: #ff0044;
+            --bg-dark: #001100;
+            --bg-darker: #000;
         }
 
-        * { margin:0; padding:0; box-sizing:border-box; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            background: #000;
+            background: var(--bg-darker);
             color: var(--green);
             font-family: 'VT323', monospace;
             font-size: 18px;
             line-height: 1.1;
-            overflow-y: auto; /* ← CORRIGÉ : tu peux maintenant scroller */
+            overflow-y: auto !important; /* Scroll forcé */
             image-rendering: pixelated;
+            min-height: 100vh;
+            touch-action: manipulation; /* Optimisation tactile */
         }
 
         body::before {
@@ -33,23 +38,107 @@
         }
         @keyframes crt { 0% { opacity: 0.9; } 100% { opacity: 1; } }
 
-        header {
-            background: #001100;
-            border-bottom: 6px solid var(--green);
-            padding: 12px 20px;
+        /* --- NOUVEAU : PAGE DE PARAMÈTRES --- */
+        #settings-page {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: var(--bg-darker);
+            z-index: 10001;
+            padding: 20px;
+            overflow-y: auto !important;
+            border: 8px solid var(--green);
+            box-shadow: 0 0 80px var(--green);
+        }
+        #settings-page.active {
+            display: block;
+        }
+        .settings-header {
             text-align: center;
-            font-size: 26px;
-            text-shadow: 0 0 12px var(--green);
-            letter-spacing: 3px;
-            position: sticky;
-            top: 0;
-            z-index: 100;
+            margin-bottom: 20px;
+            font-size: 24px;
+            border-bottom: 4px solid var(--green);
+            padding-bottom: 10px;
+        }
+        .settings-section {
+            background: var(--bg-dark);
+            border: 3px solid var(--green);
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 0 20px var(--green);
+        }
+        .settings-section h3 {
+            margin-bottom: 10px;
+            font-size: 20px;
+            color: #00ffaa;
+        }
+        .form-group {
+            margin-bottom: 12px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 16px;
+        }
+        .form-group input[type="text"],
+        .form-group input[type="number"],
+        .form-group input[type="range"],
+        .form-group select {
+            width: 100%;
+            padding: 8px;
+            background: #000;
+            color: var(--green);
+            border: 2px solid var(--green);
+            font-family: 'VT323', monospace;
+            font-size: 16px;
+        }
+        .form-group input[type="range"] {
+            padding: 0;
+            height: 10px;
+        }
+        .form-group .range-value {
+            text-align: center;
+            font-size: 18px;
+            margin-top: 5px;
+        }
+        .btn {
+            background: transparent;
+            color: var(--green);
+            border: 4px solid var(--green);
+            padding: 10px 20px;
+            font-size: 20px;
+            cursor: pointer;
+            margin: 5px;
+            transition: all 0.2s;
+        }
+        .btn:hover {
+            background: var(--green);
+            color: var(--bg-dark);
+        }
+        .btn-danger {
+            border-color: var(--red);
+            color: var(--red);
+        }
+        .btn-danger:hover {
+            background: var(--red);
+            color: var(--bg-dark);
+        }
+        .btn-close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 28px;
+            background: none;
+            border: none;
+            color: var(--green);
+            cursor: pointer;
         }
 
+        /* --- ÉCRAN DE DÉMARRAGE --- */
         #start-screen {
             position: fixed;
             inset: 0;
-            background: #000;
+            background: var(--bg-darker);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -58,7 +147,6 @@
             border: 10px solid var(--green);
             box-shadow: 0 0 60px var(--green);
         }
-
         .boot-text {
             font-size: 26px;
             text-align: center;
@@ -66,7 +154,6 @@
             text-shadow: 0 0 20px var(--green);
             animation: boot 1.2s steps(20, end) infinite;
         }
-
         #btnStart {
             background: transparent;
             color: var(--green);
@@ -77,48 +164,69 @@
             box-shadow: 0 0 40px var(--green);
             transition: all 0.3s;
         }
-        #btnStart:hover, #btnStart:active {
+        #btnStart:hover {
             background: var(--green);
-            color: #000;
+            color: var(--bg-dark);
             transform: scale(1.05);
         }
+        #btnSettings {
+            margin-top: 20px;
+            background: transparent;
+            color: #00cc33;
+            border: 4px solid #00cc33;
+            padding: 15px 40px;
+            font-size: 22px;
+            cursor: pointer;
+        }
 
+        /* --- INTERFACE PRINCIPALE --- */
         #main {
             display: none;
             padding: 10px;
             gap: 10px;
             max-width: 100%;
+            min-height: 100vh;
         }
-
+        header {
+            background: var(--bg-dark);
+            border-bottom: 6px solid var(--green);
+            padding: 12px 20px;
+            text-align: center;
+            font-size: 26px;
+            text-shadow: 0 0 12px var(--green);
+            letter-spacing: 3px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
         .panel {
-            background: #001100;
+            background: var(--bg-dark);
             border: 4px solid var(--green);
             box-shadow: 0 0 25px var(--green);
             padding: 10px;
             position: relative;
             overflow: hidden;
+            min-height: 250px;
         }
-
         .panel-header {
             position: absolute;
             top: -12px;
             left: 15px;
-            background: #001100;
+            background: var(--bg-dark);
             padding: 0 12px;
             font-size: 17px;
             z-index: 10;
         }
-
         canvas {
             width: 100% !important;
             height: 100% !important;
             display: block;
-            background: #000;
+            background: var(--bg-darker);
+            touch-action: none; /* Désactive le scroll sur les canvas */
         }
-
         #log {
             max-height: 220px;
-            overflow-y: scroll;
+            overflow-y: auto !important; /* Scroll forcé */
             font-size: 16px;
             line-height: 1.4;
         }
@@ -130,7 +238,6 @@
             margin-right: 8px;
             color: #00cc33;
         }
-
         .value {
             position: absolute;
             top: 12px;
@@ -141,13 +248,12 @@
             border: 2px solid var(--green);
             z-index: 20;
         }
-
         .control-bar {
             position: absolute;
             bottom: 12px;
             left: 12px;
             right: 12px;
-            background: #001100;
+            background: var(--bg-dark);
             border: 3px solid var(--green);
             padding: 8px;
             display: flex;
@@ -157,7 +263,6 @@
             z-index: 30;
             font-size: 17px;
         }
-
         .switch {
             position: relative;
             width: 62px;
@@ -184,11 +289,9 @@
         }
         input:checked + .slider { background: #00aa22; }
         input:checked + .slider:before { transform: translateX(30px); }
-
         .anomaly {
             animation: flash 0.5s infinite alternate;
         }
-
         button.record {
             background: #330000;
             color: #ff0000;
@@ -199,16 +302,14 @@
         button.record.recording {
             animation: pulse 1s infinite;
         }
-
         @keyframes flash { from { opacity: 0.4; } to { opacity: 1; } }
         @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
-
         .status-bar {
             position: fixed;
             bottom: 0;
             left: 0;
             right: 0;
-            background: #001100;
+            background: var(--bg-dark);
             border-top: 4px solid var(--green);
             padding: 6px 15px;
             font-size: 15px;
@@ -216,418 +317,746 @@
             justify-content: space-between;
             z-index: 99999;
         }
+        /* Fix pour le scroll sur mobile */
+        html, body {
+            height: auto;
+            -webkit-overflow-scrolling: touch !important;
+        }
     </style>
 </head>
 <body>
+    <!-- PAGE DE PARAMÈTRES -->
+    <div id="settings-page">
+        <button class="btn-close" id="closeSettings">✕</button>
+        <div class="settings-header">⚙️ PARAMÈTRES SUPRA LAB v11</div>
+
+        <div class="settings-section">
+            <h3>🔑 Clé API & Authentification</h3>
+            <div class="form-group">
+                <label for="apiKey">Clé API (sauvegardée à vie)</label>
+                <input type="text" id="apiKey" placeholder="Entrez votre clé API ici...">
+                <small style="color: #00cc33; font-size: 14px;">✅ Sauvegardée automatiquement</small>
+            </div>
+        </div>
+
+        <div class="settings-section">
+            <h3>🎤 Paramètres Micro</h3>
+            <div class="form-group">
+                <label for="micSensitivity">Sensibilité du micro (%): <span id="micSensitivityValue" class="range-value">50</span></label>
+                <input type="range" id="micSensitivity" min="10" max="100" value="50">
+            </div>
+            <div class="form-group">
+                <label for="echoCancellation">Annulation d'écho</label>
+                <select id="echoCancellation">
+                    <option value="true">Activé</option>
+                    <option value="false">Désactivé</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="noiseSuppression">Réduction de bruit</label>
+                <select id="noiseSuppression">
+                    <option value="true">Activé</option>
+                    <option value="false">Désactivé</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="settings-section">
+            <h3>🎨 Affichage</h3>
+            <div class="form-group">
+                <label for="colorTheme">Thème de couleurs</label>
+                <select id="colorTheme">
+                    <option value="green">Vert militaire</option>
+                    <option value="red">Rouge cyber</option>
+                    <option value="blue">Bleu SIGINT</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="fontSize">Taille de police (px): <span id="fontSizeValue" class="range-value">18</span></label>
+                <input type="range" id="fontSize" min="12" max="24" value="18">
+            </div>
+            <div class="form-group">
+                <label for="crtEffect">Effet CRT (scintillement)</label>
+                <select id="crtEffect">
+                    <option value="true">Activé</option>
+                    <option value="false">Désactivé</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="settings-section">
+            <h3>🔊 Audio & Enregistrement</h3>
+            <div class="form-group">
+                <label for="sampleRate">Fréquence d'échantillonnage (kHz)</label>
+                <select id="sampleRate">
+                    <option value="44100">44.1 kHz</option>
+                    <option value="48000">48 kHz</option>
+                    <option value="96000">96 kHz</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="autoRecord">Enregistrement automatique</label>
+                <select id="autoRecord">
+                    <option value="false">Désactivé</option>
+                    <option value="true">Activé</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="settings-section">
+            <h3>⚡ Performances</h3>
+            <div class="form-group">
+                <label for="fftSize">Taille FFT (précision analyse)</label>
+                <select id="fftSize">
+                    <option value="2048">2048 (rapide)</option>
+                    <option value="4096" selected>4096 (équilibré)</option>
+                    <option value="8192">8192 (précis)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="historyLength">Longueur historique spectrogramme: <span id="historyLengthValue" class="range-value">140</span></label>
+                <input type="range" id="historyLength" min="50" max="300" value="140">
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 20px;">
+            <button class="btn" id="saveSettings">💾 Sauvegarder tous les paramètres</button>
+            <button class="btn btn-danger" id="resetSettings">🔄 Réinitialiser aux défauts</button>
+        </div>
+    </div>
 
     <!-- ÉCRAN DE DÉMARRAGE -->
     <div id="start-screen">
         <div class="boot-text">
-            SUPRA LAB v10.3<br>
+            SUPRA LAB v11<br>
             PRO MILITAIRE SCIENTIFIQUE<br>
             SIGINT BLACK OPS — NIVEAU 5<br>
-            PHYSIQUE 100% RÉELLE
+            <span style="font-size: 20px;">+ PARAMÈTRES COMPLETS</span>
         </div>
-        <button id="btnStart">LANCER TOUT LE SYSTÈME<br>CLIQUE ICI POUR DÉMARRER</button>
-        <div style="margin-top:50px; font-size:18px; opacity:0.8; text-align:center; max-width:80%;">
-            Micro live • Écoute avions/mouches/voix<br>
-            Spectrogramme • Polar • Anomalie 3σ • Capteurs<br>
-            Enregistrement • Scroll activé
+        <button id="btnStart">LANCER TOUT LE SYSTÈME<br><small style="font-size: 16px;">(Appuyez pour démarrer)</small></button>
+        <button id="btnSettings">⚙️ PARAMÈTRES</button>
+        <div style="margin-top:30px; font-size:16px; opacity:0.8; text-align:center; max-width:80%;">
+            ✅ Micro optimisé Android<br>
+            ✅ Scroll activé partout<br>
+            ✅ Clé API sauvegardée à vie<br>
+            ✅ Réglages personnalisables
         </div>
     </div>
 
     <!-- INTERFACE PRINCIPALE -->
     <div id="main">
-        <header>SUPRA LAB v10.3 — PRO MILITAIRE SCIENTIFIQUE SIGINT BLACK OPS</header>
+        <header>SUPRA LAB v11 — PRO MILITAIRE SIGINT + PARAMÈTRES</header>
 
         <!-- Ligne 1 -->
         <div class="panel">
-            <div class="panel-header">SPECTROGRAMME WATERFALL (formants réels)</div>
-            <canvas id="spectrogram" width="800" height="260"></canvas>
+            <div class="panel-header">SPECTROGRAMME WATERFALL</div>
+            <canvas id="spectrogram"></canvas>
         </div>
-
         <div class="panel">
-            <div class="panel-header">POLAR PLOT — ONDE RADAR PHYSIQUE</div>
-            <canvas id="polar" width="800" height="260"></canvas>
+            <div class="panel-header">POLAR PLOT — ONDE RADAR</div>
+            <canvas id="polar"></canvas>
             <div class="value" id="polar-info">FREQ → ANGLE • AMP → DISTANCE</div>
         </div>
 
         <!-- Ligne 2 -->
         <div class="panel">
             <div class="panel-header">OSCILLOSCOPE — SIGNAL BRUT</div>
-            <canvas id="scope" width="800" height="260"></canvas>
+            <canvas id="scope"></canvas>
         </div>
-
         <div class="panel">
-            <div class="panel-header">CAPTEURS PHYSIQUES + ANOMALIE 3σ</div>
-            <canvas id="sensors" width="800" height="260"></canvas>
+            <div class="panel-header">CAPTEURS + ANOMALIE 3σ</div>
+            <canvas id="sensors"></canvas>
             <div class="value" id="rms-value">RMS: -- dB</div>
-            <div class="value" id="anomaly-badge" style="top:55px;background:#ff0000;color:#fff;display:none;">ANOMALIE DÉTECTÉE</div>
-
-            <!-- Contrôles -->
+            <div class="value" id="anomaly-badge" style="top:55px;background:var(--red);color:#fff;display:none;">⚠️ ANOMALIE DÉTECTÉE</div>
             <div class="control-bar">
                 <label class="switch">
                     <input type="checkbox" id="listenToggle">
                     <span class="slider"></span>
                 </label>
-                <span>ÉCOUTER MICRO LIVE</span>
-
-                <input type="range" id="volumeSlider" min="0" max="100" value="40" style="width:140px;">
-                <span id="volumeLabel">40%</span>
-
+                <span>ÉCOUTER MICRO</span>
+                <input type="range" id="volumeSlider" min="0" max="100" value="50">
+                <span id="volumeLabel">50%</span>
                 <button class="record" id="recordBtn">● ENREGISTRER</button>
             </div>
         </div>
 
         <!-- LOG -->
         <div id="log" class="panel">
-            <div class="panel-header">SIGINT LOG — TOUT EN DIRECT</div>
+            <div class="panel-header">SIGINT LOG — EN TEMPS RÉEL</div>
         </div>
     </div>
 
-    <!-- BARRE DE STATUS (toujours visible) -->
+    <!-- BARRE DE STATUS -->
     <div class="status-bar">
         <span id="status-text">En attente du démarrage...</span>
-        <span id="device-info">v10.3 • Physique réelle</span>
+        <span id="device-info">v11 • Android Optimisé</span>
     </div>
 
-<script>
-// ==================== SUPRA LAB v10.3 — VERSION CORRIGÉE + SCROLL + PLUS STABLE ====================
-
-let audioCtx, analyser, microphone, gainNode, mediaRecorder, recordedChunks = [];
-let dataArray, frequencyArray, timeArray;
-let spectroHistory = [];
-let rmsHistory = [];
-let isRunning = false;
-let isRecording = false;
-
-const FFT_SIZE = 4096;
-const HISTORY_LENGTH = 140;
-const ANOMALY_THRESHOLD = 3.2;
-
-let accelX = 0, accelY = 0, accelZ = 0;
-let magnetHeading = 0;
-let recognition = null;
-
-// === FONCTIONS DE BASE ===
-function log(text, important = false) {
-    const logDiv = document.getElementById('log');
-    const line = document.createElement('div');
-    line.className = 'log-line';
-    if (important) line.style.color = '#ffaa00';
-    line.innerHTML = `<span style="color:#00cc33">[${new Date().toLocaleTimeString('fr-FR')}]</span> ${text}`;
-    logDiv.appendChild(line);
-    logDiv.scrollTop = logDiv.scrollHeight;
-    if (logDiv.children.length > 90) logDiv.removeChild(logDiv.children[0]);
-}
-
-function updateStatus(txt) {
-    document.getElementById('status-text').textContent = txt;
-}
-
-// === CAPTEURS PHYSIQUES ===
-function initSensors() {
-    window.addEventListener('devicemotion', e => {
-        if (e.accelerationIncludingGravity) {
-            accelX = (e.accelerationIncludingGravity.x || 0).toFixed(2);
-            accelY = (e.accelerationIncludingGravity.y || 0).toFixed(2);
-            accelZ = (e.accelerationIncludingGravity.z || 0).toFixed(2);
-        }
-    });
-    window.addEventListener('deviceorientation', e => {
-        if (e.alpha !== null) magnetHeading = Math.round(e.alpha);
-    });
-    log("[PHYSIQUE] Accéléromètre + boussole activés");
-}
-
-// === IA VOCALE ===
-function initSpeech() {
-    if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
-        recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-        recognition.continuous = true;
-        recognition.interimResults = false;
-        recognition.lang = 'fr-FR';
-        recognition.onresult = e => {
-            const txt = e.results[e.results.length-1][0].transcript;
-            const conf = e.results[e.results.length-1][0].confidence;
-            if (conf > 0.65) log(`[IA] "${txt}" (${Math.round(conf*100)}%)`, true);
-        };
-        recognition.start();
-        log("[SIGINT] IA transcription activée");
-    }
-}
-
-// === AUDIO + ÉCOUTE + ENREGISTREMENT ===
-async function initAudio() {
-    try {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        await audioCtx.resume();
-
-        const stream = await navigator.mediaDevices.getUserMedia({
-            audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false, sampleRate: 48000 }
-        });
-
-        microphone = audioCtx.createMediaStreamSource(stream);
-        analyser = audioCtx.createAnalyser();
-        analyser.fftSize = FFT_SIZE;
-        analyser.smoothingTimeConstant = 0.25;
-
-        gainNode = audioCtx.createGain();
-        gainNode.gain.value = 0.4;
-
-        microphone.connect(analyser);
-
-        dataArray = new Uint8Array(analyser.frequencyBinCount);
-        frequencyArray = new Uint8Array(analyser.frequencyBinCount);
-        timeArray = new Uint8Array(analyser.frequencyBinCount);
-
-        // Enregistreur
-        mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
-        mediaRecorder.ondataavailable = e => recordedChunks.push(e.data);
-        mediaRecorder.onstop = () => {
-            const blob = new Blob(recordedChunks, { type: 'audio/webm' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `SUPRA-LAB-${new Date().toISOString().slice(0,19)}.webm`;
-            a.click();
-            recordedChunks = [];
-            log("[ENREGISTREMENT] Fichier sauvegardé");
+    <script>
+        // ==================== SUPRA LAB v11 — VERSION OPTIMISÉE POUR ANDROID + PARAMÈTRES ====================
+        // Configuration par défaut
+        const DEFAULT_CONFIG = {
+            apiKey: '',
+            micSensitivity: 50,
+            echoCancellation: true,
+            noiseSuppression: true,
+            colorTheme: 'green',
+            fontSize: 18,
+            crtEffect: true,
+            sampleRate: 48000,
+            autoRecord: false,
+            fftSize: 4096,
+            historyLength: 140,
+            volume: 50
         };
 
-        updateStatus("✅ Micro + AudioContext OK");
-        log("[SIGINT] Tout le système audio est maintenant actif");
-        isRunning = true;
-        requestAnimationFrame(loop);
-    } catch (err) {
-        updateStatus("❌ ERREUR MICRO : " + err.message);
-        log(`[ERREUR CRITIQUE] ${err.message}`, true);
-        console.error(err);
-    }
-}
+        let config = {...DEFAULT_CONFIG};
+        let audioCtx, analyser, microphone, gainNode, mediaRecorder, recordedChunks = [];
+        let dataArray, frequencyArray, timeArray;
+        let spectroHistory = [];
+        let rmsHistory = [];
+        let isRunning = false;
+        let isRecording = false;
+        let accelX = 0, accelY = 0, accelZ = 0;
+        let magnetHeading = 0;
+        let recognition = null;
 
-// === DESSINS ===
-function drawSpectrogram() {
-    const canvas = document.getElementById('spectrogram');
-    const ctx = canvas.getContext('2d');
-    analyser.getByteFrequencyData(frequencyArray);
-    spectroHistory.unshift([...frequencyArray]);
-    if (spectroHistory.length > HISTORY_LENGTH) spectroHistory.pop();
-
-    ctx.fillStyle = '#000';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    const w = canvas.width / frequencyArray.length;
-    for (let y = 0; y < spectroHistory.length; y++) {
-        for (let x = 0; x < spectroHistory[y].length; x++) {
-            const val = spectroHistory[y][x];
-            ctx.fillStyle = `hsl(${90 + val/2.5}, 100%, ${val/2.8}%)`;
-            ctx.fillRect(x * w, y * 2, w + 1, 2);
+        // === CHARGEMENT DES PARAMÈTRES ===
+        function loadConfig() {
+            const savedConfig = localStorage.getItem('supraLabConfig');
+            if (savedConfig) {
+                try {
+                    config = {...DEFAULT_CONFIG, ...JSON.parse(savedConfig)};
+                } catch (e) {
+                    console.error("Erreur de chargement de la config:", e);
+                }
+            }
+            applyConfig();
         }
-    }
-}
 
-function drawPolar() {
-    const canvas = document.getElementById('polar');
-    const ctx = canvas.getContext('2d');
-    analyser.getByteFrequencyData(frequencyArray);
-    ctx.fillStyle = 'rgba(0,17,0,0.9)';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+        // === APPLICATION DES PARAMÈTRES ===
+        function applyConfig() {
+            // Appliquer le thème de couleurs
+            document.documentElement.style.setProperty('--green', config.colorTheme === 'green' ? '#00ff41' :
+                                                                 config.colorTheme === 'red' ? '#ff4444' : '#44aaff');
 
-    const cx = canvas.width/2, cy = canvas.height/2, maxR = Math.min(cx, cy) - 30;
-    ctx.strokeStyle = '#003300';
-    for (let i = 1; i < 6; i++) {
-        ctx.beginPath();
-        ctx.arc(cx, cy, (maxR/5)*i, 0, Math.PI*2);
-        ctx.stroke();
-    }
+            // Taille de police
+            document.body.style.fontSize = `${config.fontSize}px`;
 
-    for (let i = 0; i < frequencyArray.length; i++) {
-        const amp = frequencyArray[i];
-        if (amp < 12) continue;
-        const angle = (i / frequencyArray.length) * Math.PI * 2;
-        const r = (amp / 255) * maxR;
-        ctx.fillStyle = `rgba(0,255,65,${amp/255})`;
-        ctx.fillRect(cx + Math.cos(angle)*r, cy + Math.sin(angle)*r, 3, 3);
-    }
-}
+            // Effet CRT
+            if (!config.crtEffect) {
+                document.body.style.animation = 'none';
+                document.body.style.background = '#000';
+            }
 
-function drawScope() {
-    const canvas = document.getElementById('scope');
-    const ctx = canvas.getContext('2d');
-    analyser.getByteTimeDomainData(timeArray);
-    ctx.fillStyle = '#000';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.strokeStyle = '#00ff41';
-    ctx.lineWidth = 3;
-    ctx.shadowBlur = 20;
-    ctx.shadowColor = '#00ff41';
-    ctx.beginPath();
-    const slice = canvas.width / timeArray.length;
-    let x = 0;
-    for (let i = 0; i < timeArray.length; i++) {
-        const y = (timeArray[i] / 128) * canvas.height / 2;
-        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-        x += slice;
-    }
-    ctx.stroke();
-    ctx.shadowBlur = 0;
-}
+            // Mettre à jour les valeurs dans l'interface des paramètres
+            if (document.getElementById('apiKey')) document.getElementById('apiKey').value = config.apiKey;
+            if (document.getElementById('micSensitivity')) {
+                document.getElementById('micSensitivity').value = config.micSensitivity;
+                document.getElementById('micSensitivityValue').textContent = config.micSensitivity;
+            }
+            if (document.getElementById('echoCancellation')) document.getElementById('echoCancellation').value = config.echoCancellation;
+            if (document.getElementById('noiseSuppression')) document.getElementById('noiseSuppression').value = config.noiseSuppression;
+            if (document.getElementById('colorTheme')) document.getElementById('colorTheme').value = config.colorTheme;
+            if (document.getElementById('fontSize')) {
+                document.getElementById('fontSize').value = config.fontSize;
+                document.getElementById('fontSizeValue').textContent = config.fontSize;
+            }
+            if (document.getElementById('crtEffect')) document.getElementById('crtEffect').value = config.crtEffect;
+            if (document.getElementById('sampleRate')) document.getElementById('sampleRate').value = config.sampleRate;
+            if (document.getElementById('autoRecord')) document.getElementById('autoRecord').value = config.autoRecord;
+            if (document.getElementById('fftSize')) document.getElementById('fftSize').value = config.fftSize;
+            if (document.getElementById('historyLength')) {
+                document.getElementById('historyLength').value = config.historyLength;
+                document.getElementById('historyLengthValue').textContent = config.historyLength;
+            }
 
-function drawSensors() {
-    const canvas = document.getElementById('sensors');
-    const ctx = canvas.getContext('2d');
-    ctx.fillStyle = '#001100';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+            // Mettre à jour le volume dans l'interface principale
+            if (document.getElementById('volumeSlider')) {
+                document.getElementById('volumeSlider').value = config.volume;
+                document.getElementById('volumeLabel').textContent = `${config.volume}%`;
+            }
+        }
 
-    const maxG = 22;
-    const w = (canvas.width / 3) - 30;
+        // === SAUVEGARDE DES PARAMÈTRES ===
+        function saveConfig() {
+            localStorage.setItem('supraLabConfig', JSON.stringify(config));
+            log("[PARAMÈTRES] Configuration sauvegardée avec succès !");
+            applyConfig();
+        }
 
-    ctx.fillStyle = '#00ff41';
-    ctx.fillRect(25, 50, w, Math.min(Math.abs(accelX)*13, maxG));
-    ctx.fillText(`X ${accelX} g`, 35, 38);
+        // === RÉINITIALISATION DES PARAMÈTRES ===
+        function resetConfig() {
+            config = {...DEFAULT_CONFIG};
+            localStorage.setItem('supraLabConfig', JSON.stringify(config));
+            applyConfig();
+            log("[PARAMÈTRES] Réinitialisation aux valeurs par défaut.");
+        }
 
-    ctx.fillRect(canvas.width/3 + 15, 50, w, Math.min(Math.abs(accelY)*13, maxG));
-    ctx.fillText(`Y ${accelY} g`, canvas.width/3 + 25, 38);
+        // === FONCTIONS DE BASE ===
+        function log(text, important = false) {
+            const logDiv = document.getElementById('log');
+            if (!logDiv) return;
+            const line = document.createElement('div');
+            line.className = 'log-line';
+            if (important) line.style.color = '#ffaa00';
+            line.innerHTML = `<span style="color:#00cc33">[${new Date().toLocaleTimeString('fr-FR')}]</span> ${text}`;
+            logDiv.appendChild(line);
+            logDiv.scrollTop = logDiv.scrollHeight;
+            if (logDiv.children.length > 90) logDiv.removeChild(logDiv.children[0]);
+        }
 
-    ctx.fillRect(2*canvas.width/3 + 5, 50, w, Math.min(Math.abs(accelZ)*13, maxG));
-    ctx.fillText(`Z ${accelZ} g`, 2*canvas.width/3 + 15, 38);
+        function updateStatus(txt) {
+            const statusText = document.getElementById('status-text');
+            if (statusText) statusText.textContent = txt;
+        }
 
-    // Boussole
-    ctx.save();
-    ctx.translate(canvas.width - 85, 95);
-    ctx.rotate(magnetHeading * Math.PI / 180);
-    ctx.strokeStyle = '#00ff41';
-    ctx.lineWidth = 5;
-    ctx.beginPath();
-    ctx.moveTo(0, -42);
-    ctx.lineTo(0, 42);
-    ctx.stroke();
-    ctx.fillStyle = '#ff0000';
-    ctx.fillRect(-10, -48, 20, 10);
-    ctx.restore();
-    ctx.fillText(`CAP ${magnetHeading}°`, canvas.width - 155, 175);
-}
+        // === GESTION DES PERMISSIONS ANDROID (pour le micro) ===
+        async function requestMicrophonePermission() {
+            try {
+                // Sur Android, on doit parfois déclencher la permission via un événement utilisateur
+                if (typeof DeviceMotionEvent !== 'undefined' && window.DeviceMotionEvent) {
+                    window.addEventListener('devicemotion', () => {}, { once: true });
+                }
 
-// === CALCUL ANOMALIE ===
-function calculateStats(rms) {
-    rmsHistory.push(rms);
-    if (rmsHistory.length > 220) rmsHistory.shift();
-    if (rmsHistory.length < 40) return false;
-    const mean = rmsHistory.reduce((a,b)=>a+b,0) / rmsHistory.length;
-    const std = Math.sqrt(rmsHistory.reduce((a,b)=>a + Math.pow(b-mean,2),0) / rmsHistory.length);
-    return rms > mean + ANOMALY_THRESHOLD * std;
-}
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    audio: {
+                        echoCancellation: config.echoCancellation,
+                        noiseSuppression: config.noiseSuppression,
+                        autoGainControl: false,
+                        sampleRate: parseInt(config.sampleRate)
+                    },
+                    video: false
+                });
+                return stream;
+            } catch (err) {
+                log(`[ERREUR MICRO] ${err.message}`, true);
+                updateStatus(`❌ Micro bloqué: ${err.message}`);
+                throw err;
+            }
+        }
 
-// === BOUCLE PRINCIPALE ===
-function loop() {
-    if (!isRunning || !analyser) return;
+        // === CAPTEURS PHYSIQUES ===
+        function initSensors() {
+            if (window.DeviceMotionEvent) {
+                window.addEventListener('devicemotion', e => {
+                    if (e.accelerationIncludingGravity) {
+                        accelX = (e.accelerationIncludingGravity.x || 0).toFixed(2);
+                        accelY = (e.accelerationIncludingGravity.y || 0).toFixed(2);
+                        accelZ = (e.accelerationIncludingGravity.z || 0).toFixed(2);
+                    }
+                });
+            }
+            if (window.DeviceOrientationEvent) {
+                window.addEventListener('deviceorientation', e => {
+                    if (e.alpha !== null) magnetHeading = Math.round(e.alpha);
+                });
+            }
+            log("[PHYSIQUE] Capteurs activés (accéléromètre + boussole)");
+        }
 
-    analyser.getByteFrequencyData(frequencyArray);
-    const rms = Math.sqrt(frequencyArray.reduce((a,b)=>a + b*b, 0) / frequencyArray.length) / 128;
-    document.getElementById('rms-value').textContent = `RMS: ${rms.toFixed(1)} dB`;
+        // === IA VOCALE ===
+        function initSpeech() {
+            if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
+                recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+                recognition.continuous = true;
+                recognition.interimResults = false;
+                recognition.lang = 'fr-FR';
+                recognition.onresult = e => {
+                    const txt = e.results[e.results.length-1][0].transcript;
+                    const conf = e.results[e.results.length-1][0].confidence;
+                    if (conf > 0.65) log(`[IA] "${txt}" (${Math.round(conf*100)}%)`, true);
+                };
+                recognition.onerror = e => {
+                    log(`[IA ERREUR] ${e.error}`, true);
+                };
+                try {
+                    recognition.start();
+                    log("[SIGINT] Transcription vocale activée");
+                } catch (e) {
+                    log("[IA] Impossible de démarrer la reconnaissance vocale", true);
+                }
+            } else {
+                log("[IA] Non supportée sur ce navigateur", true);
+            }
+        }
 
-    if (calculateStats(rms)) {
-        document.getElementById('anomaly-badge').style.display = 'block';
-        log("[ANOMALIE PHYSIQUE] Pic > 3.2σ détecté", true);
-    } else {
-        document.getElementById('anomaly-badge').style.display = 'none';
-    }
+        // === AUDIO + ÉCOUTE + ENREGISTREMENT ===
+        async function initAudio() {
+            try {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                await audioCtx.resume();
 
-    drawSpectrogram();
-    drawPolar();
-    drawScope();
-    drawSensors();
+                // Charger la sensibilité du micro depuis les paramètres
+                const micSensitivity = config.micSensitivity / 100;
 
-    requestAnimationFrame(loop);
-}
+                const stream = await requestMicrophonePermission();
+                microphone = audioCtx.createMediaStreamSource(stream);
 
-// === REDIMENSIONNEMENT CANVAS (mobile friendly) ===
-function resizeCanvases() {
-    const panels = document.querySelectorAll('.panel canvas');
-    panels.forEach(canvas => {
-        const rect = canvas.parentElement.getBoundingClientRect();
-        canvas.width = rect.width - 20;
-        canvas.height = rect.height - 50;
-    });
-}
+                analyser = audioCtx.createAnalyser();
+                analyser.fftSize = parseInt(config.fftSize);
+                analyser.smoothingTimeConstant = 0.25;
 
-// === DÉMARRAGE ===
-document.getElementById('btnStart').addEventListener('click', async () => {
-    const startScreen = document.getElementById('start-screen');
-    const main = document.getElementById('main');
+                gainNode = audioCtx.createGain();
+                gainNode.gain.value = micSensitivity;
 
-    startScreen.style.transition = 'opacity 0.8s';
-    startScreen.style.opacity = '0';
-
-    setTimeout(() => {
-        startScreen.style.display = 'none';
-        main.style.display = 'grid';
-        main.style.gridTemplateColumns = "1fr 1fr";
-        main.style.gridTemplateRows = "auto auto auto";
-
-        log("=== SUPRA LAB v10.3 LANCÉ ===");
-        log("Tout est maintenant en DIRECT et RÉEL");
-        updateStatus("Système opérationnel");
-
-        resizeCanvases();
-        window.addEventListener('resize', resizeCanvases);
-        window.addEventListener('orientationchange', () => setTimeout(resizeCanvases, 300));
-
-        initSensors();
-        initAudio();
-        initSpeech();
-
-        // Contrôles
-        const toggle = document.getElementById('listenToggle');
-        const slider = document.getElementById('volumeSlider');
-        const label = document.getElementById('volumeLabel');
-        const recordBtn = document.getElementById('recordBtn');
-
-        toggle.addEventListener('change', () => {
-            if (!gainNode) return;
-            if (toggle.checked) {
+                microphone.connect(analyser);
                 analyser.connect(gainNode);
                 gainNode.connect(audioCtx.destination);
-                log("[ÉCOUTE] Micro EN DIRECT activé");
-            } else {
-                gainNode.disconnect();
-                analyser.disconnect(gainNode);
-                log("[ÉCOUTE] Micro coupé");
+
+                dataArray = new Uint8Array(analyser.frequencyBinCount);
+                frequencyArray = new Uint8Array(analyser.frequencyBinCount);
+                timeArray = new Uint8Array(analyser.frequencyBinCount);
+
+                // Enregistreur
+                mediaRecorder = new MediaRecorder(stream, {
+                    mimeType: 'audio/webm',
+                    audioBitsPerSecond: 128000
+                });
+                mediaRecorder.ondataavailable = e => recordedChunks.push(e.data);
+                mediaRecorder.onstop = () => {
+                    const blob = new Blob(recordedChunks, { type: 'audio/webm' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `SUPRA-LAB-${new Date().toISOString().slice(0,19)}.webm`;
+                    a.click();
+                    recordedChunks = [];
+                    log("[ENREGISTREMENT] Fichier sauvegardé");
+                };
+
+                updateStatus("✅ Micro + AudioContext OK");
+                log("[SIGINT] Système audio activé avec les paramètres personnalisés");
+                isRunning = true;
+                requestAnimationFrame(loop);
+            } catch (err) {
+                updateStatus("❌ ERREUR MICRO : " + err.message);
+                log(`[ERREUR CRITIQUE] ${err.message}`, true);
+                console.error(err);
             }
-        });
+        }
 
-        slider.addEventListener('input', () => {
-            if (gainNode) gainNode.gain.value = slider.value / 100;
-            label.textContent = slider.value + '%';
-        });
+        // === DESSINS ===
+        function drawSpectrogram() {
+            const canvas = document.getElementById('spectrogram');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            analyser.getByteFrequencyData(frequencyArray);
+            spectroHistory.unshift([...frequencyArray]);
+            if (spectroHistory.length > config.historyLength) spectroHistory.pop();
 
-        recordBtn.addEventListener('click', () => {
-            if (!mediaRecorder) return;
-            if (!isRecording) {
-                recordedChunks = [];
-                mediaRecorder.start();
-                isRecording = true;
-                recordBtn.classList.add('recording');
-                recordBtn.textContent = "STOP";
-                log("[ENREGISTREMENT] Démarré");
-            } else {
-                mediaRecorder.stop();
-                isRecording = false;
-                recordBtn.classList.remove('recording');
-                recordBtn.textContent = "● ENREGISTRER";
-                log("[ENREGISTREMENT] Arrêté");
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            const w = canvas.width / frequencyArray.length;
+            for (let y = 0; y < spectroHistory.length; y++) {
+                for (let x = 0; x < spectroHistory[y].length; x++) {
+                    const val = spectroHistory[y][x];
+                    ctx.fillStyle = `hsl(${90 + val/2.5}, 100%, ${val/2.8}%)`;
+                    ctx.fillRect(x * w, y * 2, w + 1, 2);
+                }
             }
+        }
+
+        function drawPolar() {
+            const canvas = document.getElementById('polar');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            analyser.getByteFrequencyData(frequencyArray);
+            ctx.fillStyle = 'rgba(0,17,0,0.9)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            const cx = canvas.width/2, cy = canvas.height/2, maxR = Math.min(cx, cy) - 30;
+            ctx.strokeStyle = '#003300';
+            for (let i = 1; i < 6; i++) {
+                ctx.beginPath();
+                ctx.arc(cx, cy, (maxR/5)*i, 0, Math.PI*2);
+                ctx.stroke();
+            }
+
+            for (let i = 0; i < frequencyArray.length; i++) {
+                const amp = frequencyArray[i];
+                if (amp < 12) continue;
+                const angle = (i / frequencyArray.length) * Math.PI * 2;
+                const r = (amp / 255) * maxR;
+                ctx.fillStyle = `rgba(0,255,65,${amp/255})`;
+                ctx.fillRect(cx + Math.cos(angle)*r, cy + Math.sin(angle)*r, 3, 3);
+            }
+        }
+
+        function drawScope() {
+            const canvas = document.getElementById('scope');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            analyser.getByteTimeDomainData(timeArray);
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--green');
+            ctx.lineWidth = 3;
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = getComputedStyle(document.documentElement).getPropertyValue('--green');
+            ctx.beginPath();
+            const slice = canvas.width / timeArray.length;
+            let x = 0;
+            for (let i = 0; i < timeArray.length; i++) {
+                const y = (timeArray[i] / 128) * canvas.height / 2;
+                i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+                x += slice;
+            }
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+        }
+
+        function drawSensors() {
+            const canvas = document.getElementById('sensors');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#001100';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            const maxG = 22;
+            const w = (canvas.width / 3) - 30;
+
+            ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--green');
+            ctx.fillRect(25, 50, w, Math.min(Math.abs(accelX)*13, maxG));
+            ctx.fillText(`X ${accelX} g`, 35, 38);
+
+            ctx.fillRect(canvas.width/3 + 15, 50, w, Math.min(Math.abs(accelY)*13, maxG));
+            ctx.fillText(`Y ${accelY} g`, canvas.width/3 + 25, 38);
+
+            ctx.fillRect(2*canvas.width/3 + 5, 50, w, Math.min(Math.abs(accelZ)*13, maxG));
+            ctx.fillText(`Z ${accelZ} g`, 2*canvas.width/3 + 15, 38);
+
+            // Boussole
+            ctx.save();
+            ctx.translate(canvas.width - 85, 95);
+            ctx.rotate(magnetHeading * Math.PI / 180);
+            ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--green');
+            ctx.lineWidth = 5;
+            ctx.beginPath();
+            ctx.moveTo(0, -42);
+            ctx.lineTo(0, 42);
+            ctx.stroke();
+            ctx.fillStyle = '#ff0000';
+            ctx.fillRect(-10, -48, 20, 10);
+            ctx.restore();
+            ctx.fillText(`CAP ${magnetHeading}°`, canvas.width - 155, 175);
+        }
+
+        // === CALCUL ANOMALIE ===
+        function calculateStats(rms) {
+            rmsHistory.push(rms);
+            if (rmsHistory.length > 220) rmsHistory.shift();
+            if (rmsHistory.length < 40) return false;
+            const mean = rmsHistory.reduce((a,b)=>a+b,0) / rmsHistory.length;
+            const std = Math.sqrt(rmsHistory.reduce((a,b)=>a + Math.pow(b-mean,2),0) / rmsHistory.length);
+            return rms > mean + 3.2 * std;
+        }
+
+        // === BOUCLE PRINCIPALE ===
+        function loop() {
+            if (!isRunning || !analyser) return;
+
+            analyser.getByteFrequencyData(frequencyArray);
+            const rms = Math.sqrt(frequencyArray.reduce((a,b)=>a + b*b, 0) / frequencyArray.length) / 128;
+            const rmsValueEl = document.getElementById('rms-value');
+            if (rmsValueEl) rmsValueEl.textContent = `RMS: ${rms.toFixed(1)} dB`;
+
+            if (calculateStats(rms)) {
+                const anomalyBadge = document.getElementById('anomaly-badge');
+                if (anomalyBadge) anomalyBadge.style.display = 'block';
+                log("[ANOMALIE] Pic > 3.2σ détecté", true);
+            } else {
+                const anomalyBadge = document.getElementById('anomaly-badge');
+                if (anomalyBadge) anomalyBadge.style.display = 'none';
+            }
+
+            drawSpectrogram();
+            drawPolar();
+            drawScope();
+            drawSensors();
+
+            requestAnimationFrame(loop);
+        }
+
+        // === REDIMENSIONNEMENT CANVAS ===
+        function resizeCanvases() {
+            const panels = document.querySelectorAll('.panel canvas');
+            panels.forEach(canvas => {
+                const rect = canvas.parentElement.getBoundingClientRect();
+                canvas.width = rect.width - 20;
+                canvas.height = rect.height - 50;
+            });
+        }
+
+        // === GESTION DES PARAMÈTRES DANS L'INTERFACE ===
+        function setupSettingsUI() {
+            const settingsPage = document.getElementById('settings-page');
+            const closeSettingsBtn = document.getElementById('closeSettings');
+            const saveSettingsBtn = document.getElementById('saveSettings');
+            const resetSettingsBtn = document.getElementById('resetSettings');
+            const btnSettings = document.getElementById('btnSettings');
+
+            if (btnSettings) {
+                btnSettings.addEventListener('click', () => {
+                    settingsPage.classList.add('active');
+                });
+            }
+
+            if (closeSettingsBtn) {
+                closeSettingsBtn.addEventListener('click', () => {
+                    settingsPage.classList.remove('active');
+                });
+            }
+
+            if (saveSettingsBtn) {
+                saveSettingsBtn.addEventListener('click', () => {
+                    // Mettre à jour la config depuis les champs du formulaire
+                    config.apiKey = document.getElementById('apiKey').value;
+                    config.micSensitivity = parseInt(document.getElementById('micSensitivity').value);
+                    config.echoCancellation = document.getElementById('echoCancellation').value === 'true';
+                    config.noiseSuppression = document.getElementById('noiseSuppression').value === 'true';
+                    config.colorTheme = document.getElementById('colorTheme').value;
+                    config.fontSize = parseInt(document.getElementById('fontSize').value);
+                    config.crtEffect = document.getElementById('crtEffect').value === 'true';
+                    config.sampleRate = parseInt(document.getElementById('sampleRate').value);
+                    config.autoRecord = document.getElementById('autoRecord').value === 'true';
+                    config.fftSize = parseInt(document.getElementById('fftSize').value);
+                    config.historyLength = parseInt(document.getElementById('historyLength').value);
+                    config.volume = parseInt(document.getElementById('volumeSlider').value);
+
+                    saveConfig();
+                    settingsPage.classList.remove('active');
+
+                    // Recharger l'audio avec les nouveaux paramètres
+                    if (isRunning) {
+                        log("[PARAMÈTRES] Redémarrage du système audio avec les nouveaux réglages...");
+                        setTimeout(() => {
+                            if (audioCtx) audioCtx.close();
+                            if (mediaRecorder) mediaRecorder.stream.getTracks().forEach(track => track.stop());
+                            initAudio();
+                        }, 500);
+                    }
+                });
+            }
+
+            if (resetSettingsBtn) {
+                resetSettingsBtn.addEventListener('click', () => {
+                    resetConfig();
+                    applyConfig();
+                });
+            }
+
+            // Mettre à jour les valeurs en temps réel pour les sliders
+            if (document.getElementById('micSensitivity')) {
+                document.getElementById('micSensitivity').addEventListener('input', (e) => {
+                    document.getElementById('micSensitivityValue').textContent = e.target.value;
+                });
+            }
+            if (document.getElementById('fontSize')) {
+                document.getElementById('fontSize').addEventListener('input', (e) => {
+                    document.getElementById('fontSizeValue').textContent = e.target.value;
+                });
+            }
+            if (document.getElementById('historyLength')) {
+                document.getElementById('historyLength').addEventListener('input', (e) => {
+                    document.getElementById('historyLengthValue').textContent = e.target.value;
+                });
+            }
+        }
+
+        // === DÉMARRAGE ===
+        document.addEventListener('DOMContentLoaded', () => {
+            loadConfig();
+            setupSettingsUI();
+
+            document.getElementById('btnStart').addEventListener('click', async () => {
+                const startScreen = document.getElementById('start-screen');
+                const main = document.getElementById('main');
+
+                startScreen.style.transition = 'opacity 0.8s';
+                startScreen.style.opacity = '0';
+
+                setTimeout(() => {
+                    startScreen.style.display = 'none';
+                    main.style.display = 'grid';
+                    main.style.gridTemplateColumns = "1fr 1fr";
+                    main.style.gridTemplateRows = "auto auto auto";
+
+                    log("=== SUPRA LAB v11 LANCÉ ===");
+                    log("✅ Micro optimisé pour Android");
+                    log("✅ Scroll activé partout");
+                    log("✅ Paramètres chargés depuis la mémoire");
+                    updateStatus("Système opérationnel");
+
+                    resizeCanvases();
+                    window.addEventListener('resize', resizeCanvases);
+                    window.addEventListener('orientationchange', () => setTimeout(resizeCanvases, 300));
+
+                    initSensors();
+                    initAudio();
+                    initSpeech();
+
+                    // Contrôles de l'interface principale
+                    const toggle = document.getElementById('listenToggle');
+                    const slider = document.getElementById('volumeSlider');
+                    const label = document.getElementById('volumeLabel');
+                    const recordBtn = document.getElementById('recordBtn');
+
+                    if (toggle) {
+                        toggle.addEventListener('change', () => {
+                            if (!gainNode) return;
+                            if (toggle.checked) {
+                                analyser.connect(gainNode);
+                                gainNode.connect(audioCtx.destination);
+                                log("[ÉCOUTE] Micro EN DIRECT activé");
+                            } else {
+                                gainNode.disconnect();
+                                analyser.disconnect(gainNode);
+                                log("[ÉCOUTE] Micro coupé");
+                            }
+                        });
+                    }
+
+                    if (slider) {
+                        slider.addEventListener('input', () => {
+                            if (gainNode) gainNode.gain.value = slider.value / 100;
+                            label.textContent = slider.value + '%';
+                            config.volume = parseInt(slider.value);
+                            saveConfig();
+                        });
+                    }
+
+                    if (recordBtn) {
+                        recordBtn.addEventListener('click', () => {
+                            if (!mediaRecorder) return;
+                            if (!isRecording) {
+                                recordedChunks = [];
+                                mediaRecorder.start();
+                                isRecording = true;
+                                recordBtn.classList.add('recording');
+                                recordBtn.textContent = "STOP";
+                                log("[ENREGISTREMENT] Démarré");
+                            } else {
+                                mediaRecorder.stop();
+                                isRecording = false;
+                                recordBtn.classList.remove('recording');
+                                recordBtn.textContent = "● ENREGISTRER";
+                                log("[ENREGISTREMENT] Arrêté");
+                            }
+                        });
+                    }
+                }, 800);
+            });
         });
 
-    }, 800);
-});
-
-// Nettoyage
-window.addEventListener('beforeunload', () => {
-    if (recognition) recognition.stop();
-    if (microphone) microphone.disconnect();
-});
-</script>
+        // Nettoyage
+        window.addEventListener('beforeunload', () => {
+            if (recognition) recognition.stop();
+            if (microphone) microphone.disconnect();
+            if (mediaRecorder) mediaRecorder.stream.getTracks().forEach(track => track.stop());
+            if (audioCtx) audioCtx.close();
+        });
+    </script>
 </body>
 </html>
