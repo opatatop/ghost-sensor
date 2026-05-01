@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>SUPRA LAB v13 — FULL SPECTRUM BLACK OPS + IA GROQ</title>
+    <title>SUPRA LAB v11 — FULL SPECTRUM + IA GROQ</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
 
@@ -25,7 +25,6 @@
             min-height: 100vh;
             overflow-y: auto;
             touch-action: manipulation;
-            image-rendering: pixelated;
         }
 
         body.night-vision {
@@ -96,7 +95,7 @@
 
         #log {
             min-height: 300px;
-            max-height: 380px;
+            max-height: 400px;
             overflow-y: auto;
             background: rgba(0,20,0,0.85);
             padding: 14px;
@@ -157,7 +156,7 @@
     <!-- PARAMÈTRES -->
     <div id="settings-page" style="display:none;position:fixed;inset:0;background:var(--bg-darker);z-index:10001;padding:20px;overflow-y:auto;border:8px solid var(--green);">
         <button id="closeSettings" style="position:absolute;top:15px;right:15px;font-size:32px;background:none;border:none;color:var(--green);">✕</button>
-        <div class="settings-header" style="text-align:center;font-size:26px;margin-bottom:25px;">⚙️ PARAMÈTRES SUPRA LAB v11</div>
+        <div style="text-align:center;font-size:26px;margin-bottom:25px;">⚙️ PARAMÈTRES SUPRA LAB v11</div>
 
         <div class="settings-section">
             <h3>🔑 Clé API Groq</h3>
@@ -182,23 +181,21 @@
 
         <div style="text-align:center;margin-top:30px;">
             <button class="btn" id="saveSettings">💾 Sauvegarder</button>
-            <button class="btn btn-danger" id="resetSettings">🔄 Réinitialiser</button>
         </div>
     </div>
 
     <!-- START SCREEN -->
     <div id="start-screen">
-        <div class="boot-text" style="text-align:center;margin-bottom:40px;font-size:26px;">
+        <div style="text-align:center;margin-bottom:40px;font-size:26px;">
             SUPRA LAB v11<br>
-            PRO MILITAIRE SIGINT + IA GROQ<br>
-            FULL SPECTRUM BLACK OPS
+            FULL SPECTRUM SIGINT + IA GROQ
         </div>
         <button id="btnStart" class="btn" style="padding:25px 80px;font-size:36px;">LANCER TOUT LE SYSTÈME</button>
         <button id="btnSettings" class="btn" style="margin-top:20px;">⚙️ PARAMÈTRES</button>
         <button id="btnStartIA" class="btn" style="margin-top:20px;">🎤 ACTIVER L'IA VOCALE</button>
     </div>
 
-    <!-- MAIN INTERFACE -->
+    <!-- MAIN -->
     <div id="main">
         <header>SUPRA LAB v11 — FULL SPECTRUM SIGINT + IA GROQ</header>
 
@@ -206,24 +203,19 @@
             <div class="panel-header">SPECTROGRAMME WATERFALL</div>
             <canvas id="spectrogram"></canvas>
         </div>
-
         <div class="panel">
             <div class="panel-header">POLAR PLOT — ONDE RADAR</div>
             <canvas id="polar"></canvas>
-            <div class="value" id="polar-info">FREQ → ANGLE • AMP → DISTANCE</div>
         </div>
-
         <div class="panel">
             <div class="panel-header">OSCILLOSCOPE — SIGNAL BRUT</div>
             <canvas id="scope"></canvas>
         </div>
-
         <div class="panel">
             <div class="panel-header">CAPTEURS + ANOMALIE 3σ</div>
             <canvas id="sensors"></canvas>
             <div class="value" id="rms-value">RMS: -- dB</div>
             <div class="value" id="anomaly-badge" style="top:55px;background:var(--red);color:#fff;display:none;">⚠️ ANOMALIE DÉTECTÉE</div>
-            
             <div class="control-bar">
                 <label class="switch">
                     <input type="checkbox" id="listenToggle">
@@ -237,17 +229,17 @@
         </div>
 
         <div class="panel">
-            <div class="panel-header">HISTOGRAMME BANDES DÉTECTÉES</div>
+            <div class="panel-header">HISTOGRAMME BANDES</div>
             <canvas id="bandHistogram" width="800" height="160"></canvas>
         </div>
 
         <div class="panel">
-            <div class="panel-header">BAND ANALYSIS — EMF / EVP / MILITARY</div>
+            <div class="panel-header">BAND ANALYSIS</div>
             <div id="band-info" style="padding:12px;font-size:18px;"></div>
         </div>
 
         <div class="panel" style="min-height:340px;">
-            <div class="panel-header">SIGINT LOG + ANALYSE IA MILITAIRE</div>
+            <div class="panel-header">SIGINT LOG + ANALYSE IA</div>
             <div id="log"></div>
         </div>
     </div>
@@ -304,12 +296,11 @@
             document.getElementById('status-text').textContent = txt;
         }
 
-        // ==================== NIGHT VISION & ALERT ====================
+        // ==================== NOUVELLES FONCTIONS ====================
         function toggleNightVision() {
             isNightVision = !isNightVision;
             document.body.classList.toggle('night-vision', isNightVision);
             document.getElementById('btnNightVision').textContent = isNightVision ? "☀️ NORMAL" : "🌙 NIGHT VISION";
-            log(isNightVision ? "[DISPLAY] Night Vision activé" : "[DISPLAY] Mode normal", true);
         }
 
         function playCriticalAlert() {
@@ -330,74 +321,50 @@
         function classifyBand(freq) {
             if (Math.abs(freq - 121500000) < 1000000) return "VHF EMERGENCY AVIATION";
             if (Math.abs(freq - 243000000) < 2000000) return "UHF MILITARY EMERGENCY";
-            if (Math.abs(freq - 1090000000) < 3000000) return "ADS-B AIRCRAFT";
             if (freq >= 902000000 && freq <= 928000000) return "DRONE 915 MHz";
             if (freq >= 2400000000 && freq <= 2483000000) return "2.4 GHz DRONE/WIFI";
-            if (freq < 30000) return "VLF - POSSIBLE EVP/EMF";
+            if (freq < 30000) return "VLF - POSSIBLE EVP";
             return "RF INCONNU";
         }
 
-        // ==================== ANALYSE GROQ ====================
-        async function analyzeWithGroq(audioBlob = null) {
-            if (!config.groqApiKey) return log("[GROQ] Clé API manquante", true);
+        async function analyzeWithGroq() {
+            if (!config.groqApiKey) {
+                log("[GROQ] Clé API manquante. Ajoute-la dans Paramètres.", true);
+                return;
+            }
 
-            let prompt = `Tu es SUPRA, analyste SIGINT Black Ops niveau 5.
-RMS: ${audioSummary.rms.toFixed(2)} dB
-Fréquence dominante: ${audioSummary.peakFreq} Hz → ${audioSummary.band}
-Anomalie: ${audioSummary.anomaly ? "OUI" : "Non"}
-Transcript: "${audioSummary.transcript || 'Aucun'}"`;
+            const prompt = `Tu es SUPRA, analyste SIGINT militaire niveau 5.
+Données actuelles :
+- RMS: ${audioSummary.rms.toFixed(2)} dB
+- Fréquence dominante: ${audioSummary.peakFreq} Hz (${audioSummary.band})
+- Anomalie détectée: ${audioSummary.anomaly ? "OUI" : "Non"}
+- Dernier transcript vocal: "${audioSummary.transcript || 'Aucun'}"
 
-            if (audioBlob) prompt += "\nFichier audio joint → analyse prioritaire.";
+Analyse en français, style militaire court et précis.`;
 
             try {
                 const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
                     method: "POST",
-                    headers: { "Authorization": `Bearer ${config.groqApiKey}`, "Content-Type": "application/json" },
-                    body: JSON.stringify({ model: "llama-3.3-70b-versatile", messages: [{role:"user", content:prompt}], temperature:0.6, max_tokens:480 })
+                    headers: {
+                        "Authorization": `Bearer ${config.groqApiKey}`,
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        model: "llama-3.3-70b-versatile",
+                        messages: [{ role: "user", content: prompt }],
+                        temperature: 0.65,
+                        max_tokens: 400
+                    })
                 });
                 const data = await res.json();
-                const text = data.choices?.[0]?.message?.content || "";
-                log(`[SUPRA IA] ${text.replace(/\n/g, ' • ')}`, true);
+                const response = data.choices?.[0]?.message?.content || "Pas de réponse";
+                log(`[SUPRA IA] ${response.replace(/\n/g, ' • ')}`, true);
             } catch (e) {
                 log(`[GROQ ERREUR] ${e.message}`, true);
             }
         }
 
-        function startAutoScanner() {
-            setInterval(() => {
-                if (audioSummary.rms > 8 || audioSummary.anomaly) analyzeWithGroq();
-            }, 10000);
-        }
-
-        // ==================== ENREGISTREMENT + ENVOI AUDIO ====================
-        function startAudioForAI() {
-            if (!mediaRecorder) return;
-            recordedChunks = [];
-            mediaRecorder.start();
-            document.getElementById('btnSendAudio').textContent = "● EN COURS...";
-            setTimeout(() => mediaRecorder.stop(), 15000);
-        }
-
-        // ==================== MISE À JOUR SUMMARY ====================
-        function updateAudioSummary(rms, freqArray, anomaly) {
-            audioSummary.rms = rms;
-            audioSummary.anomaly = anomaly;
-
-            let maxIdx = 0, maxVal = 0;
-            for (let i = 0; i < freqArray.length; i++) {
-                if (freqArray[i] > maxVal) {
-                    maxVal = freqArray[i];
-                    maxIdx = i;
-                }
-            }
-            audioSummary.peakFreq = Math.round((maxIdx / freqArray.length) * 24000);
-            audioSummary.band = classifyBand(audioSummary.peakFreq);
-
-            document.getElementById('rms-value').textContent = `RMS: ${rms.toFixed(1)} dB`;
-            document.getElementById('band-info').innerHTML = `Fréq : ${audioSummary.peakFreq} Hz<br>Bande : ${audioSummary.band}<br>Anomalie : ${anomaly ? 'CRITIQUE' : 'Normale'}`;
-        }
-
-        // ==================== FONCTIONS ORIGINALES (INTACTES) ====================
+        // ==================== TES FONCTIONS ORIGINALES ====================
         function loadConfig() {
             const saved = localStorage.getItem('supraLabConfig');
             if (saved) config = {...DEFAULT_CONFIG, ...JSON.parse(saved)};
@@ -413,13 +380,6 @@ Transcript: "${audioSummary.transcript || 'Aucun'}"`;
         function saveConfig() {
             localStorage.setItem('supraLabConfig', JSON.stringify(config));
             log("[PARAMÈTRES] Configuration sauvegardée", true);
-            applyConfig();
-        }
-
-        function checkPermissions() {
-            const errors = [];
-            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) errors.push("Micro non supporté");
-            return errors;
         }
 
         function initSensors() {
@@ -441,30 +401,38 @@ Transcript: "${audioSummary.transcript || 'Aucun'}"`;
 
         function initSpeech() {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (!SpeechRecognition) return log("[IA] Non supportée sur ce navigateur", true);
+            if (!SpeechRecognition) return log("[IA LOCALE] Non supportée", true);
 
             recognition = new SpeechRecognition();
             recognition.continuous = true;
+            recognition.interimResults = false;
             recognition.lang = 'fr-FR';
 
             recognition.onresult = (e) => {
                 const transcript = e.results[e.results.length - 1][0].transcript;
-                audioSummary.transcript = transcript;
-                log(`[IA VOCALE] "${transcript}"`, true);
+                const confidence = e.results[e.results.length - 1][0].confidence;
+
+                if (confidence > 0.6) {
+                    audioSummary.transcript = transcript;
+                    log(`[IA VOCALE] "${transcript}"`, true);
+
+                    // Déclenchement de l'analyse Groq si mots-clés
+                    if (/supra|analyse|avion|drone|urgence|anomalie/i.test(transcript.toLowerCase())) {
+                        log("[GROQ] Analyse demandée par commande vocale...", true);
+                        analyzeWithGroq();
+                    }
+                }
             };
 
-            recognition.onerror = (e) => log(`[IA ERREUR] ${e.error}`, true);
-            recognition.onend = () => setTimeout(() => recognition.start(), 800);
+            recognition.onerror = (e) => log(`[IA VOCALE ERREUR] ${e.error}`, true);
+            recognition.onend = () => setTimeout(() => { if (recognition) recognition.start(); }, 1000);
 
             recognition.start();
-            log("[IA VOCALE] Activée", true);
+            log("[IA VOCALE] Écoute activée - Parle maintenant", true);
         }
 
         async function initAudio() {
             try {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                await audioCtx.resume();
-
                 const stream = await navigator.mediaDevices.getUserMedia({
                     audio: {
                         echoCancellation: config.echoCancellation,
@@ -472,6 +440,9 @@ Transcript: "${audioSummary.transcript || 'Aucun'}"`;
                         sampleRate: 48000
                     }
                 });
+
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                await audioCtx.resume();
 
                 microphone = audioCtx.createMediaStreamSource(stream);
                 analyser = audioCtx.createAnalyser();
@@ -499,20 +470,20 @@ Transcript: "${audioSummary.transcript || 'Aucun'}"`;
 
                 isRunning = true;
                 requestAnimationFrame(loop);
-                log("[AUDIO] Système audio activé");
+                log("[AUDIO] Système audio démarré");
             } catch (err) {
-                log(`[ERREUR AUDIO] ${err.message}`, true);
+                log(`[ERREUR MICRO] ${err.message}`, true);
             }
         }
 
-        // ==================== DESSINS ORIGINAUX ====================
+        // ==================== TES FONCTIONS DE DESSIN ====================
         function drawSpectrogram() {
             const canvas = document.getElementById('spectrogram');
             if (!canvas || !analyser) return;
             const ctx = canvas.getContext('2d');
             analyser.getByteFrequencyData(frequencyArray);
             spectroHistory.unshift([...frequencyArray]);
-            if (spectroHistory.length > 120) spectroHistory.pop();
+            if (spectroHistory.length > 140) spectroHistory.pop();
 
             ctx.fillStyle = '#000';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -534,7 +505,7 @@ Transcript: "${audioSummary.transcript || 'Aucun'}"`;
             analyser.getByteFrequencyData(frequencyArray);
             ctx.fillStyle = 'rgba(0,17,0,0.9)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-            // ... (tu peux remettre ton code complet de drawPolar ici)
+            // Tu peux remettre ton code complet ici si tu veux
         }
 
         function drawScope() {
@@ -563,7 +534,7 @@ Transcript: "${audioSummary.transcript || 'Aucun'}"`;
             const ctx = canvas.getContext('2d');
             ctx.fillStyle = '#001100';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-            // ... (ton code original de drawSensors)
+            // Ton code original de drawSensors ici
         }
 
         function calculateStats(rms) {
@@ -606,7 +577,7 @@ Transcript: "${audioSummary.transcript || 'Aucun'}"`;
 
             document.getElementById('btnNightVision').addEventListener('click', toggleNightVision);
             document.getElementById('btnFullscreen').addEventListener('click', () => document.documentElement.requestFullscreen());
-            document.getElementById('btnAnalyzeNow').addEventListener('click', () => analyzeWithGroq());
+            document.getElementById('btnAnalyzeNow').addEventListener('click', analyzeWithGroq);
             document.getElementById('btnSendAudio').addEventListener('click', startAudioForAI);
             document.getElementById('btnStartIA').addEventListener('click', initSpeech);
 
@@ -614,8 +585,7 @@ Transcript: "${audioSummary.transcript || 'Aucun'}"`;
                 document.getElementById('start-screen').style.display = 'none';
                 document.getElementById('main').style.display = 'flex';
 
-                log("=== SUPRA LAB v11 FULL SPECTRUM ACTIVÉ ===", true);
-                log("Toutes les fonctionnalités chargées : IA Groq, Night Vision, Scanner auto...", true);
+                log("=== SUPRA LAB v11 DÉMARRÉ ===", true);
 
                 initSensors();
                 await initAudio();
@@ -632,6 +602,19 @@ Transcript: "${audioSummary.transcript || 'Aucun'}"`;
             document.getElementById('btnSettings').addEventListener('click', () => document.getElementById('settings-page').style.display = 'block');
             document.getElementById('closeSettings').addEventListener('click', () => document.getElementById('settings-page').style.display = 'none');
         });
+
+        function startAutoScanner() {
+            setInterval(() => {
+                if (audioSummary.rms > 10 || audioSummary.anomaly) analyzeWithGroq();
+            }, 10000);
+        }
+
+        function startAudioForAI() {
+            if (!mediaRecorder) return;
+            recordedChunks = [];
+            mediaRecorder.start();
+            setTimeout(() => mediaRecorder.stop(), 15000);
+        }
     </script>
 </body>
 </html>
