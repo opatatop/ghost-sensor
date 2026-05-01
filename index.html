@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
-    <title>SUPRA LAB v11 — FULL PRO MILITAIRE SIGINT + PARAMÈTRES</title>
+    <title>SUPRA LAB v12 — PRO MILITAIRE SIGINT + IA VOCALE</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
 
@@ -21,10 +21,10 @@
             font-family: 'VT323', monospace;
             font-size: 18px;
             line-height: 1.1;
-            overflow-y: auto !important; /* Scroll forcé */
+            overflow-y: auto !important;
             image-rendering: pixelated;
             min-height: 100vh;
-            touch-action: manipulation; /* Optimisation tactile */
+            touch-action: manipulation;
         }
 
         body::before {
@@ -38,7 +38,7 @@
         }
         @keyframes crt { 0% { opacity: 0.9; } 100% { opacity: 1; } }
 
-        /* --- NOUVEAU : PAGE DE PARAMÈTRES --- */
+        /* --- PAGE DE PARAMÈTRES --- */
         #settings-page {
             display: none;
             position: fixed;
@@ -169,7 +169,7 @@
             color: var(--bg-dark);
             transform: scale(1.05);
         }
-        #btnSettings {
+        #btnSettings, #btnStartIA {
             margin-top: 20px;
             background: transparent;
             color: #00cc33;
@@ -222,11 +222,11 @@
             height: 100% !important;
             display: block;
             background: var(--bg-darker);
-            touch-action: none; /* Désactive le scroll sur les canvas */
+            touch-action: none;
         }
         #log {
             max-height: 220px;
-            overflow-y: auto !important; /* Scroll forcé */
+            overflow-y: auto !important;
             font-size: 16px;
             line-height: 1.4;
         }
@@ -322,6 +322,12 @@
             height: auto;
             -webkit-overflow-scrolling: touch !important;
         }
+        /* Style pour les messages d'erreur */
+        .error-message {
+            color: var(--red) !important;
+            font-size: 20px !important;
+            text-shadow: 0 0 10px var(--red) !important;
+        }
     </style>
 </head>
 <body>
@@ -329,16 +335,6 @@
     <div id="settings-page">
         <button class="btn-close" id="closeSettings">✕</button>
         <div class="settings-header">⚙️ PARAMÈTRES SUPRA LAB v11</div>
-
-        <div class="settings-section">
-            <h3>🔑 Clé API & Authentification</h3>
-            <div class="form-group">
-                <label for="apiKey">Clé API (sauvegardée à vie)</label>
-                <input type="text" id="apiKey" placeholder="Entrez votre clé API ici...">
-                <small style="color: #00cc33; font-size: 14px;">✅ Sauvegardée automatiquement</small>
-            </div>
-        </div>
-
         <div class="settings-section">
             <h3>🎤 Paramètres Micro</h3>
             <div class="form-group">
@@ -360,7 +356,6 @@
                 </select>
             </div>
         </div>
-
         <div class="settings-section">
             <h3>🎨 Affichage</h3>
             <div class="form-group">
@@ -371,57 +366,10 @@
                     <option value="blue">Bleu SIGINT</option>
                 </select>
             </div>
-            <div class="form-group">
-                <label for="fontSize">Taille de police (px): <span id="fontSizeValue" class="range-value">18</span></label>
-                <input type="range" id="fontSize" min="12" max="24" value="18">
-            </div>
-            <div class="form-group">
-                <label for="crtEffect">Effet CRT (scintillement)</label>
-                <select id="crtEffect">
-                    <option value="true">Activé</option>
-                    <option value="false">Désactivé</option>
-                </select>
-            </div>
         </div>
-
-        <div class="settings-section">
-            <h3>🔊 Audio & Enregistrement</h3>
-            <div class="form-group">
-                <label for="sampleRate">Fréquence d'échantillonnage (kHz)</label>
-                <select id="sampleRate">
-                    <option value="44100">44.1 kHz</option>
-                    <option value="48000">48 kHz</option>
-                    <option value="96000">96 kHz</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="autoRecord">Enregistrement automatique</label>
-                <select id="autoRecord">
-                    <option value="false">Désactivé</option>
-                    <option value="true">Activé</option>
-                </select>
-            </div>
-        </div>
-
-        <div class="settings-section">
-            <h3>⚡ Performances</h3>
-            <div class="form-group">
-                <label for="fftSize">Taille FFT (précision analyse)</label>
-                <select id="fftSize">
-                    <option value="2048">2048 (rapide)</option>
-                    <option value="4096" selected>4096 (équilibré)</option>
-                    <option value="8192">8192 (précis)</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="historyLength">Longueur historique spectrogramme: <span id="historyLengthValue" class="range-value">140</span></label>
-                <input type="range" id="historyLength" min="50" max="300" value="140">
-            </div>
-        </div>
-
         <div style="text-align: center; margin-top: 20px;">
-            <button class="btn" id="saveSettings">💾 Sauvegarder tous les paramètres</button>
-            <button class="btn btn-danger" id="resetSettings">🔄 Réinitialiser aux défauts</button>
+            <button class="btn" id="saveSettings">💾 Sauvegarder</button>
+            <button class="btn btn-danger" id="resetSettings">🔄 Réinitialiser</button>
         </div>
     </div>
 
@@ -431,21 +379,21 @@
             SUPRA LAB v11<br>
             PRO MILITAIRE SCIENTIFIQUE<br>
             SIGINT BLACK OPS — NIVEAU 5<br>
-            <span style="font-size: 20px;">+ PARAMÈTRES COMPLETS</span>
+            <span style="font-size: 20px;">+ IA VOCALE + CAPTEURS</span>
         </div>
         <button id="btnStart">LANCER TOUT LE SYSTÈME<br><small style="font-size: 16px;">(Appuyez pour démarrer)</small></button>
         <button id="btnSettings">⚙️ PARAMÈTRES</button>
+        <button id="btnStartIA">🎤 ACTIVER L'IA VOCALE</button>
         <div style="margin-top:30px; font-size:16px; opacity:0.8; text-align:center; max-width:80%;">
             ✅ Micro optimisé Android<br>
-            ✅ Scroll activé partout<br>
-            ✅ Clé API sauvegardée à vie<br>
-            ✅ Réglages personnalisables
+            ✅ Capteurs physiques (accéléromètre + boussole)<br>
+            ✅ IA vocale avec gestion d'erreurs
         </div>
     </div>
 
     <!-- INTERFACE PRINCIPALE -->
     <div id="main">
-        <header>SUPRA LAB v11 — PRO MILITAIRE SIGINT + PARAMÈTRES</header>
+        <header>SUPRA LAB v11 — PRO MILITAIRE SIGINT + IA VOCALE</header>
 
         <!-- Ligne 1 -->
         <div class="panel">
@@ -493,23 +441,14 @@
     </div>
 
     <script>
-        // ==================== SUPRA LAB v11 — VERSION OPTIMISÉE POUR ANDROID + PARAMÈTRES ====================
-        // Configuration par défaut
+        // ==================== CONFIGURATION ====================
         const DEFAULT_CONFIG = {
-            apiKey: '',
             micSensitivity: 50,
             echoCancellation: true,
             noiseSuppression: true,
             colorTheme: 'green',
-            fontSize: 18,
-            crtEffect: true,
-            sampleRate: 48000,
-            autoRecord: false,
-            fftSize: 4096,
-            historyLength: 140,
             volume: 50
         };
-
         let config = {...DEFAULT_CONFIG};
         let audioCtx, analyser, microphone, gainNode, mediaRecorder, recordedChunks = [];
         let dataArray, frequencyArray, timeArray;
@@ -521,7 +460,24 @@
         let magnetHeading = 0;
         let recognition = null;
 
-        // === CHARGEMENT DES PARAMÈTRES ===
+        // ==================== FONCTIONS DE BASE ====================
+        function log(text, important = false) {
+            const logDiv = document.getElementById('log');
+            if (!logDiv) return;
+            const line = document.createElement('div');
+            line.className = 'log-line' + (important ? ' error-message' : '');
+            line.innerHTML = `<span style="color:#00cc33">[${new Date().toLocaleTimeString('fr-FR')}]</span> ${text}`;
+            logDiv.appendChild(line);
+            logDiv.scrollTop = logDiv.scrollHeight;
+            if (logDiv.children.length > 90) logDiv.removeChild(logDiv.children[0]);
+        }
+
+        function updateStatus(txt) {
+            const statusText = document.getElementById('status-text');
+            if (statusText) statusText.textContent = txt;
+        }
+
+        // ==================== GESTION DES PARAMÈTRES ====================
         function loadConfig() {
             const savedConfig = localStorage.getItem('supraLabConfig');
             if (savedConfig) {
@@ -534,109 +490,51 @@
             applyConfig();
         }
 
-        // === APPLICATION DES PARAMÈTRES ===
         function applyConfig() {
-            // Appliquer le thème de couleurs
-            document.documentElement.style.setProperty('--green', config.colorTheme === 'green' ? '#00ff41' :
-                                                                 config.colorTheme === 'red' ? '#ff4444' : '#44aaff');
-
-            // Taille de police
-            document.body.style.fontSize = `${config.fontSize}px`;
-
-            // Effet CRT
-            if (!config.crtEffect) {
-                document.body.style.animation = 'none';
-                document.body.style.background = '#000';
-            }
-
-            // Mettre à jour les valeurs dans l'interface des paramètres
-            if (document.getElementById('apiKey')) document.getElementById('apiKey').value = config.apiKey;
+            document.documentElement.style.setProperty('--green', config.colorTheme === 'green' ? '#00ff41' : config.colorTheme === 'red' ? '#ff4444' : '#44aaff');
             if (document.getElementById('micSensitivity')) {
                 document.getElementById('micSensitivity').value = config.micSensitivity;
                 document.getElementById('micSensitivityValue').textContent = config.micSensitivity;
             }
-            if (document.getElementById('echoCancellation')) document.getElementById('echoCancellation').value = config.echoCancellation;
-            if (document.getElementById('noiseSuppression')) document.getElementById('noiseSuppression').value = config.noiseSuppression;
-            if (document.getElementById('colorTheme')) document.getElementById('colorTheme').value = config.colorTheme;
-            if (document.getElementById('fontSize')) {
-                document.getElementById('fontSize').value = config.fontSize;
-                document.getElementById('fontSizeValue').textContent = config.fontSize;
-            }
-            if (document.getElementById('crtEffect')) document.getElementById('crtEffect').value = config.crtEffect;
-            if (document.getElementById('sampleRate')) document.getElementById('sampleRate').value = config.sampleRate;
-            if (document.getElementById('autoRecord')) document.getElementById('autoRecord').value = config.autoRecord;
-            if (document.getElementById('fftSize')) document.getElementById('fftSize').value = config.fftSize;
-            if (document.getElementById('historyLength')) {
-                document.getElementById('historyLength').value = config.historyLength;
-                document.getElementById('historyLengthValue').textContent = config.historyLength;
-            }
-
-            // Mettre à jour le volume dans l'interface principale
             if (document.getElementById('volumeSlider')) {
                 document.getElementById('volumeSlider').value = config.volume;
                 document.getElementById('volumeLabel').textContent = `${config.volume}%`;
             }
         }
 
-        // === SAUVEGARDE DES PARAMÈTRES ===
         function saveConfig() {
             localStorage.setItem('supraLabConfig', JSON.stringify(config));
-            log("[PARAMÈTRES] Configuration sauvegardée avec succès !");
+            log("[PARAMÈTRES] Configuration sauvegardée !");
             applyConfig();
         }
 
-        // === RÉINITIALISATION DES PARAMÈTRES ===
-        function resetConfig() {
-            config = {...DEFAULT_CONFIG};
-            localStorage.setItem('supraLabConfig', JSON.stringify(config));
-            applyConfig();
-            log("[PARAMÈTRES] Réinitialisation aux valeurs par défaut.");
-        }
+        // ==================== VÉRIFICATION DES PERMISSIONS ====================
+        function checkPermissions() {
+            const errors = [];
 
-        // === FONCTIONS DE BASE ===
-        function log(text, important = false) {
-            const logDiv = document.getElementById('log');
-            if (!logDiv) return;
-            const line = document.createElement('div');
-            line.className = 'log-line';
-            if (important) line.style.color = '#ffaa00';
-            line.innerHTML = `<span style="color:#00cc33">[${new Date().toLocaleTimeString('fr-FR')}]</span> ${text}`;
-            logDiv.appendChild(line);
-            logDiv.scrollTop = logDiv.scrollHeight;
-            if (logDiv.children.length > 90) logDiv.removeChild(logDiv.children[0]);
-        }
-
-        function updateStatus(txt) {
-            const statusText = document.getElementById('status-text');
-            if (statusText) statusText.textContent = txt;
-        }
-
-        // === GESTION DES PERMISSIONS ANDROID (pour le micro) ===
-        async function requestMicrophonePermission() {
-            try {
-                // Sur Android, on doit parfois déclencher la permission via un événement utilisateur
-                if (typeof DeviceMotionEvent !== 'undefined' && window.DeviceMotionEvent) {
-                    window.addEventListener('devicemotion', () => {}, { once: true });
-                }
-
-                const stream = await navigator.mediaDevices.getUserMedia({
-                    audio: {
-                        echoCancellation: config.echoCancellation,
-                        noiseSuppression: config.noiseSuppression,
-                        autoGainControl: false,
-                        sampleRate: parseInt(config.sampleRate)
-                    },
-                    video: false
-                });
-                return stream;
-            } catch (err) {
-                log(`[ERREUR MICRO] ${err.message}`, true);
-                updateStatus(`❌ Micro bloqué: ${err.message}`);
-                throw err;
+            // Vérifie le micro
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                errors.push("Micro non supporté par ce navigateur !");
             }
+
+            // Vérifie les capteurs
+            if (!window.DeviceMotionEvent) {
+                errors.push("Accéléromètre non supporté !");
+            }
+            if (!window.DeviceOrientationEvent) {
+                errors.push("Boussole non supportée !");
+            }
+
+            // Vérifie SpeechRecognition
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                errors.push("Reconnaissance vocale (IA) non supportée ! Essayez Firefox.");
+            }
+
+            return errors;
         }
 
-        // === CAPTEURS PHYSIQUES ===
+        // ==================== INITIALISATION DES CAPTEURS ====================
         function initSensors() {
             if (window.DeviceMotionEvent) {
                 window.addEventListener('devicemotion', e => {
@@ -646,59 +544,142 @@
                         accelZ = (e.accelerationIncludingGravity.z || 0).toFixed(2);
                     }
                 });
+                log("[PHYSIQUE] ✅ Accéléromètre activé");
+            } else {
+                log("[PHYSIQUE] ❌ Accéléromètre non supporté", true);
             }
+
             if (window.DeviceOrientationEvent) {
                 window.addEventListener('deviceorientation', e => {
                     if (e.alpha !== null) magnetHeading = Math.round(e.alpha);
                 });
+                log("[PHYSIQUE] ✅ Boussole activée");
+            } else {
+                log("[PHYSIQUE] ❌ Boussole non supportée", true);
             }
-            log("[PHYSIQUE] Capteurs activés (accéléromètre + boussole)");
         }
 
-        // === IA VOCALE ===
+        // ==================== INITIALISATION DE L'IA VOCALE (CORRIGÉE) ====================
         function initSpeech() {
-            if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
-                recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+            if (!SpeechRecognition) {
+                log("[IA] ❌ Ton navigateur ne supporte PAS la reconnaissance vocale ! Essayez Firefox ou le navigateur natif.", true);
+                updateStatus("❌ IA non supportée");
+                return;
+            }
+
+            try {
+                // Arrête la reconnaissance précédente si elle existe
+                if (recognition) {
+                    recognition.stop();
+                    recognition = null;
+                }
+
+                recognition = new SpeechRecognition();
                 recognition.continuous = true;
                 recognition.interimResults = false;
                 recognition.lang = 'fr-FR';
-                recognition.onresult = e => {
-                    const txt = e.results[e.results.length-1][0].transcript;
-                    const conf = e.results[e.results.length-1][0].confidence;
-                    if (conf > 0.65) log(`[IA] "${txt}" (${Math.round(conf*100)}%)`, true);
+                recognition.maxAlternatives = 1;
+
+                // Gestion des résultats
+                recognition.onresult = (e) => {
+                    const transcript = e.results[e.results.length - 1][0].transcript;
+                    const confidence = e.results[e.results.length - 1][0].confidence;
+                    if (confidence > 0.65) {
+                        log(`[IA] 🎤 "${transcript}" (Confiance: ${Math.round(confidence * 100)}%)`, true);
+                    }
                 };
-                recognition.onerror = e => {
-                    log(`[IA ERREUR] ${e.error}`, true);
+
+                // Gestion des erreurs (NOUVEAU : très détaillé)
+                recognition.onerror = (e) => {
+                    let errorMsg = "[IA ERREUR] ";
+                    switch (e.error) {
+                        case 'no-speech':
+                            errorMsg += "Aucun son détecté. Parle plus fort ou vérifie que le micro n'est pas muet.";
+                            break;
+                        case 'audio-capture':
+                            errorMsg += "Micro bloqué ! Vérifie les permissions dans les paramètres du navigateur.";
+                            break;
+                        case 'not-allowed':
+                            errorMsg += "Permission MICROPHONE refusée ! Active-la dans les paramètres du navigateur (⚙️ > Paramètres du site > Microphone).";
+                            break;
+                        case 'network':
+                            errorMsg += "Problème réseau (l'IA est locale, donc cette erreur est anormale).";
+                            break;
+                        case 'service-not-allowed':
+                            errorMsg += "Le service de reconnaissance vocale est désactivé. Essayez un autre navigateur.";
+                            break;
+                        case 'language-not-supported':
+                            errorMsg += "La langue 'fr-FR' n'est pas supportée. Essaie 'en-US'.";
+                            break;
+                        default:
+                            errorMsg += `Erreur inconnue: ${e.error} (Code: ${e.errorCode})`;
+                    }
+                    log(errorMsg, true);
+                    updateStatus(`⚠️ ${errorMsg}`);
                 };
-                try {
-                    recognition.start();
-                    log("[SIGINT] Transcription vocale activée");
-                } catch (e) {
-                    log("[IA] Impossible de démarrer la reconnaissance vocale", true);
-                }
-            } else {
-                log("[IA] Non supportée sur ce navigateur", true);
+
+                // Gestion du démarrage/arrêt
+                recognition.onstart = () => {
+                    log("[IA] ✅ Écoute vocale activée. Parle maintenant !", true);
+                    updateStatus("🎤 IA: Écoute en cours...");
+                };
+
+                recognition.onend = () => {
+                    log("[IA] ⏹️ Écoute arrêtée. Redémarrage automatique...", true);
+                    // Redémarre après 1 seconde pour éviter les boucles infinies
+                    setTimeout(() => {
+                        try {
+                            if (recognition) recognition.start();
+                        } catch (e) {
+                            log(`[IA] ⚠️ Impossible de redémarrer: ${e.message}`, true);
+                        }
+                    }, 1000);
+                };
+
+                // Démarre la reconnaissance
+                recognition.start();
+                log("[IA] 🚀 Démarrage de l'IA vocale...", true);
+
+            } catch (e) {
+                log(`[IA ERREUR CRITIQUE] ${e.message}`, true);
+                console.error(e);
+                updateStatus("❌ Erreur critique IA");
             }
         }
 
-        // === AUDIO + ÉCOUTE + ENREGISTREMENT ===
+        // ==================== INITIALISATION AUDIO ====================
         async function initAudio() {
             try {
+                // Vérifie les permissions d'abord
+                const permissionErrors = checkPermissions();
+                if (permissionErrors.length > 0) {
+                    permissionErrors.forEach(err => log(`[ERREUR] ${err}`, true));
+                    updateStatus("❌ Permissions manquantes");
+                    return;
+                }
+
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 await audioCtx.resume();
 
-                // Charger la sensibilité du micro depuis les paramètres
-                const micSensitivity = config.micSensitivity / 100;
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    audio: {
+                        echoCancellation: config.echoCancellation,
+                        noiseSuppression: config.noiseSuppression,
+                        autoGainControl: false,
+                        sampleRate: 48000
+                    },
+                    video: false
+                });
 
-                const stream = await requestMicrophonePermission();
                 microphone = audioCtx.createMediaStreamSource(stream);
-
                 analyser = audioCtx.createAnalyser();
-                analyser.fftSize = parseInt(config.fftSize);
+                analyser.fftSize = 4096;
                 analyser.smoothingTimeConstant = 0.25;
 
                 gainNode = audioCtx.createGain();
-                gainNode.gain.value = micSensitivity;
+                gainNode.gain.value = config.micSensitivity / 100;
 
                 microphone.connect(analyser);
                 analyser.connect(gainNode);
@@ -709,10 +690,8 @@
                 timeArray = new Uint8Array(analyser.frequencyBinCount);
 
                 // Enregistreur
-                mediaRecorder = new MediaRecorder(stream, {
-                    mimeType: 'audio/webm',
-                    audioBitsPerSecond: 128000
-                });
+                mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+                recordedChunks = [];
                 mediaRecorder.ondataavailable = e => recordedChunks.push(e.data);
                 mediaRecorder.onstop = () => {
                     const blob = new Blob(recordedChunks, { type: 'audio/webm' });
@@ -726,24 +705,30 @@
                 };
 
                 updateStatus("✅ Micro + AudioContext OK");
-                log("[SIGINT] Système audio activé avec les paramètres personnalisés");
+                log("[SIGINT] Système audio activé");
                 isRunning = true;
                 requestAnimationFrame(loop);
+
             } catch (err) {
-                updateStatus("❌ ERREUR MICRO : " + err.message);
+                updateStatus(`❌ ERREUR MICRO: ${err.message}`);
                 log(`[ERREUR CRITIQUE] ${err.message}`, true);
                 console.error(err);
+
+                // Message d'aide spécifique
+                if (err.message.includes("permission denied")) {
+                    log("[AIDE] Activez la permission MICROPHONE dans les paramètres du navigateur !", true);
+                }
             }
         }
 
-        // === DESSINS ===
+        // ==================== DESSINS ====================
         function drawSpectrogram() {
             const canvas = document.getElementById('spectrogram');
-            if (!canvas) return;
+            if (!canvas || !analyser) return;
             const ctx = canvas.getContext('2d');
             analyser.getByteFrequencyData(frequencyArray);
             spectroHistory.unshift([...frequencyArray]);
-            if (spectroHistory.length > config.historyLength) spectroHistory.pop();
+            if (spectroHistory.length > 140) spectroHistory.pop();
 
             ctx.fillStyle = '#000';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -760,7 +745,7 @@
 
         function drawPolar() {
             const canvas = document.getElementById('polar');
-            if (!canvas) return;
+            if (!canvas || !analyser) return;
             const ctx = canvas.getContext('2d');
             analyser.getByteFrequencyData(frequencyArray);
             ctx.fillStyle = 'rgba(0,17,0,0.9)';
@@ -786,7 +771,7 @@
 
         function drawScope() {
             const canvas = document.getElementById('scope');
-            if (!canvas) return;
+            if (!canvas || !analyser) return;
             const ctx = canvas.getContext('2d');
             analyser.getByteTimeDomainData(timeArray);
             ctx.fillStyle = '#000';
@@ -843,7 +828,7 @@
             ctx.fillText(`CAP ${magnetHeading}°`, canvas.width - 155, 175);
         }
 
-        // === CALCUL ANOMALIE ===
+        // ==================== CALCUL ANOMALIE ====================
         function calculateStats(rms) {
             rmsHistory.push(rms);
             if (rmsHistory.length > 220) rmsHistory.shift();
@@ -853,7 +838,7 @@
             return rms > mean + 3.2 * std;
         }
 
-        // === BOUCLE PRINCIPALE ===
+        // ==================== BOUCLE PRINCIPALE ====================
         function loop() {
             if (!isRunning || !analyser) return;
 
@@ -879,7 +864,7 @@
             requestAnimationFrame(loop);
         }
 
-        // === REDIMENSIONNEMENT CANVAS ===
+        // ==================== REDIMENSIONNEMENT ====================
         function resizeCanvases() {
             const panels = document.querySelectorAll('.panel canvas');
             panels.forEach(canvas => {
@@ -889,7 +874,7 @@
             });
         }
 
-        // === GESTION DES PARAMÈTRES DANS L'INTERFACE ===
+        // ==================== GESTION DES PARAMÈTRES UI ====================
         function setupSettingsUI() {
             const settingsPage = document.getElementById('settings-page');
             const closeSettingsBtn = document.getElementById('closeSettings');
@@ -911,64 +896,38 @@
 
             if (saveSettingsBtn) {
                 saveSettingsBtn.addEventListener('click', () => {
-                    // Mettre à jour la config depuis les champs du formulaire
-                    config.apiKey = document.getElementById('apiKey').value;
                     config.micSensitivity = parseInt(document.getElementById('micSensitivity').value);
                     config.echoCancellation = document.getElementById('echoCancellation').value === 'true';
                     config.noiseSuppression = document.getElementById('noiseSuppression').value === 'true';
                     config.colorTheme = document.getElementById('colorTheme').value;
-                    config.fontSize = parseInt(document.getElementById('fontSize').value);
-                    config.crtEffect = document.getElementById('crtEffect').value === 'true';
-                    config.sampleRate = parseInt(document.getElementById('sampleRate').value);
-                    config.autoRecord = document.getElementById('autoRecord').value === 'true';
-                    config.fftSize = parseInt(document.getElementById('fftSize').value);
-                    config.historyLength = parseInt(document.getElementById('historyLength').value);
                     config.volume = parseInt(document.getElementById('volumeSlider').value);
-
                     saveConfig();
                     settingsPage.classList.remove('active');
-
-                    // Recharger l'audio avec les nouveaux paramètres
-                    if (isRunning) {
-                        log("[PARAMÈTRES] Redémarrage du système audio avec les nouveaux réglages...");
-                        setTimeout(() => {
-                            if (audioCtx) audioCtx.close();
-                            if (mediaRecorder) mediaRecorder.stream.getTracks().forEach(track => track.stop());
-                            initAudio();
-                        }, 500);
-                    }
+                    if (gainNode) gainNode.gain.value = config.volume / 100;
                 });
             }
 
             if (resetSettingsBtn) {
                 resetSettingsBtn.addEventListener('click', () => {
-                    resetConfig();
+                    config = {...DEFAULT_CONFIG};
+                    localStorage.setItem('supraLabConfig', JSON.stringify(config));
                     applyConfig();
-                });
-            }
-
-            // Mettre à jour les valeurs en temps réel pour les sliders
-            if (document.getElementById('micSensitivity')) {
-                document.getElementById('micSensitivity').addEventListener('input', (e) => {
-                    document.getElementById('micSensitivityValue').textContent = e.target.value;
-                });
-            }
-            if (document.getElementById('fontSize')) {
-                document.getElementById('fontSize').addEventListener('input', (e) => {
-                    document.getElementById('fontSizeValue').textContent = e.target.value;
-                });
-            }
-            if (document.getElementById('historyLength')) {
-                document.getElementById('historyLength').addEventListener('input', (e) => {
-                    document.getElementById('historyLengthValue').textContent = e.target.value;
                 });
             }
         }
 
-        // === DÉMARRAGE ===
+        // ==================== DÉMARRAGE ====================
         document.addEventListener('DOMContentLoaded', () => {
             loadConfig();
             setupSettingsUI();
+
+            // Bouton pour démarrer l'IA manuellement
+            const btnStartIA = document.getElementById('btnStartIA');
+            if (btnStartIA) {
+                btnStartIA.addEventListener('click', () => {
+                    initSpeech();
+                });
+            }
 
             document.getElementById('btnStart').addEventListener('click', async () => {
                 const startScreen = document.getElementById('start-screen');
@@ -984,9 +943,7 @@
                     main.style.gridTemplateRows = "auto auto auto";
 
                     log("=== SUPRA LAB v11 LANCÉ ===");
-                    log("✅ Micro optimisé pour Android");
-                    log("✅ Scroll activé partout");
-                    log("✅ Paramètres chargés depuis la mémoire");
+                    log("✅ Micro, capteurs et IA vocale prêts");
                     updateStatus("Système opérationnel");
 
                     resizeCanvases();
@@ -995,9 +952,10 @@
 
                     initSensors();
                     initAudio();
-                    initSpeech();
+                    // Ne démarre PAS l'IA automatiquement (pour éviter les blocages)
+                    // L'utilisateur devra cliquer sur le bouton "ACTIVER L'IA VOCALE"
 
-                    // Contrôles de l'interface principale
+                    // Contrôles
                     const toggle = document.getElementById('listenToggle');
                     const slider = document.getElementById('volumeSlider');
                     const label = document.getElementById('volumeLabel');
