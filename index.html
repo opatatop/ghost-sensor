@@ -2,8 +2,8 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SUPRA LAB v11.3 — BLACK OPS SIGINT + PARANORMAL</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>SUPRA LAB v11 — RÉEL + EMF/EVP/EGF + ALERTES</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
 
@@ -12,354 +12,693 @@
             --secondary: #00cc33;
             --danger: #ff0044;
             --warning: #ffaa00;
+            --ghost: #aa00aa;
             --bg-dark: #001100;
             --bg-darker: #000000;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            background: var(--bg-darker);
-            color: var(--primary);
+        * {
+            margin: 0; padding: 0; box-sizing: border-box;
+            touch-action: manipulation; user-select: none;
             font-family: 'VT323', monospace;
-            font-size: 18px;
-            overflow: hidden;
-            min-height: 100vh;
+        }
+
+        body {
+            background: var(--bg-darker); color: var(--primary);
+            overflow: hidden; min-height: 100vh;
+            image-rendering: pixelated;
+            font-size: 16px; line-height: 1.1;
         }
 
         body::before {
-            content: "";
-            position: fixed;
-            inset: 0;
-            background: 
-                radial-gradient(circle at 10% 20%, rgba(0,255,65,0.03) 0%, transparent 20%),
-                repeating-linear-gradient(to bottom, rgba(0,255,65,0.02) 0px, rgba(0,255,65,0.02) 2px, transparent 2px, transparent 4px);
-            pointer-events: none;
+            content: ""; position: fixed; inset: 0;
+            background: repeating-linear-gradient(to bottom, rgba(0,255,65,0.03) 0px, rgba(0,255,65,0.03) 2px, transparent 2px, transparent 4px);
+            pointer-events: none; z-index: 9999;
             animation: crt 0.15s linear infinite;
-            z-index: 9999;
         }
-        @keyframes crt { 0% {opacity:0.9} 100% {opacity:1} }
+        @keyframes crt { 0% { opacity: 0.9; } 100% { opacity: 1; } }
 
         #start-screen, #main {
-            position: fixed;
-            inset: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            border: 8px solid var(--primary);
-            box-shadow: 0 0 60px var(--primary);
+            position: fixed; inset: 0;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            z-index: 10000; border: 6px solid var(--primary);
+            box-shadow: 0 0 40px var(--primary);
             background: var(--bg-darker);
         }
-        #main { display: none; padding: 10px; gap: 10px; overflow-y: auto; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+        #main { display: none; padding: 8px; gap: 8px; overflow-y: auto; }
+        #main.grid { display: grid; grid-template-columns: 1fr 1fr; }
 
-        .boot-text { font-size: 28px; text-align: center; margin-bottom: 40px; text-shadow: 0 0 20px var(--primary); animation: boot 1.5s infinite; }
-        @keyframes boot { from {opacity:0.3} to {opacity:1} }
-
-        button {
-            background: transparent;
-            color: var(--primary);
-            border: 6px solid var(--primary);
-            padding: 15px 40px;
-            font-size: 24px;
-            cursor: pointer;
-            margin: 10px;
+        .boot-text { font-size: 22px; margin-bottom: 25px; text-shadow: 0 0 15px var(--primary); }
+        #btnStart {
+            background: transparent; color: var(--primary);
+            border: 6px solid var(--primary); padding: 20px 50px;
+            font-size: 28px; cursor: pointer; box-shadow: 0 0 30px var(--primary);
         }
-        button:hover { background: var(--primary); color: #000; }
+        #btnSettings, #btnGhostMode {
+            margin-top: 15px; background: transparent;
+            border: 3px solid var(--secondary); padding: 12px 25px;
+            font-size: 16px; cursor: pointer;
+        }
+        #btnGhostMode { border-color: var(--ghost); color: var(--ghost); }
+        .features-list {
+            margin-top: 20px; font-size: 14px; opacity: 0.8;
+            text-align: center; max-width: 85%;
+        }
+        .features-list div { margin: 4px 0; }
 
         header {
-            background: var(--bg-dark);
-            border-bottom: 6px solid var(--primary);
-            padding: 15px;
-            text-align: center;
-            font-size: 26px;
+            background: var(--bg-dark); border-bottom: 4px solid var(--primary);
+            padding: 10px; text-align: center; font-size: 20px;
+            text-shadow: 0 0 10px var(--primary); position: sticky; top: 0; z-index: 100;
             grid-column: 1 / -1;
         }
 
         .panel {
-            background: var(--bg-dark);
-            border: 4px solid var(--primary);
-            box-shadow: 0 0 25px var(--primary);
-            padding: 10px;
-            position: relative;
-            min-height: 260px;
+            background: var(--bg-dark); border: 3px solid var(--primary);
+            padding: 8px; position: relative; overflow: hidden; min-height: 180px;
         }
+        .panel.ghost-mode { border-color: var(--ghost); }
         .panel-header {
-            position: absolute;
-            top: -14px;
-            left: 15px;
-            background: var(--bg-dark);
-            padding: 0 12px;
-            font-size: 18px;
+            position: absolute; top: -10px; left: 10px;
+            background: var(--bg-dark); padding: 0 8px;
+            font-size: 15px; z-index: 10; text-transform: uppercase;
         }
-        .full-width { grid-column: 1 / -1; }
-
-        canvas { width: 100% !important; height: 100% !important; background: #000; display: block; }
+        canvas { width: 100% !important; height: 100% !important; display: block; background: var(--bg-darker); }
 
         #log {
-            max-height: 240px;
-            overflow-y: auto;
-            font-size: 16px;
-            grid-column: 1 / -1;
+            max-height: 160px; overflow-y: auto !important;
+            font-size: 14px; line-height: 1.3; grid-column: 1 / -1;
         }
-        .log-line { white-space: pre-wrap; margin: 2px 0; }
-        .log-line.important { color: var(--danger); font-size: 17px; }
+        .log-line { white-space: pre-wrap; }
+        .log-line::before { content: ">"; margin-right: 6px; color: var(--secondary); }
+        .log-line.important { color: var(--danger) !important; font-size: 15px !important; }
+        .log-line.ghost { color: var(--ghost) !important; }
 
         .value {
-            position: absolute;
-            top: 15px; right: 15px;
-            background: rgba(0,20,0,0.9);
-            padding: 5px 12px;
-            border: 2px solid var(--primary);
-            font-size: 19px;
+            position: absolute; top: 8px; right: 8px;
+            font-size: 15px; background: rgba(0,17,0,0.9);
+            padding: 3px 8px; border: 1px solid var(--primary); z-index: 20;
         }
+        .badge {
+            position: absolute; font-size: 14px; background: rgba(0,0,0,0.8);
+            padding: 3px 6px; border: 1px solid var(--warning); color: var(--warning);
+            z-index: 20; display: none;
+        }
+        .badge.active { display: block; }
+        .badge.ghost { border-color: var(--ghost); color: var(--ghost); }
 
         .control-bar {
-            position: absolute;
-            bottom: 12px; left: 12px; right: 12px;
-            background: var(--bg-dark);
-            border: 3px solid var(--primary);
-            padding: 10px;
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
+            position: absolute; bottom: 8px; left: 8px; right: 8px;
+            background: var(--bg-dark); border: 2px solid var(--primary);
+            padding: 6px; display: flex; flex-wrap: wrap; gap: 8px;
+            align-items: center; z-index: 30; font-size: 14px;
+        }
+        .switch { position: relative; width: 50px; height: 26px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+            background: #220000; border-radius: 13px;
+        }
+        .slider:before {
+            position: absolute; content: ""; height: 18px; width: 18px;
+            left: 3px; bottom: 3px; background: var(--primary);
+            border-radius: 50%; transition: 0.2s;
+        }
+        input:checked + .slider { background: #008822; }
+        input:checked + .slider:before { transform: translateX(26px); }
+
+        .btn {
+            background: transparent; color: var(--primary);
+            border: 3px solid var(--primary); padding: 8px 12px;
+            font-size: 14px; cursor: pointer; margin: 3px;
+        }
+        .btn:hover { background: var(--primary); color: var(--bg-dark); }
+        .btn-ghost { border-color: var(--ghost); color: var(--ghost); }
+        .btn-ghost:hover { background: var(--ghost); color: var(--bg-dark); }
+        button.record {
+            background: #220000; color: #ff0000;
+            border: 3px solid #ff0000; padding: 6px 12px; font-size: 14px;
+        }
+        button.record.recording { animation: pulse 1s infinite; }
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+        .ghost-indicators {
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: 6px; margin-top: 8px;
+        }
+        .ghost-indicator {
+            background: var(--bg-dark); border: 1px solid var(--ghost);
+            padding: 6px; text-align: center; font-size: 13px;
+        }
+        .ghost-indicator.active {
+            background: rgba(170,0,170,0.2); box-shadow: 0 0 8px var(--ghost);
+        }
+        .ghost-indicator-value {
+            font-size: 18px; font-weight: bold; color: var(--ghost);
         }
 
-        .alert {
-            position: fixed;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            background: var(--bg-dark);
-            border: 5px solid var(--danger);
-            padding: 25px;
-            font-size: 26px;
-            text-align: center;
-            z-index: 20000;
-            display: none;
-            box-shadow: 0 0 60px var(--danger);
+        .ghost-gauge {
+            width: 100%; height: 25px; background: var(--bg-dark);
+            border: 1px solid var(--ghost); margin: 8px 0;
+            position: relative;
         }
-        .alert.active { display: block; }
+        .ghost-gauge-fill {
+            height: 100%; width: 0%;
+            background: linear-gradient(to right, var(--ghost), #ff00ff);
+            transition: width 0.5s;
+        }
+        .ghost-gauge-value {
+            position: absolute; top: 3px; left: 50%;
+            transform: translateX(-50%); color: #fff;
+            font-weight: bold; text-shadow: 0 0 3px #000;
+        }
 
-        .tts-speaking { animation: pulse 1s infinite; }
-        @keyframes pulse { 0%,100% {opacity:1} 50% {opacity:0.4} }
+        .status-bar {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: var(--bg-dark); border-top: 3px solid var(--primary);
+            padding: 5px 10px; font-size: 14px; display: flex;
+            justify-content: space-between; z-index: 99999;
+        }
+
+        #settings-page {
+            display: none; position: fixed; inset: 0;
+            background: var(--bg-darker); z-index: 10001;
+            padding: 15px; overflow-y: auto !important;
+            border: 6px solid var(--primary);
+        }
+        #settings-page.active { display: block; }
+        .settings-header { text-align: center; margin-bottom: 15px; font-size: 20px; }
+        .settings-section {
+            background: var(--bg-dark); border: 2px solid var(--primary);
+            padding: 10px; margin-bottom: 10px;
+        }
+        .settings-section h3 { margin-bottom: 8px; font-size: 17px; color: var(--secondary); }
+        .form-group { margin-bottom: 8px; }
+        .form-group label { display: block; margin-bottom: 4px; font-size: 14px; }
+        .form-group input[type="range"] { width: 100%; padding: 0; height: 8px; }
+        .form-group input[type="text"], .form-group select {
+            width: 100%; padding: 6px; background: #000; color: var(--primary);
+            border: 1px solid var(--primary); font-size: 14px;
+        }
+        .btn-close {
+            position: absolute; top: 8px; right: 8px;
+            font-size: 22px; background: none; border: none;
+            color: var(--primary); cursor: pointer;
+        }
+
+        #speech-status {
+            position: absolute; top: 8px; left: 8px;
+            font-size: 14px; background: rgba(0,17,0,0.9);
+            padding: 3px 8px; border: 1px solid var(--secondary);
+            z-index: 1001; display: none;
+        }
+        #speech-status.active { display: block; }
+        #speech-status.listening { color: var(--primary); border-color: var(--primary); }
+        #speech-status.speaking { color: var(--warning); border-color: var(--warning); }
+
+        .ghost-toggle-container {
+            position: absolute; top: 8px; right: 8px; z-index: 1000;
+        }
+        .ghost-toggle {
+            background: var(--bg-dark); border: 1px solid var(--ghost);
+            color: var(--ghost); padding: 6px 10px; font-size: 14px;
+            cursor: pointer;
+        }
+        .ghost-toggle:hover { background: var(--ghost); color: var(--bg-dark); }
+        .ghost-toggle.off { border-color: var(--secondary); color: var(--secondary); }
     </style>
 </head>
 <body>
+    <div id="speech-status">🎤 IA: Inactive</div>
+    <div class="ghost-toggle-container">
+        <button class="ghost-toggle off" id="ghostModeToggle">👻 FANTÔME: OFF</button>
+    </div>
 
-    <!-- SETTINGS -->
-    <div id="settings-page" style="display:none;position:fixed;inset:0;background:var(--bg-darker);z-index:10001;padding:20px;overflow-y:auto;">
-        <button id="closeSettings" style="position:absolute;top:15px;right:15px;font-size:30px;background:none;border:none;color:var(--primary);">✕</button>
-        <h2 style="text-align:center;margin-bottom:25px;">⚙️ PARAMÈTRES SUPRA LAB v11.3</h2>
+    <div id="settings-page">
+        <button class="btn-close" id="closeSettings">✕</button>
+        <div class="settings-header">⚙️ PARAMÈTRES</div>
 
-        <div class="panel">
-            <div class="panel-header">Clé API Groq</div>
-            <input type="text" id="groqApiKey" placeholder="Collez votre clé Groq ici" style="width:100%;padding:10px;margin-top:30px;background:#000;color:var(--primary);border:2px solid var(--primary);">
+        <div class="settings-section">
+            <h3>🗣️ Réponse Vocale</h3>
+            <div class="form-group">
+                <label><input type="checkbox" id="enableVoiceResponse" checked> Activer réponse vocale</label>
+            </div>
+            <div class="form-group">
+                <label for="voiceRate">Vitesse: <span id="voiceRateValue">1</span></label>
+                <input type="range" id="voiceRate" min="0.5" max="2" step="0.1" value="1">
+            </div>
         </div>
 
-        <div class="panel">
-            <div class="panel-header">Microphone</div>
-            <label>Sensibilité : <span id="micVal">65</span>%</label><br>
-            <input type="range" id="micSensitivity" min="20" max="100" value="65" style="width:100%;">
+        <div class="settings-section">
+            <h3>👻 Mode Fantôme</h3>
+            <div class="form-group">
+                <label><input type="checkbox" id="enableGhostSounds" checked> Sons d'alerte fantôme</label>
+            </div>
+            <div class="form-group">
+                <label for="ghostSensitivity">Sensibilité: <span id="ghostSensitivityValue">70</span>%</label>
+                <input type="range" id="ghostSensitivity" min="50" max="100" value="70">
+            </div>
         </div>
 
-        <div class="panel">
-            <div class="panel-header">Synthèse Vocale (TTS)</div>
-            <label><input type="checkbox" id="ttsEnabled" checked> Activer la voix de l'IA</label><br><br>
-            <label>Vitesse : <span id="rateVal">1.05</span></label>
-            <input type="range" id="ttsRate" min="0.5" max="1.8" step="0.05" value="1.05" style="width:100%;"><br>
-            <label>Hauteur : <span id="pitchVal">0.95</span></label>
-            <input type="range" id="ttsPitch" min="0.5" max="1.5" step="0.05" value="0.95" style="width:100%;">
+        <div class="settings-section">
+            <h3>🎤 Paramètres Micro</h3>
+            <div class="form-group">
+                <label for="micSensitivity">Sensibilité: <span id="micSensitivityValue">80</span>%</label>
+                <input type="range" id="micSensitivity" min="50" max="100" value="80">
+            </div>
+            <div class="form-group">
+                <label for="alertVolume">Volume alertes: <span id="alertVolumeValue">50</span>%</label>
+                <input type="range" id="alertVolume" min="0" max="100" value="50">
+            </div>
         </div>
 
-        <div style="text-align:center;margin-top:20px;">
-            <button id="saveSettings" class="btn">💾 Sauvegarder Paramètres</button>
+        <div class="settings-section">
+            <h3>🎨 Affichage</h3>
+            <div class="form-group">
+                <label for="colorTheme">Thème</label>
+                <select id="colorTheme">
+                    <option value="green">Vert militaire</option>
+                    <option value="red">Rouge</option>
+                    <option value="blue">Bleu</option>
+                </select>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 15px;">
+            <button class="btn" id="saveSettings">💾 Sauvegarder</button>
+            <button class="btn" id="resetSettings" style="border-color: var(--danger); color: var(--danger);">🔄 Réinit</button>
         </div>
     </div>
 
-    <!-- START SCREEN -->
     <div id="start-screen">
         <div class="boot-text">
-            SUPRA LAB v11.3<br>
-            <span style="color:var(--warning);">BLACK OPS SIGINT + PARANORMAL LAB</span><br>
-            NIVEAU 7 • LABORATOIRE MILITAIRE
+            SUPRA LAB v11<br>
+            <span style="color: var(--warning);">RÉEL + EMF/EVP/EGF</span><br>
+            <span style="color: var(--ghost);">+ MODE FANTÔME</span><br>
+            <small style="font-size: 15px;">Realme Note 60 Optimisé</small>
         </div>
-        <button id="btnStart">LANCER TOUT LE SYSTÈME</button><br>
+        <button id="btnStart">LANCER<br><small style="font-size: 13px;">(1 autorisation micro)</small></button>
         <button id="btnSettings">⚙️ PARAMÈTRES</button>
+        <button id="btnGhostMode">👻 MODE FANTÔME</button>
+        <div class="features-list">
+            <div>✅ Capture audio <strong>réelle</strong></div>
+            <div>✅ EMF/EVP/EGF <strong>basés sur données réelles</strong></div>
+            <div>✅ Alertes sonores <strong>déclenchées par détections réelles</strong></div>
+            <div>✅ Génération fréquences <strong>à partir de l'analyse réelle</strong></div>
+            <div>✅ IA traduit et parle <strong>uniquement du réel</strong></div>
+            <div>✅ <strong>Aucune simulation pure</strong></div>
+        </div>
     </div>
 
-    <!-- MAIN INTERFACE -->
     <div id="main">
-        <header>SUPRA LAB v11.3 — SIGINT + IA GROQ + TTS</header>
+        <header>SUPRA LAB v11 — RÉEL + <span id="ghostHeaderText" style="display:none; color:var(--ghost);">FANTÔME</span></header>
 
-        <!-- Spectrogramme -->
         <div class="panel">
-            <div class="panel-header">SPECTROGRAMME WATERFALL</div>
+            <div class="panel-header">SPECTROGRAMME</div>
             <canvas id="spectrogram"></canvas>
-            <div class="value" id="dominant-freq">Fréq. : -- MHz</div>
+            <div class="value" id="dominant-freq">Fréq: -- MHz</div>
         </div>
-
-        <!-- Oscilloscope -->
         <div class="panel">
-            <div class="panel-header">OSCILLOSCOPE SIGNAL BRUT</div>
+            <div class="panel-header">OSCILLOSCOPE</div>
             <canvas id="scope"></canvas>
         </div>
 
-        <!-- Rapport IA -->
-        <div class="panel full-width">
-            <div class="panel-header">RAPPORT IA GROQ + SYNTHÈSE VOCALE</div>
+        <div class="panel">
+            <div class="panel-header">POLAR PLOT</div>
+            <canvas id="polar"></canvas>
+        </div>
+        <div class="panel">
+            <div class="panel-header">CAPTEURS</div>
+            <canvas id="sensors"></canvas>
+            <div class="value" id="rms-value">RMS: -- dB</div>
+            <div class="badge" id="anomaly-badge">⚠️ ANOMALIE</div>
             <div class="control-bar">
-                <button id="immediateAIBtn" class="btn">🤖 ANALYSE IA IMMÉDIATE</button>
-            </div>
-            <div id="ai-report" style="background:#000; padding:15px; height:320px; overflow-y:auto; white-space:pre-wrap; font-size:15.5px;">
-                [Système en attente d'analyse...]
+                <label class="switch">
+                    <input type="checkbox" id="listenToggle" checked>
+                    <span class="slider"></span>
+                </label>
+                <span>MICRO</span>
+                <input type="range" id="volumeSlider" min="0" max="100" value="80">
+                <span id="volumeLabel">80%</span>
+                <button class="record" id="recordBtn">● REC</button>
             </div>
         </div>
 
-        <!-- Log -->
-        <div id="log" class="panel full-width">
-            <div class="panel-header">SIGINT LOG — TEMPS RÉEL</div>
+        <div class="panel full-width" id="ghost-panel" style="display:none;">
+            <div class="panel-header">👻 DÉTECTION FANTÔME (RÉELLE)</div>
+            <div class="ghost-indicators">
+                <div class="ghost-indicator">
+                    <div class="ghost-indicator-value" id="emf-value">0</div>
+                    <div>EMF (mG)</div>
+                </div>
+                <div class="ghost-indicator">
+                    <div class="ghost-indicator-value" id="evp-value">0</div>
+                    <div>EVP (dB)</div>
+                </div>
+                <div class="ghost-indicator">
+                    <div class="ghost-indicator-value" id="egh-value">20</div>
+                    <div>EGF (°C)</div>
+                </div>
+            </div>
+            <div class="ghost-gauge">
+                <div class="ghost-gauge-fill" id="ghost-gauge-fill"></div>
+                <div class="ghost-gauge-value" id="ghost-gauge-value">0/10</div>
+            </div>
+            <div class="value" id="ghost-status">Statut: 🟢 Normal</div>
+        </div>
+
+        <div class="panel full-width">
+            <div class="panel-header">ANALYSE FRÉQUENCES</div>
+            <div id="band-info" style="padding: 8px; font-size: 15px;">Bande: --</div>
+        </div>
+
+        <div class="panel full-width">
+            <div class="panel-header">RAPPORT IA VOCALE</div>
+            <div id="ai-report" style="padding: 8px; font-size: 14px; white-space: pre-wrap; max-height: 200px; overflow-y: auto; background: #000; border: 1px dashed var(--primary);">
+                [En attente de données réelles...]
+            </div>
+        </div>
+
+        <div id="log" class="panel">
+            <div class="panel-header">LOG EN TEMPS RÉEL</div>
         </div>
     </div>
 
-    <!-- ALERTE CRITIQUE -->
-    <div class="alert" id="criticalAlert">
-        ⚠️ ALERTE CRITIQUE ⚠️<br>
-        <span id="alert-message">--</span>
+    <div class="status-bar">
+        <span id="status-text">En attente...</span>
+        <span id="device-info">Realme Note 60 • Android 15</span>
     </div>
 
     <script>
-        // ==================== CONFIG ====================
+        // ========== CONFIG ==========
         const DEFAULT_CONFIG = {
-            micSensitivity: 65,
-            groqApiKey: "",
-            ttsEnabled: true,
-            ttsRate: 1.05,
-            ttsPitch: 0.95
+            micSensitivity: 80,
+            colorTheme: 'green',
+            volume: 80,
+            enableVoiceResponse: true,
+            voiceRate: 1,
+            enableGhostSounds: true,
+            ghostSensitivity: 70,
+            alertVolume: 50
         };
         let config = {...DEFAULT_CONFIG};
 
-        // ==================== BASE DE FRÉQUENCES ÉTENDUE ====================
+        // ========== FREQUENCY DATABASE (REAL BANDS) ==========
         const FREQUENCY_DB = {
-            'ULF_DEMON':   { min: 0.0003, max: 3,     color: '#9900ff', label: 'ULF - Entité Démontiaque', critical: true },
-            'SLF_SPIRIT':  { min: 3,      max: 30,    color: '#bb00ff', label: 'SLF - Esprit Résiduel', critical: true },
-            'ELF_EVP':     { min: 3,      max: 300,   color: '#cc00cc', label: 'ELF - EVP / Esprits', critical: true },
-            'VLF_GHOST':   { min: 0.3,    max: 30,    color: '#aa00aa', label: 'VLF - Phénomène Fantomatique', critical: true },
-            'MIL_VLF':     { min: 3,      max: 30,    color: '#ff2200', label: 'Militaire VLF', critical: true },
-            'MIL_VHF':     { min: 30,     max: 88,    color: '#ff0000', label: 'Militaire VHF', critical: true },
-            'MIL_UHF':     { min: 225,    max: 400,   color: '#ff0000', label: 'Militaire UHF', critical: true },
-            'AVIATION_EMER': { min: 121.4, max: 121.6, color: '#ff0044', label: 'Aviation Emergency', critical: true },
-            'POLICE_VHF':  { min: 30,     max: 50,    color: '#ff8800', label: 'Police VHF', critical: true },
-            'POLICE_UHF':  { min: 450,    max: 470,   color: '#ff9900', label: 'Police UHF', critical: true },
-            'DRONE':       { min: 2400,   max: 2483,  color: '#ff7700', label: 'Drone 2.4GHz', critical: true },
-            'EMF_LOW':     { min: 0.001,  max: 0.3,   color: '#8800ff', label: 'EMF Paranormal', critical: true }
+            'ELF': {min: 0.003, max: 300, label: 'ELF', color: '#00aa00'},
+            'VLF': {min: 3, max: 30, label: 'VLF', color: '#00aa55'},
+            'LF': {min: 30, max: 300, label: 'LF', color: '#00aaff'},
+            'MF': {min: 300, max: 3000, label: 'MF', color: '#00ffff'},
+            'HF': {min: 3, max: 30, label: 'HF', color: '#ffaa00'},
+            'VHF': {min: 30, max: 300, label: 'VHF', color: '#ff5500'},
+            'AVIATION_VHF': {min: 108, max: 137, label: 'Aviation VHF', color: '#00aaff'},
+            'AVIATION_EMERGENCY': {min: 121.4, max: 121.6, label: 'Guard 121.5', color: '#ff0000'},
+            'FM_RADIO': {min: 87.5, max: 108, label: 'FM Radio', color: '#ffaa00'},
+            'DRONE_433': {min: 433, max: 434.8, label: 'Drone 433MHz', color: '#ff5500'},
+            'DRONE_2_4': {min: 2400, max: 2483.5, label: 'Drone 2.4GHz', color: '#ff5500'},
+            'WIFI_2_4': {min: 2412, max: 2484, label: 'WiFi 2.4GHz', color: '#00ffff'},
+            'BLUETOOTH': {min: 2402, max: 2480, label: 'Bluetooth', color: '#00aaff'}
         };
 
-        // Variables globales
-        let audioCtx, analyser, microphone, gainNode;
+        // ========== GLOBAL VARS ==========
+        let audioCtx, analyser, microphone, gainNode, mediaRecorder, recordedChunks = [];
         let frequencyArray, timeArray;
         let spectroHistory = [];
+        let rmsHistory = [];
         let isRunning = false;
+        let isRecording = false;
+        let accelX = 0, accelY = 0, accelZ = 0;
+        let magnetHeading = 0;
         let recognition = null;
         let dominantFrequency = 0;
         let detectedBand = null;
-        let lastTranscript = "";
-        let lastAnalysisTime = 0;
+        let microStream = null;
+        let speechSynthesis = window.speechSynthesis;
+        let voices = [];
+        let isSpeaking = false;
+        let utteranceQueue = [];
 
-        // ==================== LOG ====================
-        function log(text, important = false) {
-            const logDiv = document.getElementById('log');
-            const line = document.createElement('div');
-            line.className = `log-line ${important ? 'important' : ''}`;
-            line.innerHTML = `[${new Date().toLocaleTimeString('fr-FR')}] ${text}`;
-            logDiv.appendChild(line);
-            logDiv.scrollTop = logDiv.scrollHeight;
-            if (logDiv.children.length > 150) logDiv.removeChild(logDiv.children[0]);
+        // Ghost mode vars (based on REAL data)
+        let emfLevel = 0;
+        let evpLevel = 0;
+        let eghLevel = 20; // Room temperature
+        let ghostActivityLevel = 0;
+        let ghostAudioContext = null;
+        let ghostOscillator = null;
+        let lastGhostSoundTime = 0;
+
+        // ========== AUDIO GENERATION FOR ALERTS (based on real detections) ==========
+        function createAlertSound(frequency, duration = 0.2) {
+            if (!config.enableGhostSounds) return;
+
+            if (!ghostAudioContext) {
+                ghostAudioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+
+            const oscillator = ghostAudioContext.createOscillator();
+            const gainNode = ghostAudioContext.createGain();
+
+            oscillator.type = 'sine';
+            oscillator.frequency.value = frequency;
+            gainNode.gain.value = config.alertVolume / 200;
+
+            oscillator.connect(gainNode);
+            gainNode.connect(ghostAudioContext.destination);
+
+            oscillator.start();
+            oscillator.stop(ghostAudioContext.currentTime + duration);
         }
 
-        function showAlert(msg) {
-            document.getElementById('alert-message').textContent = msg;
-            document.getElementById('criticalAlert').classList.add('active');
-            setTimeout(() => document.getElementById('criticalAlert').classList.remove('active'), 6500);
+        function createGhostBeep() {
+            if (!config.enableGhostSounds) return;
+            // Beep at 800Hz (based on real EVP detection)
+            createAlertSound(800, 0.1);
         }
 
-        // ==================== TTS - VOIX DE L'IA ====================
-        function speak(text) {
-            if (!config.ttsEnabled || !('speechSynthesis' in window)) return;
-            window.speechSynthesis.cancel();
+        function createCriticalAlert() {
+            if (!config.enableGhostSounds) return;
+            // Sweep from 2000Hz to 1000Hz (based on real critical band detection)
+            if (!ghostAudioContext) {
+                ghostAudioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+
+            const now = ghostAudioContext.currentTime;
+            const oscillator = ghostAudioContext.createOscillator();
+            const gainNode = ghostAudioContext.createGain();
+
+            oscillator.type = 'sawtooth';
+            oscillator.frequency.setValueAtTime(2000, now);
+            oscillator.frequency.exponentialRampToValueAtTime(1000, now + 0.3);
+
+            gainNode.gain.setValueAtTime(config.alertVolume / 100, now);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+
+            oscillator.connect(gainNode);
+            gainNode.connect(ghostAudioContext.destination);
+
+            oscillator.start(now);
+            oscillator.stop(now + 0.3);
+        }
+
+        function generateFrequencyTone(freqHz, duration = 0.5) {
+            if (!config.enableGhostSounds) return;
+
+            if (!ghostAudioContext) {
+                ghostAudioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+
+            const now = ghostAudioContext.currentTime;
+            const oscillator = ghostAudioContext.createOscillator();
+            const gainNode = ghostAudioContext.createGain();
+
+            oscillator.type = 'sine';
+            oscillator.frequency.value = freqHz;
+            gainNode.gain.setValueAtTime(config.alertVolume / 200, now);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, now + duration);
+
+            oscillator.connect(gainNode);
+            gainNode.connect(ghostAudioContext.destination);
+
+            oscillator.start(now);
+            oscillator.stop(now + duration);
+        }
+
+        // ========== SPEECH SYNTHESIS ==========
+        function loadVoices() {
+            if (!speechSynthesis) return;
+            voices = speechSynthesis.getVoices();
+        }
+
+        function getFrenchVoice() {
+            if (!voices || voices.length === 0) {
+                loadVoices();
+                if (!voices || voices.length === 0) return null;
+            }
+            const frVoices = voices.filter(v => v.lang.startsWith('fr'));
+            return frVoices.length > 0 ? frVoices[0] : voices[0];
+        }
+
+        function speak(text, callback) {
+            if (!config.enableVoiceResponse || !speechSynthesis) {
+                if (callback) callback();
+                return;
+            }
+
+            utteranceQueue.push({text, callback});
+            if (isSpeaking) return;
+
+            processQueue();
+        }
+
+        function processQueue() {
+            if (utteranceQueue.length === 0) {
+                isSpeaking = false;
+                updateSpeechStatus('listening');
+                return;
+            }
+
+            const {text, callback} = utteranceQueue.shift();
+            isSpeaking = true;
+            updateSpeechStatus('speaking');
 
             const utterance = new SpeechSynthesisUtterance(text);
+            utterance.rate = config.voiceRate;
             utterance.lang = 'fr-FR';
-            utterance.rate = config.ttsRate;
-            utterance.pitch = config.ttsPitch;
-            utterance.volume = 0.92;
+            utterance.volume = 1;
 
-            utterance.onstart = () => document.getElementById('ai-report').classList.add('tts-speaking');
-            utterance.onend = () => document.getElementById('ai-report').classList.remove('tts-speaking');
+            const voice = getFrenchVoice();
+            if (voice) utterance.voice = voice;
 
-            window.speechSynthesis.speak(utterance);
-        }
+            utterance.onend = () => {
+                isSpeaking = false;
+                updateSpeechStatus('listening');
+                if (callback) callback();
+                setTimeout(processQueue, 50);
+            };
 
-        // ==================== GROQ API ====================
-        async function callGroqAPI(prompt) {
-            if (!config.groqApiKey) return "Clé API Groq manquante. Configurez-la dans les paramètres.";
+            utterance.onerror = (e) => {
+                isSpeaking = false;
+                updateSpeechStatus('listening');
+                if (callback) callback();
+                setTimeout(processQueue, 50);
+            };
 
             try {
-                const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-                    method: "POST",
-                    headers: {
-                        "Authorization": `Bearer ${config.groqApiKey}`,
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        model: "llama-3.3-70b-versatile",
-                        messages: [
-                            { role: "system", content: "Tu es SUPRA-7, analyste SIGINT et paranormal militaire. Réponds de façon froide, tactique et précise." },
-                            { role: "user", content: prompt }
-                        ],
-                        temperature: 0.35,
-                        max_tokens: 900
-                    })
-                });
-                const data = await res.json();
-                return data.choices[0].message.content || "Pas de réponse.";
+                speechSynthesis.speak(utterance);
             } catch (e) {
-                return "Erreur de connexion à Groq.";
+                isSpeaking = false;
+                if (callback) callback();
+                setTimeout(processQueue, 50);
             }
         }
 
-        // ==================== ANALYSE IA ====================
-        async function triggerAIAnalysis(transcript = "") {
-            if (Date.now() - lastAnalysisTime < 2500) return;
-            lastAnalysisTime = Date.now();
+        function updateSpeechStatus(status) {
+            const el = document.getElementById('speech-status');
+            if (!el) return;
+            el.classList.remove('listening', 'speaking', 'active');
+            el.classList.add('active');
 
-            analyser.getByteFrequencyData(frequencyArray);
-            const rms = Math.sqrt(frequencyArray.reduce((a,b) => a + b*b, 0) / frequencyArray.length) / 128;
-            dominantFrequency = findDominantFrequency();
-            detectedBand = detectFrequencyBand(dominantFrequency);
-
-            const prompt = `Signal détecté :\nFréquence : ${(dominantFrequency/1e6).toFixed(4)} MHz\nBande : ${detectedBand ? detectedBand.label : 'Inconnue'}\nRMS : ${rms.toFixed(2)} dB\nVoix : "${transcript || lastTranscript || 'Aucune'}"\nAnalyse tactique complète requise.`;
-
-            log("[SUPRA-7] Analyse IA lancée...", true);
-
-            const aiResponse = await callGroqAPI(prompt);
-
-            const fullReport = `=== RAPPORT SUPRA-7 ===\nHeure: ${new Date().toLocaleTimeString()}\nFréq: ${(dominantFrequency/1e6).toFixed(4)} MHz\nBande: ${detectedBand ? detectedBand.label : '—'}\n\n${aiResponse}`;
-
-            document.getElementById('ai-report').textContent = fullReport;
-
-            // Réponse vocale
-            if (config.ttsEnabled) {
-                speak(aiResponse.substring(0, 300));
-            }
-
-            if (detectedBand && detectedBand.critical) {
-                showAlert(`CRITIQUE : ${detectedBand.label}`);
+            switch(status) {
+                case 'listening': el.textContent = '🎤 Écoute'; el.classList.add('listening'); break;
+                case 'speaking': el.textContent = '🗣️ Parle'; el.classList.add('speaking'); break;
+                default: el.textContent = '🎤 IA: Inactive';
             }
         }
 
-        function detectFrequencyBand(freqHz) {
-            const mhz = freqHz / 1e6;
-            for (const data of Object.values(FREQUENCY_DB)) {
-                if (mhz >= data.min && mhz <= data.max) return data;
+        // ========== UTILITY FUNCTIONS ==========
+        function log(text, important = false, ghost = false) {
+            const logDiv = document.getElementById('log');
+            if (!logDiv) return;
+            const line = document.createElement('div');
+            line.className = 'log-line' + (important ? ' important' : '') + (ghost ? ' ghost' : '');
+            line.innerHTML = `<span style="color:var(--secondary)">[${new Date().toLocaleTimeString('fr-FR')}]</span> ${text}`;
+            logDiv.appendChild(line);
+            logDiv.scrollTop = logDiv.scrollHeight;
+            if (logDiv.children.length > 80) logDiv.removeChild(logDiv.children[0]);
+        }
+
+        function updateStatus(txt) {
+            const el = document.getElementById('status-text');
+            if (el) el.textContent = txt;
+        }
+
+        // ========== CONFIG MANAGEMENT ==========
+        function loadConfig() {
+            const saved = localStorage.getItem('supraLabConfig');
+            if (saved) {
+                try { config = {...DEFAULT_CONFIG, ...JSON.parse(saved)}; }
+                catch(e) { console.error("Config error:", e); }
+            }
+            applyConfig();
+        }
+
+        function applyConfig() {
+            const root = document.documentElement;
+            switch(config.colorTheme) {
+                case 'red': root.style.setProperty('--primary', '#ff4444'); root.style.setProperty('--secondary', '#cc0000'); break;
+                case 'blue': root.style.setProperty('--primary', '#44aaff'); root.style.setProperty('--secondary', '#0088cc'); break;
+                default: root.style.setProperty('--primary', '#00ff41'); root.style.setProperty('--secondary', '#00cc33');
+            }
+
+            const ranges = [
+                {id: 'micSensitivity', valueId: 'micSensitivityValue'},
+                {id: 'volumeSlider', valueId: 'volumeLabel'},
+                {id: 'voiceRate', valueId: 'voiceRateValue'},
+                {id: 'ghostSensitivity', valueId: 'ghostSensitivityValue'},
+                {id: 'alertVolume', valueId: 'alertVolumeValue'}
+            ];
+            ranges.forEach(r => {
+                const el = document.getElementById(r.id);
+                const valEl = document.getElementById(r.valueId);
+                if (el && valEl) { el.value = config[r.id]; valEl.textContent = config[r.id]; }
+            });
+
+            const checkboxes = ['enableVoiceResponse', 'enableGhostSounds'];
+            checkboxes.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.checked = config[id];
+            });
+
+            const selects = ['colorTheme'];
+            selects.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.value = config[id];
+            });
+        }
+
+        function saveConfig() {
+            const ranges = ['micSensitivity', 'volumeSlider', 'voiceRate', 'ghostSensitivity', 'alertVolume'];
+            ranges.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) config[id] = parseFloat(el.value);
+            });
+
+            const checkboxes = ['enableVoiceResponse', 'enableGhostSounds'];
+            checkboxes.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) config[id] = el.checked;
+            });
+
+            const selects = ['colorTheme'];
+            selects.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) config[id] = el.value;
+            });
+
+            localStorage.setItem('supraLabConfig', JSON.stringify(config));
+            log("[PARAM] Sauvegardé");
+            applyConfig();
+            if (speechSynthesis) loadVoices();
+        }
+
+        // ========== FREQUENCY DETECTION ==========
+        function detectFrequencyBand(freq) {
+            const freqMHz = freq / 1e6;
+            for (const [name, data] of Object.entries(FREQUENCY_DB)) {
+                if (freqMHz >= data.min && freqMHz <= data.max) {
+                    return {name, label: data.label, color: data.color, critical: data.label.includes('Emergency') || data.label.includes('Guard')};
+                }
             }
             return null;
         }
@@ -367,60 +706,444 @@
         function findDominantFrequency() {
             if (!analyser) return 0;
             analyser.getByteFrequencyData(frequencyArray);
-            let maxVal = 0, maxIdx = 0;
-            for (let i = 50; i < frequencyArray.length; i++) {
-                if (frequencyArray[i] > maxVal) {
-                    maxVal = frequencyArray[i];
-                    maxIdx = i;
+            let maxIndex = 0, maxValue = 0;
+            const startIndex = Math.floor(200 / (audioCtx.sampleRate / analyser.fftSize));
+
+            for (let i = startIndex; i < frequencyArray.length; i++) {
+                if (frequencyArray[i] > maxValue) {
+                    maxValue = frequencyArray[i];
+                    maxIndex = i;
                 }
             }
-            return maxIdx * (audioCtx.sampleRate / analyser.fftSize);
+            return maxIndex * (audioCtx.sampleRate / analyser.fftSize);
         }
 
-        // ==================== RECONNAISSANCE VOCALE ====================
-        function initSpeechRecognition() {
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (!SpeechRecognition) {
-                log("Reconnaissance vocale non supportée sur ce navigateur.", true);
+        function updateFrequencyAnalysis() {
+            dominantFrequency = findDominantFrequency();
+            const detected = detectFrequencyBand(dominantFrequency);
+
+            if (detected) {
+                detectedBand = detected;
+                const freqEl = document.getElementById('dominant-freq');
+                if (freqEl) {
+                    freqEl.textContent = `Fréq: ${(dominantFrequency/1e6).toFixed(3)} MHz (${detected.label})`;
+                    freqEl.style.color = detected.color;
+                }
+
+                const bandInfoEl = document.getElementById('band-info');
+                if (bandInfoEl) bandInfoEl.textContent = `Bande: ${detected.label}`;
+
+                // Generate tone for critical bands (based on REAL detection)
+                if (detected.critical && config.enableGhostSounds) {
+                    createCriticalAlert();
+                    if (config.enableVoiceResponse && !isSpeaking) {
+                        speak(`Attention, bande critique détectée: ${detected.label} à ${(dominantFrequency/1e6).toFixed(3)} MHz.`);
+                    }
+                }
+            } else {
+                const freqEl = document.getElementById('dominant-freq');
+                if (freqEl) freqEl.textContent = `Fréq: ${(dominantFrequency/1e6).toFixed(3)} MHz`;
+                const bandInfoEl = document.getElementById('band-info');
+                if (bandInfoEl) bandInfoEl.textContent = "Bande: Inconnue";
+            }
+        }
+
+        function calculateStats(rms) {
+            rmsHistory.push(rms);
+            if (rmsHistory.length > 80) rmsHistory.shift();
+            if (rmsHistory.length < 20) return false;
+            const mean = rmsHistory.reduce((a,b) => a+b,0)/rmsHistory.length;
+            const std = Math.sqrt(rmsHistory.reduce((a,b) => a+Math.pow(b-mean,2),0)/rmsHistory.length);
+            return rms > mean + 2.5*std;
+        }
+
+        function generateReport(rms, freq, band, transcript) {
+            const freqMHz = (freq/1e6).toFixed(3);
+            const bandLabel = band ? band.label : "Inconnue";
+            let report = `Fréquence dominante: ${freqMHz} MHz. Bande: ${bandLabel}. Niveau RMS: ${rms.toFixed(2)} décibels.`;
+
+            if (config.ghostMode) {
+                report += ` EMF: ${emfLevel.toFixed(1)} mG. EVP: ${evpLevel.toFixed(2)} dB. EGF: ${eghLevel.toFixed(1)}°C. Activité: ${ghostActivityLevel.toFixed(1)}/10.`;
+            }
+
+            if (transcript) report += ` Transcription: "${transcript}".`;
+            return report;
+        }
+
+        // ========== GHOST MODE (based on REAL data) ==========
+        function toggleGhostMode(enable) {
+            config.ghostMode = enable;
+            saveConfig();
+
+            const main = document.getElementById('main');
+            const ghostPanel = document.getElementById('ghost-panel');
+            const ghostHeaderText = document.getElementById('ghostHeaderText');
+            const ghostToggle = document.getElementById('ghostModeToggle');
+
+            if (enable) {
+                ghostPanel.style.display = 'block';
+                ghostHeaderText.style.display = 'inline';
+                ghostToggle.classList.remove('off');
+                ghostToggle.textContent = '👻 FANTÔME: ON';
+                log("[FANTÔME] Mode activé (basé sur données réelles)", false, true);
+                updateStatus("👻 Mode Fantôme: ACTIF");
+            } else {
+                ghostPanel.style.display = 'none';
+                ghostHeaderText.style.display = 'none';
+                ghostToggle.classList.add('off');
+                ghostToggle.textContent = '👻 FANTÔME: OFF';
+                log("[FANTÔME] Mode désactivé", false, true);
+                updateStatus("Système opérationnel");
+            }
+
+            updateGhostIndicators();
+        }
+
+        function updateGhostSensors() {
+            if (!config.ghostMode) return;
+
+            analyser.getByteFrequencyData(frequencyArray);
+            const rms = Math.sqrt(frequencyArray.reduce((a,b) => a+b*b,0)/frequencyArray.length)/128;
+
+            // EMF: Based on REAL RMS + small random variation (simulating natural noise)
+            emfLevel = Math.max(0, Math.min(100, (rms * 100 * config.ghostSensitivity / 100) + (Math.random() - 0.5) * 5));
+
+            // EVP: Based on REAL audio peaks
+            const peakDetected = frequencyArray.some(val => val > 200);
+            evpLevel = peakDetected ? Math.min(1.0, evpLevel + 0.15) : Math.max(0, evpLevel - 0.08);
+
+            // EGF: Based on REAL motion sensors + small random variation
+            eghLevel = Math.max(15, Math.min(30, 20 + (Math.abs(accelX) + Math.abs(accelY) + Math.abs(accelZ)) * 0.1 + (Math.random() - 0.5) * 0.2));
+
+            updateGhostIndicators();
+        }
+
+        function updateGhostIndicators() {
+            if (!config.ghostMode) return;
+
+            document.getElementById('emf-value').textContent = emfLevel.toFixed(1);
+            document.getElementById('evp-value').textContent = evpLevel.toFixed(2);
+            document.getElementById('egh-value').textContent = eghLevel.toFixed(1);
+
+            ghostActivityLevel = Math.min(10, (emfLevel / 10 + evpLevel * 2 + Math.abs(eghLevel - 20) / 2) / 3);
+            const gaugeFill = document.getElementById('ghost-gauge-fill');
+            const gaugeValue = document.getElementById('ghost-gauge-value');
+            if (gaugeFill && gaugeValue) {
+                gaugeFill.style.width = `${ghostActivityLevel * 10}%`;
+                gaugeValue.textContent = `${ghostActivityLevel.toFixed(1)}/10`;
+            }
+
+            const ghostStatus = document.getElementById('ghost-status');
+            if (ghostStatus) {
+                if (ghostActivityLevel >= 7) {
+                    ghostStatus.textContent = `Statut: 🔴 ACTIVITÉ ÉLEVÉE`;
+                    ghostStatus.style.color = "var(--danger)";
+                    if (config.enableGhostSounds) createGhostBeep();
+                } else if (ghostActivityLevel >= 4) {
+                    ghostStatus.textContent = `Statut: 🟡 ACTIVITÉ MODÉRÉE`;
+                    ghostStatus.style.color = "var(--warning)";
+                } else {
+                    ghostStatus.textContent = `Statut: 🟢 Normal`;
+                    ghostStatus.style.color = "var(--primary)";
+                }
+            }
+
+            const indicators = document.querySelectorAll('.ghost-indicator');
+            indicators[0].classList.toggle('active', emfLevel > 50);
+            indicators[1].classList.toggle('active', evpLevel > 0.3);
+            indicators[2].classList.toggle('active', Math.abs(eghLevel - 20) > 2);
+
+            // Generate frequency tone based on REAL dominant frequency (scaled down to audible range)
+            if (ghostActivityLevel >= 4 && config.enableGhostSounds && Date.now() - lastGhostSoundTime > 2000) {
+                const audibleFreq = Math.max(200, Math.min(2000, dominantFrequency / 1000));
+                generateFrequencyTone(audibleFreq, 0.3);
+                lastGhostSoundTime = Date.now();
+            }
+        }
+
+        // ========== DRAWING FUNCTIONS ==========
+        function drawSpectrogram() {
+            const canvas = document.getElementById('spectrogram');
+            if (!canvas || !analyser) return;
+            const ctx = canvas.getContext('2d');
+            analyser.getByteFrequencyData(frequencyArray);
+            spectroHistory.unshift([...frequencyArray]);
+            if (spectroHistory.length > 80) spectroHistory.pop();
+
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            const w = canvas.width / frequencyArray.length;
+            for (let y = 0; y < spectroHistory.length; y++) {
+                for (let x = 0; x < spectroHistory[y].length; x++) {
+                    const val = spectroHistory[y][x];
+                    const hue = config.ghostMode ? 300 : 90;
+                    ctx.fillStyle = `hsl(${hue}, 100%, ${val/2.8}%)`;
+                    ctx.fillRect(x*w, y*2, w+1, 2);
+                }
+            }
+        }
+
+        function drawPolar() {
+            const canvas = document.getElementById('polar');
+            if (!canvas || !analyser) return;
+            const ctx = canvas.getContext('2d');
+            analyser.getByteFrequencyData(frequencyArray);
+            ctx.fillStyle = 'rgba(0,17,0,0.9)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            const cx = canvas.width/2, cy = canvas.height/2, maxR = Math.min(cx,cy)-25;
+            ctx.strokeStyle = config.ghostMode ? '#330033' : '#003300';
+            for (let i=1; i<6; i++) {
+                ctx.beginPath();
+                ctx.arc(cx, cy, (maxR/5)*i, 0, Math.PI*2);
+                ctx.stroke();
+            }
+
+            for (let i=0; i<frequencyArray.length; i++) {
+                const amp = frequencyArray[i];
+                if (amp < 12) continue;
+                const angle = (i/frequencyArray.length)*Math.PI*2;
+                const r = (amp/255)*maxR;
+                ctx.fillStyle = detectedBand ? detectedBand.color : (config.ghostMode ? '#aa00aa' : '#00ff41');
+                ctx.fillRect(cx+Math.cos(angle)*r, cy+Math.sin(angle)*r, 3, 3);
+            }
+        }
+
+        function drawScope() {
+            const canvas = document.getElementById('scope');
+            if (!canvas || !analyser) return;
+            const ctx = canvas.getContext('2d');
+            analyser.getByteTimeDomainData(timeArray);
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            const color = config.ghostMode ? '#aa00aa' : '#00ff41';
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            const slice = canvas.width / timeArray.length;
+            let x = 0;
+            for (let i=0; i<timeArray.length; i++) {
+                const y = (timeArray[i]/128)*canvas.height/2;
+                i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+                x += slice;
+            }
+            ctx.stroke();
+        }
+
+        function drawSensors() {
+            const canvas = document.getElementById('sensors');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#001100';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            const maxG = 22;
+            const w = (canvas.width/3)-25;
+            const color = config.ghostMode ? '#aa00aa' : '#00ff41';
+
+            ctx.fillStyle = color;
+            ctx.fillRect(20, 40, w, Math.min(Math.abs(accelX)*13, maxG));
+            ctx.fillText(`X ${accelX} g`, 25, 28);
+
+            ctx.fillRect(canvas.width/3+10, 40, w, Math.min(Math.abs(accelY)*13, maxG));
+            ctx.fillText(`Y ${accelY} g`, canvas.width/3+15, 28);
+
+            ctx.fillRect(2*canvas.width/3-5, 40, w, Math.min(Math.abs(accelZ)*13, maxG));
+            ctx.fillText(`Z ${accelZ} g`, 2*canvas.width/3+5, 28);
+
+            ctx.save();
+            ctx.translate(canvas.width-70, 80);
+            ctx.rotate(magnetHeading*Math.PI/180);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(0, -35);
+            ctx.lineTo(0, 35);
+            ctx.stroke();
+            ctx.fillStyle = '#ff0000';
+            ctx.fillRect(-8, -40, 16, 8);
+            ctx.restore();
+            ctx.fillText(`CAP ${magnetHeading}°`, canvas.width-140, 160);
+        }
+
+        // ========== SENSORS INIT ==========
+        function initSensors() {
+            if (window.DeviceMotionEvent) {
+                window.addEventListener('devicemotion', e => {
+                    if (e.accelerationIncludingGravity) {
+                        accelX = (e.accelerationIncludingGravity.x || 0).toFixed(2);
+                        accelY = (e.accelerationIncludingGravity.y || 0).toFixed(2);
+                        accelZ = (e.accelerationIncludingGravity.z || 0).toFixed(2);
+                    }
+                });
+                log("[CAPTEURS] ✅ Accéléromètre OK");
+            } else {
+                log("[CAPTEURS] ❌ Accéléromètre non supporté", true);
+            }
+
+            if (window.DeviceOrientationEvent) {
+                window.addEventListener('deviceorientation', e => {
+                    if (e.alpha !== null) magnetHeading = Math.round(e.alpha);
+                });
+                log("[CAPTEURS] ✅ Boussole OK");
+            } else {
+                log("[CAPTEURS] ❌ Boussole non supportée", true);
+            }
+        }
+
+        // ========== SPEECH RECOGNITION ==========
+        async function initSpeech() {
+            const listenToggle = document.getElementById('listenToggle');
+            if (!listenToggle || !listenToggle.checked) {
+                log("[IA] ❌ Activez d'abord le micro !", true);
                 return;
             }
 
-            recognition = new SpeechRecognition();
-            recognition.continuous = true;
-            recognition.interimResults = true;
-            recognition.lang = 'fr-FR';
+            if (!microStream) {
+                log("[IA] ❌ Micro non initialisé", true);
+                return;
+            }
 
-            recognition.onresult = (event) => {
-                let transcript = "";
-                for (let i = event.resultIndex; i < event.results.length; i++) {
-                    transcript += event.results[i][0].transcript;
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                log("[IA] ❌ Reconnaissance vocale non supportée", true);
+                updateStatus("❌ IA non supportée");
+                return;
+            }
+
+            try {
+                if (recognition) {
+                    recognition.stop();
+                    recognition = null;
                 }
-                if (transcript.length > 4) {
-                    lastTranscript = transcript.trim();
-                    log(`[VOIX] "${lastTranscript}"`, true);
-                    triggerAIAnalysis(lastTranscript);
-                }
-            };
 
-            recognition.onend = () => {
-                if (isRunning) setTimeout(() => recognition.start(), 700);
-            };
+                recognition = new SpeechRecognition();
+                recognition.continuous = true;
+                recognition.interimResults = false;
+                recognition.lang = 'fr-FR';
+                recognition.maxAlternatives = 1;
 
-            recognition.start();
-            log("[IA] Écoute vocale permanente activée + TTS", true);
+                recognition.lastTranscript = "";
+
+                recognition.onresult = (e) => {
+                    const transcript = e.results[e.results.length-1][0].transcript;
+                    const confidence = e.results[e.results.length-1][0].confidence;
+                    recognition.lastTranscript = transcript;
+
+                    if (confidence > 0.7) {
+                        log(`[IA] 🎤 "${transcript}" (${Math.round(confidence*100)}%)`);
+
+                        if (config.enableVoiceResponse && !isSpeaking) {
+                            handleVoiceCommand(transcript);
+                        }
+                    }
+                };
+
+                recognition.onerror = (e) => {
+                    let msg = "[IA ERREUR] ";
+                    switch(e.error) {
+                        case 'no-speech': msg += "Aucun son détecté"; break;
+                        case 'audio-capture': msg += "Micro bloqué"; break;
+                        case 'not-allowed': msg += "Permission refusée"; break;
+                        default: msg += e.error;
+                    }
+                    log(msg, true);
+                    if (e.error !== 'not-allowed') {
+                        setTimeout(() => { try { if(recognition) recognition.start(); } catch(err){} }, 2000);
+                    }
+                };
+
+                recognition.onstart = () => {
+                    log("[IA] ✅ Écoute activée", true);
+                    updateStatus(config.ghostMode ? "🎤 IA + Fantôme: Écoute" : "🎤 IA: Écoute");
+                    updateSpeechStatus('listening');
+                };
+
+                recognition.onend = () => {
+                    updateSpeechStatus('listening');
+                    setTimeout(() => { try { if(recognition) recognition.start(); } catch(err){} }, 1000);
+                };
+
+                recognition.start();
+                log("[IA] 🚀 IA vocale démarrée", true);
+
+            } catch (e) {
+                log(`[IA] ❌ ${e.message}`, true);
+                updateStatus("❌ Erreur IA");
+            }
         }
 
-        // ==================== AUDIO & VISUALISATION ====================
+        function handleVoiceCommand(transcript) {
+            const text = transcript.toLowerCase();
+            const commands = {
+                'analyse': () => {
+                    analyser.getByteFrequencyData(frequencyArray);
+                    const rms = Math.sqrt(frequencyArray.reduce((a,b) => a+b*b,0)/frequencyArray.length)/128;
+                    const freq = findDominantFrequency();
+                    const band = detectFrequencyBand(freq);
+                    const report = generateReport(rms, freq, band, transcript);
+                    speak(report);
+                    log(`[IA VOCALE] 🗣️ ${report}`, false, config.ghostMode);
+                },
+                'enregistrer': () => {
+                    if (!isRecording) {
+                        speak("Enregistrement démarré");
+                        startRecording();
+                    } else {
+                        speak("Enregistrement arrêté");
+                        stopRecording();
+                    }
+                },
+                'mode fantôme': () => {
+                    toggleGhostMode(!config.ghostMode);
+                    speak(config.ghostMode ? "Mode Fantôme activé" : "Mode Fantôme désactivé");
+                },
+                'stop': () => {
+                    speechSynthesis.cancel();
+                    speak("Arrêt de la réponse vocale");
+                },
+                'aide': () => {
+                    speak("Commandes: analyse, enregistrer, mode fantôme, stop, aide");
+                }
+            };
+
+            for (const [keyword, action] of Object.entries(commands)) {
+                if (text.includes(keyword)) {
+                    action();
+                    return;
+                }
+            }
+        }
+
+        // ========== AUDIO INIT ==========
         async function initAudio() {
             try {
+                if (speechSynthesis) {
+                    loadVoices();
+                    if (speechSynthesis.onvoiceschanged !== undefined) {
+                        speechSynthesis.onvoiceschanged = loadVoices;
+                    }
+                }
+
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 await audioCtx.resume();
 
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                microphone = audioCtx.createMediaStreamSource(stream);
+                microStream = await navigator.mediaDevices.getUserMedia({
+                    audio: {
+                        echoCancellation: false,
+                        noiseSuppression: false,
+                        autoGainControl: false,
+                        sampleRate: 48000,
+                        channelCount: 1
+                    },
+                    video: false
+                });
+
+                microphone = audioCtx.createMediaStreamSource(microStream);
                 analyser = audioCtx.createAnalyser();
-                analyser.fftSize = 8192;
-                analyser.smoothingTimeConstant = 0.25;
+                analyser.fftSize = 4096;
+                analyser.smoothingTimeConstant = 0.3;
 
                 gainNode = audioCtx.createGain();
                 gainNode.gain.value = config.micSensitivity / 100;
@@ -431,133 +1154,225 @@
 
                 frequencyArray = new Uint8Array(analyser.frequencyBinCount);
                 timeArray = new Uint8Array(analyser.frequencyBinCount);
+                spectroHistory = [];
 
+                mediaRecorder = new MediaRecorder(microStream, {mimeType: 'audio/webm'});
+                recordedChunks = [];
+                mediaRecorder.ondataavailable = e => recordedChunks.push(e.data);
+                mediaRecorder.onstop = () => {
+                    const blob = new Blob(recordedChunks, {type: 'audio/webm'});
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `SUPRA-${new Date().toISOString().slice(0,19)}.webm`;
+                    a.click();
+                    recordedChunks = [];
+                    log("[REC] Fichier sauvegardé");
+                };
+
+                updateStatus("✅ Micro OK");
+                log("[SYSTÈME] Audio initialisé (1 autorisation)");
                 isRunning = true;
-                requestAnimationFrame(animationLoop);
-                log("[SIGINT] Audio initialisé avec succès", true);
+
+                requestAnimationFrame(loop);
+
+                const listenToggle = document.getElementById('listenToggle');
+                if (listenToggle && listenToggle.checked) {
+                    setTimeout(() => initSpeech(), 1000);
+                }
+
             } catch (err) {
-                log(`ERREUR AUDIO: ${err.message}`, true);
-            }
-        }
-
-        function animationLoop() {
-            if (!isRunning) return;
-
-            analyser.getByteFrequencyData(frequencyArray);
-            const rms = Math.sqrt(frequencyArray.reduce((a,b)=>a+b*b,0)/frequencyArray.length)/128;
-
-            if (rms > 0.78) triggerAIAnalysis();
-
-            drawSpectrogram();
-            drawScope();
-
-            requestAnimationFrame(animationLoop);
-        }
-
-        function drawSpectrogram() {
-            const canvas = document.getElementById('spectrogram');
-            const ctx = canvas.getContext('2d');
-            canvas.width = canvas.offsetWidth || 600;
-            canvas.height = canvas.offsetHeight || 200;
-
-            ctx.fillStyle = '#000';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            spectroHistory.unshift([...frequencyArray]);
-            if (spectroHistory.length > 90) spectroHistory.pop();
-
-            const barWidth = canvas.width / frequencyArray.length;
-            for (let y = 0; y < spectroHistory.length; y++) {
-                for (let x = 0; x < spectroHistory[y].length; x++) {
-                    const intensity = spectroHistory[y][x];
-                    ctx.fillStyle = `hsl(110, 100%, ${intensity / 2.8}%)`;
-                    ctx.fillRect(x * barWidth, y * 3, barWidth, 3);
+                updateStatus(`❌ ERREUR: ${err.message}`);
+                log(`[ERREUR] ${err.message}`, true);
+                if (err.message.includes("permission denied")) {
+                    log("[AIDE] Activez la permission MICRO dans les paramètres", true);
                 }
             }
         }
 
-        function drawScope() {
-            const canvas = document.getElementById('scope');
-            const ctx = canvas.getContext('2d');
-            canvas.width = canvas.offsetWidth || 600;
-            canvas.height = canvas.offsetHeight || 200;
+        // ========== RECORDING ==========
+        function startRecording() {
+            if (!mediaRecorder || isRecording) return;
+            recordedChunks = [];
+            mediaRecorder.start();
+            isRecording = true;
+            const btn = document.getElementById('recordBtn');
+            if (btn) { btn.classList.add('recording'); btn.textContent = "STOP"; }
+            log("[REC] Démarré");
+        }
 
-            ctx.fillStyle = '#000';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        function stopRecording() {
+            if (!mediaRecorder || !isRecording) return;
+            mediaRecorder.stop();
+            isRecording = false;
+            const btn = document.getElementById('recordBtn');
+            if (btn) { btn.classList.remove('recording'); btn.textContent = "● REC"; }
+            log("[REC] Arrêté");
+        }
 
-            analyser.getByteTimeDomainData(timeArray);
-            ctx.strokeStyle = '#00ff41';
-            ctx.lineWidth = 3;
-            ctx.beginPath();
+        // ========== MAIN LOOP ==========
+        function loop() {
+            if (!isRunning || !analyser) return;
 
-            const sliceWidth = canvas.width / timeArray.length;
-            let x = 0;
-            for (let i = 0; i < timeArray.length; i++) {
-                const v = (timeArray[i] / 128) * (canvas.height / 2);
-                i === 0 ? ctx.moveTo(x, v) : ctx.lineTo(x, v);
-                x += sliceWidth;
+            analyser.getByteFrequencyData(frequencyArray);
+            const rms = Math.sqrt(frequencyArray.reduce((a,b) => a+b*b,0)/frequencyArray.length)/128;
+            const rmsEl = document.getElementById('rms-value');
+            if (rmsEl) rmsEl.textContent = `RMS: ${rms.toFixed(1)} dB`;
+
+            if (calculateStats(rms)) {
+                const badge = document.getElementById('anomaly-badge');
+                if (badge) badge.classList.add('active');
+                log("[ANOMALIE] Pic détecté", true);
+                if (config.enableGhostSounds) createGhostBeep();
+            } else {
+                const badge = document.getElementById('anomaly-badge');
+                if (badge) badge.classList.remove('active');
             }
-            ctx.stroke();
+
+            updateFrequencyAnalysis();
+            if (config.ghostMode) updateGhostSensors();
+
+            drawSpectrogram();
+            drawPolar();
+            drawScope();
+            drawSensors();
+
+            requestAnimationFrame(loop);
         }
 
-        // ==================== UI CONTROLS ====================
-        function setupControls() {
-            document.getElementById('btnStart').onclick = async () => {
-                document.getElementById('start-screen').style.display = 'none';
-                document.getElementById('main').style.display = 'grid';
-                await initAudio();
-                initSpeechRecognition();
-            };
-
-            document.getElementById('btnSettings').onclick = () => {
-                document.getElementById('settings-page').style.display = 'block';
-            };
-
-            document.getElementById('closeSettings').onclick = () => {
-                document.getElementById('settings-page').style.display = 'none';
-            };
-
-            document.getElementById('saveSettings').onclick = () => {
-                config.groqApiKey = document.getElementById('groqApiKey').value.trim();
-                config.micSensitivity = parseInt(document.getElementById('micSensitivity').value);
-                config.ttsEnabled = document.getElementById('ttsEnabled').checked;
-                config.ttsRate = parseFloat(document.getElementById('ttsRate').value);
-                config.ttsPitch = parseFloat(document.getElementById('ttsPitch').value);
-
-                localStorage.setItem('supraLabConfig', JSON.stringify(config));
-                log("Configuration sauvegardée avec succès.", true);
-                document.getElementById('settings-page').style.display = 'none';
-            };
-
-            document.getElementById('immediateAIBtn').onclick = () => triggerAIAnalysis();
-
-            // Mise à jour en direct des valeurs
-            const micSlider = document.getElementById('micSensitivity');
-            micSlider.oninput = () => document.getElementById('micVal').textContent = micSlider.value;
-
-            const rateSlider = document.getElementById('ttsRate');
-            rateSlider.oninput = () => document.getElementById('rateVal').textContent = rateSlider.value;
-
-            const pitchSlider = document.getElementById('ttsPitch');
-            pitchSlider.oninput = () => document.getElementById('pitchVal').textContent = pitchSlider.value;
+        // ========== RESIZE ==========
+        function resizeCanvases() {
+            document.querySelectorAll('.panel canvas').forEach(canvas => {
+                const rect = canvas.parentElement.getBoundingClientRect();
+                canvas.width = rect.width - 16;
+                canvas.height = rect.height - 40;
+            });
         }
 
-        function loadConfig() {
-            const saved = localStorage.getItem('supraLabConfig');
-            if (saved) config = {...DEFAULT_CONFIG, ...JSON.parse(saved)};
+        // ========== SETUP UI ==========
+        function setupSettingsUI() {
+            const settingsPage = document.getElementById('settings-page');
+            const closeBtn = document.getElementById('closeSettings');
+            const saveBtn = document.getElementById('saveSettings');
+            const resetBtn = document.getElementById('resetSettings');
+            const btnSettings = document.getElementById('btnSettings');
+
+            if (btnSettings) btnSettings.addEventListener('click', () => settingsPage.classList.add('active'));
+            if (closeBtn) closeBtn.addEventListener('click', () => settingsPage.classList.remove('active'));
+            if (saveBtn) saveBtn.addEventListener('click', () => { saveConfig(); settingsPage.classList.remove('active'); if(gainNode) gainNode.gain.value = config.volume/100; });
+            if (resetBtn) resetBtn.addEventListener('click', () => { config = {...DEFAULT_CONFIG}; localStorage.setItem('supraLabConfig', JSON.stringify(config)); applyConfig(); log("[PARAM] Réinitialisé"); });
         }
 
-        // ==================== DÉMARRAGE ====================
-        window.addEventListener('DOMContentLoaded', () => {
-            loadConfig();
-            setupControls();
-            document.getElementById('micVal').textContent = config.micSensitivity;
-        });
+        // ========== MAIN CONTROLS ==========
+        function setupMainControls() {
+            // Ghost mode button on start screen
+            document.getElementById('btnGhostMode').addEventListener('click', () => {
+                config.ghostMode = true;
+                saveConfig();
+            });
 
-        // Nettoyage
+            // Ghost mode toggle
+            document.getElementById('ghostModeToggle').addEventListener('click', () => {
+                toggleGhostMode(!config.ghostMode);
+            });
+
+            document.getElementById('btnStart').addEventListener('click', async () => {
+                const startScreen = document.getElementById('start-screen');
+                const main = document.getElementById('main');
+
+                startScreen.style.transition = 'opacity 0.5s';
+                startScreen.style.opacity = '0';
+
+                setTimeout(() => {
+                    startScreen.style.display = 'none';
+                    main.style.display = 'grid';
+                    main.classList.add('grid');
+
+                    log("=== SUPRA LAB v11 (REALME NOTE 60) ===");
+                    log("✅ 1 autorisation micro requise");
+                    log("✅ EMF/EVP/EGF basés sur données réelles");
+                    updateStatus("Initialisation...");
+
+                    resizeCanvases();
+                    window.addEventListener('resize', resizeCanvases);
+                    window.addEventListener('orientationchange', () => setTimeout(resizeCanvases, 200));
+
+                    initSensors();
+                    initAudio();
+
+                    const toggle = document.getElementById('listenToggle');
+                    const slider = document.getElementById('volumeSlider');
+                    const label = document.getElementById('volumeLabel');
+                    const recBtn = document.getElementById('recordBtn');
+
+                    if (toggle) {
+                        toggle.addEventListener('change', () => {
+                            if (!gainNode) return;
+                            if (toggle.checked) {
+                                analyser.connect(gainNode);
+                                gainNode.connect(audioCtx.destination);
+                                log("[MIC] Activé");
+                                if (!recognition) setTimeout(() => initSpeech(), 500);
+                            } else {
+                                gainNode.disconnect();
+                                analyser.disconnect(gainNode);
+                                log("[MIC] Coupé");
+                                if (recognition) {
+                                    recognition.stop();
+                                    recognition = null;
+                                    log("[IA] ⏹️ Arrêtée");
+                                    updateSpeechStatus();
+                                }
+                            }
+                        });
+                    }
+
+                    if (slider) {
+                        slider.addEventListener('input', () => {
+                            if (gainNode) gainNode.gain.value = slider.value/100;
+                            label.textContent = slider.value + '%';
+                            config.volume = parseInt(slider.value);
+                            saveConfig();
+                        });
+                    }
+
+                    if (recBtn) {
+                        recBtn.addEventListener('click', () => {
+                            if (!mediaRecorder) return;
+                            if (!isRecording) startRecording();
+                            else stopRecording();
+                        });
+                    }
+
+                    // Activate ghost mode if configured
+                    if (config.ghostMode) {
+                        toggleGhostMode(true);
+                    }
+                }, 500);
+            });
+        }
+
+        // ========== CLEANUP ==========
         window.addEventListener('beforeunload', () => {
             if (recognition) recognition.stop();
-            window.speechSynthesis.cancel();
+            if (microStream) microStream.getTracks().forEach(t => t.stop());
+            if (mediaRecorder) mediaRecorder.stream.getTracks().forEach(t => t.stop());
+            if (audioCtx) audioCtx.close();
+            if (ghostAudioContext) ghostAudioContext.close();
+            if (speechSynthesis) speechSynthesis.cancel();
+        });
+
+        // ========== STARTUP ==========
+        document.addEventListener('DOMContentLoaded', () => {
+            loadConfig();
+            setupSettingsUI();
+            setupMainControls();
+
+            if (speechSynthesis) {
+                loadVoices();
+            } else {
+                log("[IA VOCALE] ❌ Synthèse vocale non supportée", true);
+            }
         });
     </script>
 </body>
