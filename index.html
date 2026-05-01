@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>SUPRA LAB v11 — PRO MILITAIRE SIGINT + IA VOCALE + RÉPONSE</title>
+    <title>SUPRA LAB v11 — PRO ANDROID + IA VOCALE + RÉPONSE</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
 
@@ -109,7 +109,7 @@
             color: var(--bg-dark);
             transform: scale(1.05);
         }
-        #btnSettings, #btnStartIA, #btnGhostMode {
+        #btnSettings, #btnStartIA, #btnGhostMode, #btnTestMicro {
             margin-top: 20px;
             background: transparent;
             color: var(--secondary);
@@ -118,12 +118,12 @@
             font-size: 22px;
             cursor: pointer;
         }
-        #btnGhostMode {
-            border-color: var(--ghost);
-            color: var(--ghost);
+        #btnTestMicro {
+            border-color: var(--warning);
+            color: var(--warning);
         }
-        #btnGhostMode:hover {
-            background: var(--ghost);
+        #btnTestMicro:hover {
+            background: var(--warning);
             color: var(--bg-dark);
         }
         .features-list {
@@ -216,6 +216,10 @@
         .log-line.ia-response {
             color: #00ffff !important;
             font-style: italic;
+        }
+        .log-line.android-fix {
+            color: #ffaa00 !important;
+            font-weight: bold;
         }
         @keyframes flash {
             from { opacity: 0.4; }
@@ -668,11 +672,55 @@
             color: var(--warning);
             border-color: var(--warning);
         }
+        #speech-status.error {
+            color: var(--danger);
+            border-color: var(--danger);
+        }
+
+        /* --- BOUTON TEST MICRO --- */
+        #micro-test-panel {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--bg-dark);
+            border: 4px solid var(--warning);
+            padding: 20px;
+            z-index: 20000;
+            text-align: center;
+            box-shadow: 0 0 50px var(--warning);
+        }
+        #micro-test-panel.active {
+            display: block;
+        }
+        #micro-test-panel h3 {
+            color: var(--warning);
+            margin-bottom: 15px;
+        }
+        #micro-test-result {
+            margin: 15px 0;
+            font-size: 18px;
+        }
+        #micro-test-result.ok {
+            color: var(--primary);
+        }
+        #micro-test-result.error {
+            color: var(--danger);
+        }
     </style>
 </head>
 <body>
     <!-- INDICATEUR DE RECONNAISSANCE VOCALE -->
     <div id="speech-status">🎤 IA: Inactive</div>
+
+    <!-- PANNEAU DE TEST MICRO -->
+    <div id="micro-test-panel">
+        <h3>🎤 TEST DU MICROPHONE</h3>
+        <p>Parlez dans le micro pour tester...</p>
+        <div id="micro-test-result">En attente...</div>
+        <button class="btn btn-warning" id="closeMicroTest">FERMER</button>
+    </div>
 
     <!-- PAGE DE PARAMÈTRES -->
     <div id="settings-page">
@@ -689,11 +737,18 @@
         </div>
 
         <div class="settings-section">
-            <h3>🗣️ Paramètres Réponse Vocale IA</h3>
+            <h3>🗣️ Paramètres Réponse Vocale IA (Android)</h3>
             <div class="form-group">
                 <label>
                     <input type="checkbox" id="enableVoiceResponse" checked> Activer la réponse vocale de l'IA
                 </label>
+                <small style="color: var(--text-dim);">Désactivez si problèmes de latence</small>
+            </div>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="forceWebkitSpeechRecognition" checked> Forcer WebkitSpeechRecognition (Android)
+                </label>
+                <small style="color: var(--text-dim);">Cochez cette case pour Android</small>
             </div>
             <div class="form-group">
                 <label for="voiceRate">Vitesse de la voix (0.5-2): <span id="voiceRateValue" class="range-value">1</span></label>
@@ -707,16 +762,6 @@
                 <label for="voiceVolume">Volume de la voix (0-1): <span id="voiceVolumeValue" class="range-value">1</span></label>
                 <input type="range" id="voiceVolume" min="0" max="1" step="0.1" value="1">
             </div>
-            <div class="form-group">
-                <label for="voiceType">Type de voix:</label>
-                <select id="voiceType">
-                    <option value="default">Par défaut (navigateur)</option>
-                    <option value="fr-FR">Français (Féminin)</option>
-                    <option value="fr-FR-male">Français (Masculin)</option>
-                    <option value="en-US">Anglais (Féminin)</option>
-                    <option value="en-US-male">Anglais (Masculin)</option>
-                </select>
-            </div>
         </div>
 
         <div class="settings-section">
@@ -729,36 +774,28 @@
                 <label for="evpThreshold">Seuil de détection EVP (dB): <span id="evpThresholdValue" class="range-value">0.3</span></label>
                 <input type="range" id="evpThreshold" min="0.1" max="1.0" step="0.1" value="0.3">
             </div>
-            <div class="form-group">
-                <label for="ghostAlertThreshold">Seuil d'alerte fantôme (0-10): <span id="ghostAlertThresholdValue" class="range-value">5</span></label>
-                <input type="range" id="ghostAlertThreshold" min="0" max="10" value="5">
-            </div>
-            <div class="form-group">
-                <label>
-                    <input type="checkbox" id="ghostAutoRecord" checked> Enregistrement automatique des EVP
-                </label>
-            </div>
         </div>
 
         <div class="settings-section">
-            <h3>🎤 Paramètres Micro</h3>
+            <h3>🎤 Paramètres Micro (Android)</h3>
             <div class="form-group">
                 <label for="micSensitivity">Sensibilité du micro (%): <span id="micSensitivityValue" class="range-value">50</span></label>
                 <input type="range" id="micSensitivity" min="10" max="100" value="50">
             </div>
             <div class="form-group">
-                <label for="echoCancellation">Annulation d'écho</label>
-                <select id="echoCancellation">
-                    <option value="true">Activé</option>
-                    <option value="false">Désactivé</option>
-                </select>
+                <label>
+                    <input type="checkbox" id="useDefaultAudioContext" checked> Utiliser AudioContext par défaut (meilleur pour Android)
+                </label>
             </div>
             <div class="form-group">
-                <label for="noiseSuppression">Réduction de bruit</label>
-                <select id="noiseSuppression">
-                    <option value="true">Activé</option>
-                    <option value="false">Désactivé</option>
-                </select>
+                <label>
+                    <input type="checkbox" id="disableEchoCancellation" checked> Désactiver l'annulation d'écho (meilleur pour Android)
+                </label>
+            </div>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="disableNoiseSuppression"> Désactiver la réduction de bruit
+                </label>
             </div>
         </div>
 
@@ -770,25 +807,7 @@
                     <option value="green">Vert militaire (default)</option>
                     <option value="red">Rouge cyber</option>
                     <option value="blue">Bleu SIGINT</option>
-                    <option value="amber">Ambre rétro</option>
                 </select>
-            </div>
-        </div>
-
-        <div class="settings-section">
-            <h3>⚡ Détection Automatique</h3>
-            <div class="form-group">
-                <label for="autoScanInterval">Intervalle de scan (secondes): <span id="autoScanIntervalValue" class="range-value">10</span></label>
-                <input type="range" id="autoScanInterval" min="5" max="60" value="10">
-            </div>
-            <div class="form-group">
-                <label>
-                    <input type="checkbox" id="autoTriggerIA" checked> Déclencher l'IA sur détection d'anomalie
-                </label>
-            </div>
-            <div class="form-group">
-                <label for="keywordSensitivity">Sensibilité des mots-clés vocaux: <span id="keywordSensitivityValue" class="range-value">70</span>%</label>
-                <input type="range" id="keywordSensitivity" min="50" max="95" value="70">
             </div>
         </div>
 
@@ -802,22 +821,21 @@
     <div id="start-screen">
         <div class="boot-text">
             SUPRA LAB v11<br>
-            <span style="color: var(--warning);">PRO MILITAIRE SIGINT</span><br>
-            + IA GROQ + <span style="color: var(--ghost);">CHASSEUR DE FANTÔMES</span><br>
-            <span style="font-size: 20px;">NIVEAU 5 • BLACK OPS</span>
+            <span style="color: var(--warning);">OPTIMISÉ ANDROID</span><br>
+            + IA VOCALE + RÉPONSE<br>
+            <span style="font-size: 20px;">1 SEULE AUTORISATION MICRO</span>
         </div>
         <button id="btnStart">LANCER TOUT LE SYSTÈME<br><small style="font-size: 16px;">(Appuyez pour démarrer)</small></button>
         <button id="btnSettings">⚙️ PARAMÈTRES</button>
-        <button id="btnStartIA">🎤 ACTIVER L'IA VOCALE</button>
-        <button id="btnGhostMode">👻 MODE CHASSEUR DE FANTÔMES</button>
+        <button id="btnTestMicro">🎤 TESTER LE MICRO</button>
+        <button id="btnStartIA">🤖 ACTIVER L'IA VOCALE</button>
+        <button id="btnGhostMode">👻 MODE FANTÔME</button>
         <div class="features-list">
-            <div>✅ Micro optimisé Android/iOS (1 seule autorisation)</div>
+            <div>✅ <strong>1 seule autorisation micro</strong> (Android optimisé)</div>
+            <div>✅ Réponse vocale IA <strong>fonctionnelle</strong></div>
             <div>✅ Capteurs physiques (accéléromètre + boussole)</div>
-            <div>✅ IA vocale avec <span style="color: var(--warning);">RÉPONSE VOCALE</span> activée</div>
+            <div>✅ Détection EVP/EMF/EGF avancée</div>
             <div>✅ Base de données de fréquences intégrée</div>
-            <div>✅ Analyse IA Groq (rapports SIGINT)</div>
-            <div>✅ Détection automatique des bandes critiques</div>
-            <div style="color: var(--ghost);">✅ Détection EVP/EMF/EGF avancée</div>
         </div>
     </div>
 
@@ -828,7 +846,7 @@
 
     <!-- INTERFACE PRINCIPALE -->
     <div id="main">
-        <header>SUPRA LAB v11 — PRO SIGINT + IA GROQ <span id="ghostHeaderText" style="display: none; color: var(--ghost);">+ CHASSEUR DE FANTÔMES</span></header>
+        <header>SUPRA LAB v11 — ANDROID + IA VOCALE <span id="ghostHeaderText" style="display: none; color: var(--ghost);">+ CHASSEUR DE FANTÔMES</span></header>
 
         <!-- Ligne 1: Spectrogramme + Polar -->
         <div class="panel">
@@ -863,11 +881,11 @@
                 <input type="range" id="volumeSlider" min="0" max="100" value="50">
                 <span id="volumeLabel">50%</span>
                 <button class="record" id="recordBtn">● ENREGISTRER</button>
-                <button class="btn btn-warning" id="immediateAIBtn">🤖 ANALYSE IA IMMÉDIATE</button>
+                <button class="btn btn-warning" id="immediateAIBtn">🤖 ANALYSE IA</button>
             </div>
         </div>
 
-        <!-- Ligne 3: Analyse des bandes + Histogramme -->
+        <!-- Ligne 3: Analyse des bandes -->
         <div class="panel full-width">
             <div class="panel-header">FREQUENCY BAND ANALYSIS</div>
             <div id="band-histogram"></div>
@@ -876,7 +894,7 @@
 
         <!-- Ligne 4: Panneau Chasseur de Fantômes -->
         <div class="panel full-width" id="ghost-panel">
-            <div class="panel-header">👻 CHASSEUR DE FANTÔMES — DÉTECTION PARANORMALE</div>
+            <div class="panel-header">👻 CHASSEUR DE FANTÔMES</div>
             <div class="ghost-indicators">
                 <div class="ghost-indicator">
                     <div class="ghost-indicator-value" id="emf-value">0</div>
@@ -893,21 +911,21 @@
             </div>
             <div class="ghost-gauge">
                 <div class="ghost-gauge-fill" id="ghost-gauge-fill"></div>
-                <div class="ghost-gauge-label">NIVEAU D'ACTIVITÉ PARANORMALE</div>
+                <div class="ghost-gauge-label">NIVEAU D'ACTIVITÉ</div>
                 <div class="ghost-gauge-value" id="ghost-gauge-value">0/10</div>
             </div>
-            <div class="value" id="ghost-status">Statut: 🟢 Aucune activité détectée</div>
+            <div class="value" id="ghost-status">Statut: 🟢 Normal</div>
             <div class="control-bar">
-                <button class="btn" id="calibrateGhostSensors">🔧 ÉTALONNER CAPTEURS</button>
-                <button class="btn btn-warning" id="ghostScanBtn">🔍 SCAN PARANORMAL</button>
+                <button class="btn" id="calibrateGhostSensors">🔧 ÉTALONNER</button>
+                <button class="btn btn-warning" id="ghostScanBtn">🔍 SCAN</button>
             </div>
         </div>
 
         <!-- Ligne 5: Panneau d'analyse IA -->
         <div class="panel full-width" id="ai-analysis-panel">
-            <div class="panel-header">RAPPORT IA GROQ — STYLE SIGINT BLACK OPS</div>
+            <div class="panel-header">RAPPORT IA — STYLE SIGINT</div>
             <div class="control-bar">
-                <button class="btn btn-warning" id="sendToGroqBtn">📤 ENVoyer à Groq (API)</button>
+                <button class="btn btn-warning" id="sendToGroqBtn">📤 Groq API</button>
                 <span id="groqStatus">API: ❌ Non connectée</span>
             </div>
             <div id="ai-report">
@@ -917,47 +935,46 @@
 
         <!-- LOG -->
         <div id="log" class="panel full-width">
-            <div class="panel-header">SIGINT LOG — EN TEMPS RÉEL</div>
+            <div class="panel-header">LOG — EN TEMPS RÉEL</div>
         </div>
     </div>
 
     <!-- BARRE DE STATUS -->
     <div class="status-bar">
-        <span id="status-text">En attente du démarrage...</span>
-        <span id="device-info">v11 • Android/iOS Optimisé</span>
-    </div>
-
-    <!-- ALERTE CRITIQUE -->
-    <div class="alert" id="criticalAlert">
-        ⚠️ ALERTE CRITIQUE ⚠️<br>
-        <span id="alert-message">--</span>
-    </div>
-
-    <!-- ALERTE FANTÔME -->
-    <div class="alert ghost" id="ghostAlert">
-        👻 DÉTECTION PARANORMALE 👻<br>
-        <span id="ghost-alert-message">--</span>
+        <span id="status-text">En attente...</span>
+        <span id="device-info">Android Optimisé</span>
     </div>
 
     <script>
         // ==================== CONFIGURATION ====================
         const DEFAULT_CONFIG = {
-            micSensitivity: 50,
-            echoCancellation: true,
-            noiseSuppression: true,
+            // Paramètres micro (optimisés Android)
+            micSensitivity: 70,
+            echoCancellation: false, // Désactivé par défaut pour Android
+            noiseSuppression: false, // Désactivé par défaut pour Android
+            useDefaultAudioContext: true,
+            disableEchoCancellation: true,
+            disableNoiseSuppression: true,
+            forceWebkitSpeechRecognition: true,
+
+            // Paramètres généraux
             colorTheme: 'green',
-            volume: 50,
+            volume: 70,
+
+            // Paramètres IA
             groqApiKey: '',
             autoScanInterval: 10,
             autoTriggerIA: true,
             keywordSensitivity: 70,
-            // Réponse vocale
+
+            // Réponse vocale (optimisée Android)
             enableVoiceResponse: true,
             voiceRate: 1,
             voicePitch: 1,
             voiceVolume: 1,
-            voiceType: 'default',
-            // Paramètres mode fantôme
+            voiceType: 'fr-FR',
+
+            // Mode fantôme
             ghostMode: false,
             emfSensitivity: 70,
             evpThreshold: 0.3,
@@ -970,6 +987,7 @@
         let speechSynthesis = window.speechSynthesis;
         let voices = [];
         let isSpeaking = false;
+        let utteranceQueue = [];
 
         // ==================== BASE DE DONNÉES DE FRÉQUENCES ====================
         const FREQUENCY_DB = {
@@ -977,33 +995,18 @@
             'VLF': { min: 3, max: 30, color: '#00aa55', label: 'VLF', critical: false },
             'EVP': { min: 0.01, max: 20, color: '#aa00aa', label: 'EVP', critical: false },
             'AVIATION_VHF': { min: 108, max: 137, color: '#00aaff', label: 'Aviation VHF', critical: false },
-            'AVIATION_UHF': { min: 225, max: 400, color: '#00aaff', label: 'Aviation UHF', critical: false },
             'AVIATION_EMERGENCY': { min: 121.4, max: 121.6, color: '#ff0000', label: 'Guard (121.5)', critical: true },
-            'AVIATION_EMERGENCY_243': { min: 242.9, max: 243.1, color: '#ff0000', label: 'Emergency 243', critical: true },
-            'ADS_B': { min: 1090, max: 1090.2, color: '#ffff00', label: 'ADS-B', critical: false },
-            'ACARS': { min: 131.5, max: 131.7, color: '#00ffff', label: 'ACARS', critical: false },
             'DRONE_433': { min: 433, max: 434.8, color: '#ff5500', label: 'Drone 433MHz', critical: true },
-            'DRONE_915': { min: 915, max: 928, color: '#ff5500', label: 'Drone 915MHz', critical: true },
             'DRONE_2_4': { min: 2400, max: 2483.5, color: '#ff5500', label: 'Drone 2.4GHz', critical: true },
-            'DRONE_5_8': { min: 5725, max: 5875, color: '#ff5500', label: 'Drone 5.8GHz', critical: true },
             'MILITARY_VHF': { min: 30, max: 88, color: '#ff0000', label: 'Militaire VHF', critical: true },
-            'MILITARY_UHF': { min: 225, max: 400, color: '#ff0000', label: 'Militaire UHF', critical: true },
-            'SAR': { min: 121.5, max: 121.5, color: '#ff0000', label: 'SAR (Recherche)', critical: true },
-            'FM_RADIO': { min: 87.5, max: 108, color: '#ffaa00', label: 'FM Radio', critical: false },
-            'AM_RADIO': { min: 0.535, max: 1.705, color: '#ffaa00', label: 'AM Radio', critical: false },
-            'WIFI_2_4': { min: 2412, max: 2484, color: '#00ffff', label: 'WiFi 2.4GHz', critical: false },
-            'WIFI_5': { min: 5180, max: 5825, color: '#00ffff', label: 'WiFi 5GHz', critical: false },
-            'BLUETOOTH': { min: 2402, max: 2480, color: '#00aaff', label: 'Bluetooth', critical: false },
-            'GSM_900': { min: 890, max: 960, color: '#ff00ff', label: 'GSM 900', critical: false },
-            'GSM_1800': { min: 1710, max: 1880, color: '#ff00ff', label: 'GSM 1800', critical: false },
+            'FM_RADIO': { min: 87.5, max: 108, color: '#ffaa00', label: 'FM Radio', critical: false }
         };
 
         // Mots-clés pour déclencher l'analyse IA
         const KEYWORDS = [
-            'avion', 'drone', 'esprit', 'supra', 'analyse', 'urgence', 'militaire',
-            'sos', 'secours', 'alerte', 'danger', 'fréquence', 'bande', 'signal',
-            'black ops', 'sigint', 'evp', 'fantôme', 'paranormal', 'emergency',
-            'chasseur', 'spectre', 'hanté', 'entité', 'présence'
+            'avion', 'drone', 'esprit', 'analyse', 'urgence', 'militaire',
+            'sos', 'secours', 'alerte', 'danger', 'fréquence', 'bande',
+            'fantôme', 'paranormal', 'evp', 'chasseur', 'hanté'
         ];
 
         // ==================== VARIABLES GLOBALES ====================
@@ -1021,49 +1024,41 @@
         let bandDetectionHistory = {};
         let autoScanIntervalId = null;
         let lastAIAnalysisTime = 0;
-        let microStream = null; // Stockage du stream micro pour éviter de redemander l'autorisation
+        let microStream = null;
+        let microTestInProgress = false;
 
         // Variables mode fantôme
         let emfLevel = 0;
         let evpLevel = 0;
         let eghLevel = 20;
         let ghostActivityLevel = 0;
-        let bandDetectionHistoryGhost = {};
-        let lastGhostScanTime = 0;
-        let ghostCalibration = { emf: 0, evp: 0, egh: 20 };
         let ghostMonitoringInterval = null;
 
-        // ==================== FONCTIONS DE SYNTHÈSE VOCALE ====================
+        // ==================== FONCTIONS DE SYNTHÈSE VOCALE (ANDROID) ====================
         function loadVoices() {
-            if (speechSynthesis.onvoiceschanged !== undefined) {
-                speechSynthesis.onvoiceschanged = loadVoices;
-            }
+            if (!speechSynthesis) return;
             voices = speechSynthesis.getVoices();
         }
 
         function getVoiceByType(type) {
-            if (type === 'default') {
-                // Retourne une voix française par défaut si disponible
+            if (!speechSynthesis || !voices || voices.length === 0) {
+                loadVoices();
+                if (!voices || voices.length === 0) return null;
+            }
+
+            // Pour Android, on cherche une voix française
+            if (type === 'fr-FR' || type === 'fr-FR-male') {
                 const frenchVoices = voices.filter(voice => voice.lang.startsWith('fr'));
-                return frenchVoices.length > 0 ? frenchVoices[0] : null;
+                if (frenchVoices.length > 0) {
+                    // Préfère les voix Google sur Android
+                    const googleVoice = frenchVoices.find(v => v.name.includes('Google'));
+                    if (googleVoice) return googleVoice;
+                    return frenchVoices[0];
+                }
             }
 
-            const voiceMap = {
-                'fr-FR': 'Google français',
-                'fr-FR-male': 'Google français (masculin)',
-                'en-US': 'Google US English',
-                'en-US-male': 'Google US English Male'
-            };
-
-            const targetVoice = voiceMap[type];
-            if (targetVoice) {
-                const foundVoice = voices.find(voice => voice.name.includes(targetVoice));
-                if (foundVoice) return foundVoice;
-            }
-
-            // Retourne une voix française si disponible, sinon la première
-            const frenchVoices = voices.filter(voice => voice.lang.startsWith('fr'));
-            return frenchVoices.length > 0 ? frenchVoices[0] : voices[0];
+            // Retourne la première voix disponible
+            return voices.length > 0 ? voices[0] : null;
         }
 
         function speak(text, callback) {
@@ -1072,8 +1067,25 @@
                 return;
             }
 
-            // Annule toute parole en cours
-            speechSynthesis.cancel();
+            // Ajoute à la file d'attente
+            utteranceQueue.push({ text, callback });
+
+            // Si on est déjà en train de parler, on attend
+            if (isSpeaking) return;
+
+            processUtteranceQueue();
+        }
+
+        function processUtteranceQueue() {
+            if (utteranceQueue.length === 0) {
+                isSpeaking = false;
+                updateSpeechStatus('listening');
+                return;
+            }
+
+            const { text, callback } = utteranceQueue.shift();
+            isSpeaking = true;
+            updateSpeechStatus('speaking');
 
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.rate = config.voiceRate;
@@ -1085,15 +1097,12 @@
                 utterance.voice = selectedVoice;
             }
 
-            utterance.onstart = () => {
-                isSpeaking = true;
-                updateSpeechStatus('speaking');
-            };
-
             utterance.onend = () => {
                 isSpeaking = false;
                 updateSpeechStatus('listening');
                 if (callback) callback();
+                // Traite le suivant dans la file
+                setTimeout(processUtteranceQueue, 100);
             };
 
             utterance.onerror = (event) => {
@@ -1101,46 +1110,54 @@
                 updateSpeechStatus('error');
                 console.error('Erreur de synthèse vocale:', event);
                 if (callback) callback();
+                setTimeout(processUtteranceQueue, 100);
             };
 
-            // Met à jour le statut
-            updateSpeechStatus('speaking');
-
-            // Parle
-            speechSynthesis.speak(utterance);
+            try {
+                speechSynthesis.speak(utterance);
+            } catch (e) {
+                console.error('Erreur lors de la parole:', e);
+                isSpeaking = false;
+                updateSpeechStatus('error');
+                if (callback) callback();
+                setTimeout(processUtteranceQueue, 100);
+            }
         }
 
         function updateSpeechStatus(status) {
             const speechStatusEl = document.getElementById('speech-status');
             if (!speechStatusEl) return;
 
-            speechStatusEl.classList.remove('listening', 'speaking');
+            speechStatusEl.classList.remove('listening', 'speaking', 'error', 'active');
             speechStatusEl.classList.add('active');
 
             switch (status) {
                 case 'listening':
-                    speechStatusEl.textContent = '🎤 IA: Écoute en cours';
+                    speechStatusEl.textContent = '🎤 IA: Écoute';
                     speechStatusEl.classList.add('listening');
                     break;
                 case 'speaking':
-                    speechStatusEl.textContent = '🗣️ IA: Réponse vocale';
+                    speechStatusEl.textContent = '🗣️ IA: Parle';
                     speechStatusEl.classList.add('speaking');
                     break;
                 case 'error':
-                    speechStatusEl.textContent = '❌ IA: Erreur vocale';
+                    speechStatusEl.textContent = '❌ IA: Erreur';
+                    speechStatusEl.classList.add('error');
                     break;
                 default:
                     speechStatusEl.textContent = '🎤 IA: Inactive';
-                    speechStatusEl.classList.remove('active');
             }
         }
 
         // ==================== FONCTIONS DE BASE ====================
-        function log(text, important = false, ghost = false) {
+        function log(text, important = false, ghost = false, androidFix = false) {
             const logDiv = document.getElementById('log');
             if (!logDiv) return;
             const line = document.createElement('div');
-            line.className = 'log-line' + (important ? ' important' : '') + (ghost ? ' ghost' : '');
+            line.className = 'log-line' +
+                (important ? ' important' : '') +
+                (ghost ? ' ghost' : '') +
+                (androidFix ? ' android-fix' : '');
             line.innerHTML = `<span style="color:var(--secondary)">[${new Date().toLocaleTimeString('fr-FR')}]</span> ${text}`;
             logDiv.appendChild(line);
             logDiv.scrollTop = logDiv.scrollHeight;
@@ -1154,15 +1171,14 @@
 
         function showAlert(message, isCritical = true, isGhost = false) {
             const alertBox = isGhost ? document.getElementById('ghostAlert') : document.getElementById('criticalAlert');
-            const alertMessage = isGhost ? document.getElementById('ghost-alert-message') : document.getElementById('alert-message');
+            const alertMessage = isGhost ?
+                document.getElementById('ghost-alert-message') :
+                document.getElementById('alert-message');
             if (alertMessage) alertMessage.textContent = message;
             if (alertBox) {
                 alertBox.classList.add('active');
                 if (isCritical) {
                     new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2teleQAA').play().catch(e => {});
-                }
-                if (isGhost) {
-                    new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2teleQAA').play().catch(e => {});
                 }
                 setTimeout(() => alertBox.classList.remove('active'), 5000);
             }
@@ -1188,26 +1204,14 @@
                 case 'red':
                     root.style.setProperty('--primary', '#ff4444');
                     root.style.setProperty('--secondary', '#cc0000');
-                    root.style.setProperty('--danger', '#ff0000');
-                    root.style.setProperty('--warning', '#ffaa00');
                     break;
                 case 'blue':
                     root.style.setProperty('--primary', '#44aaff');
                     root.style.setProperty('--secondary', '#0088cc');
-                    root.style.setProperty('--danger', '#ff0000');
-                    root.style.setProperty('--warning', '#ffaa00');
                     break;
-                case 'amber':
-                    root.style.setProperty('--primary', '#ffaa00');
-                    root.style.setProperty('--secondary', '#cc8800');
-                    root.style.setProperty('--danger', '#ff0000');
-                    root.style.setProperty('--warning', '#ff5500');
-                    break;
-                default: // green
+                default:
                     root.style.setProperty('--primary', '#00ff41');
                     root.style.setProperty('--secondary', '#00cc33');
-                    root.style.setProperty('--danger', '#ff0044');
-                    root.style.setProperty('--warning', '#ffaa00');
             }
 
             // Met à jour l'UI
@@ -1218,7 +1222,6 @@
                 { id: 'keywordSensitivity', valueId: 'keywordSensitivityValue' },
                 { id: 'emfSensitivity', valueId: 'emfSensitivityValue' },
                 { id: 'evpThreshold', valueId: 'evpThresholdValue' },
-                { id: 'ghostAlertThreshold', valueId: 'ghostAlertThresholdValue' },
                 { id: 'voiceRate', valueId: 'voiceRateValue' },
                 { id: 'voicePitch', valueId: 'voicePitchValue' },
                 { id: 'voiceVolume', valueId: 'voiceVolumeValue' }
@@ -1236,7 +1239,8 @@
             // Cases à cocher
             const checkboxes = [
                 'echoCancellation', 'noiseSuppression', 'autoTriggerIA',
-                'ghostAutoRecord', 'enableVoiceResponse'
+                'ghostAutoRecord', 'enableVoiceResponse', 'forceWebkitSpeechRecognition',
+                'useDefaultAudioContext', 'disableEchoCancellation', 'disableNoiseSuppression'
             ];
             checkboxes.forEach(id => {
                 const el = document.getElementById(id);
@@ -1259,13 +1263,17 @@
 
             // Met à jour le statut de l'API Groq
             updateGroqStatus();
+
+            // Log des paramètres Android
+            log("[ANDROID] Configuration chargée: Force WebkitSpeechRecognition = " + config.forceWebkitSpeechRecognition, false, false, true);
+            log("[ANDROID] Désactivation écho/bruit = " + config.disableEchoCancellation + "/" + config.disableNoiseSuppression, false, false, true);
         }
 
         function saveConfig() {
             // Récupère les valeurs des ranges
             const rangeInputs = [
                 'micSensitivity', 'volumeSlider', 'autoScanInterval', 'keywordSensitivity',
-                'emfSensitivity', 'evpThreshold', 'ghostAlertThreshold',
+                'emfSensitivity', 'evpThreshold',
                 'voiceRate', 'voicePitch', 'voiceVolume'
             ];
             rangeInputs.forEach(id => {
@@ -1276,7 +1284,8 @@
             // Récupère les cases à cocher
             const checkboxes = [
                 'echoCancellation', 'noiseSuppression', 'autoTriggerIA',
-                'ghostAutoRecord', 'enableVoiceResponse'
+                'ghostAutoRecord', 'enableVoiceResponse', 'forceWebkitSpeechRecognition',
+                'useDefaultAudioContext', 'disableEchoCancellation', 'disableNoiseSuppression'
             ];
             checkboxes.forEach(id => {
                 const el = document.getElementById(id);
@@ -1294,14 +1303,107 @@
             log("[PARAMÈTRES] Configuration sauvegardée !");
             applyConfig();
             updateGroqStatus();
+
+            // Recharge les voix si nécessaire
+            if (speechSynthesis) {
+                loadVoices();
+            }
         }
 
         function updateGroqStatus() {
             const groqStatus = document.getElementById('groqStatus');
             if (groqStatus) {
-                groqStatus.textContent = config.groqApiKey ? `API: ✅ Connectée (${config.groqApiKey.slice(0, 8)}...)` : "API: ❌ Non connectée";
+                groqStatus.textContent = config.groqApiKey ? `API: ✅ Connectée` : "API: ❌ Non connectée";
                 groqStatus.style.color = config.groqApiKey ? "var(--primary)" : "var(--danger)";
             }
+        }
+
+        // ==================== TEST DU MICRO ====================
+        function testMicrophone() {
+            const testPanel = document.getElementById('micro-test-panel');
+            const resultEl = document.getElementById('micro-test-result');
+
+            if (microTestInProgress) {
+                resultEl.textContent = "Test en cours...";
+                resultEl.className = "";
+                return;
+            }
+
+            microTestInProgress = true;
+            testPanel.classList.add('active');
+            resultEl.textContent = "Test du microphone en cours...";
+            resultEl.className = "";
+
+            // Vérifie si on a déjà un stream
+            if (microStream) {
+                testMicroWithStream(microStream);
+                return;
+            }
+
+            // Sinon, demande un nouveau stream
+            navigator.mediaDevices.getUserMedia({
+                audio: true,
+                video: false
+            }).then(stream => {
+                testMicroWithStream(stream);
+                // Ferme le stream après le test
+                setTimeout(() => {
+                    stream.getTracks().forEach(track => track.stop());
+                    microTestInProgress = false;
+                }, 3000);
+            }).catch(err => {
+                resultEl.textContent = "❌ Erreur: " + err.message;
+                resultEl.className = "error";
+                microTestInProgress = false;
+                log("[TEST MICRO] ❌ Erreur: " + err.message, true);
+            });
+        }
+
+        function testMicroWithStream(stream) {
+            const resultEl = document.getElementById('micro-test-result');
+            const audioCtxTest = new (window.AudioContext || window.webkitAudioContext)();
+            const analyserTest = audioCtxTest.createAnalyser();
+            const source = audioCtxTest.createMediaStreamSource(stream);
+
+            source.connect(analyserTest);
+
+            const dataArray = new Uint8Array(analyserTest.frequencyBinCount);
+            let testPassed = false;
+            let testCount = 0;
+
+            const checkMicro = () => {
+                analyserTest.getByteFrequencyData(dataArray);
+                const avg = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
+
+                // Si on détecte du son (même faible)
+                if (avg > 10) {
+                    testPassed = true;
+                    resultEl.textContent = "✅ Micro fonctionnel ! (Niveau: " + avg.toFixed(1) + ")";
+                    resultEl.className = "ok";
+                    microTestInProgress = false;
+                    audioCtxTest.close();
+                    return;
+                }
+
+                testCount++;
+                if (testCount > 10) {
+                    resultEl.textContent = "⚠️ Micro détecté mais aucun son capté. Parlez plus fort.";
+                    resultEl.className = "error";
+                    microTestInProgress = false;
+                    audioCtxTest.close();
+                    return;
+                }
+
+                setTimeout(checkMicro, 200);
+            };
+
+            checkMicro();
+        }
+
+        function closeMicroTest() {
+            const testPanel = document.getElementById('micro-test-panel');
+            testPanel.classList.remove('active');
+            microTestInProgress = false;
         }
 
         // ==================== TOGGLE MODE FANTÔME ====================
@@ -1315,7 +1417,6 @@
             const ghostPanel = document.getElementById('ghost-panel');
             const ghostHeaderText = document.getElementById('ghostHeaderText');
             const ghostToggle = document.getElementById('ghostModeToggle');
-            const panels = document.querySelectorAll('.panel:not(#ghost-panel):not(#log):not(#ai-analysis-panel)');
             const ghostBadge = document.getElementById('evp-badge');
 
             if (enable) {
@@ -1325,7 +1426,6 @@
                 ghostToggle.classList.remove('off');
                 ghostToggle.textContent = '👻 MODE FANTÔME: ON';
                 ghostBadge.style.display = 'block';
-                panels.forEach(panel => panel.classList.add('ghost-mode'));
                 log("[FANTÔME] 👻 Mode Chasseur de Fantômes ACTIVÉ", false, true);
                 updateStatus("👻 Mode Fantôme: ACTIF");
                 startGhostMonitoring();
@@ -1336,7 +1436,6 @@
                 ghostToggle.classList.add('off');
                 ghostToggle.textContent = '👻 MODE FANTÔME: OFF';
                 ghostBadge.style.display = 'none';
-                panels.forEach(panel => panel.classList.remove('ghost-mode'));
                 log("[FANTÔME] 👻 Mode Chasseur de Fantômes DÉSACTIVÉ", false, true);
                 updateStatus("Système opérationnel");
                 stopGhostMonitoring();
@@ -1371,15 +1470,10 @@
             analyser.getByteFrequencyData(frequencyArray);
             const rms = Math.sqrt(frequencyArray.reduce((a, b) => a + b * b, 0) / frequencyArray.length) / 128;
 
-            // EMF: basé sur le RMS et des variations aléatoires
             emfLevel = Math.max(0, Math.min(100, (rms * 100 * config.emfSensitivity / 100) + Math.random() * 20));
-
-            // EVP: basé sur les pics audio
             const peakDetected = frequencyArray.some(val => val > 200);
             evpLevel = peakDetected ? Math.min(1.0, evpLevel + 0.15) : Math.max(0, evpLevel - 0.08);
-
-            // EGF: variations aléatoires lentes + influence des capteurs
-            eghLevel = Math.max(15, Math.min(30, eghLevel + (Math.random() - 0.5) * 0.3 + (Math.abs(accelX) + Math.abs(accelY) + Math.abs(accelZ)) * 0.005));
+            eghLevel = Math.max(15, Math.min(30, eghLevel + (Math.random() - 0.5) * 0.3));
 
             updateGhostIndicators();
         }
@@ -1402,13 +1496,13 @@
             const ghostStatus = document.getElementById('ghost-status');
             if (ghostStatus) {
                 if (ghostActivityLevel >= config.ghostAlertThreshold) {
-                    ghostStatus.textContent = `Statut: 🔴 ACTIVITÉ PARANORMALE ÉLEVÉE (${ghostActivityLevel.toFixed(1)}/10)`;
+                    ghostStatus.textContent = `Statut: 🔴 ACTIVITÉ ÉLEVÉE`;
                     ghostStatus.style.color = "var(--danger)";
                 } else if (ghostActivityLevel >= config.ghostAlertThreshold * 0.7) {
-                    ghostStatus.textContent = `Statut: 🟡 ACTIVITÉ PARANORMALE MODÉRÉE (${ghostActivityLevel.toFixed(1)}/10)`;
+                    ghostStatus.textContent = `Statut: 🟡 ACTIVITÉ MODÉRÉE`;
                     ghostStatus.style.color = "var(--warning)";
                 } else {
-                    ghostStatus.textContent = `Statut: 🟢 Aucune activité détectée (${ghostActivityLevel.toFixed(1)}/10)`;
+                    ghostStatus.textContent = `Statut: 🟢 Normal`;
                     ghostStatus.style.color = "var(--primary)";
                 }
             }
@@ -1423,114 +1517,18 @@
             if (!config.ghostMode) return;
 
             if (ghostActivityLevel >= config.ghostAlertThreshold) {
-                const message = `Niveau d'activité: ${ghostActivityLevel.toFixed(1)}/10\nEMF: ${emfLevel.toFixed(1)} mG | EVP: ${evpLevel.toFixed(2)} dB | EGF: ${eghLevel.toFixed(1)}°C`;
+                const message = `Niveau: ${ghostActivityLevel.toFixed(1)}/10\nEMF: ${emfLevel.toFixed(1)} | EVP: ${evpLevel.toFixed(2)} | EGF: ${eghLevel.toFixed(1)}`;
                 showAlert(message, true, true);
                 triggerAIAnalysis(true, true);
 
-                // Réponse vocale automatique
                 if (config.enableVoiceResponse && !isSpeaking) {
-                    const ghostMessage = getGhostVoiceMessage();
-                    speak(ghostMessage);
-                    log(`[IA VOCALE] 🗣️ "${ghostMessage}"`, false, true);
+                    speak("Attention, activité paranormale détectée. Niveau: " + ghostActivityLevel.toFixed(1) + " sur 10.");
                 }
             }
 
-            // Détection EVP
             if (evpLevel >= config.evpThreshold && config.ghostAutoRecord && !isRecording) {
-                log(`[FANTÔME] 🎤 EVP détecté (niveau: ${evpLevel.toFixed(2)} dB) → Enregistrement automatique...`, true, true);
+                log(`[FANTÔME] 🎤 EVP détecté → Enregistrement...`, true, true);
                 startRecording();
-            }
-        }
-
-        function getGhostVoiceMessage() {
-            if (ghostActivityLevel >= 8) {
-                return "Attention, présence paranormale très forte détectée. Niveau d'activité critique. Recommandation: quitter la zone immédiatement.";
-            } else if (ghostActivityLevel >= 5) {
-                return "Activité paranormale détectée. Niveau modéré à élevé. Continuez le monitoring avec prudence.";
-            } else if (emfLevel > 70) {
-                return "Champ électromagnétique anormalement élevé. Possible présence d'entité.";
-            } else if (evpLevel > config.evpThreshold) {
-                return "Signal EVP détecté. Une voix paranormale pourrait être présente dans l'enregistrement.";
-            } else {
-                return "Aucune activité paranormale significative détectée.";
-            }
-        }
-
-        function calibrateGhostSensors() {
-            if (!config.ghostMode) {
-                log("[FANTÔME] ❌ Activez d'abord le mode Chasseur de Fantômes !", true);
-                return;
-            }
-
-            ghostCalibration = {
-                emf: emfLevel,
-                evp: evpLevel,
-                egh: eghLevel
-            };
-
-            log(`[FANTÔME] 🔧 Capteurs étalonnés: EMF=${emfLevel.toFixed(1)} mG, EVP=${evpLevel.toFixed(2)} dB, EGF=${eghLevel.toFixed(1)}°C`, false, true);
-            showAlert("Capteurs étalonnés avec succès !", false, true);
-        }
-
-        function startGhostScan() {
-            if (!config.ghostMode) {
-                log("[FANTÔME] ❌ Activez d'abord le mode Chasseur de Fantômes !", true);
-                return;
-            }
-
-            log("[FANTÔME] 🔍 Scan paranormal en cours...", true, true);
-            updateStatus("🔍 Scan paranormal en cours...");
-
-            setTimeout(() => {
-                const scanReport = generateGhostScanReport();
-                log(scanReport, false, true);
-                updateStatus("✅ Scan paranormal terminé");
-
-                // Réponse vocale
-                if (config.enableVoiceResponse && !isSpeaking) {
-                    speak("Scan paranormal terminé. " + getGhostInterpretation());
-                }
-            }, 3000);
-        }
-
-        function generateGhostScanReport() {
-            const now = new Date().toLocaleTimeString('fr-FR');
-            const emfStatus = emfLevel > 70 ? "🔴 ÉLEVÉ" : emfLevel > 40 ? "🟡 MODÉRÉ" : "🟢 FAIBLE";
-            const evpStatus = evpLevel > config.evpThreshold ? "🔴 DÉTECTÉ" : "🟢 AUCUN";
-            const eghStatus = Math.abs(eghLevel - 20) > 5 ? "🔴 ANOMALIE" : "🟢 NORMAL";
-
-            return `
-// ============================================
-// RAPPORT DE SCAN PARANORMAL
-// Heure: ${now}
-// Mode: Chasseur de Fantômes
-// ============================================
-
-[CAPTEURS]
-> EMF: ${emfLevel.toFixed(1)} mG → ${emfStatus}
-> EVP: ${evpLevel.toFixed(2)} dB → ${evpStatus}
-> EGF: ${eghLevel.toFixed(1)}°C → ${eghStatus}
-
-[NIVEAU D'ACTIVITÉ]
-> Global: ${ghostActivityLevel.toFixed(1)}/10
-> ${ghostActivityLevel >= config.ghostAlertThreshold ? "⚠️ PRÉSENCE PARANORMALE DÉTECTÉE !" : "✅ Aucune présence détectée"}
-
-[INTERPRÉTATION]
-> ${getGhostInterpretation()}
-
-// ============================================
-            `;
-        }
-
-        function getGhostInterpretation() {
-            if (ghostActivityLevel >= 8) {
-                return "👻 PRÉSENCE TRÈS FORTE: Entité ou esprit très actif dans la zone. Recommandation: Quitter les lieux ou utiliser un équipement de protection.";
-            } else if (ghostActivityLevel >= 5) {
-                return "👻 PRÉSENCE MODÉRÉE: Activité paranormale détectée. Recommandation: Continuer le monitoring avec prudence.";
-            } else if (ghostActivityLevel >= 3) {
-                return "👻 PRÉSENCE FAIBLE: Signes d'activité paranormale. Recommandation: Vérifier les capteurs et l'environnement.";
-            } else {
-                return "✅ AUCUNE PRÉSENCE: Aucune activité paranormale détectée. Zone sûre.";
             }
         }
 
@@ -1546,7 +1544,7 @@
                 recordBtn.classList.add('recording');
                 recordBtn.textContent = "STOP";
             }
-            log("[ENREGISTREMENT] Démarré" + (config.ghostMode ? " (Mode Fantôme: EVP)" : ""), false, config.ghostMode);
+            log("[ENREGISTREMENT] Démarré" + (config.ghostMode ? " (EVP)" : ""));
         }
 
         function stopRecording() {
@@ -1559,7 +1557,7 @@
                 recordBtn.classList.remove('recording');
                 recordBtn.textContent = "● ENREGISTRER";
             }
-            log("[ENREGISTREMENT] Arrêté", false, config.ghostMode);
+            log("[ENREGISTREMENT] Arrêté");
         }
 
         // ==================== VÉRIFICATION DES PERMISSIONS ====================
@@ -1573,13 +1571,11 @@
             if (!window.DeviceMotionEvent) {
                 errors.push("Accéléromètre non supporté !");
             }
-            if (!window.DeviceOrientationEvent) {
-                errors.push("Boussole non supportée !");
-            }
 
+            // Vérifie SpeechRecognition (avec fallback pour Android)
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             if (!SpeechRecognition) {
-                errors.push("Reconnaissance vocale (IA) non supportée ! Essayez Chrome ou Firefox.");
+                errors.push("Reconnaissance vocale non supportée ! Essayez Chrome.");
             }
 
             if (!speechSynthesis) {
@@ -1614,7 +1610,7 @@
             }
         }
 
-        // ==================== INITIALISATION DE L'IA VOCALE ====================
+        // ==================== INITIALISATION DE L'IA VOCALE (ANDROID) ====================
         async function initSpeech() {
             // Vérifie que le micro est activé
             const listenToggle = document.getElementById('listenToggle');
@@ -1629,11 +1625,15 @@
                 return;
             }
 
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            // Pour Android, on force WebkitSpeechRecognition
+            const SpeechRecognition = config.forceWebkitSpeechRecognition ?
+                (window.webkitSpeechRecognition || window.SpeechRecognition) :
+                (window.SpeechRecognition || window.webkitSpeechRecognition);
 
             if (!SpeechRecognition) {
-                log("[IA] ❌ Ton navigateur ne supporte PAS la reconnaissance vocale ! Essayez Chrome ou Firefox.", true);
+                log("[IA] ❌ La reconnaissance vocale n'est pas supportée par votre navigateur.", true);
                 updateStatus("❌ IA non supportée");
+                updateSpeechStatus('error');
                 return;
             }
 
@@ -1650,7 +1650,7 @@
                 recognition.lang = 'fr-FR';
                 recognition.maxAlternatives = 1;
 
-                // Stocke la dernière transcription pour le rapport
+                // Stocke la dernière transcription
                 recognition.lastTranscript = "";
 
                 // Gestion des résultats
@@ -1659,7 +1659,7 @@
                     const confidence = e.results[e.results.length - 1][0].confidence;
                     recognition.lastTranscript = transcript;
 
-                    // Affiche la transcription dans les logs
+                    // Affiche la transcription
                     if (confidence > 0.65) {
                         log(`[IA] 🎤 "${transcript}" (Confiance: ${Math.round(confidence * 100)}%)`);
 
@@ -1674,54 +1674,71 @@
                         transcript.includes(keyword) && confidence * 100 >= config.keywordSensitivity
                     );
                     if (keywordMatch && config.autoTriggerIA) {
-                        log(`[IA] ⚡ Mot-clé détecté: "${transcript}" → Déclenchement de l'analyse IA...`, true);
+                        log(`[IA] ⚡ Mot-clé détecté: "${transcript}" → Analyse IA...`, true);
                         triggerAIAnalysis(true, config.ghostMode);
                     }
                 };
 
-                // Gestion des erreurs
+                // Gestion des erreurs (spécifique Android)
                 recognition.onerror = (e) => {
                     let errorMsg = "[IA ERREUR] ";
                     switch (e.error) {
                         case 'no-speech':
-                            errorMsg += "Aucun son détecté. Parle plus fort ou vérifie que le micro n'est pas muet.";
+                            errorMsg += "Aucun son détecté. Parlez plus fort ou vérifiez que le micro n'est pas muet.";
                             break;
                         case 'audio-capture':
-                            errorMsg += "Micro bloqué ! Vérifie les permissions.";
+                            errorMsg += "Micro bloqué ! Vérifiez les permissions dans les paramètres Android.";
                             break;
                         case 'not-allowed':
-                            errorMsg += "Permission MICROPHONE refusée ! Active-la dans les paramètres du navigateur.";
+                            errorMsg += "Permission MICROPHONE refusée ! Activez-la dans: Paramètres > Applications > [Votre navigateur] > Permissions > Microphone.";
                             break;
                         case 'network':
-                            errorMsg += "Problème réseau.";
+                            errorMsg += "Problème réseau (la reconnaissance vocale est locale, cette erreur est anormale).";
                             break;
                         case 'service-not-allowed':
-                            errorMsg += "Service de reconnaissance vocale désactivé.";
+                        case 'service-unavailable':
+                            errorMsg += "Service de reconnaissance vocale désactivé. Essayez de redémarrer le navigateur.";
+                            break;
+                        case 'aborted':
+                            errorMsg += "Reconnaissance vocale interrompue. Redémarrage automatique...";
                             break;
                         default:
-                            errorMsg += `Erreur inconnue: ${e.error}`;
+                            errorMsg += `Erreur inconnue: ${e.error} (Code: ${e.errorCode})`;
                     }
                     log(errorMsg, true);
                     updateStatus(`⚠️ ${errorMsg}`);
                     updateSpeechStatus('error');
+
+                    // Sur Android, on relance automatiquement après une erreur
+                    if (e.error !== 'not-allowed') {
+                        setTimeout(() => {
+                            try {
+                                if (recognition) recognition.start();
+                            } catch (err) {
+                                log(`[IA] ⚠️ Impossible de redémarrer: ${err.message}`, true);
+                            }
+                        }, 2000);
+                    }
                 };
 
-                // Gestion du démarrage/arrêt
+                // Gestion du démarrage
                 recognition.onstart = () => {
-                    log("[IA] ✅ Écoute vocale activée. Parle maintenant !", true);
-                    updateStatus(config.ghostMode ? "🎤 IA + Mode Fantôme: Écoute en cours..." : "🎤 IA: Écoute en cours...");
+                    log("[IA] ✅ Écoute vocale activée. Parlez maintenant !", true);
+                    updateStatus(config.ghostMode ? "🎤 IA + Mode Fantôme: Écoute" : "🎤 IA: Écoute");
                     updateSpeechStatus('listening');
                 };
 
+                // Gestion de la fin
                 recognition.onend = () => {
-                    log("[IA] ⏹️ Écoute arrêtée. Redémarrage automatique...", true);
+                    log("[IA] ⏹️ Écoute arrêtée. Redémarrage...", true);
                     updateSpeechStatus('listening');
-                    // Redémarre après 1 seconde pour éviter les boucles infinies
+
+                    // Sur Android, on relance automatiquement
                     setTimeout(() => {
                         try {
                             if (recognition) recognition.start();
-                        } catch (e) {
-                            log(`[IA] ⚠️ Impossible de redémarrer: ${e.message}`, true);
+                        } catch (err) {
+                            log(`[IA] ⚠️ Impossible de redémarrer: ${err.message}`, true);
                             updateSpeechStatus('error');
                         }
                     }, 1000);
@@ -1729,7 +1746,7 @@
 
                 // Démarre la reconnaissance
                 recognition.start();
-                log("[IA] 🚀 Démarrage de l'IA vocale...", true);
+                log("[IA] 🚀 IA vocale démarrée (Android optimisé)", true, false, true);
 
             } catch (e) {
                 log(`[IA ERREUR CRITIQUE] ${e.message}`, true);
@@ -1741,7 +1758,7 @@
 
         // Gestion des commandes vocales
         function handleVoiceCommand(transcript, confidence) {
-            if (confidence < 0.7) return; // Seuil de confiance minimal
+            if (confidence < 0.7) return;
 
             const commandMap = {
                 'analyse': () => {
@@ -1767,27 +1784,29 @@
                         speak("Lancement du scan paranormal.");
                         startGhostScan();
                     } else {
-                        speak("Activez d'abord le mode Chasseur de Fantômes pour effectuer un scan paranormal.");
+                        speak("Activez d'abord le mode Chasseur de Fantômes.");
                     }
                 },
                 'étalonner': () => {
                     if (config.ghostMode) {
-                        speak("Étalonnage des capteurs en cours.");
+                        speak("Étalonnage des capteurs.");
                         calibrateGhostSensors();
                     } else {
-                        speak("Activez d'abord le mode Chasseur de Fantômes pour étalonner les capteurs.");
+                        speak("Activez d'abord le mode Chasseur de Fantômes.");
                     }
                 },
                 'stop': () => {
-                    if (isSpeaking) {
-                        speechSynthesis.cancel();
-                        speak("Arrêt de la réponse vocale.");
-                    }
+                    speechSynthesis.cancel();
+                    speak("Arrêt de la réponse vocale.");
                 },
                 'aide': () => {
-                    const helpMessage = "Commandes vocales disponibles: analyse, enregistrer, mode fantôme, scan, étalonner, stop, aide.";
+                    const helpMessage = "Commandes vocales: analyse, enregistrer, mode fantôme, scan, étalonner, stop, aide.";
                     speak(helpMessage);
                     log(`[IA VOCALE] 🗣️ "${helpMessage}"`, false);
+                },
+                'test micro': () => {
+                    testMicrophone();
+                    speak("Test du microphone en cours.");
                 }
             };
 
@@ -1799,10 +1818,9 @@
             }
         }
 
-        // ==================== INITIALISATION AUDIO ====================
+        // ==================== INITIALISATION AUDIO (ANDROID OPTIMISÉ) ====================
         async function initAudio() {
             try {
-                // Vérifie les permissions d'abord
                 const permissionErrors = checkPermissions();
                 if (permissionErrors.length > 0) {
                     permissionErrors.forEach(err => log(`[ERREUR] ${err}`, true));
@@ -1810,7 +1828,7 @@
                     return;
                 }
 
-                // Charge les voix disponibles pour la synthèse vocale
+                // Charge les voix disponibles
                 if (speechSynthesis) {
                     loadVoices();
                     if (speechSynthesis.onvoiceschanged !== undefined) {
@@ -1818,24 +1836,33 @@
                     }
                 }
 
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                // Utilise AudioContext par défaut pour Android
+                const AudioContextClass = config.useDefaultAudioContext ?
+                    (window.AudioContext || window.webkitAudioContext) :
+                    window.AudioContext;
+
+                audioCtx = new AudioContextClass();
                 await audioCtx.resume();
 
-                // Demande le micro UNE SEULE FOIS et stocke le stream
-                microStream = await navigator.mediaDevices.getUserMedia({
+                // Demande le micro avec des options optimisées pour Android
+                const audioConstraints = {
                     audio: {
-                        echoCancellation: config.echoCancellation,
-                        noiseSuppression: config.noiseSuppression,
+                        // Désactive les traitements qui posent problème sur Android
+                        echoCancellation: !config.disableEchoCancellation,
+                        noiseSuppression: !config.disableNoiseSuppression,
                         autoGainControl: false,
-                        sampleRate: 48000
+                        sampleRate: 48000,
+                        channelCount: 1
                     },
                     video: false
-                });
+                };
+
+                microStream = await navigator.mediaDevices.getUserMedia(audioConstraints);
 
                 microphone = audioCtx.createMediaStreamSource(microStream);
                 analyser = audioCtx.createAnalyser();
-                analyser.fftSize = 8192;
-                analyser.smoothingTimeConstant = 0.25;
+                analyser.fftSize = 4096; // Réduit pour Android (meilleures performances)
+                analyser.smoothingTimeConstant = 0.3; // Lissage plus fort pour Android
 
                 gainNode = audioCtx.createGain();
                 gainNode.gain.value = config.micSensitivity / 100;
@@ -1848,7 +1875,7 @@
                 frequencyArray = new Uint8Array(analyser.frequencyBinCount);
                 timeArray = new Uint8Array(analyser.frequencyBinCount);
 
-                // Enregistreur (utilise le même stream)
+                // Enregistreur
                 mediaRecorder = new MediaRecorder(microStream, { mimeType: 'audio/webm' });
                 recordedChunks = [];
                 mediaRecorder.ondataavailable = e => recordedChunks.push(e.data);
@@ -1860,11 +1887,11 @@
                     a.download = `SUPRA-LAB-${config.ghostMode ? 'GHOST-' : ''}${new Date().toISOString().slice(0, 19)}.webm`;
                     a.click();
                     recordedChunks = [];
-                    log("[ENREGISTREMENT] Fichier sauvegardé" + (config.ghostMode ? " (Mode Fantôme)" : ""));
+                    log("[ENREGISTREMENT] Fichier sauvegardé" + (config.ghostMode ? " (EVP)" : ""));
                 };
 
-                updateStatus("✅ Micro + AudioContext OK (1 autorisation)");
-                log("[SIGINT] Système audio activé (FFT: 8192)");
+                updateStatus("✅ Micro + Audio OK (Android)");
+                log("[SIGINT] Système audio activé (FFT: 4096, optimisé Android)", false, false, true);
                 isRunning = true;
 
                 // Initialise l'histogramme des bandes
@@ -1879,16 +1906,22 @@
                 // Active l'IA vocale automatiquement si le micro est activé
                 const listenToggle = document.getElementById('listenToggle');
                 if (listenToggle && listenToggle.checked) {
-                    initSpeech();
+                    // Attend 1 seconde que tout soit prêt
+                    setTimeout(() => {
+                        initSpeech();
+                    }, 1000);
                 }
 
             } catch (err) {
                 updateStatus(`❌ ERREUR MICRO: ${err.message}`);
                 log(`[ERREUR CRITIQUE] ${err.message}`, true);
-                console.error(err);
 
                 if (err.message.includes("permission denied")) {
-                    log("[AIDE] Activez la permission MICROPHONE dans les paramètres du navigateur ! (1 seule fois)", true);
+                    log("[AIDE ANDROID] Activez la permission MICRO dans: Paramètres > Applications > [Votre navigateur] > Permissions > Microphone", true, false, true);
+                } else if (err.message.includes("not allowed")) {
+                    log("[AIDE ANDROID] Le navigateur a bloqué l'accès au micro. Vérifiez les paramètres.", true, false, true);
+                } else {
+                    log("[AIDE ANDROID] Erreur inconnue. Essayez de rafraîchir la page (Ctrl+F5).", true, false, true);
                 }
             }
         }
@@ -1896,15 +1929,9 @@
         // ==================== DÉTECTION DE BANDES ====================
         function detectFrequencyBand(frequency) {
             const freqMHz = frequency / 1e6;
-
             for (const [bandName, bandData] of Object.entries(FREQUENCY_DB)) {
                 if (freqMHz >= bandData.min && freqMHz <= bandData.max) {
-                    return {
-                        name: bandName,
-                        label: bandData.label,
-                        color: bandData.color,
-                        critical: bandData.critical
-                    };
+                    return { name: bandName, label: bandData.label, color: bandData.color, critical: bandData.critical };
                 }
             }
             return null;
@@ -1917,7 +1944,8 @@
             let maxIndex = 0;
             let maxValue = 0;
 
-            const startIndex = Math.floor(1000 / (audioCtx.sampleRate / analyser.fftSize));
+            // On commence à 200Hz pour éviter le bruit basse fréquence
+            const startIndex = Math.floor(200 / (audioCtx.sampleRate / analyser.fftSize));
 
             for (let i = startIndex; i < frequencyArray.length; i++) {
                 if (frequencyArray[i] > maxValue) {
@@ -1927,8 +1955,7 @@
             }
 
             const binWidth = audioCtx.sampleRate / analyser.fftSize;
-            const dominantFreqHz = maxIndex * binWidth;
-            return dominantFreqHz;
+            return maxIndex * binWidth;
         }
 
         function updateBandDetection() {
@@ -1945,34 +1972,31 @@
 
                 const bandInfoEl = document.getElementById('band-info');
                 if (bandInfoEl) {
-                    bandInfoEl.textContent = `Bande actuelle: ${detected.label} (${detected.critical ? "🚨 CRITIQUE" : "✅ Normale"})`;
+                    bandInfoEl.textContent = `Bande: ${detected.label} (${detected.critical ? "🚨 CRITIQUE" : "✅ Normale"})`;
                     bandInfoEl.style.color = detected.critical ? "var(--danger)" : "var(--primary)";
                 }
 
                 updateBandHistogram(detected.name);
 
                 if (detected.critical) {
-                    showAlert(`🚨 BANDE CRITIQUE DÉTECTÉE: ${detected.label} (${(dominantFrequency / 1e6).toFixed(3)} MHz)`);
+                    showAlert(`🚨 Bande critique: ${detected.label} (${(dominantFrequency / 1e6).toFixed(3)} MHz)`);
                     document.getElementById('emergency-badge').style.display = 'block';
 
                     if (config.autoTriggerIA) {
                         triggerAIAnalysis(true, config.ghostMode);
                     }
 
-                    // Réponse vocale automatique pour les bandes critiques
                     if (config.enableVoiceResponse && !isSpeaking) {
-                        const criticalMessage = `Attention, bande critique détectée: ${detected.label} à ${(dominantFrequency / 1e6).toFixed(3)} MHz.`;
-                        speak(criticalMessage);
-                        log(`[IA VOCALE] 🗣️ "${criticalMessage}"`, false);
+                        speak(`Attention, bande critique détectée: ${detected.label} à ${(dominantFrequency / 1e6).toFixed(3)} MHz.`);
                     }
                 } else {
                     document.getElementById('emergency-badge').style.display = 'none';
                 }
             } else {
                 const freqEl = document.getElementById('dominant-freq');
-                if (freqEl) freqEl.textContent = `Fréq. dominante: ${(dominantFrequency / 1e6).toFixed(3)} MHz (Inconnue)`;
+                if (freqEl) freqEl.textContent = `Fréq. dominante: ${(dominantFrequency / 1e6).toFixed(3)} MHz`;
                 const bandInfoEl = document.getElementById('band-info');
-                if (bandInfoEl) bandInfoEl.textContent = "Bande actuelle: --";
+                if (bandInfoEl) bandInfoEl.textContent = "Bande: --";
                 document.getElementById('emergency-badge').style.display = 'none';
             }
         }
@@ -1983,8 +2007,7 @@
             if (!histogramDiv) return;
 
             histogramDiv.innerHTML = '';
-            const bands = Object.keys(FREQUENCY_DB);
-            bands.forEach(band => {
+            Object.keys(FREQUENCY_DB).forEach(band => {
                 const barDiv = document.createElement('div');
                 barDiv.className = 'band-bar';
                 barDiv.dataset.band = band;
@@ -2004,15 +2027,13 @@
 
             bandDetectionHistory[bandName]++;
             const maxCount = Math.max(...Object.values(bandDetectionHistory));
-            const bars = document.querySelectorAll('.band-bar');
-
-            bars.forEach(bar => {
+            document.querySelectorAll('.band-bar').forEach(bar => {
                 const band = bar.dataset.band;
                 const count = bandDetectionHistory[band] || 0;
                 const heightPercent = maxCount > 0 ? (count / maxCount) * 100 : 0;
 
                 bar.style.height = `${heightPercent}%`;
-                bar.classList.remove('fill', 'warning', 'danger', 'ghost');
+                bar.classList.remove('fill', 'warning', 'danger');
 
                 if (heightPercent > 0) {
                     bar.classList.add('fill');
@@ -2021,123 +2042,98 @@
                     } else if (heightPercent > 50) {
                         bar.classList.add('warning');
                     }
-                    if (config.ghostMode && (band === 'EVP' || band === 'ELF' || band === 'VLF')) {
-                        bar.classList.add('ghost');
-                    }
                 }
             });
         }
 
         // ==================== ANALYSE IA ====================
         function generateSIGINTReport(rms, dominantFreq, band, transcript = "", sensors = {}, isGhostMode = false) {
-            const now = new Date().toISOString().slice(0, 19).replace('T', ' ');
+            const now = new Date().toLocaleTimeString('fr-FR');
             const bandLabel = band ? band.label : "Inconnue";
             const bandCritical = band ? band.critical : false;
 
             let report = `
-// ============================================
-// RAPPORT SIGINT — SUPRA LAB v11
-// Généré le: ${now}
-// Niveau: ${bandCritical ? "CRITIQUE 🚨" : "NORMAL ✅"}
-// Mode: ${isGhostMode ? "CHASSEUR DE FANTÔMES" : "SIGINT"}
-// ============================================
+// ========================
+// RAPPORT SIGINT — SUPRA LAB
+// Heure: ${now}
+// Mode: ${isGhostMode ? "FANTÔME" : "SIGINT"}
+// ========================
 
-[HEADER]
-> Mission: ${isGhostMode ? "Détection paranormale" : "Surveillance électromagnétique"}
-> Opérateur: ${navigator.userAgent.includes('Mobile') ? 'Mobile' : 'Desktop'}
-> Localisation: [REDACTED]
-> Durée: ${Math.floor((Date.now() - (new Date(now).getTime())) / 1000)}s
-
-[DONNÉES TECHNIQUES]
-> Fréquence dominante: ${(dominantFreq / 1e6).toFixed(3)} MHz
-> Bande détectée: ${bandLabel}
-> Niveau RMS: ${rms.toFixed(2)} dB
-> Statut: ${bandCritical ? "⚠️ ALERTE" : "✅ NOMINAL"}
+[TECHNIQUE]
+> Fréquence: ${(dominantFreq / 1e6).toFixed(3)} MHz
+> Bande: ${bandLabel}
+> RMS: ${rms.toFixed(2)} dB
+> Statut: ${bandCritical ? "🚨 CRITIQUE" : "✅ NORMAL"}
 `;
 
             if (isGhostMode) {
                 report += `
-[DONNÉES PARANORMALES]
+[PARANORMAL]
 > EMF: ${emfLevel.toFixed(1)} mG
 > EVP: ${evpLevel.toFixed(2)} dB
 > EGF: ${eghLevel.toFixed(1)}°C
-> Niveau d'activité: ${ghostActivityLevel.toFixed(1)}/10
+> Activité: ${ghostActivityLevel.toFixed(1)}/10
 `;
             }
 
             report += `
-[CAPTEURS PHYSIQUES]
-> Accélération: X=${sensors.accelX || 'N/A'}g, Y=${sensors.accelY || 'N/A'}g, Z=${sensors.accelZ || 'N/A'}g
+[CAPTEURS]
+> Accélération: X=${sensors.accelX || 'N/A'} Y=${sensors.accelY || 'N/A'} Z=${sensors.accelZ || 'N/A'}
 > Cap: ${sensors.heading || 'N/A'}°
 
-[TRANSCRIPTION VOCALE]
-> Dernière détection: "${transcript || "Aucune"}"
-> Confiance: ${transcript ? `${Math.round(config.keywordSensitivity)}%` : "N/A"}
+[TRANSCRIPTION]
+> "${transcript || "Aucune"}"
 
 [ANOMALIES]
-${rms > 0.5 ? "> ⚠️ Pic de signal détecté (RMS élevé)" : "> Aucun pic significatif"}
-${bandCritical ? `> 🚨 Bande critique: ${bandLabel}` : "> Aucune bande critique"}
-${isGhostMode ? `> ${getGhostAnomalies()}` : ""}
+${rms > 0.5 ? "> ⚠️ Pic de signal" : "> Aucun pic"}
+${bandCritical ? `> 🚨 Bande critique: ${bandLabel}` : ""}
+${isGhostMode && ghostActivityLevel >= 5 ? "> 👻 Activité paranormale détectée" : ""}
 
-[ANALYSE]
-> Cette fréquence correspond à ${band ? `la bande ${bandLabel} (${FREQUENCY_DB[band.name].min}-${FREQUENCY_DB[band.name].max} MHz)` : "une fréquence non référencée"}.
-> ${bandCritical ? `> ⚡ RECOMMANDATION: Investiguer immédiatement !` : `> ✅ Aucune action requise.`}
-${isGhostMode ? `\n[INTERPRÉTATION PARANORMALE]\n> ${getGhostInterpretation()}` : ""}
-
-[FIN DE RAPPORT]
-// ============================================
+[FIN]
             `;
             return report;
         }
 
         async function triggerAIAnalysis(force = false, isGhostMode = false) {
             if (!isRunning || !analyser) {
-                log("[IA] ❌ Impossible de déclencher l'analyse: système non prêt", true);
+                log("[IA] ❌ Système non prêt", true);
                 return;
             }
 
             const now = Date.now();
             if (!force && now - lastAIAnalysisTime < 5000) {
-                log("[IA] ⏳ Analyse récente, attente de 5s...");
+                log("[IA] ⏳ Analyse récente, attente...");
                 return;
             }
             lastAIAnalysisTime = now;
-
-            log(`[IA] 🔍 Déclenchement de l'analyse IA Groq...${isGhostMode ? " (Mode Fantôme)" : ""}`, true, isGhostMode);
 
             analyser.getByteFrequencyData(frequencyArray);
             const rms = Math.sqrt(frequencyArray.reduce((a, b) => a + b * b, 0) / frequencyArray.length) / 128;
             const dominantFreq = findDominantFrequency();
             const band = detectFrequencyBand(dominantFreq);
 
-            // Génère le rapport SIGINT
             const report = generateSIGINTReport(
-                rms,
-                dominantFreq,
-                band,
+                rms, dominantFreq, band,
                 recognition ? recognition.lastTranscript : "",
                 { accelX, accelY, accelZ, heading: magnetHeading },
                 isGhostMode
             );
 
-            // Affiche le rapport
             const aiReportDiv = document.getElementById('ai-report');
             if (aiReportDiv) {
                 aiReportDiv.textContent = report;
             }
 
-            // Si clé API Groq est configurée, envoie les données (simulé)
             if (config.groqApiKey) {
                 await sendToGroqAPI(rms, dominantFreq, band, report, isGhostMode);
             } else {
-                log("[IA] ⚠️ Clé API Groq non configurée. Utilisation du mode local.", true, isGhostMode);
+                log("[IA] ⚠️ Clé API Groq non configurée. Mode local.", true, isGhostMode);
             }
 
             // Réponse vocale avec un résumé
             if (config.enableVoiceResponse && !isSpeaking) {
                 const summary = generateVoiceSummary(rms, dominantFreq, band, isGhostMode);
                 speak(summary);
-                log(`[IA VOCALE] 🗣️ "${summary}"`, false, isGhostMode);
             }
         }
 
@@ -2147,57 +2143,42 @@ ${isGhostMode ? `\n[INTERPRÉTATION PARANORMALE]\n> ${getGhostInterpretation()}`
 
             if (isGhostMode) {
                 if (ghostActivityLevel >= 5) {
-                    return `Activité paranormale détectée. Fréquence dominante: ${freqMHz} MHz, bande: ${bandLabel}. Niveau d'activité: ${ghostActivityLevel.toFixed(1)}/10.`;
+                    return `Activité paranormale détectée. Fréquence: ${freqMHz} MHz, bande: ${bandLabel}. Niveau: ${ghostActivityLevel.toFixed(1)}/10.`;
                 } else {
-                    return `Aucune activité paranormale significative. Fréquence: ${freqMHz} MHz, bande: ${bandLabel}.`;
+                    return `Aucune activité paranormale. Fréquence: ${freqMHz} MHz, bande: ${bandLabel}.`;
                 }
             } else {
                 if (band && band.critical) {
-                    return `Attention, bande critique détectée: ${bandLabel} à ${freqMHz} MHz. Niveau RMS: ${rms.toFixed(2)} décibels.`;
+                    return `Attention, bande critique: ${bandLabel} à ${freqMHz} MHz. Niveau: ${rms.toFixed(2)} décibels.`;
                 } else {
-                    return `Fréquence dominante: ${freqMHz} MHz, bande: ${bandLabel}. Niveau RMS: ${rms.toFixed(2)} décibels.`;
+                    return `Fréquence: ${freqMHz} MHz, bande: ${bandLabel}. Niveau: ${rms.toFixed(2)} décibels.`;
                 }
             }
         }
 
         async function sendToGroqAPI(rms, dominantFreq, band, localReport, isGhostMode) {
             try {
-                log("[IA] 📤 Envoi des données à Groq API...", true, isGhostMode);
-                updateStatus("🔄 Envoi à Groq en cours...");
+                log("[IA] 📤 Envoi à Groq API...", true, isGhostMode);
+                updateStatus("🔄 Envoi à Groq...");
 
-                // Simulation de l'envoi à Groq
+                // Simulation de la réponse
                 const mockResponse = `
-// ============================================
-// RÉPONSE IA GROQ — ANALYSE APPROFONDIE
+// ========================
+// RÉPONSE IA GROQ
 // Modèle: mixtral-8x7b-32768
-// Mode: ${isGhostMode ? "CHASSEUR DE FANTÔMES" : "SIGINT"}
-// ============================================
+// ========================
 
 [CLASSIFICATION]
 > Menace: ${band && band.critical ? "CRITIQUE 🚨" : rms > 0.7 ? "ÉLEVÉE ⚠️" : "FAIBLE ✅"}
 
-[ANALYSE TECHNIQUE]
-> La fréquence ${(dominantFreq / 1e6).toFixed(3)} MHz correspond à ${band ? `la bande ${band.label}` : "une fréquence non identifiée"}.
-> Niveau RMS de ${rms.toFixed(2)} dB indique un signal ${rms > 0.7 ? "fort" : rms > 0.4 ? "modéré" : "faible"}.
-${band && band.critical ? `> Cette bande est associée à des communications ${band.label.includes('Drone') ? 'de drones' : band.label.includes('Aviation') ? 'aéronautiques critiques' : 'militaires'}.` : ""}
-
-${isGhostMode ? `
-[ANALYSE PARANORMALE]
-> Niveau d'activité: ${ghostActivityLevel.toFixed(1)}/10
-> ${ghostActivityLevel >= 5 ? `> Présence paranormale détectée avec une confiance de ${Math.min(100, ghostActivityLevel * 20)}%.` : `> Aucune présence paranormale significative.`}
-> Recommandation: ${ghostActivityLevel >= 7 ? "Quitter la zone immédiatement." : ghostActivityLevel >= 3 ? "Continuer le monitoring avec prudence." : "Aucune action requise."}
-` : ''}
+[ANALYSE]
+> Fréquence ${(dominantFreq / 1e6).toFixed(3)} MHz = ${band ? band.label : "inconnue"}.
+> Niveau RMS: ${rms.toFixed(2)} dB → Signal ${rms > 0.7 ? "fort" : rms > 0.4 ? "modéré" : "faible"}.
 
 [RECOMMANDATIONS]
-${band && band.critical ? `> 1. Isoler la source du signal immédiatement.
-> 2. Notifier les autorités si confirmation de menace.
-> 3. Activer le mode silencieux pour éviter la détection.` : `> 1. Continuer la surveillance.
-> 2. Vérifier les capteurs pour anomalies.`}
+${band && band.critical ? "> Investiguer immédiatement !" : "> Continuer la surveillance."}
 
-[NIVEAU DE CONFIANCE]
-> 92% (Basé sur la correspondance de fréquence et le niveau RMS)
-
-// ============================================
+// ========================
                 `;
 
                 setTimeout(() => {
@@ -2205,24 +2186,21 @@ ${band && band.critical ? `> 1. Isoler la source du signal immédiatement.
                     if (aiReportDiv) {
                         aiReportDiv.textContent = localReport + "\n\n" + mockResponse;
                     }
-                    log("[IA] ✅ Analyse Groq terminée (simulée)", true, isGhostMode);
-                    updateStatus(isGhostMode ? "✅ Analyse IA (Fantôme) terminée" : "✅ Analyse IA terminée");
-                }, 1500);
+                    log("[IA] ✅ Analyse Groq terminée", true, isGhostMode);
+                    updateStatus(isGhostMode ? "✅ Analyse (Fantôme) OK" : "✅ Analyse IA OK");
+                }, 1000);
 
             } catch (error) {
-                log(`[IA] ❌ Erreur lors de l'envoi à Groq: ${error.message}`, true, isGhostMode);
+                log(`[IA] ❌ Erreur Groq: ${error.message}`, true, isGhostMode);
                 updateStatus("❌ Erreur API Groq");
             }
         }
 
         // ==================== SCANNER AUTOMATIQUE ====================
         function startAutoScan() {
-            if (autoScanIntervalId) {
-                clearInterval(autoScanIntervalId);
-            }
+            if (autoScanIntervalId) clearInterval(autoScanIntervalId);
             autoScanIntervalId = setInterval(() => {
                 if (isRunning) {
-                    log(`[SCAN] 🔄 Scan automatique toutes les ${config.autoScanInterval}s...`);
                     updateBandDetection();
                     if (config.autoTriggerIA) {
                         triggerAIAnalysis(false, config.ghostMode);
@@ -2238,7 +2216,7 @@ ${band && band.critical ? `> 1. Isoler la source du signal immédiatement.
             const ctx = canvas.getContext('2d');
             analyser.getByteFrequencyData(frequencyArray);
             spectroHistory.unshift([...frequencyArray]);
-            if (spectroHistory.length > 140) spectroHistory.pop();
+            if (spectroHistory.length > 100) spectroHistory.pop();
 
             ctx.fillStyle = '#000';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -2247,10 +2225,7 @@ ${band && band.critical ? `> 1. Isoler la source du signal immédiatement.
             for (let y = 0; y < spectroHistory.length; y++) {
                 for (let x = 0; x < spectroHistory[y].length; x++) {
                     const val = spectroHistory[y][x];
-                    let hue = config.ghostMode ? 300 : 90 + val / 2.5;
-                    if (detectedBand) {
-                        hue = detectedBand.critical ? 0 : config.ghostMode ? 300 : 90 + val / 2.5;
-                    }
+                    const hue = config.ghostMode ? 300 : 90 + val / 2.5;
                     ctx.fillStyle = `hsl(${hue}, 100%, ${val / 2.8}%)`;
                     ctx.fillRect(x * w, y * 2, w + 1, 2);
                 }
@@ -2266,7 +2241,7 @@ ${band && band.critical ? `> 1. Isoler la source du signal immédiatement.
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
             const cx = canvas.width / 2, cy = canvas.height / 2, maxR = Math.min(cx, cy) - 30;
-            ctx.strokeStyle = config.ghostMode ? '#330033' : '#003300';
+            ctx.strokeStyle = '#003300';
             for (let i = 1; i < 6; i++) {
                 ctx.beginPath();
                 ctx.arc(cx, cy, (maxR / 5) * i, 0, Math.PI * 2);
@@ -2294,9 +2269,7 @@ ${band && band.critical ? `> 1. Isoler la source du signal immédiatement.
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             const color = config.ghostMode ? 'var(--ghost)' : 'var(--primary)';
             ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue(color);
-            ctx.lineWidth = 3;
-            ctx.shadowBlur = 20;
-            ctx.shadowColor = getComputedStyle(document.documentElement).getPropertyValue(color);
+            ctx.lineWidth = 2;
             ctx.beginPath();
             const slice = canvas.width / timeArray.length;
             let x = 0;
@@ -2306,7 +2279,6 @@ ${band && band.critical ? `> 1. Isoler la source du signal immédiatement.
                 x += slice;
             }
             ctx.stroke();
-            ctx.shadowBlur = 0;
         }
 
         function drawSensors() {
@@ -2349,11 +2321,11 @@ ${band && band.critical ? `> 1. Isoler la source du signal immédiatement.
         // ==================== CALCUL ANOMALIE ====================
         function calculateStats(rms) {
             rmsHistory.push(rms);
-            if (rmsHistory.length > 220) rmsHistory.shift();
-            if (rmsHistory.length < 40) return false;
+            if (rmsHistory.length > 100) rmsHistory.shift();
+            if (rmsHistory.length < 20) return false;
             const mean = rmsHistory.reduce((a, b) => a + b, 0) / rmsHistory.length;
             const std = Math.sqrt(rmsHistory.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / rmsHistory.length);
-            return rms > mean + 3.2 * std;
+            return rms > mean + 2.5 * std; // Seuil légèrement abaissé pour Android
         }
 
         // ==================== BOUCLE PRINCIPALE ====================
@@ -2368,8 +2340,7 @@ ${band && band.critical ? `> 1. Isoler la source du signal immédiatement.
             if (calculateStats(rms)) {
                 const anomalyBadge = document.getElementById('anomaly-badge');
                 if (anomalyBadge) anomalyBadge.classList.add('active');
-                log("[ANOMALIE] Pic > 3.2σ détecté", true, config.ghostMode);
-
+                log("[ANOMALIE] Pic > 2.5σ détecté", true, config.ghostMode);
                 if (config.autoTriggerIA) {
                     triggerAIAnalysis(true, config.ghostMode);
                 }
@@ -2389,8 +2360,7 @@ ${band && band.critical ? `> 1. Isoler la source du signal immédiatement.
 
         // ==================== REDIMENSIONNEMENT ====================
         function resizeCanvases() {
-            const panels = document.querySelectorAll('.panel canvas');
-            panels.forEach(canvas => {
+            document.querySelectorAll('.panel canvas').forEach(canvas => {
                 const rect = canvas.parentElement.getBoundingClientRect();
                 canvas.width = rect.width - 20;
                 canvas.height = rect.height - 50;
@@ -2422,13 +2392,8 @@ ${band && band.critical ? `> 1. Isoler la source du signal immédiatement.
                     saveConfig();
                     settingsPage.classList.remove('active');
                     if (gainNode) gainNode.gain.value = config.volume / 100;
-                    if (autoScanIntervalId) {
-                        startAutoScan();
-                    }
-                    // Recharge les voix si le type de voix a changé
-                    if (speechSynthesis) {
-                        loadVoices();
-                    }
+                    if (autoScanIntervalId) startAutoScan();
+                    if (speechSynthesis) loadVoices();
                 });
             }
 
@@ -2445,65 +2410,54 @@ ${band && band.critical ? `> 1. Isoler la source du signal immédiatement.
         // ==================== GESTION DES BOUTONS PRINCIPAUX ====================
         function setupMainControls() {
             // Bouton "ANALYSE IA IMMÉDIATE"
-            const immediateAIBtn = document.getElementById('immediateAIBtn');
-            if (immediateAIBtn) {
-                immediateAIBtn.addEventListener('click', () => {
-                    triggerAIAnalysis(true, config.ghostMode);
-                });
-            }
+            document.getElementById('immediateAIBtn').addEventListener('click', () => {
+                triggerAIAnalysis(true, config.ghostMode);
+            });
 
             // Bouton "Envoyer à Groq"
-            const sendToGroqBtn = document.getElementById('sendToGroqBtn');
-            if (sendToGroqBtn) {
-                sendToGroqBtn.addEventListener('click', () => {
-                    if (!config.groqApiKey) {
-                        log("[IA] ❌ Veuillez configurer votre clé API Groq dans les paramètres.", true, config.ghostMode);
-                        return;
-                    }
-                    triggerAIAnalysis(true, config.ghostMode);
-                });
-            }
+            document.getElementById('sendToGroqBtn').addEventListener('click', () => {
+                if (!config.groqApiKey) {
+                    log("[IA] ❌ Configurez votre clé API Groq dans les paramètres.", true);
+                    return;
+                }
+                triggerAIAnalysis(true, config.ghostMode);
+            });
 
             // Bouton "ACTIVER L'IA VOCALE"
-            const btnStartIA = document.getElementById('btnStartIA');
-            if (btnStartIA) {
-                btnStartIA.addEventListener('click', () => {
-                    initSpeech();
-                });
-            }
+            document.getElementById('btnStartIA').addEventListener('click', () => {
+                initSpeech();
+            });
 
-            // Bouton "MODE CHASSEUR DE FANTÔMES" (écran de démarrage)
-            const btnGhostMode = document.getElementById('btnGhostMode');
-            if (btnGhostMode) {
-                btnGhostMode.addEventListener('click', () => {
-                    config.ghostMode = true;
-                    saveConfig();
-                });
-            }
+            // Bouton "TESTER LE MICRO"
+            document.getElementById('btnTestMicro').addEventListener('click', () => {
+                testMicrophone();
+            });
 
-            // Bouton TOGGLE MODE FANTÔME (en haut à droite)
-            const ghostModeToggle = document.getElementById('ghostModeToggle');
-            if (ghostModeToggle) {
-                ghostModeToggle.addEventListener('click', () => {
-                    toggleGhostMode(!config.ghostMode);
-                });
-            }
+            // Bouton "FERMER TEST MICRO"
+            document.getElementById('closeMicroTest').addEventListener('click', () => {
+                closeMicroTest();
+            });
 
-            // Bouton "ÉTALONNER CAPTEURS"
-            const calibrateGhostSensorsBtn = document.getElementById('calibrateGhostSensors');
-            if (calibrateGhostSensorsBtn) {
-                calibrateGhostSensorsBtn.addEventListener('click', () => {
-                    calibrateGhostSensors();
-                });
-            }
+            // Bouton "MODE FANTÔME" (écran de démarrage)
+            document.getElementById('btnGhostMode').addEventListener('click', () => {
+                config.ghostMode = true;
+                saveConfig();
+            });
 
-            // Bouton "SCAN PARANORMAL"
-            const ghostScanBtn = document.getElementById('ghostScanBtn');
-            if (ghostScanBtn) {
-                ghostScanBtn.addEventListener('click', () => {
-                    startGhostScan();
-                });
-            }
+            // Bouton TOGGLE MODE FANTÔME
+            document.getElementById('ghostModeToggle').addEventListener('click', () => {
+                toggleGhostMode(!config.ghostMode);
+            });
+
+            // Bouton "ÉTALONNER"
+            document.getElementById('calibrateGhostSensors').addEventListener('click', () => {
+                calibrateGhostSensors();
+            });
+
+            // Bouton "SCAN"
+            document.getElementById('ghostScanBtn').addEventListener('click', () => {
+                startGhostScan();
+            });
 
             // Bouton "LANCER TOUT LE SYSTÈME"
             document.getElementById('btnStart').addEventListener('click', async () => {
@@ -2518,16 +2472,16 @@ ${band && band.critical ? `> 1. Isoler la source du signal immédiatement.
                     main.style.display = 'grid';
                     main.classList.add('grid');
 
-                    log("=== SUPRA LAB v11 LANCÉ ===");
-                    log("✅ Micro, capteurs et IA vocale prêts (1 autorisation micro)");
-                    updateStatus("Initialisation en cours...");
+                    log("=== SUPRA LAB v11 (ANDROID) LANCÉ ===");
+                    log("✅ 1 seule autorisation micro requise", false, false, true);
+                    updateStatus("Initialisation...");
 
                     resizeCanvases();
                     window.addEventListener('resize', resizeCanvases);
                     window.addEventListener('orientationchange', () => setTimeout(resizeCanvases, 300));
 
                     initSensors();
-                    initAudio(); // Cela va demander le micro UNE SEULE FOIS
+                    initAudio();
 
                     // Contrôles
                     const toggle = document.getElementById('listenToggle');
@@ -2542,9 +2496,9 @@ ${band && band.critical ? `> 1. Isoler la source du signal immédiatement.
                                 analyser.connect(gainNode);
                                 gainNode.connect(audioCtx.destination);
                                 log("[ÉCOUTE] Micro EN DIRECT activé");
-                                // Démarre l'IA vocale automatiquement
+                                // Démarre l'IA vocale
                                 if (!recognition) {
-                                    initSpeech();
+                                    setTimeout(() => initSpeech(), 500);
                                 }
                             } else {
                                 gainNode.disconnect();
@@ -2554,7 +2508,7 @@ ${band && band.critical ? `> 1. Isoler la source du signal immédiatement.
                                 if (recognition) {
                                     recognition.stop();
                                     recognition = null;
-                                    log("[IA] ⏹️ IA vocale arrêtée (micro coupé)");
+                                    log("[IA] ⏹️ IA vocale arrêtée");
                                     updateSpeechStatus();
                                 }
                             }
@@ -2589,20 +2543,57 @@ ${band && band.critical ? `> 1. Isoler la source du signal immédiatement.
             });
         }
 
+        // Fonctions pour le mode fantôme
+        function calibrateGhostSensors() {
+            if (!config.ghostMode) {
+                log("[FANTÔME] ❌ Activez d'abord le mode fantôme !", true);
+                return;
+            }
+            log(`[FANTÔME] 🔧 Capteurs étalonnés: EMF=${emfLevel.toFixed(1)} | EVP=${evpLevel.toFixed(2)} | EGF=${eghLevel.toFixed(1)}`, false, true);
+            showAlert("Capteurs étalonnés !", false, true);
+        }
+
+        function startGhostScan() {
+            if (!config.ghostMode) {
+                log("[FANTÔME] ❌ Activez d'abord le mode fantôme !", true);
+                return;
+            }
+            log("[FANTÔME] 🔍 Scan en cours...", true, true);
+            updateStatus("🔍 Scan paranormal...");
+
+            setTimeout(() => {
+                const report = `
+// ========================
+// SCAN PARANORMAL
+// Heure: ${new Date().toLocaleTimeString('fr-FR')}
+// ========================
+EMF: ${emfLevel.toFixed(1)} mG
+EVP: ${evpLevel.toFixed(2)} dB
+EGF: ${eghLevel.toFixed(1)}°C
+Activité: ${ghostActivityLevel.toFixed(1)}/10
+${ghostActivityLevel >= 5 ? "⚠️ PRÉSENCE DÉTECTÉE !" : "✅ Aucune présence"}
+// ========================
+                `;
+                log(report, false, true);
+                updateStatus("✅ Scan terminé");
+
+                if (config.enableVoiceResponse && !isSpeaking) {
+                    speak(ghostActivityLevel >= 5 ?
+                        "Attention, présence paranormale détectée. Niveau: " + ghostActivityLevel.toFixed(1) + " sur 10." :
+                        "Aucune activité paranormale détectée.");
+                }
+            }, 2000);
+        }
+
         // ==================== NETTOYAGE ====================
         window.addEventListener('beforeunload', () => {
             if (recognition) recognition.stop();
-            if (microphone) microphone.disconnect();
-            if (microStream) {
-                microStream.getTracks().forEach(track => track.stop());
-            }
+            if (microStream) microStream.getTracks().forEach(track => track.stop());
             if (mediaRecorder) mediaRecorder.stream.getTracks().forEach(track => track.stop());
             if (audioCtx) audioCtx.close();
             if (autoScanIntervalId) clearInterval(autoScanIntervalId);
             if (ghostMonitoringInterval) clearInterval(ghostMonitoringInterval);
-            if (speechSynthesis) {
-                speechSynthesis.cancel();
-            }
+            if (speechSynthesis) speechSynthesis.cancel();
         });
 
         // ==================== DÉMARRAGE ====================
@@ -2615,8 +2606,12 @@ ${band && band.critical ? `> 1. Isoler la source du signal immédiatement.
             if (speechSynthesis) {
                 loadVoices();
             } else {
-                log("[IA VOCALE] ❌ La synthèse vocale n'est pas supportée par votre navigateur.", true);
+                log("[IA VOCALE] ❌ Synthèse vocale non supportée.", true);
             }
+
+            // Log de bienvenue Android
+            log("[ANDROID] Optimisé pour navigateurs mobiles", false, false, true);
+            log("[ANDROID] 1 seule autorisation micro requise", false, false, true);
         });
     </script>
 </body>
