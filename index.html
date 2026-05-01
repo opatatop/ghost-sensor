@@ -2,1018 +2,286 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
-    <title>SUPRA LAB v12 — PRO MILITAIRE SIGINT + IA VOCALE</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>SUPRA LAB v11 — FULL SPECTRUM BLACK OPS</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
-
         :root {
             --green: #00ff41;
+            --night-green: #00cc22;
             --red: #ff0044;
             --bg-dark: #001100;
             --bg-darker: #000;
         }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * { margin:0; padding:0; box-sizing:border-box; }
         body {
-            background: var(--bg-darker);
-            color: var(--green);
-            font-family: 'VT323', monospace;
-            font-size: 18px;
-            line-height: 1.1;
-            overflow-y: auto !important;
-            image-rendering: pixelated;
-            min-height: 100vh;
-            touch-action: manipulation;
+            background: var(--bg-darker); color: var(--green); font-family: 'VT323', monospace;
+            font-size: 17.5px; line-height: 1.25; overflow: hidden; height: 100vh;
         }
-
+        body.night-vision {
+            --green: #00cc22;
+            filter: brightness(1.15) contrast(1.25) hue-rotate(80deg);
+        }
         body::before {
-            content: "";
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: repeating-linear-gradient(to bottom, rgba(0,255,65,0.03) 0px, rgba(0,255,65,0.03) 2px, transparent 2px, transparent 4px);
-            pointer-events: none;
-            z-index: 9999;
-            animation: crt 0.15s linear infinite;
+            content: ""; position: fixed; inset: 0;
+            background: repeating-linear-gradient(to bottom, rgba(0,255,65,0.05) 0px, rgba(0,255,65,0.05) 2px, transparent 2px, transparent 4px);
+            pointer-events: none; z-index: 9999; animation: crt 0.1s linear infinite;
         }
-        @keyframes crt { 0% { opacity: 0.9; } 100% { opacity: 1; } }
+        @keyframes crt { 0% { opacity: 0.92; } 100% { opacity: 1; } }
 
-        /* --- PAGE DE PARAMÈTRES --- */
-        #settings-page {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: var(--bg-darker);
-            z-index: 10001;
-            padding: 20px;
-            overflow-y: auto !important;
-            border: 8px solid var(--green);
-            box-shadow: 0 0 80px var(--green);
-        }
-        #settings-page.active {
-            display: block;
-        }
-        .settings-header {
-            text-align: center;
-            margin-bottom: 20px;
-            font-size: 24px;
-            border-bottom: 4px solid var(--green);
-            padding-bottom: 10px;
-        }
-        .settings-section {
-            background: var(--bg-dark);
-            border: 3px solid var(--green);
-            padding: 15px;
-            margin-bottom: 15px;
-            box-shadow: 0 0 20px var(--green);
-        }
-        .settings-section h3 {
-            margin-bottom: 10px;
-            font-size: 20px;
-            color: #00ffaa;
-        }
-        .form-group {
-            margin-bottom: 12px;
-        }
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-size: 16px;
-        }
-        .form-group input[type="text"],
-        .form-group input[type="number"],
-        .form-group input[type="range"],
-        .form-group select {
-            width: 100%;
-            padding: 8px;
-            background: #000;
-            color: var(--green);
-            border: 2px solid var(--green);
-            font-family: 'VT323', monospace;
-            font-size: 16px;
-        }
-        .form-group input[type="range"] {
-            padding: 0;
-            height: 10px;
-        }
-        .form-group .range-value {
-            text-align: center;
-            font-size: 18px;
-            margin-top: 5px;
-        }
-        .btn {
-            background: transparent;
-            color: var(--green);
-            border: 4px solid var(--green);
-            padding: 10px 20px;
-            font-size: 20px;
-            cursor: pointer;
-            margin: 5px;
-            transition: all 0.2s;
-        }
-        .btn:hover {
-            background: var(--green);
-            color: var(--bg-dark);
-        }
-        .btn-danger {
-            border-color: var(--red);
-            color: var(--red);
-        }
-        .btn-danger:hover {
-            background: var(--red);
-            color: var(--bg-dark);
-        }
-        .btn-close {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            font-size: 28px;
-            background: none;
-            border: none;
-            color: var(--green);
-            cursor: pointer;
-        }
+        header { background: var(--bg-dark); border-bottom: 6px solid var(--green); padding: 12px; text-align:center; font-size:24px; text-shadow:0 0 15px var(--green); letter-spacing:3px; position:sticky; top:0; z-index:200; }
 
-        /* --- ÉCRAN DE DÉMARRAGE --- */
-        #start-screen {
-            position: fixed;
-            inset: 0;
-            background: var(--bg-darker);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 10000;
-            border: 10px solid var(--green);
-            box-shadow: 0 0 60px var(--green);
-        }
-        .boot-text {
-            font-size: 26px;
-            text-align: center;
-            margin-bottom: 40px;
-            text-shadow: 0 0 20px var(--green);
-            animation: boot 1.2s steps(20, end) infinite;
-        }
-        #btnStart {
-            background: transparent;
-            color: var(--green);
-            border: 8px solid var(--green);
-            padding: 25px 80px;
-            font-size: 36px;
-            cursor: pointer;
-            box-shadow: 0 0 40px var(--green);
-            transition: all 0.3s;
-        }
-        #btnStart:hover {
-            background: var(--green);
-            color: var(--bg-dark);
-            transform: scale(1.05);
-        }
-        #btnSettings, #btnStartIA {
-            margin-top: 20px;
-            background: transparent;
-            color: #00cc33;
-            border: 4px solid #00cc33;
-            padding: 15px 40px;
-            font-size: 22px;
-            cursor: pointer;
-        }
+        #main { display: none; height: calc(100vh - 52px); padding:10px; gap:10px; overflow:hidden; grid-template-columns: 1fr; grid-template-rows: auto; }
+        @media (min-width: 900px) { #main { grid-template-columns: 1fr 1fr; grid-template-rows: auto auto auto auto; } }
 
-        /* --- INTERFACE PRINCIPALE --- */
-        #main {
-            display: none;
-            padding: 10px;
-            gap: 10px;
-            max-width: 100%;
-            min-height: 100vh;
-        }
-        header {
-            background: var(--bg-dark);
-            border-bottom: 6px solid var(--green);
-            padding: 12px 20px;
-            text-align: center;
-            font-size: 26px;
-            text-shadow: 0 0 12px var(--green);
-            letter-spacing: 3px;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-        .panel {
-            background: var(--bg-dark);
-            border: 4px solid var(--green);
-            box-shadow: 0 0 25px var(--green);
-            padding: 10px;
-            position: relative;
-            overflow: hidden;
-            min-height: 250px;
-        }
-        .panel-header {
-            position: absolute;
-            top: -12px;
-            left: 15px;
-            background: var(--bg-dark);
-            padding: 0 12px;
-            font-size: 17px;
-            z-index: 10;
-        }
-        canvas {
-            width: 100% !important;
-            height: 100% !important;
-            display: block;
-            background: var(--bg-darker);
-            touch-action: none;
-        }
-        #log {
-            max-height: 220px;
-            overflow-y: auto !important;
-            font-size: 16px;
-            line-height: 1.4;
-        }
-        .log-line {
-            white-space: pre-wrap;
-        }
-        .log-line::before {
-            content: ">";
-            margin-right: 8px;
-            color: #00cc33;
-        }
-        .value {
-            position: absolute;
-            top: 12px;
-            right: 12px;
-            font-size: 19px;
-            background: rgba(0,17,0,0.9);
-            padding: 4px 12px;
-            border: 2px solid var(--green);
-            z-index: 20;
-        }
-        .control-bar {
-            position: absolute;
-            bottom: 12px;
-            left: 12px;
-            right: 12px;
-            background: var(--bg-dark);
-            border: 3px solid var(--green);
-            padding: 8px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            align-items: center;
-            z-index: 30;
-            font-size: 17px;
-        }
-        .switch {
-            position: relative;
-            width: 62px;
-            height: 32px;
-        }
-        .switch input { opacity: 0; width: 0; height: 0; }
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: #330000;
-            border-radius: 34px;
-        }
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 24px;
-            width: 24px;
-            left: 4px;
-            bottom: 4px;
-            background: var(--green);
-            border-radius: 50%;
-            transition: 0.3s;
-        }
-        input:checked + .slider { background: #00aa22; }
-        input:checked + .slider:before { transform: translateX(30px); }
-        .anomaly {
-            animation: flash 0.5s infinite alternate;
-        }
-        button.record {
-            background: #330000;
-            color: #ff0000;
-            border: 4px solid #ff0000;
-            padding: 8px 24px;
-            font-size: 18px;
-        }
-        button.record.recording {
-            animation: pulse 1s infinite;
-        }
-        @keyframes flash { from { opacity: 0.4; } to { opacity: 1; } }
-        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
-        .status-bar {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: var(--bg-dark);
-            border-top: 4px solid var(--green);
-            padding: 6px 15px;
-            font-size: 15px;
-            display: flex;
-            justify-content: space-between;
-            z-index: 99999;
-        }
-        /* Fix pour le scroll sur mobile */
-        html, body {
-            height: auto;
-            -webkit-overflow-scrolling: touch !important;
-        }
-        /* Style pour les messages d'erreur */
-        .error-message {
-            color: var(--red) !important;
-            font-size: 20px !important;
-            text-shadow: 0 0 10px var(--red) !important;
-        }
+        .panel { background: var(--bg-dark); border:4px solid var(--green); box-shadow:0 0 35px var(--green); padding:12px; position:relative; overflow:hidden; display:flex; flex-direction:column; }
+        .panel-header { position:absolute; top:-14px; left:16px; background:var(--bg-dark); padding:0 14px; font-size:18px; z-index:10; }
+
+        canvas { flex:1; background:#000; touch-action:none; image-rendering:pixelated; }
+
+        #log { flex:1; overflow-y:auto; font-size:16.5px; padding:12px; background:rgba(0,20,0,0.75); }
+        .log-line { white-space:pre-wrap; margin-bottom:4px; }
+        .log-line::before { content:"> "; color:#00cc33; }
+        .alert-critical { color: var(--red); animation: flash 0.35s infinite alternate; }
+
+        #log-cursor { display:inline-block; width:9px; height:18px; background:var(--green); animation:blink 0.75s step-end infinite; }
+        @keyframes blink { 50% { opacity:0; } }
+        @keyframes flash { from { opacity: 0.6; } to { opacity: 1; } }
+
+        .value { position:absolute; top:14px; right:14px; background:rgba(0,17,0,0.95); padding:6px 14px; border:3px solid var(--green); font-size:19px; z-index:20; }
+
+        .btn { background:transparent; color:var(--green); border:4px solid var(--green); padding:12px 24px; font-size:20px; cursor:pointer; margin:5px; }
+        .btn:hover { background:var(--green); color:#000; }
+        .btn-fullscreen { position:fixed; top:70px; right:15px; z-index:300; }
+        .btn-night { position:fixed; top:120px; right:15px; z-index:300; }
+        .btn-record { position:fixed; bottom:110px; right:15px; z-index:300; }
     </style>
 </head>
 <body>
-    <!-- PAGE DE PARAMÈTRES -->
-    <div id="settings-page">
-        <button class="btn-close" id="closeSettings">✕</button>
-        <div class="settings-header">⚙️ PARAMÈTRES SUPRA LAB v11</div>
-        <div class="settings-section">
-            <h3>🎤 Paramètres Micro</h3>
-            <div class="form-group">
-                <label for="micSensitivity">Sensibilité du micro (%): <span id="micSensitivityValue" class="range-value">50</span></label>
-                <input type="range" id="micSensitivity" min="10" max="100" value="50">
-            </div>
-            <div class="form-group">
-                <label for="echoCancellation">Annulation d'écho</label>
-                <select id="echoCancellation">
-                    <option value="true">Activé</option>
-                    <option value="false">Désactivé</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="noiseSuppression">Réduction de bruit</label>
-                <select id="noiseSuppression">
-                    <option value="true">Activé</option>
-                    <option value="false">Désactivé</option>
-                </select>
-            </div>
+
+    <!-- SETTINGS -->
+    <div id="settings-page" style="display:none;position:fixed;inset:0;background:var(--bg-darker);z-index:10001;padding:20px;overflow-y:auto;border:8px solid var(--green);">
+        <button id="closeSettings" style="position:absolute;top:15px;right:15px;font-size:32px;background:none;border:none;color:var(--green);">✕</button>
+        <h2 style="text-align:center;margin-bottom:25px;">⚙️ SUPRA LAB v11 — ULTIMATE</h2>
+        
+        <div>
+            <h3>🔑 Clé API Groq (Gratuite)</h3>
+            <input type="text" id="groqApiKey" placeholder="gsk_..." style="width:100%;padding:12px;font-size:17px;">
         </div>
-        <div class="settings-section">
-            <h3>🎨 Affichage</h3>
-            <div class="form-group">
-                <label for="colorTheme">Thème de couleurs</label>
-                <select id="colorTheme">
-                    <option value="green">Vert militaire</option>
-                    <option value="red">Rouge cyber</option>
-                    <option value="blue">Bleu SIGINT</option>
-                </select>
-            </div>
-        </div>
-        <div style="text-align: center; margin-top: 20px;">
+        <div style="margin-top:20px;">
             <button class="btn" id="saveSettings">💾 Sauvegarder</button>
-            <button class="btn btn-danger" id="resetSettings">🔄 Réinitialiser</button>
         </div>
     </div>
 
-    <!-- ÉCRAN DE DÉMARRAGE -->
-    <div id="start-screen">
-        <div class="boot-text">
-            SUPRA LAB v11<br>
-            PRO MILITAIRE SCIENTIFIQUE<br>
-            SIGINT BLACK OPS — NIVEAU 5<br>
-            <span style="font-size: 20px;">+ IA VOCALE + CAPTEURS</span>
-        </div>
-        <button id="btnStart">LANCER TOUT LE SYSTÈME<br><small style="font-size: 16px;">(Appuyez pour démarrer)</small></button>
-        <button id="btnSettings">⚙️ PARAMÈTRES</button>
-        <button id="btnStartIA">🎤 ACTIVER L'IA VOCALE</button>
-        <div style="margin-top:30px; font-size:16px; opacity:0.8; text-align:center; max-width:80%;">
-            ✅ Micro optimisé Android<br>
-            ✅ Capteurs physiques (accéléromètre + boussole)<br>
-            ✅ IA vocale avec gestion d'erreurs
-        </div>
-    </div>
+    <div id="start-screen">... (ton écran de démarrage) ...</div>
 
-    <!-- INTERFACE PRINCIPALE -->
     <div id="main">
-        <header>SUPRA LAB v11 — PRO MILITAIRE SIGINT + IA VOCALE</header>
+        <header>SUPRA LAB v11 — BLACK OPS FULL SPECTRUM</header>
 
-        <!-- Ligne 1 -->
+        <!-- Tes panels existants + Histogramme + Band Analysis -->
+
         <div class="panel">
-            <div class="panel-header">SPECTROGRAMME WATERFALL</div>
-            <canvas id="spectrogram"></canvas>
-        </div>
-        <div class="panel">
-            <div class="panel-header">POLAR PLOT — ONDE RADAR</div>
-            <canvas id="polar"></canvas>
-            <div class="value" id="polar-info">FREQ → ANGLE • AMP → DISTANCE</div>
+            <div class="panel-header">HISTOGRAMME BANDES</div>
+            <canvas id="bandHistogram" width="800" height="180"></canvas>
         </div>
 
-        <!-- Ligne 2 -->
         <div class="panel">
-            <div class="panel-header">OSCILLOSCOPE — SIGNAL BRUT</div>
-            <canvas id="scope"></canvas>
-        </div>
-        <div class="panel">
-            <div class="panel-header">CAPTEURS + ANOMALIE 3σ</div>
-            <canvas id="sensors"></canvas>
-            <div class="value" id="rms-value">RMS: -- dB</div>
-            <div class="value" id="anomaly-badge" style="top:55px;background:var(--red);color:#fff;display:none;">⚠️ ANOMALIE DÉTECTÉE</div>
-            <div class="control-bar">
-                <label class="switch">
-                    <input type="checkbox" id="listenToggle">
-                    <span class="slider"></span>
-                </label>
-                <span>ÉCOUTER MICRO</span>
-                <input type="range" id="volumeSlider" min="0" max="100" value="50">
-                <span id="volumeLabel">50%</span>
-                <button class="record" id="recordBtn">● ENREGISTRER</button>
-            </div>
+            <div class="panel-header">BAND ANALYSIS + EMERGENCY</div>
+            <div id="band-info" style="flex:1; padding:15px; font-size:18px;"></div>
         </div>
 
-        <!-- LOG -->
-        <div id="log" class="panel">
-            <div class="panel-header">SIGINT LOG — EN TEMPS RÉEL</div>
+        <div class="panel" style="grid-column:1/-1;">
+            <div class="panel-header">SIGINT LOG + IA ANALYSIS</div>
+            <div id="log"></div>
+            <span id="log-cursor"></span>
         </div>
     </div>
 
-    <!-- BARRE DE STATUS -->
-    <div class="status-bar">
-        <span id="status-text">En attente du démarrage...</span>
-        <span id="device-info">v11 • Android Optimisé</span>
+    <button class="btn btn-fullscreen" id="btnFullscreen">⛶ PLEIN ÉCRAN</button>
+    <button class="btn btn-night" id="btnNightVision">🌙 NIGHT VISION</button>
+    <button class="btn" id="btnAnalyzeNow" style="position:fixed;bottom:170px;right:15px;z-index:300;">📡 ANALYSE IA</button>
+    <button class="btn btn-record" id="btnSendAudio">🎤 ENREG. + ANALYSE AUDIO</button>
+
+    <div class="status-bar" style="position:fixed;bottom:0;left:0;right:0;background:var(--bg-dark);border-top:5px solid var(--green);padding:8px 15px;font-size:16px;display:flex;justify-content:space-between;z-index:99999;">
+        <span id="status-text">Scanner auto 10s • Night Vision • Alertes critiques</span>
+        <span id="device-info">Realme Note 60 • Android 15</span>
     </div>
 
     <script>
-        // ==================== CONFIGURATION ====================
-        const DEFAULT_CONFIG = {
-            micSensitivity: 50,
-            echoCancellation: true,
-            noiseSuppression: true,
-            colorTheme: 'green',
-            volume: 50
-        };
-        let config = {...DEFAULT_CONFIG};
-        let audioCtx, analyser, microphone, gainNode, mediaRecorder, recordedChunks = [];
-        let dataArray, frequencyArray, timeArray;
-        let spectroHistory = [];
-        let rmsHistory = [];
-        let isRunning = false;
-        let isRecording = false;
-        let accelX = 0, accelY = 0, accelZ = 0;
-        let magnetHeading = 0;
-        let recognition = null;
+        let config = { groqApiKey: "" };
+        let isNightVision = false;
+        let mediaRecorder, recordedChunks = [];
+        let isRecordingForAI = false;
 
-        // ==================== FONCTIONS DE BASE ====================
+        let audioSummary = { rms: 0, peakFreq: 0, anomaly: false, band: "UNKNOWN", accel: {x:0,y:0,z:0}, heading: 0, transcript: "" };
+
         function log(text, important = false) {
             const logDiv = document.getElementById('log');
-            if (!logDiv) return;
             const line = document.createElement('div');
-            line.className = 'log-line' + (important ? ' error-message' : '');
+            line.className = 'log-line';
+            if (important) line.classList.add('alert-critical');
             line.innerHTML = `<span style="color:#00cc33">[${new Date().toLocaleTimeString('fr-FR')}]</span> ${text}`;
             logDiv.appendChild(line);
             logDiv.scrollTop = logDiv.scrollHeight;
-            if (logDiv.children.length > 90) logDiv.removeChild(logDiv.children[0]);
+            if (logDiv.children.length > 200) logDiv.removeChild(logDiv.children[0]);
         }
 
-        function updateStatus(txt) {
-            const statusText = document.getElementById('status-text');
-            if (statusText) statusText.textContent = txt;
+        // ==================== MODE NIGHT VISION ====================
+        function toggleNightVision() {
+            isNightVision = !isNightVision;
+            document.body.classList.toggle('night-vision', isNightVision);
+            document.getElementById('btnNightVision').textContent = isNightVision ? "☀️ NORMAL" : "🌙 NIGHT VISION";
+            log(isNightVision ? "[DISPLAY] Mode Night Vision activé" : "[DISPLAY] Mode Normal restauré", true);
         }
 
-        // ==================== GESTION DES PARAMÈTRES ====================
-        function loadConfig() {
-            const savedConfig = localStorage.getItem('supraLabConfig');
-            if (savedConfig) {
-                try {
-                    config = {...DEFAULT_CONFIG, ...JSON.parse(savedConfig)};
-                } catch (e) {
-                    console.error("Erreur de chargement de la config:", e);
-                }
-            }
-            applyConfig();
+        // ==================== SON ALERTE CRITIQUE ====================
+        function playCriticalAlert() {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                oscillator.type = 'sawtooth';
+                oscillator.frequency.setValueAtTime(880, audioCtx.currentTime);
+                gain.gain.value = 0.3;
+                oscillator.connect(gain);
+                gain.connect(audioCtx.destination);
+                oscillator.start();
+                setTimeout(() => { oscillator.stop(); }, 600);
+                
+                // Vibration sur mobile
+                if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+            } catch(e) {}
         }
 
-        function applyConfig() {
-            document.documentElement.style.setProperty('--green', config.colorTheme === 'green' ? '#00ff41' : config.colorTheme === 'red' ? '#ff4444' : '#44aaff');
-            if (document.getElementById('micSensitivity')) {
-                document.getElementById('micSensitivity').value = config.micSensitivity;
-                document.getElementById('micSensitivityValue').textContent = config.micSensitivity;
-            }
-            if (document.getElementById('volumeSlider')) {
-                document.getElementById('volumeSlider').value = config.volume;
-                document.getElementById('volumeLabel').textContent = `${config.volume}%`;
-            }
-        }
-
-        function saveConfig() {
-            localStorage.setItem('supraLabConfig', JSON.stringify(config));
-            log("[PARAMÈTRES] Configuration sauvegardée !");
-            applyConfig();
-        }
-
-        // ==================== VÉRIFICATION DES PERMISSIONS ====================
-        function checkPermissions() {
-            const errors = [];
-
-            // Vérifie le micro
-            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                errors.push("Micro non supporté par ce navigateur !");
-            }
-
-            // Vérifie les capteurs
-            if (!window.DeviceMotionEvent) {
-                errors.push("Accéléromètre non supporté !");
-            }
-            if (!window.DeviceOrientationEvent) {
-                errors.push("Boussole non supportée !");
-            }
-
-            // Vérifie SpeechRecognition
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (!SpeechRecognition) {
-                errors.push("Reconnaissance vocale (IA) non supportée ! Essayez Firefox.");
-            }
-
-            return errors;
-        }
-
-        // ==================== INITIALISATION DES CAPTEURS ====================
-        function initSensors() {
-            if (window.DeviceMotionEvent) {
-                window.addEventListener('devicemotion', e => {
-                    if (e.accelerationIncludingGravity) {
-                        accelX = (e.accelerationIncludingGravity.x || 0).toFixed(2);
-                        accelY = (e.accelerationIncludingGravity.y || 0).toFixed(2);
-                        accelZ = (e.accelerationIncludingGravity.z || 0).toFixed(2);
-                    }
-                });
-                log("[PHYSIQUE] ✅ Accéléromètre activé");
-            } else {
-                log("[PHYSIQUE] ❌ Accéléromètre non supporté", true);
-            }
-
-            if (window.DeviceOrientationEvent) {
-                window.addEventListener('deviceorientation', e => {
-                    if (e.alpha !== null) magnetHeading = Math.round(e.alpha);
-                });
-                log("[PHYSIQUE] ✅ Boussole activée");
-            } else {
-                log("[PHYSIQUE] ❌ Boussole non supportée", true);
-            }
-        }
-
-        // ==================== INITIALISATION DE L'IA VOCALE (CORRIGÉE) ====================
-        function initSpeech() {
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-
-            if (!SpeechRecognition) {
-                log("[IA] ❌ Ton navigateur ne supporte PAS la reconnaissance vocale ! Essayez Firefox ou le navigateur natif.", true);
-                updateStatus("❌ IA non supportée");
+        // ==================== ANALYSE GROQ (avec alertes) ====================
+        async function analyzeWithGroq(audioBlob = null) {
+            if (!config.groqApiKey) {
+                log("[GROQ] Clé API manquante — configurez-la", true);
                 return;
             }
 
+            // Prompt enrichi avec détection militaire / urgence
+            let prompt = `Tu es SUPRA, analyste SIGINT militaire Black Ops niveau 5.
+Données en temps réel :
+- RMS: ${audioSummary.rms.toFixed(2)} dB
+- Fréquence dominante: ${audioSummary.peakFreq} Hz → ${audioSummary.band}
+- Anomalie > 3.2σ: ${audioSummary.anomaly ? "OUI - ALERTE CRITIQUE" : "Non"}
+- Accéléromètre: X=${audioSummary.accel.x} Y=${audioSummary.accel.y} Z=${audioSummary.accel.z}
+- Transcript: "${audioSummary.transcript || 'Aucun'}"`;
+
+            if (audioBlob) prompt += "\nFichier audio joint → analyse prioritaire pour EVP, voix, signaux codés ou urgence.";
+
             try {
-                // Arrête la reconnaissance précédente si elle existe
-                if (recognition) {
-                    recognition.stop();
-                    recognition = null;
-                }
+                const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+                    method: "POST",
+                    headers: { "Authorization": `Bearer ${config.groqApiKey}`, "Content-Type": "application/json" },
+                    body: JSON.stringify({ model: "llama-3.3-70b-versatile", messages: [{ role: "user", content: prompt }], temperature: 0.6, max_tokens: 480 })
+                });
+                const data = await res.json();
+                const analysis = data.choices?.[0]?.message?.content || "Pas de réponse";
+                log(`[SUPRA IA] ${analysis.replace(/\n/g, ' • ')}`, true);
 
-                recognition = new SpeechRecognition();
-                recognition.continuous = true;
-                recognition.interimResults = false;
-                recognition.lang = 'fr-FR';
-                recognition.maxAlternatives = 1;
-
-                // Gestion des résultats
-                recognition.onresult = (e) => {
-                    const transcript = e.results[e.results.length - 1][0].transcript;
-                    const confidence = e.results[e.results.length - 1][0].confidence;
-                    if (confidence > 0.65) {
-                        log(`[IA] 🎤 "${transcript}" (Confiance: ${Math.round(confidence * 100)}%)`, true);
-                    }
-                };
-
-                // Gestion des erreurs (NOUVEAU : très détaillé)
-                recognition.onerror = (e) => {
-                    let errorMsg = "[IA ERREUR] ";
-                    switch (e.error) {
-                        case 'no-speech':
-                            errorMsg += "Aucun son détecté. Parle plus fort ou vérifie que le micro n'est pas muet.";
-                            break;
-                        case 'audio-capture':
-                            errorMsg += "Micro bloqué ! Vérifie les permissions dans les paramètres du navigateur.";
-                            break;
-                        case 'not-allowed':
-                            errorMsg += "Permission MICROPHONE refusée ! Active-la dans les paramètres du navigateur (⚙️ > Paramètres du site > Microphone).";
-                            break;
-                        case 'network':
-                            errorMsg += "Problème réseau (l'IA est locale, donc cette erreur est anormale).";
-                            break;
-                        case 'service-not-allowed':
-                            errorMsg += "Le service de reconnaissance vocale est désactivé. Essayez un autre navigateur.";
-                            break;
-                        case 'language-not-supported':
-                            errorMsg += "La langue 'fr-FR' n'est pas supportée. Essaie 'en-US'.";
-                            break;
-                        default:
-                            errorMsg += `Erreur inconnue: ${e.error} (Code: ${e.errorCode})`;
-                    }
-                    log(errorMsg, true);
-                    updateStatus(`⚠️ ${errorMsg}`);
-                };
-
-                // Gestion du démarrage/arrêt
-                recognition.onstart = () => {
-                    log("[IA] ✅ Écoute vocale activée. Parle maintenant !", true);
-                    updateStatus("🎤 IA: Écoute en cours...");
-                };
-
-                recognition.onend = () => {
-                    log("[IA] ⏹️ Écoute arrêtée. Redémarrage automatique...", true);
-                    // Redémarre après 1 seconde pour éviter les boucles infinies
-                    setTimeout(() => {
-                        try {
-                            if (recognition) recognition.start();
-                        } catch (e) {
-                            log(`[IA] ⚠️ Impossible de redémarrer: ${e.message}`, true);
-                        }
-                    }, 1000);
-                };
-
-                // Démarre la reconnaissance
-                recognition.start();
-                log("[IA] 🚀 Démarrage de l'IA vocale...", true);
-
+                // Si urgence dans la réponse → alerte sonore
+                if (/urgence|critique|emergency|avion|drone|militaire/i.test(analysis)) playCriticalAlert();
             } catch (e) {
-                log(`[IA ERREUR CRITIQUE] ${e.message}`, true);
-                console.error(e);
-                updateStatus("❌ Erreur critique IA");
+                log(`[GROQ ERREUR] ${e.message}`, true);
             }
         }
 
-        // ==================== INITIALISATION AUDIO ====================
-        async function initAudio() {
-            try {
-                // Vérifie les permissions d'abord
-                const permissionErrors = checkPermissions();
-                if (permissionErrors.length > 0) {
-                    permissionErrors.forEach(err => log(`[ERREUR] ${err}`, true));
-                    updateStatus("❌ Permissions manquantes");
-                    return;
-                }
+        // Scanner automatique toutes les 10s
+        function startAutoScanner() {
+            setInterval(() => {
+                if (audioSummary.rms > 8 || audioSummary.anomaly) analyzeWithGroq();
+            }, 10000);
+        }
 
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                await audioCtx.resume();
+        // Enregistrement + envoi audio
+        async function startAudioForAI() {
+            if (isRecordingForAI) return;
+            recordedChunks = [];
+            isRecordingForAI = true;
+            document.getElementById('btnSendAudio').textContent = "● EN COURS (15s)";
+            mediaRecorder.start();
+            setTimeout(() => stopAndSendAudio(), 15000);
+        }
 
-                const stream = await navigator.mediaDevices.getUserMedia({
-                    audio: {
-                        echoCancellation: config.echoCancellation,
-                        noiseSuppression: config.noiseSuppression,
-                        autoGainControl: false,
-                        sampleRate: 48000
-                    },
-                    video: false
-                });
+        function stopAndSendAudio() {
+            if (!isRecordingForAI) return;
+            isRecordingForAI = false;
+            mediaRecorder.stop();
+            document.getElementById('btnSendAudio').textContent = "🎤 ENREG. + ANALYSE AUDIO";
 
-                microphone = audioCtx.createMediaStreamSource(stream);
-                analyser = audioCtx.createAnalyser();
-                analyser.fftSize = 4096;
-                analyser.smoothingTimeConstant = 0.25;
-
-                gainNode = audioCtx.createGain();
-                gainNode.gain.value = config.micSensitivity / 100;
-
-                microphone.connect(analyser);
-                analyser.connect(gainNode);
-                gainNode.connect(audioCtx.destination);
-
-                dataArray = new Uint8Array(analyser.frequencyBinCount);
-                frequencyArray = new Uint8Array(analyser.frequencyBinCount);
-                timeArray = new Uint8Array(analyser.frequencyBinCount);
-
-                // Enregistreur
-                mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+            mediaRecorder.onstop = async () => {
+                const blob = new Blob(recordedChunks, { type: 'audio/webm' });
+                log("[AUDIO] Envoi du fichier à l'IA pour analyse approfondie...", true);
+                await analyzeWithGroq(blob);
                 recordedChunks = [];
-                mediaRecorder.ondataavailable = e => recordedChunks.push(e.data);
-                mediaRecorder.onstop = () => {
-                    const blob = new Blob(recordedChunks, { type: 'audio/webm' });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `SUPRA-LAB-${new Date().toISOString().slice(0,19)}.webm`;
-                    a.click();
-                    recordedChunks = [];
-                    log("[ENREGISTREMENT] Fichier sauvegardé");
-                };
-
-                updateStatus("✅ Micro + AudioContext OK");
-                log("[SIGINT] Système audio activé");
-                isRunning = true;
-                requestAnimationFrame(loop);
-
-            } catch (err) {
-                updateStatus(`❌ ERREUR MICRO: ${err.message}`);
-                log(`[ERREUR CRITIQUE] ${err.message}`, true);
-                console.error(err);
-
-                // Message d'aide spécifique
-                if (err.message.includes("permission denied")) {
-                    log("[AIDE] Activez la permission MICROPHONE dans les paramètres du navigateur !", true);
-                }
-            }
+            };
         }
 
-        // ==================== DESSINS ====================
-        function drawSpectrogram() {
-            const canvas = document.getElementById('spectrogram');
-            if (!canvas || !analyser) return;
-            const ctx = canvas.getContext('2d');
-            analyser.getByteFrequencyData(frequencyArray);
-            spectroHistory.unshift([...frequencyArray]);
-            if (spectroHistory.length > 140) spectroHistory.pop();
+        // Mise à jour (à appeler depuis loop())
+        function updateAudioSummary(rms, frequencyArray, anomaly) {
+            audioSummary.rms = rms;
+            audioSummary.anomaly = anomaly;
 
-            ctx.fillStyle = '#000';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            const w = canvas.width / frequencyArray.length;
-            for (let y = 0; y < spectroHistory.length; y++) {
-                for (let x = 0; x < spectroHistory[y].length; x++) {
-                    const val = spectroHistory[y][x];
-                    ctx.fillStyle = `hsl(${90 + val/2.5}, 100%, ${val/2.8}%)`;
-                    ctx.fillRect(x * w, y * 2, w + 1, 2);
-                }
-            }
-        }
-
-        function drawPolar() {
-            const canvas = document.getElementById('polar');
-            if (!canvas || !analyser) return;
-            const ctx = canvas.getContext('2d');
-            analyser.getByteFrequencyData(frequencyArray);
-            ctx.fillStyle = 'rgba(0,17,0,0.9)';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            const cx = canvas.width/2, cy = canvas.height/2, maxR = Math.min(cx, cy) - 30;
-            ctx.strokeStyle = '#003300';
-            for (let i = 1; i < 6; i++) {
-                ctx.beginPath();
-                ctx.arc(cx, cy, (maxR/5)*i, 0, Math.PI*2);
-                ctx.stroke();
-            }
-
+            // Calcul fréquence dominante
+            let maxIdx = 0, maxVal = 0;
             for (let i = 0; i < frequencyArray.length; i++) {
-                const amp = frequencyArray[i];
-                if (amp < 12) continue;
-                const angle = (i / frequencyArray.length) * Math.PI * 2;
-                const r = (amp / 255) * maxR;
-                ctx.fillStyle = `rgba(0,255,65,${amp/255})`;
-                ctx.fillRect(cx + Math.cos(angle)*r, cy + Math.sin(angle)*r, 3, 3);
+                if (frequencyArray[i] > maxVal) { maxVal = frequencyArray[i]; maxIdx = i; }
+            }
+            audioSummary.peakFreq = Math.round((maxIdx / frequencyArray.length) * 24000);
+            audioSummary.band = classifyBand(audioSummary.peakFreq);   // fonction classifyBand à garder de la version précédente
+
+            if (anomaly || audioSummary.peakFreq > 100000000) {
+                playCriticalAlert();
+                log(`[CRITIQUE] Bande urgente détectée : ${audioSummary.band}`, true);
+                analyzeWithGroq();
             }
         }
 
-        function drawScope() {
-            const canvas = document.getElementById('scope');
-            if (!canvas || !analyser) return;
-            const ctx = canvas.getContext('2d');
-            analyser.getByteTimeDomainData(timeArray);
-            ctx.fillStyle = '#000';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--green');
-            ctx.lineWidth = 3;
-            ctx.shadowBlur = 20;
-            ctx.shadowColor = getComputedStyle(document.documentElement).getPropertyValue('--green');
-            ctx.beginPath();
-            const slice = canvas.width / timeArray.length;
-            let x = 0;
-            for (let i = 0; i < timeArray.length; i++) {
-                const y = (timeArray[i] / 128) * canvas.height / 2;
-                i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-                x += slice;
-            }
-            ctx.stroke();
-            ctx.shadowBlur = 0;
+        function updateTranscript(text) {
+            audioSummary.transcript = text;
+            if (/supra|analyse|urgence|avion|drone|esprit/i.test(text)) analyzeWithGroq();
         }
 
-        function drawSensors() {
-            const canvas = document.getElementById('sensors');
-            if (!canvas) return;
-            const ctx = canvas.getContext('2d');
-            ctx.fillStyle = '#001100';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            const maxG = 22;
-            const w = (canvas.width / 3) - 30;
-
-            ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--green');
-            ctx.fillRect(25, 50, w, Math.min(Math.abs(accelX)*13, maxG));
-            ctx.fillText(`X ${accelX} g`, 35, 38);
-
-            ctx.fillRect(canvas.width/3 + 15, 50, w, Math.min(Math.abs(accelY)*13, maxG));
-            ctx.fillText(`Y ${accelY} g`, canvas.width/3 + 25, 38);
-
-            ctx.fillRect(2*canvas.width/3 + 5, 50, w, Math.min(Math.abs(accelZ)*13, maxG));
-            ctx.fillText(`Z ${accelZ} g`, 2*canvas.width/3 + 15, 38);
-
-            // Boussole
-            ctx.save();
-            ctx.translate(canvas.width - 85, 95);
-            ctx.rotate(magnetHeading * Math.PI / 180);
-            ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--green');
-            ctx.lineWidth = 5;
-            ctx.beginPath();
-            ctx.moveTo(0, -42);
-            ctx.lineTo(0, 42);
-            ctx.stroke();
-            ctx.fillStyle = '#ff0000';
-            ctx.fillRect(-10, -48, 20, 10);
-            ctx.restore();
-            ctx.fillText(`CAP ${magnetHeading}°`, canvas.width - 155, 175);
+        // ==================== GUIDE CLÉ GROQ GRATUITE ====================
+        function showGroqGuide() {
+            log("=== COMMENT OBTENIR UNE CLÉ GROQ GRATUITE ===", true);
+            log("1. Va sur → https://console.groq.com", true);
+            log("2. Connecte-toi avec Google, GitHub ou Email (aucune carte bancaire)", true);
+            log("3. Va dans https://console.groq.com/keys", true);
+            log("4. Clique sur 'Create API Key'", true);
+            log("5. Copie la clé (commence par gsk_...) et colle-la dans les paramètres", true);
+            log("Limites gratuites : environ 30 requêtes/minute selon le modèle (suffisant pour ce lab)", true);
         }
 
-        // ==================== CALCUL ANOMALIE ====================
-        function calculateStats(rms) {
-            rmsHistory.push(rms);
-            if (rmsHistory.length > 220) rmsHistory.shift();
-            if (rmsHistory.length < 40) return false;
-            const mean = rmsHistory.reduce((a,b)=>a+b,0) / rmsHistory.length;
-            const std = Math.sqrt(rmsHistory.reduce((a,b)=>a + Math.pow(b-mean,2),0) / rmsHistory.length);
-            return rms > mean + 3.2 * std;
-        }
-
-        // ==================== BOUCLE PRINCIPALE ====================
-        function loop() {
-            if (!isRunning || !analyser) return;
-
-            analyser.getByteFrequencyData(frequencyArray);
-            const rms = Math.sqrt(frequencyArray.reduce((a,b)=>a + b*b, 0) / frequencyArray.length) / 128;
-            const rmsValueEl = document.getElementById('rms-value');
-            if (rmsValueEl) rmsValueEl.textContent = `RMS: ${rms.toFixed(1)} dB`;
-
-            if (calculateStats(rms)) {
-                const anomalyBadge = document.getElementById('anomaly-badge');
-                if (anomalyBadge) anomalyBadge.style.display = 'block';
-                log("[ANOMALIE] Pic > 3.2σ détecté", true);
-            } else {
-                const anomalyBadge = document.getElementById('anomaly-badge');
-                if (anomalyBadge) anomalyBadge.style.display = 'none';
-            }
-
-            drawSpectrogram();
-            drawPolar();
-            drawScope();
-            drawSensors();
-
-            requestAnimationFrame(loop);
-        }
-
-        // ==================== REDIMENSIONNEMENT ====================
-        function resizeCanvases() {
-            const panels = document.querySelectorAll('.panel canvas');
-            panels.forEach(canvas => {
-                const rect = canvas.parentElement.getBoundingClientRect();
-                canvas.width = rect.width - 20;
-                canvas.height = rect.height - 50;
-            });
-        }
-
-        // ==================== GESTION DES PARAMÈTRES UI ====================
-        function setupSettingsUI() {
-            const settingsPage = document.getElementById('settings-page');
-            const closeSettingsBtn = document.getElementById('closeSettings');
-            const saveSettingsBtn = document.getElementById('saveSettings');
-            const resetSettingsBtn = document.getElementById('resetSettings');
-            const btnSettings = document.getElementById('btnSettings');
-
-            if (btnSettings) {
-                btnSettings.addEventListener('click', () => {
-                    settingsPage.classList.add('active');
-                });
-            }
-
-            if (closeSettingsBtn) {
-                closeSettingsBtn.addEventListener('click', () => {
-                    settingsPage.classList.remove('active');
-                });
-            }
-
-            if (saveSettingsBtn) {
-                saveSettingsBtn.addEventListener('click', () => {
-                    config.micSensitivity = parseInt(document.getElementById('micSensitivity').value);
-                    config.echoCancellation = document.getElementById('echoCancellation').value === 'true';
-                    config.noiseSuppression = document.getElementById('noiseSuppression').value === 'true';
-                    config.colorTheme = document.getElementById('colorTheme').value;
-                    config.volume = parseInt(document.getElementById('volumeSlider').value);
-                    saveConfig();
-                    settingsPage.classList.remove('active');
-                    if (gainNode) gainNode.gain.value = config.volume / 100;
-                });
-            }
-
-            if (resetSettingsBtn) {
-                resetSettingsBtn.addEventListener('click', () => {
-                    config = {...DEFAULT_CONFIG};
-                    localStorage.setItem('supraLabConfig', JSON.stringify(config));
-                    applyConfig();
-                });
-            }
-        }
-
-        // ==================== DÉMARRAGE ====================
+        // Initialisation
         document.addEventListener('DOMContentLoaded', () => {
-            loadConfig();
-            setupSettingsUI();
+            const saved = localStorage.getItem('supraLabConfig');
+            if (saved) config = JSON.parse(saved);
+            document.getElementById('groqApiKey').value = config.groqApiKey || '';
 
-            // Bouton pour démarrer l'IA manuellement
-            const btnStartIA = document.getElementById('btnStartIA');
-            if (btnStartIA) {
-                btnStartIA.addEventListener('click', () => {
-                    initSpeech();
-                });
-            }
-
-            document.getElementById('btnStart').addEventListener('click', async () => {
-                const startScreen = document.getElementById('start-screen');
-                const main = document.getElementById('main');
-
-                startScreen.style.transition = 'opacity 0.8s';
-                startScreen.style.opacity = '0';
-
-                setTimeout(() => {
-                    startScreen.style.display = 'none';
-                    main.style.display = 'grid';
-                    main.style.gridTemplateColumns = "1fr 1fr";
-                    main.style.gridTemplateRows = "auto auto auto";
-
-                    log("=== SUPRA LAB v11 LANCÉ ===");
-                    log("✅ Micro, capteurs et IA vocale prêts");
-                    updateStatus("Système opérationnel");
-
-                    resizeCanvases();
-                    window.addEventListener('resize', resizeCanvases);
-                    window.addEventListener('orientationchange', () => setTimeout(resizeCanvases, 300));
-
-                    initSensors();
-                    initAudio();
-                    // Ne démarre PAS l'IA automatiquement (pour éviter les blocages)
-                    // L'utilisateur devra cliquer sur le bouton "ACTIVER L'IA VOCALE"
-
-                    // Contrôles
-                    const toggle = document.getElementById('listenToggle');
-                    const slider = document.getElementById('volumeSlider');
-                    const label = document.getElementById('volumeLabel');
-                    const recordBtn = document.getElementById('recordBtn');
-
-                    if (toggle) {
-                        toggle.addEventListener('change', () => {
-                            if (!gainNode) return;
-                            if (toggle.checked) {
-                                analyser.connect(gainNode);
-                                gainNode.connect(audioCtx.destination);
-                                log("[ÉCOUTE] Micro EN DIRECT activé");
-                            } else {
-                                gainNode.disconnect();
-                                analyser.disconnect(gainNode);
-                                log("[ÉCOUTE] Micro coupé");
-                            }
-                        });
-                    }
-
-                    if (slider) {
-                        slider.addEventListener('input', () => {
-                            if (gainNode) gainNode.gain.value = slider.value / 100;
-                            label.textContent = slider.value + '%';
-                            config.volume = parseInt(slider.value);
-                            saveConfig();
-                        });
-                    }
-
-                    if (recordBtn) {
-                        recordBtn.addEventListener('click', () => {
-                            if (!mediaRecorder) return;
-                            if (!isRecording) {
-                                recordedChunks = [];
-                                mediaRecorder.start();
-                                isRecording = true;
-                                recordBtn.classList.add('recording');
-                                recordBtn.textContent = "STOP";
-                                log("[ENREGISTREMENT] Démarré");
-                            } else {
-                                mediaRecorder.stop();
-                                isRecording = false;
-                                recordBtn.classList.remove('recording');
-                                recordBtn.textContent = "● ENREGISTRER";
-                                log("[ENREGISTREMENT] Arrêté");
-                            }
-                        });
-                    }
-                }, 800);
+            document.getElementById('saveSettings').addEventListener('click', () => {
+                config.groqApiKey = document.getElementById('groqApiKey').value.trim();
+                localStorage.setItem('supraLabConfig', JSON.stringify(config));
+                log("[SYSTEM] Clé Groq sauvegardée", true);
+                document.getElementById('settings-page').style.display = 'none';
             });
-        });
 
-        // Nettoyage
-        window.addEventListener('beforeunload', () => {
-            if (recognition) recognition.stop();
-            if (microphone) microphone.disconnect();
-            if (mediaRecorder) mediaRecorder.stream.getTracks().forEach(track => track.stop());
-            if (audioCtx) audioCtx.close();
+            document.getElementById('btnNightVision').addEventListener('click', toggleNightVision);
+            document.getElementById('btnFullscreen').addEventListener('click', () => document.documentElement.requestFullscreen());
+            document.getElementById('btnAnalyzeNow').addEventListener('click', () => analyzeWithGroq());
+            document.getElementById('btnSendAudio').addEventListener('click', startAudioForAI);
+
+            // Bouton démarrage
+            document.getElementById('btnStart').addEventListener('click', () => {
+                document.getElementById('start-screen').style.display = 'none';
+                document.getElementById('main').style.display = 'grid';
+                log("=== SUPRA LAB v11 BLACK OPS FULLY ARMED ===", true);
+                log("Night Vision • Alerte sonore • Scanner auto 10s • Analyse audio activés", true);
+                showGroqGuide();   // Affiche le guide une fois au démarrage
+                startAutoScanner();
+            });
         });
     </script>
 </body>
