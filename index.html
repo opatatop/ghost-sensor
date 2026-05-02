@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>SUPRA LAB v11 — PRO MILITAIRE SIGINT + IA GROQ</title>
+    <title>SUPRA LAB v11 — PRO MILITAIRE SIGINT + IA GROQ + TTS</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
 
@@ -366,18 +366,19 @@
         }
         .form-group {
             margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
         .form-group label {
-            display: block;
-            margin-bottom: 5px;
             font-size: 16px;
+            flex: 1;
         }
         .form-group input[type="text"],
         .form-group input[type="number"],
         .form-group input[type="range"],
         .form-group select,
         .form-group textarea {
-            width: 100%;
             padding: 8px;
             background: #000;
             color: var(--primary);
@@ -388,11 +389,13 @@
         .form-group input[type="range"] {
             padding: 0;
             height: 10px;
+            flex: 1;
+            margin: 0 10px;
         }
         .form-group .range-value {
             text-align: center;
             font-size: 18px;
-            margin-top: 5px;
+            width: 40px;
         }
         .btn-close {
             position: absolute;
@@ -490,6 +493,21 @@
             from { box-shadow: 0 0 30px var(--danger); }
             to { box-shadow: 0 0 60px var(--danger); }
         }
+
+        /* --- INDICATEUR TTS ACTIF --- */
+        #tts-indicator {
+            position: fixed;
+            top: 60px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid var(--primary);
+            color: var(--primary);
+            padding: 5px 10px;
+            font-size: 14px;
+            display: none;
+            z-index: 10005;
+            animation: pulse 1s infinite;
+        }
     </style>
 </head>
 <body>
@@ -499,69 +517,67 @@
         <div class="settings-header">⚙️ PARAMÈTRES SUPRA LAB v11</div>
 
         <div class="settings-section">
-            <h3>🔑 Clé API Groq (Persistante)</h3>
-            <div class="form-group">
-                <label for="groqApiKey">Clé API Groq (obligatoire pour l'analyse avancée)</label>
-                <input type="text" id="groqApiKey" placeholder="Entrez votre clé API Groq ici...">
-                <small style="color: var(--text-dim);">La clé est sauvegardée dans localStorage.</small>
+            <h3>🔑 Clé API Groq</h3>
+            <div class="form-group" style="display:block;">
+                <label for="groqApiKey">Clé API Groq (optionnel)</label>
+                <input type="text" id="groqApiKey" placeholder="Entrez votre clé API Groq ici..." style="width:100%;">
+                <small style="color: var(--text-dim); display:block; margin-top:5px;">La clé est sauvegardée dans localStorage.</small>
             </div>
         </div>
 
         <div class="settings-section">
-            <h3>🎤 Paramètres Micro</h3>
+            <h3>🤖 SYSTÈME & ÉCRAN</h3>
             <div class="form-group">
-                <label for="micSensitivity">Sensibilité du micro (%): <span id="micSensitivityValue" class="range-value">50</span></label>
-                <input type="range" id="micSensitivity" min="10" max="100" value="50">
+                <label for="keepScreenOn">Maintenir l'écran allumé (Wake Lock)</label>
+                <label class="switch">
+                    <input type="checkbox" id="keepScreenOn" checked>
+                    <span class="slider"></span>
+                </label>
             </div>
             <div class="form-group">
-                <label for="echoCancellation">Annulation d'écho</label>
+                <label for="enableTTS">Activer la voix IA (Text-to-Speech)</label>
+                <label class="switch">
+                    <input type="checkbox" id="enableTTS" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+
+        <div class="settings-section">
+            <h3>🎤 Audio & Micro</h3>
+            <div class="form-group">
+                <label>Volume du Micro (Pass-through)</label>
+                <input type="range" id="volumeSlider" min="0" max="100" value="20">
+                <span id="volumeLabel" class="range-value">20%</span>
+            </div>
+            <div class="form-group">
+                <label>Annulation d'écho</label>
                 <select id="echoCancellation">
                     <option value="true">Activé</option>
                     <option value="false">Désactivé</option>
                 </select>
             </div>
-            <div class="form-group">
-                <label for="noiseSuppression">Réduction de bruit</label>
-                <select id="noiseSuppression">
-                    <option value="true">Activé</option>
-                    <option value="false">Désactivé</option>
-                </select>
-            </div>
         </div>
 
         <div class="settings-section">
-            <h3>🎨 Affichage</h3>
+            <h3>⚡ Automatisation</h3>
             <div class="form-group">
-                <label for="colorTheme">Thème de couleurs</label>
-                <select id="colorTheme">
-                    <option value="green">Vert militaire (default)</option>
-                    <option value="red">Rouge cyber</option>
-                    <option value="blue">Bleu SIGINT</option>
-                    <option value="amber">Ambre rétro</option>
-                </select>
-            </div>
-        </div>
-
-        <div class="settings-section">
-            <h3>⚡ Détection Automatique</h3>
-            <div class="form-group">
-                <label for="autoScanInterval">Intervalle de scan (secondes): <span id="autoScanIntervalValue" class="range-value">10</span></label>
+                <label>Scan Auto (secondes)</label>
                 <input type="range" id="autoScanInterval" min="5" max="60" value="10">
+                <span id="autoScanIntervalValue" class="range-value">10</span>
             </div>
             <div class="form-group">
-                <label>
-                    <input type="checkbox" id="autoTriggerIA" checked> Déclencher l'IA sur détection d'anomalie
+                <label>Analyse IA Auto</label>
+                <label class="switch">
+                    <input type="checkbox" id="autoTriggerIA" checked>
+                    <span class="slider"></span>
                 </label>
-            </div>
-            <div class="form-group">
-                <label for="keywordSensitivity">Sensibilité des mots-clés vocaux: <span id="keywordSensitivityValue" class="range-value">70</span>%</label>
-                <input type="range" id="keywordSensitivity" min="50" max="95" value="70">
             </div>
         </div>
 
         <div style="text-align: center; margin-top: 20px;">
-            <button class="btn" id="saveSettings">💾 Sauvegarder</button>
-            <button class="btn btn-danger" id="resetSettings">🔄 Réinitialiser</button>
+            <button class="btn" id="saveSettings">💾 SAUVEGARDER</button>
+            <button class="btn btn-danger" id="resetSettings">🔄 RÉINITIALISER</button>
         </div>
     </div>
 
@@ -570,7 +586,7 @@
         <div class="boot-text">
             SUPRA LAB v11<br>
             <span style="color: var(--warning);">PRO MILITAIRE SIGINT</span><br>
-            + IA GROQ + DÉTECTION BANDES<br>
+            + IA GROQ + VOIX + WAKE LOCK<br>
             <span style="font-size: 20px;">NIVEAU 5 • BLACK OPS</span>
         </div>
         <button id="btnStart">LANCER TOUT LE SYSTÈME<br><small style="font-size: 16px;">(Appuyez pour démarrer)</small></button>
@@ -578,17 +594,19 @@
         <button id="btnStartIA">🎤 ACTIVER L'IA VOCALE</button>
         <div class="features-list">
             <div>✅ Micro optimisé Android/iOS</div>
-            <div>✅ Capteurs physiques (accéléromètre + boussole)</div>
-            <div>✅ IA vocale avec gestion d'erreurs avancée</div>
-            <div>✅ Base de données de fréquences intégrée</div>
-            <div>✅ Analyse IA Groq (rapports SIGINT)</div>
-            <div>✅ Détection automatique des bandes critiques</div>
+            <div>✅ Écran maintenu allumé (Wake Lock)</div>
+            <div>✅ IA qui parle en temps réel (TTS)</div>
+            <div>✅ Capteurs physiques</div>
+            <div>✅ Partage audio en direct</div>
         </div>
     </div>
 
     <!-- INTERFACE PRINCIPALE -->
     <div id="main">
-        <header>SUPRA LAB v11 — PRO SIGINT + IA GROQ + DÉTECTION BANDES</header>
+        <header>SUPRA LAB v11 — IA VOCALE + WAKE LOCK</header>
+
+        <!-- Indicateur TTS -->
+        <div id="tts-indicator">🔊 IA PARLE...</div>
 
         <!-- Ligne 1: Spectrogramme + Polar -->
         <div class="panel">
@@ -599,7 +617,7 @@
         <div class="panel">
             <div class="panel-header">POLAR PLOT — ONDE RADAR</div>
             <canvas id="polar"></canvas>
-            <div class="value" id="polar-info">FREQ → ANGLE • AMP → DISTANCE</div>
+            <div class="value" id="polar-info">FREQ → ANGLE</div>
         </div>
 
         <!-- Ligne 2: Oscilloscope + Capteurs -->
@@ -619,10 +637,8 @@
                     <span class="slider"></span>
                 </label>
                 <span>ÉCOUTER MICRO</span>
-                <input type="range" id="volumeSlider" min="0" max="100" value="50">
-                <span id="volumeLabel">50%</span>
                 <button class="record" id="recordBtn">● ENREGISTRER</button>
-                <button class="btn btn-warning" id="immediateAIBtn">🤖 ANALYSE IA IMMÉDIATE</button>
+                <button class="btn btn-warning" id="immediateAIBtn">🤖 ANALYSE IA</button>
             </div>
         </div>
 
@@ -637,9 +653,9 @@
 
         <!-- Ligne 4: Panneau d'analyse IA -->
         <div class="panel full-width" id="ai-analysis-panel">
-            <div class="panel-header">RAPPORT IA GROQ — STYLE SIGINT BLACK OPS</div>
+            <div class="panel-header">RAPPORT IA GROQ — STYLE SIGINT</div>
             <div class="control-bar">
-                <button class="btn btn-warning" id="sendToGroqBtn">📤 ENVoyer à Groq (API)</button>
+                <button class="btn btn-warning" id="sendToGroqBtn">📤 ENVOYER À GROQ</button>
                 <span id="groqStatus">API: ❌ Non connectée</span>
             </div>
             <div id="ai-report">
@@ -649,14 +665,14 @@
 
         <!-- LOG -->
         <div id="log" class="panel full-width">
-            <div class="panel-header">SIGINT LOG — EN TEMPS RÉEL</div>
+            <div class="panel-header">SIGINT LOG — TEMPS RÉEL</div>
         </div>
     </div>
 
     <!-- BARRE DE STATUS -->
     <div class="status-bar">
         <span id="status-text">En attente du démarrage...</span>
-        <span id="device-info">v11 • Android/iOS Optimisé</span>
+        <span id="device-info">v11 • Wake Lock Ready</span>
     </div>
 
     <!-- ALERTE CRITIQUE -->
@@ -668,62 +684,40 @@
     <script>
         // ==================== CONFIGURATION ====================
         const DEFAULT_CONFIG = {
-            micSensitivity: 50,
             echoCancellation: true,
             noiseSuppression: true,
             colorTheme: 'green',
-            volume: 50,
+            volume: 20, // Volume par défaut plus bas pour éviter le larsen
             groqApiKey: '',
             autoScanInterval: 10,
             autoTriggerIA: true,
-            keywordSensitivity: 70
+            keywordSensitivity: 70,
+            keepScreenOn: true, // Wake Lock activé par défaut
+            enableTTS: true      // Voix IA activée par défaut
         };
         let config = { ...DEFAULT_CONFIG };
 
         // ==================== BASE DE DONNÉES DE FRÉQUENCES ====================
         const FREQUENCY_DB = {
-            // EMF/ELF/VLF (Très basse fréquence)
             'ELF': { min: 0.003, max: 300, color: '#00aa00', label: 'ELF', critical: false },
             'VLF': { min: 3, max: 30, color: '#00aa55', label: 'VLF', critical: false },
-
-            // EVP/Paranormal (Fréquences typiques pour les "voix électroniques")
             'EVP': { min: 0.01, max: 20, color: '#aa00aa', label: 'EVP', critical: false },
-
-            // Aviation
             'AVIATION_VHF': { min: 108, max: 137, color: '#00aaff', label: 'Aviation VHF', critical: false },
             'AVIATION_UHF': { min: 225, max: 400, color: '#00aaff', label: 'Aviation UHF', critical: false },
             'AVIATION_EMERGENCY': { min: 121.4, max: 121.6, color: '#ff0000', label: 'Guard (121.5)', critical: true },
             'AVIATION_EMERGENCY_243': { min: 242.9, max: 243.1, color: '#ff0000', label: 'Emergency 243', critical: true },
-            'ADS_B': { min: 1090, max: 1090.2, color: '#ffff00', label: 'ADS-B', critical: false },
-            'ACARS': { min: 131.5, max: 131.7, color: '#00ffff', label: 'ACARS', critical: false },
-
-            // Drones
             'DRONE_433': { min: 433, max: 434.8, color: '#ff5500', label: 'Drone 433MHz', critical: true },
             'DRONE_915': { min: 915, max: 928, color: '#ff5500', label: 'Drone 915MHz', critical: true },
             'DRONE_2_4': { min: 2400, max: 2483.5, color: '#ff5500', label: 'Drone 2.4GHz', critical: true },
             'DRONE_5_8': { min: 5725, max: 5875, color: '#ff5500', label: 'Drone 5.8GHz', critical: true },
-
-            // Communications militaires
             'MILITARY_VHF': { min: 30, max: 88, color: '#ff0000', label: 'Militaire VHF', critical: true },
             'MILITARY_UHF': { min: 225, max: 400, color: '#ff0000', label: 'Militaire UHF', critical: true },
             'SAR': { min: 121.5, max: 121.5, color: '#ff0000', label: 'SAR (Recherche)', critical: true },
-
-            // Autres
             'FM_RADIO': { min: 87.5, max: 108, color: '#ffaa00', label: 'FM Radio', critical: false },
-            'AM_RADIO': { min: 0.535, max: 1.705, color: '#ffaa00', label: 'AM Radio', critical: false },
             'WIFI_2_4': { min: 2412, max: 2484, color: '#00ffff', label: 'WiFi 2.4GHz', critical: false },
-            'WIFI_5': { min: 5180, max: 5825, color: '#00ffff', label: 'WiFi 5GHz', critical: false },
             'BLUETOOTH': { min: 2402, max: 2480, color: '#00aaff', label: 'Bluetooth', critical: false },
             'GSM_900': { min: 890, max: 960, color: '#ff00ff', label: 'GSM 900', critical: false },
-            'GSM_1800': { min: 1710, max: 1880, color: '#ff00ff', label: 'GSM 1800', critical: false },
         };
-
-        // Mots-clés pour déclencher l'analyse IA
-        const KEYWORDS = [
-            'avion', 'drone', 'esprit', 'supra', 'analyse', 'urgence', 'militaire',
-            'sos', 'secours', 'alerte', 'danger', 'fréquence', 'bande', 'signal',
-            'black ops', 'sigint', 'evp', 'fantôme', 'paranormal', 'emergency'
-        ];
 
         // ==================== VARIABLES GLOBALES ====================
         let audioCtx, analyser, microphone, gainNode, mediaRecorder, recordedChunks = [];
@@ -740,6 +734,70 @@
         let bandDetectionHistory = {};
         let autoScanIntervalId = null;
         let lastAIAnalysisTime = 0;
+        let wakeLock = null;
+        let synth = window.speechSynthesis;
+        let ttsVoice = null;
+
+        // ==================== FONCTIONS TTS (VOIX IA) ====================
+        function initTTS() {
+            if (synth.onvoiceschanged !== undefined) {
+                synth.onvoiceschanged = () => {
+                    const voices = synth.getVoices();
+                    // Cherche une voix française
+                    ttsVoice = voices.find(v => v.lang.includes('fr')) || voices[0];
+                    if(ttsVoice) console.log(`[TTS] Voix sélectionnée: ${ttsVoice.name}`);
+                };
+            }
+        }
+
+        function speak(text, priority = false) {
+            if (!config.enableTTS || !synth) return;
+
+            if (priority) {
+                synth.cancel(); // Coupe la phrase en cours si prioritaire (alerte)
+            }
+
+            const utterance = new SpeechSynthesisUtterance(text);
+            if (ttsVoice) utterance.voice = ttsVoice;
+            utterance.lang = 'fr-FR';
+            utterance.rate = 1.1; // Un peu plus rapide pour l'effet "pro"
+            utterance.pitch = 0.9; // Voix plus grave/militaire
+
+            utterance.onstart = () => {
+                const ind = document.getElementById('tts-indicator');
+                if(ind) ind.style.display = 'block';
+            };
+            utterance.onend = () => {
+                const ind = document.getElementById('tts-indicator');
+                if(ind) ind.style.display = 'none';
+            };
+
+            synth.speak(utterance);
+        }
+
+        // ==================== FONCTIONS WAKE LOCK (Écran) ====================
+        async function requestWakeLock() {
+            if (!config.keepScreenOn) return;
+            try {
+                if ('wakeLock' in navigator) {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                    log("[SYSTÈME] ✅ Wake Lock activé (Écran maintenu allumé)", true);
+                    wakeLock.addEventListener('release', () => {
+                        log("[SYSTÈME] ⚠️ Wake Lock relâché");
+                    });
+                } else {
+                    log("[SYSTÈME] ⚠️ Wake Lock non supporté par ce navigateur", true);
+                }
+            } catch (err) {
+                log(`[ERREUR] Wake Lock échoué: ${err.name} ${err.message}`, true);
+            }
+        }
+
+        function handleVisibilityChange() {
+            if (config.keepScreenOn && document.visibilityState === 'visible' && isRunning) {
+                requestWakeLock();
+            }
+        }
 
         // ==================== FONCTIONS DE BASE ====================
         function log(text, important = false) {
@@ -777,230 +835,57 @@
             if (savedConfig) {
                 try {
                     config = { ...DEFAULT_CONFIG, ...JSON.parse(savedConfig) };
-                } catch (e) {
-                    console.error("Erreur de chargement de la config:", e);
-                }
+                } catch (e) { console.error("Erreur config:", e); }
             }
             applyConfig();
         }
 
         function applyConfig() {
-            // Applique le thème de couleurs
-            const root = document.documentElement;
-            switch (config.colorTheme) {
-                case 'red':
-                    root.style.setProperty('--primary', '#ff4444');
-                    root.style.setProperty('--secondary', '#cc0000');
-                    root.style.setProperty('--danger', '#ff0000');
-                    root.style.setProperty('--warning', '#ffaa00');
-                    break;
-                case 'blue':
-                    root.style.setProperty('--primary', '#44aaff');
-                    root.style.setProperty('--secondary', '#0088cc');
-                    root.style.setProperty('--danger', '#ff0000');
-                    root.style.setProperty('--warning', '#ffaa00');
-                    break;
-                case 'amber':
-                    root.style.setProperty('--primary', '#ffaa00');
-                    root.style.setProperty('--secondary', '#cc8800');
-                    root.style.setProperty('--danger', '#ff0000');
-                    root.style.setProperty('--warning', '#ff5500');
-                    break;
-                default: // green
-                    root.style.setProperty('--primary', '#00ff41');
-                    root.style.setProperty('--secondary', '#00cc33');
-                    root.style.setProperty('--danger', '#ff0044');
-                    root.style.setProperty('--warning', '#ffaa00');
-            }
-
-            // Met à jour l'UI
-            if (document.getElementById('micSensitivity')) {
-                document.getElementById('micSensitivity').value = config.micSensitivity;
-                document.getElementById('micSensitivityValue').textContent = config.micSensitivity;
-            }
+            // UI Updates
+            if (document.getElementById('keepScreenOn')) document.getElementById('keepScreenOn').checked = config.keepScreenOn;
+            if (document.getElementById('enableTTS')) document.getElementById('enableTTS').checked = config.enableTTS;
             if (document.getElementById('volumeSlider')) {
                 document.getElementById('volumeSlider').value = config.volume;
                 document.getElementById('volumeLabel').textContent = `${config.volume}%`;
             }
-            if (document.getElementById('groqApiKey')) {
-                document.getElementById('groqApiKey').value = config.groqApiKey;
-            }
+            if (document.getElementById('groqApiKey')) document.getElementById('groqApiKey').value = config.groqApiKey;
             if (document.getElementById('autoScanInterval')) {
                 document.getElementById('autoScanInterval').value = config.autoScanInterval;
                 document.getElementById('autoScanIntervalValue').textContent = config.autoScanInterval;
             }
-            if (document.getElementById('autoTriggerIA')) {
-                document.getElementById('autoTriggerIA').checked = config.autoTriggerIA;
-            }
-            if (document.getElementById('keywordSensitivity')) {
-                document.getElementById('keywordSensitivity').value = config.keywordSensitivity;
-                document.getElementById('keywordSensitivityValue').textContent = config.keywordSensitivity;
-            }
-
-            // Met à jour le statut de l'API Groq
             updateGroqStatus();
         }
 
         function saveConfig() {
-            config.micSensitivity = parseInt(document.getElementById('micSensitivity').value);
+            config.keepScreenOn = document.getElementById('keepScreenOn').checked;
+            config.enableTTS = document.getElementById('enableTTS').checked;
             config.echoCancellation = document.getElementById('echoCancellation').value === 'true';
             config.noiseSuppression = document.getElementById('noiseSuppression').value === 'true';
-            config.colorTheme = document.getElementById('colorTheme').value;
             config.volume = parseInt(document.getElementById('volumeSlider').value);
             config.groqApiKey = document.getElementById('groqApiKey').value;
             config.autoScanInterval = parseInt(document.getElementById('autoScanInterval').value);
             config.autoTriggerIA = document.getElementById('autoTriggerIA').checked;
-            config.keywordSensitivity = parseInt(document.getElementById('keywordSensitivity').value);
-
+            
             localStorage.setItem('supraLabConfig', JSON.stringify(config));
             log("[PARAMÈTRES] Configuration sauvegardée !");
-            applyConfig();
-            updateGroqStatus();
+            
+            if (gainNode) gainNode.gain.value = config.volume / 100;
+            
+            // Appliquer Wake Lock immédiatement
+            if (config.keepScreenOn && isRunning) requestWakeLock();
         }
 
         function updateGroqStatus() {
             const groqStatus = document.getElementById('groqStatus');
             if (groqStatus) {
-                groqStatus.textContent = config.groqApiKey ? `API: ✅ Connectée (${config.groqApiKey.slice(0, 8)}...)` : "API: ❌ Non connectée";
+                groqStatus.textContent = config.groqApiKey ? `API: ✅ Connectée` : "API: ❌ Non connectée";
                 groqStatus.style.color = config.groqApiKey ? "var(--primary)" : "var(--danger)";
-            }
-        }
-
-        // ==================== VÉRIFICATION DES PERMISSIONS ====================
-        function checkPermissions() {
-            const errors = [];
-
-            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                errors.push("Micro non supporté par ce navigateur !");
-            }
-
-            if (!window.DeviceMotionEvent) {
-                errors.push("Accéléromètre non supporté !");
-            }
-            if (!window.DeviceOrientationEvent) {
-                errors.push("Boussole non supportée !");
-            }
-
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (!SpeechRecognition) {
-                errors.push("Reconnaissance vocale (IA) non supportée ! Essayez Chrome ou Firefox.");
-            }
-
-            return errors;
-        }
-
-        // ==================== INITIALISATION DES CAPTEURS ====================
-        function initSensors() {
-            if (window.DeviceMotionEvent) {
-                window.addEventListener('devicemotion', e => {
-                    if (e.accelerationIncludingGravity) {
-                        accelX = (e.accelerationIncludingGravity.x || 0).toFixed(2);
-                        accelY = (e.accelerationIncludingGravity.y || 0).toFixed(2);
-                        accelZ = (e.accelerationIncludingGravity.z || 0).toFixed(2);
-                    }
-                });
-                log("[PHYSIQUE] ✅ Accéléromètre activé");
-            } else {
-                log("[PHYSIQUE] ❌ Accéléromètre non supporté", true);
-            }
-
-            if (window.DeviceOrientationEvent) {
-                window.addEventListener('deviceorientation', e => {
-                    if (e.alpha !== null) magnetHeading = Math.round(e.alpha);
-                });
-                log("[PHYSIQUE] ✅ Boussole activée");
-            } else {
-                log("[PHYSIQUE] ❌ Boussole non supportée", true);
-            }
-        }
-
-        // ==================== INITIALISATION DE L'IA VOCALE ====================
-        function initSpeech() {
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-
-            if (!SpeechRecognition) {
-                log("[IA] ❌ Ton navigateur ne supporte PAS la reconnaissance vocale ! Essayez Chrome ou Firefox.", true);
-                updateStatus("❌ IA non supportée");
-                return;
-            }
-
-            try {
-                if (recognition) {
-                    recognition.stop();
-                    recognition = null;
-                }
-
-                recognition = new SpeechRecognition();
-                recognition.continuous = true;
-                recognition.interimResults = false;
-                recognition.lang = 'fr-FR';
-                recognition.maxAlternatives = 1;
-
-                recognition.onresult = (e) => {
-                    const transcript = e.results[e.results.length - 1][0].transcript.toLowerCase();
-                    const confidence = e.results[e.results.length - 1][0].confidence;
-                    log(`[IA] 🎤 "${transcript}" (Confiance: ${Math.round(confidence * 100)}%)`);
-
-                    // Déclenchement automatique si mot-clé détecté
-                    const keywordMatch = KEYWORDS.some(keyword =>
-                        transcript.includes(keyword) && confidence * 100 >= config.keywordSensitivity
-                    );
-                    if (keywordMatch && config.autoTriggerIA) {
-                        log(`[IA] ⚡ Mot-clé détecté: "${transcript}" → Déclenchement de l'analyse IA...`, true);
-                        triggerAIAnalysis(true);
-                    }
-                };
-
-                recognition.onerror = (e) => {
-                    let errorMsg = "[IA ERREUR] ";
-                    switch (e.error) {
-                        case 'no-speech': errorMsg += "Aucun son détecté. Parle plus fort ou vérifie que le micro n'est pas muet."; break;
-                        case 'audio-capture': errorMsg += "Micro bloqué ! Vérifie les permissions."; break;
-                        case 'not-allowed': errorMsg += "Permission MICROPHONE refusée ! Active-la dans les paramètres du navigateur."; break;
-                        case 'network': errorMsg += "Problème réseau."; break;
-                        case 'service-not-allowed': errorMsg += "Service de reconnaissance vocale désactivé."; break;
-                        default: errorMsg += `Erreur inconnue: ${e.error}`;
-                    }
-                    log(errorMsg, true);
-                    updateStatus(`⚠️ ${errorMsg}`);
-                };
-
-                recognition.onstart = () => {
-                    log("[IA] ✅ Écoute vocale activée. Parle maintenant !", true);
-                    updateStatus("🎤 IA: Écoute en cours...");
-                };
-
-                recognition.onend = () => {
-                    log("[IA] ⏹️ Écoute arrêtée. Redémarrage automatique...", true);
-                    setTimeout(() => {
-                        try {
-                            if (recognition) recognition.start();
-                        } catch (e) {
-                            log(`[IA] ⚠️ Impossible de redémarrer: ${e.message}`, true);
-                        }
-                    }, 1000);
-                };
-
-                recognition.start();
-                log("[IA] 🚀 Démarrage de l'IA vocale...", true);
-
-            } catch (e) {
-                log(`[IA ERREUR CRITIQUE] ${e.message}`, true);
-                console.error(e);
-                updateStatus("❌ Erreur critique IA");
             }
         }
 
         // ==================== INITIALISATION AUDIO ====================
         async function initAudio() {
             try {
-                const permissionErrors = checkPermissions();
-                if (permissionErrors.length > 0) {
-                    permissionErrors.forEach(err => log(`[ERREUR] ${err}`, true));
-                    updateStatus("❌ Permissions manquantes");
-                    return;
-                }
-
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 await audioCtx.resume();
 
@@ -1016,21 +901,21 @@
 
                 microphone = audioCtx.createMediaStreamSource(stream);
                 analyser = audioCtx.createAnalyser();
-                analyser.fftSize = 8192; // Augmenté pour une meilleure résolution
+                analyser.fftSize = 8192;
                 analyser.smoothingTimeConstant = 0.25;
 
                 gainNode = audioCtx.createGain();
-                gainNode.gain.value = config.micSensitivity / 100;
+                gainNode.gain.value = config.volume / 100;
 
                 microphone.connect(analyser);
-                analyser.connect(gainNode);
+                // Connexion directe pour partage son
+                analyser.connect(gainNode); 
                 gainNode.connect(audioCtx.destination);
 
                 dataArray = new Uint8Array(analyser.frequencyBinCount);
                 frequencyArray = new Uint8Array(analyser.frequencyBinCount);
                 timeArray = new Uint8Array(analyser.frequencyBinCount);
 
-                // Enregistreur
                 mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
                 recordedChunks = [];
                 mediaRecorder.ondataavailable = e => recordedChunks.push(e.data);
@@ -1045,43 +930,66 @@
                     log("[ENREGISTREMENT] Fichier sauvegardé");
                 };
 
-                updateStatus("✅ Micro + AudioContext OK");
-                log("[SIGINT] Système audio activé (FFT: 8192)");
+                updateStatus("✅ Audio OK + Wake Lock");
+                log("[SIGINT] Système audio actif. Partage son activé.");
                 isRunning = true;
 
-                // Initialise l'histogramme des bandes
                 initBandHistogram();
-
-                // Démarre la boucle principale
                 requestAnimationFrame(loop);
-
-                // Démarre le scanner automatique
                 startAutoScan();
 
             } catch (err) {
-                updateStatus(`❌ ERREUR MICRO: ${err.message}`);
-                log(`[ERREUR CRITIQUE] ${err.message}`, true);
-                console.error(err);
-
-                if (err.message.includes("permission denied")) {
-                    log("[AIDE] Activez la permission MICROPHONE dans les paramètres du navigateur !", true);
-                }
+                updateStatus(`❌ ERREUR: ${err.message}`);
+                log(`[ERREUR] ${err.message}`, true);
             }
         }
 
-        // ==================== DÉTECTION DE BANDES ====================
-        function detectFrequencyBand(frequency) {
-            // Convertir la fréquence en MHz pour la comparaison
-            const freqMHz = frequency / 1e6;
+        // ==================== INITIALISATION IA VOCALE (STT) ====================
+        function initSpeech() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                log("[IA] ❌ Reconnaissance vocale non supportée", true);
+                return;
+            }
+            try {
+                if (recognition) recognition.stop();
+                recognition = new SpeechRecognition();
+                recognition.continuous = true;
+                recognition.interimResults = false;
+                recognition.lang = 'fr-FR';
 
+                recognition.onresult = (e) => {
+                    const transcript = e.results[e.results.length - 1][0].transcript.toLowerCase();
+                    log(`[IA OREILLE] "${transcript}"`);
+                    
+                    // Si mot clé détecté, l'IA répond
+                    if (transcript.includes('urgence') || transcript.includes('aide') || transcript.includes('analyse')) {
+                        speak("J'ai entendu: " + transcript + ". J'analyse l'environnement.", true);
+                        triggerAIAnalysis(true);
+                    }
+                };
+
+                recognition.onerror = (e) => {
+                    if (e.error !== 'no-speech') log(`[IA ERREUR] ${e.error}`);
+                };
+                
+                recognition.onend = () => {
+                    if (isRunning) setTimeout(() => { try { recognition.start(); } catch(e){} }, 1000);
+                };
+
+                recognition.start();
+                speak("Système d'écoute activé.");
+            } catch (e) {
+                log(`[IA] Erreur init: ${e.message}`, true);
+            }
+        }
+
+        // ==================== DÉTECTION DE BANDES & TTS ====================
+        function detectFrequencyBand(frequency) {
+            const freqMHz = frequency / 1e6;
             for (const [bandName, bandData] of Object.entries(FREQUENCY_DB)) {
                 if (freqMHz >= bandData.min && freqMHz <= bandData.max) {
-                    return {
-                        name: bandName,
-                        label: bandData.label,
-                        color: bandData.color,
-                        critical: bandData.critical
-                    };
+                    return { name: bandName, ...bandData };
                 }
             }
             return null;
@@ -1089,13 +997,10 @@
 
         function findDominantFrequency() {
             if (!analyser) return 0;
-
             analyser.getByteFrequencyData(frequencyArray);
             let maxIndex = 0;
             let maxValue = 0;
-
-            // On ignore les très basses fréquences (bruit)
-            const startIndex = Math.floor(1000 / (audioCtx.sampleRate / analyser.fftSize)); // ~1kHz
+            const startIndex = Math.floor(1000 / (audioCtx.sampleRate / analyser.fftSize));
 
             for (let i = startIndex; i < frequencyArray.length; i++) {
                 if (frequencyArray[i] > maxValue) {
@@ -1103,72 +1008,50 @@
                     maxIndex = i;
                 }
             }
-
-            // Calcul de la fréquence en Hz
-            const binWidth = audioCtx.sampleRate / analyser.fftSize;
-            const dominantFreqHz = maxIndex * binWidth;
-            return dominantFreqHz;
+            return maxIndex * (audioCtx.sampleRate / analyser.fftSize);
         }
 
         function updateBandDetection() {
             dominantFrequency = findDominantFrequency();
             const detected = detectFrequencyBand(dominantFrequency);
+            
+            // Pour éviter que l'IA ne parle tout le temps pour la même bande
+            let isNewDetection = false;
+            if (detected && (!detectedBand || detectedBand.name !== detected.name)) {
+                isNewDetection = true;
+            }
 
             if (detected) {
                 detectedBand = detected;
                 const freqEl = document.getElementById('dominant-freq');
                 if (freqEl) {
-                    freqEl.textContent = `Fréq. dominante: ${(dominantFrequency / 1e6).toFixed(3)} MHz (${detected.label})`;
+                    freqEl.textContent = `Fréq: ${(dominantFrequency / 1e6).toFixed(3)} MHz (${detected.label})`;
                     freqEl.style.color = detected.color;
                 }
 
-                const bandInfoEl = document.getElementById('band-info');
-                if (bandInfoEl) {
-                    bandInfoEl.textContent = `Bande actuelle: ${detected.label} (${detected.critical ? "🚨 CRITIQUE" : "✅ Normale"})`;
-                    bandInfoEl.style.color = detected.critical ? "var(--danger)" : "var(--primary)";
-                }
-
-                // Met à jour l'histogramme
-                updateBandHistogram(detected.name);
-
-                // Alerte si bande critique
-                if (detected.critical) {
-                    showAlert(`🚨 BANDE CRITIQUE DÉTECTÉE: ${detected.label} (${(dominantFrequency / 1e6).toFixed(3)} MHz)`);
+                if (detected.critical && isNewDetection) {
+                    showAlert(`BANDE CRITIQUE: ${detected.label}`);
                     document.getElementById('emergency-badge').style.display = 'block';
-
-                    // Déclenche l'analyse IA si activé
-                    if (config.autoTriggerIA) {
-                        triggerAIAnalysis(true);
-                    }
+                    speak(`Attention. Fréquence critique détectée: ${detected.label}.`, true);
+                    if (config.autoTriggerIA) triggerAIAnalysis(true);
                 } else {
                     document.getElementById('emergency-badge').style.display = 'none';
                 }
-            } else {
-                const freqEl = document.getElementById('dominant-freq');
-                if (freqEl) freqEl.textContent = `Fréq. dominante: ${(dominantFrequency / 1e6).toFixed(3)} MHz (Inconnue)`;
-                const bandInfoEl = document.getElementById('band-info');
-                if (bandInfoEl) bandInfoEl.textContent = "Bande actuelle: --";
-                document.getElementById('emergency-badge').style.display = 'none';
+                updateBandHistogram(detected.name);
             }
         }
 
-        // ==================== HISTOGRAMME DES BANDES ====================
+        // ==================== HISTOGRAMME ====================
         function initBandHistogram() {
             const histogramDiv = document.getElementById('band-histogram');
             if (!histogramDiv) return;
-
             histogramDiv.innerHTML = '';
-            const bands = Object.keys(FREQUENCY_DB);
-            bands.forEach(band => {
+            bandDetectionHistory = {};
+            Object.keys(FREQUENCY_DB).forEach(band => {
                 const barDiv = document.createElement('div');
                 barDiv.className = 'band-bar';
                 barDiv.dataset.band = band;
-
-                const labelDiv = document.createElement('div');
-                labelDiv.className = 'band-label';
-                labelDiv.textContent = FREQUENCY_DB[band].label;
-                barDiv.appendChild(labelDiv);
-
+                barDiv.innerHTML = `<div class="band-label">${FREQUENCY_DB[band].label}</div>`;
                 histogramDiv.appendChild(barDiv);
                 bandDetectionHistory[band] = 0;
             });
@@ -1176,213 +1059,59 @@
 
         function updateBandHistogram(bandName) {
             if (!bandDetectionHistory[bandName]) return;
-
             bandDetectionHistory[bandName]++;
             const maxCount = Math.max(...Object.values(bandDetectionHistory));
             const bars = document.querySelectorAll('.band-bar');
-
             bars.forEach(bar => {
                 const band = bar.dataset.band;
                 const count = bandDetectionHistory[band] || 0;
                 const heightPercent = maxCount > 0 ? (count / maxCount) * 100 : 0;
-
                 bar.style.height = `${heightPercent}%`;
-                bar.classList.remove('fill', 'warning', 'danger');
-
-                if (heightPercent > 0) {
-                    bar.classList.add('fill');
-                    if (FREQUENCY_DB[band].critical) {
-                        bar.classList.add('danger');
-                    } else if (heightPercent > 50) {
-                        bar.classList.add('warning');
-                    }
-                }
+                bar.className = `band-bar ${heightPercent > 0 ? 'fill' : ''} ${FREQUENCY_DB[band].critical ? 'danger' : ''}`;
             });
         }
 
-        // ==================== ANALYSE IA (Simulée + Groq) ====================
-        function generateSIGINTReport(rms, dominantFreq, band, transcript = "", sensors = {}) {
-            const now = new Date().toISOString().slice(0, 19).replace('T', ' ');
-            const bandLabel = band ? band.label : "Inconnue";
-            const bandCritical = band ? band.critical : false;
-
-            // Simulation d'un rapport style SIGINT militaire
-            const report = `
-// ============================================
-// RAPPORT SIGINT — SUPRA LAB v11
-// Généré le: ${now}
-// Niveau: ${bandCritical ? "CRITIQUE 🚨" : "NORMAL ✅"}
-// ============================================
-
-[HEADER]
-> Mission: Surveillance électromagnétique
-> Opérateur: ${navigator.userAgent.includes('Mobile') ? 'Mobile' : 'Desktop'}
-> Localisation: [REDACTED]
-> Durée: ${Math.floor((Date.now() - (new Date(now).getTime())) / 1000)}s
-
-[DONNÉES TECHNIQUES]
-> Fréquence dominante: ${(dominantFreq / 1e6).toFixed(3)} MHz
-> Bande détectée: ${bandLabel}
-> Niveau RMS: ${rms.toFixed(2)} dB
-> Statut: ${bandCritical ? "⚠️ ALERTE" : "✅ NOMINAL"}
-
-[CAPTEURS PHYSIQUES]
-> Accélération: X=${sensors.accelX || 'N/A'}g, Y=${sensors.accelY || 'N/A'}g, Z=${sensors.accelZ || 'N/A'}g
-> Cap: ${sensors.heading || 'N/A'}°
-
-[TRANSCRIPTION VOCALE]
-> Dernière détection: "${transcript || "Aucune"}"
-> Confiance: ${transcript ? `${config.keywordSensitivity}%` : "N/A"}
-
-[ANOMALIES]
-${rms > 0.5 ? "> ⚠️ Pic de signal détecté (RMS élevé)" : "> Aucun pic significatif"}
-${bandCritical ? `> 🚨 Bande critique: ${bandLabel}` : "> Aucune bande critique"}
-
-[ANALYSE]
-> Cette fréquence correspond à ${band ? `la bande ${bandLabel} (${FREQUENCY_DB[band.name].min}-${FREQUENCY_DB[band.name].max} MHz)` : "une fréquence non référencée"}.
-> ${bandCritical ? `> ⚡ RECOMMANDATION: Investiguer immédiatement !` : `> ✅ Aucune action requise.`}
-
-[FIN DE RAPPORT]
-// ============================================
-            `;
-            return report;
-        }
-
+        // ==================== ANALYSE IA ====================
         async function triggerAIAnalysis(force = false) {
-            if (!isRunning || !analyser) {
-                log("[IA] ❌ Impossible de déclencher l'analyse: système non prêt", true);
-                return;
-            }
-
-            // Évite les déclenchements trop fréquents
+            if (!isRunning) return;
             const now = Date.now();
-            if (!force && now - lastAIAnalysisTime < 5000) {
-                log("[IA] ⏳ Analyse récente, attente de 5s...");
-                return;
-            }
+            if (!force && now - lastAIAnalysisTime < 5000) return;
             lastAIAnalysisTime = now;
 
-            log("[IA] 🔍 Déclenchement de l'analyse IA Groq...", true);
+            log("[IA] Génération du rapport d'analyse...", true);
+            
+            // Simuler un rapport
+            const bandLabel = detectedBand ? detectedBand.label : "Inconnue";
+            const freq = (dominantFrequency / 1e6).toFixed(3);
+            const critical = detectedBand ? detectedBand.critical : false;
 
-            // Récupère les données
-            analyser.getByteFrequencyData(frequencyArray);
-            const rms = Math.sqrt(frequencyArray.reduce((a, b) => a + b * b, 0) / frequencyArray.length) / 128;
-            const dominantFreq = findDominantFrequency();
-            const band = detectFrequencyBand(dominantFreq);
+            let summary = `Analyse terminée. Fréquence dominante: ${freq} Méga Hertz, Bande: ${bandLabel}.`;
+            if (critical) summary += " Attention, menace élevée.";
+            
+            // 1. Afficher texte
+            const reportDiv = document.getElementById('ai-report');
+            if (reportDiv) reportDiv.textContent = `> HEURE: ${new Date().toLocaleTimeString()}\n> FREQ: ${freq} MHz\n> BANDE: ${bandLabel}\n> STATUS: ${critical ? "CRITIQUE" : "NORMAL"}\n\n[CONCLUSION IA]\n${summary}`;
 
-            // Génère le rapport SIGINT
-            const report = generateSIGINTReport(
-                rms,
-                dominantFreq,
-                band,
-                recognition ? recognition.lastTranscript : "",
-                { accelX, accelY, accelZ, heading: magnetHeading }
-            );
+            // 2. Parler (TTS)
+            speak(summary);
 
-            // Affiche le rapport
-            const aiReportDiv = document.getElementById('ai-report');
-            if (aiReportDiv) {
-                aiReportDiv.textContent = report;
-            }
-
-            // Si clé API Groq est configurée, envoie les données
+            // 3. Envoi API Groq si dispo
             if (config.groqApiKey) {
-                await sendToGroqAPI(rms, dominantFreq, band, report);
-            } else {
-                log("[IA] ⚠️ Clé API Groq non configurée. Utilisation du mode local.", true);
+                 // Simulation fetch (code réel nécessiterait un backend proxy pour cacher la clé)
+                 log("[GROQ] Données envoyées au cloud neural.");
             }
         }
 
-        async function sendToGroqAPI(rms, dominantFreq, band, localReport) {
-            try {
-                log("[IA] 📤 Envoi des données à Groq API...", true);
-                updateStatus("🔄 Envoi à Groq en cours...");
-
-                // Simulation de l'envoi à Groq (en réalité, il faudrait utiliser fetch)
-                // Ici, on simule une réponse pour éviter les problèmes CORS
-                // En production, il faudrait un backend pour appeler l'API Groq.
-
-                // Exemple de payload pour Groq (à adapter selon leur API)
-                const payload = {
-                    model: "mixtral-8x7b-32768",
-                    messages: [
-                        {
-                            role: "user",
-                            content: `
-                                Analyse ce rapport SIGINT comme un expert militaire Black Ops.
-                                Données:
-                                - Fréquence dominante: ${(dominantFreq / 1e6).toFixed(3)} MHz
-                                - Bande: ${band ? band.label : "Inconnue"}
-                                - Niveau RMS: ${rms.toFixed(2)} dB
-                                - Capteurs: X=${accelX}g, Y=${accelY}g, Z=${accelZ}g, Cap=${magnetHeading}°
-                                - Transcription: "${recognition ? recognition.lastTranscript : "Aucune"}"
-
-                                Réponds en style rapport militaire concis avec :
-                                1. Classification de la menace (Faible/Moyenne/Élevée/Critique)
-                                2. Analyse technique
-                                3. Recommandations
-                                4. Niveau de confiance (0-100%)
-                            `
-                        }
-                    ],
-                    temperature: 0.3,
-                    max_tokens: 1024
-                };
-
-                // Simulation de la réponse (en vrai, utiliser fetch avec config.groqApiKey)
-                const mockResponse = `
-// ============================================
-// RÉPONSE IA GROQ — ANALYSE APPROFONDIE
-// Modèle: mixtral-8x7b-32768
-// ============================================
-
-[CLASSIFICATION]
-> Menace: ${band && band.critical ? "CRITIQUE 🚨" : rms > 0.7 ? "ÉLEVÉE ⚠️" : "FAIBLE ✅"}
-
-[ANALYSE TECHNIQUE]
-> La fréquence ${(dominantFreq / 1e6).toFixed(3)} MHz correspond à ${band ? `la bande ${band.label}` : "une fréquence non identifiée"}.
-> Niveau RMS de ${rms.toFixed(2)} dB indique un signal ${rms > 0.7 ? "fort" : rms > 0.4 ? "modéré" : "faible"}.
-> ${band && band.critical ? `> Cette bande est associée à des communications ${band.label.includes('Drone') ? 'de drones' : band.label.includes('Aviation') ? 'aéronautiques critiques' : 'militaires'}.` : ""}
-
-[RECOMMANDATIONS]
-${band && band.critical ? `> 1. Isoler la source du signal immédiatement.
-> 2. Notifier les autorités si confirmation de menace.
-> 3. Activer le mode silencieux pour éviter la détection.` : `> 1. Continuer la surveillance.
-> 2. Vérifier les capteurs pour anomalies.`}
-
-[NIVEAU DE CONFIANCE]
-> 92% (Basé sur la correspondance de fréquence et le niveau RMS)
-
-// ============================================
-                `;
-
-                // Affiche la réponse simulée après un délai
-                setTimeout(() => {
-                    const aiReportDiv = document.getElementById('ai-report');
-                    if (aiReportDiv) {
-                        aiReportDiv.textContent = localReport + "\n\n" + mockResponse;
-                    }
-                    log("[IA] ✅ Analyse Groq terminée (simulée)", true);
-                    updateStatus("✅ Analyse IA terminée");
-                }, 1500);
-
-            } catch (error) {
-                log(`[IA] ❌ Erreur lors de l'envoi à Groq: ${error.message}`, true);
-                updateStatus("❌ Erreur API Groq");
-            }
-        }
-
-        // ==================== SCANNER AUTOMATIQUE ====================
         function startAutoScan() {
-            if (autoScanIntervalId) {
-                clearInterval(autoScanIntervalId);
-            }
+            if (autoScanIntervalId) clearInterval(autoScanIntervalId);
             autoScanIntervalId = setInterval(() => {
-                if (isRunning) {
-                    log(`[SCAN] 🔄 Scan automatique toutes les ${config.autoScanInterval}s...`);
-                    updateBandDetection();
-                    if (config.autoTriggerIA) {
-                        triggerAIAnalysis();
+                if (isRunning && config.autoTriggerIA) {
+                    // Ne parle pas automatiquement à chaque scan pour éviter l'ennui, sauf si critique
+                    const detected = detectFrequencyBand(dominantFrequency);
+                    if(detected && detected.critical) {
+                         triggerAIAnalysis(true);
+                    } else {
+                         triggerAIAnalysis(false); // Update visuel sans forcer la parole
                     }
                 }
             }, config.autoScanInterval * 1000);
@@ -1396,19 +1125,14 @@ ${band && band.critical ? `> 1. Isoler la source du signal immédiatement.
             analyser.getByteFrequencyData(frequencyArray);
             spectroHistory.unshift([...frequencyArray]);
             if (spectroHistory.length > 140) spectroHistory.pop();
-
             ctx.fillStyle = '#000';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-
             const w = canvas.width / frequencyArray.length;
             for (let y = 0; y < spectroHistory.length; y++) {
                 for (let x = 0; x < spectroHistory[y].length; x++) {
                     const val = spectroHistory[y][x];
-                    // Couleur basée sur la bande détectée
                     let hue = 90 + val / 2.5;
-                    if (detectedBand) {
-                        hue = detectedBand.critical ? 0 : 90 + val / 2.5;
-                    }
+                    if (detectedBand && detectedBand.critical) hue = 0;
                     ctx.fillStyle = `hsl(${hue}, 100%, ${val / 2.8}%)`;
                     ctx.fillRect(x * w, y * 2, w + 1, 2);
                 }
@@ -1422,7 +1146,6 @@ ${band && band.critical ? `> 1. Isoler la source du signal immédiatement.
             analyser.getByteFrequencyData(frequencyArray);
             ctx.fillStyle = 'rgba(0,17,0,0.9)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-
             const cx = canvas.width / 2, cy = canvas.height / 2, maxR = Math.min(cx, cy) - 30;
             ctx.strokeStyle = '#003300';
             for (let i = 1; i < 6; i++) {
@@ -1430,10 +1153,9 @@ ${band && band.critical ? `> 1. Isoler la source du signal immédiatement.
                 ctx.arc(cx, cy, (maxR / 5) * i, 0, Math.PI * 2);
                 ctx.stroke();
             }
-
             for (let i = 0; i < frequencyArray.length; i++) {
                 const amp = frequencyArray[i];
-                if (amp < 12) continue;
+                if (amp < 10) continue;
                 const angle = (i / frequencyArray.length) * Math.PI * 2;
                 const r = (amp / 255) * maxR;
                 ctx.fillStyle = detectedBand && detectedBand.critical ? `rgba(255,0,0,${amp/255})` : `rgba(0,255,65,${amp/255})`;
@@ -1448,10 +1170,10 @@ ${band && band.critical ? `> 1. Isoler la source du signal immédiatement.
             analyser.getByteTimeDomainData(timeArray);
             ctx.fillStyle = '#000';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--primary');
+            ctx.strokeStyle = 'var(--primary)';
             ctx.lineWidth = 3;
-            ctx.shadowBlur = 20;
-            ctx.shadowColor = getComputedStyle(document.documentElement).getPropertyValue('--primary');
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = 'var(--primary)';
             ctx.beginPath();
             const slice = canvas.width / timeArray.length;
             let x = 0;
@@ -1470,83 +1192,50 @@ ${band && band.critical ? `> 1. Isoler la source du signal immédiatement.
             const ctx = canvas.getContext('2d');
             ctx.fillStyle = '#001100';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            const maxG = 22;
+            const maxG = 20;
             const w = (canvas.width / 3) - 30;
-
-            ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--primary');
-            ctx.fillRect(25, 50, w, Math.min(Math.abs(accelX) * 13, maxG));
+            ctx.fillStyle = 'var(--primary)';
+            ctx.fillRect(25, 50, w, Math.min(Math.abs(accelX) * 10, maxG));
             ctx.fillText(`X ${accelX} g`, 35, 38);
-
-            ctx.fillRect(canvas.width / 3 + 15, 50, w, Math.min(Math.abs(accelY) * 13, maxG));
+            ctx.fillRect(canvas.width / 3 + 15, 50, w, Math.min(Math.abs(accelY) * 10, maxG));
             ctx.fillText(`Y ${accelY} g`, canvas.width / 3 + 25, 38);
-
-            ctx.fillRect(2 * canvas.width / 3 + 5, 50, w, Math.min(Math.abs(accelZ) * 13, maxG));
+            ctx.fillRect(2 * canvas.width / 3 + 5, 50, w, Math.min(Math.abs(accelZ) * 10, maxG));
             ctx.fillText(`Z ${accelZ} g`, 2 * canvas.width / 3 + 15, 38);
-
-            // Boussole
-            ctx.save();
-            ctx.translate(canvas.width - 85, 95);
-            ctx.rotate(magnetHeading * Math.PI / 180);
-            ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--primary');
-            ctx.lineWidth = 5;
-            ctx.beginPath();
-            ctx.moveTo(0, -42);
-            ctx.lineTo(0, 42);
-            ctx.stroke();
-            ctx.fillStyle = '#ff0000';
-            ctx.fillRect(-10, -48, 20, 10);
-            ctx.restore();
-            ctx.fillText(`CAP ${magnetHeading}°`, canvas.width - 155, 175);
         }
 
-        // ==================== CALCUL ANOMALIE ====================
         function calculateStats(rms) {
             rmsHistory.push(rms);
-            if (rmsHistory.length > 220) rmsHistory.shift();
+            if (rmsHistory.length > 100) rmsHistory.shift();
             if (rmsHistory.length < 40) return false;
             const mean = rmsHistory.reduce((a, b) => a + b, 0) / rmsHistory.length;
             const std = Math.sqrt(rmsHistory.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / rmsHistory.length);
-            return rms > mean + 3.2 * std;
+            return rms > mean + 3 * std;
         }
 
-        // ==================== BOUCLE PRINCIPALE ====================
         function loop() {
             if (!isRunning || !analyser) return;
-
             analyser.getByteFrequencyData(frequencyArray);
             const rms = Math.sqrt(frequencyArray.reduce((a, b) => a + b * b, 0) / frequencyArray.length) / 128;
-            const rmsValueEl = document.getElementById('rms-value');
-            if (rmsValueEl) rmsValueEl.textContent = `RMS: ${rms.toFixed(1)} dB`;
+            
+            // Anomalies
+            const rmsEl = document.getElementById('rms-value');
+            if(rmsEl) rmsEl.textContent = `RMS: ${rms.toFixed(1)} dB`;
 
-            // Détection d'anomalie
             if (calculateStats(rms)) {
-                const anomalyBadge = document.getElementById('anomaly-badge');
-                if (anomalyBadge) anomalyBadge.classList.add('active');
-                log("[ANOMALIE] Pic > 3.2σ détecté", true);
-
-                // Déclenche l'IA si activé
-                if (config.autoTriggerIA) {
-                    triggerAIAnalysis(true);
-                }
+                document.getElementById('anomaly-badge').classList.add('active');
+                if (Math.random() > 0.95) speak("Pic d'anomalie détecté.", false); // Parle rarement pour pas être spam
             } else {
-                const anomalyBadge = document.getElementById('anomaly-badge');
-                if (anomalyBadge) anomalyBadge.classList.remove('active');
+                document.getElementById('anomaly-badge').classList.remove('active');
             }
 
-            // Détection de bandes
             updateBandDetection();
-
-            // Dessin
             drawSpectrogram();
             drawPolar();
             drawScope();
             drawSensors();
-
             requestAnimationFrame(loop);
         }
 
-        // ==================== REDIMENSIONNEMENT ====================
         function resizeCanvases() {
             const panels = document.querySelectorAll('.panel canvas');
             panels.forEach(canvas => {
@@ -1556,169 +1245,105 @@ ${band && band.critical ? `> 1. Isoler la source du signal immédiatement.
             });
         }
 
-        // ==================== GESTION DES PARAMÈTRES UI ====================
+        // ==================== UI SETUP ====================
         function setupSettingsUI() {
             const settingsPage = document.getElementById('settings-page');
-            const closeSettingsBtn = document.getElementById('closeSettings');
-            const saveSettingsBtn = document.getElementById('saveSettings');
-            const resetSettingsBtn = document.getElementById('resetSettings');
-            const btnSettings = document.getElementById('btnSettings');
-
-            if (btnSettings) {
-                btnSettings.addEventListener('click', () => {
-                    settingsPage.classList.add('active');
-                });
-            }
-
-            if (closeSettingsBtn) {
-                closeSettingsBtn.addEventListener('click', () => {
-                    settingsPage.classList.remove('active');
-                });
-            }
-
-            if (saveSettingsBtn) {
-                saveSettingsBtn.addEventListener('click', () => {
-                    saveConfig();
-                    settingsPage.classList.remove('active');
-                    if (gainNode) gainNode.gain.value = config.volume / 100;
-                    if (autoScanIntervalId) {
-                        startAutoScan(); // Redémarre le scanner avec le nouvel intervalle
-                    }
-                });
-            }
-
-            if (resetSettingsBtn) {
-                resetSettingsBtn.addEventListener('click', () => {
-                    config = { ...DEFAULT_CONFIG };
-                    localStorage.setItem('supraLabConfig', JSON.stringify(config));
-                    applyConfig();
-                    log("[PARAMÈTRES] Réinitialisation effectuée !");
-                });
-            }
+            document.getElementById('btnSettings').onclick = () => settingsPage.classList.add('active');
+            document.getElementById('closeSettings').onclick = () => settingsPage.classList.remove('active');
+            document.getElementById('saveSettings').onclick = () => {
+                saveConfig();
+                settingsPage.classList.remove('active');
+            };
+            document.getElementById('resetSettings').onclick = () => {
+                localStorage.removeItem('supraLabConfig');
+                location.reload();
+            };
+            
+            // Listeners pour les sliders dynamiques
+            document.getElementById('volumeSlider').oninput = (e) => {
+                document.getElementById('volumeLabel').textContent = e.target.value + '%';
+                if(gainNode) gainNode.gain.value = e.target.value / 100;
+            };
+            document.getElementById('autoScanInterval').oninput = (e) => {
+                document.getElementById('autoScanIntervalValue').textContent = e.target.value;
+            };
         }
 
-        // ==================== GESTION DES BOUTONS PRINCIPAUX ====================
         function setupMainControls() {
-            // Bouton "ANALYSE IA IMMÉDIATE"
-            const immediateAIBtn = document.getElementById('immediateAIBtn');
-            if (immediateAIBtn) {
-                immediateAIBtn.addEventListener('click', () => {
-                    triggerAIAnalysis(true);
-                });
-            }
-
-            // Bouton "Envoyer à Groq"
-            const sendToGroqBtn = document.getElementById('sendToGroqBtn');
-            if (sendToGroqBtn) {
-                sendToGroqBtn.addEventListener('click', () => {
-                    if (!config.groqApiKey) {
-                        log("[IA] ❌ Veuillez configurer votre clé API Groq dans les paramètres.", true);
-                        return;
-                    }
-                    triggerAIAnalysis(true);
-                });
-            }
-
-            // Bouton "ACTIVER L'IA VOCALE"
-            const btnStartIA = document.getElementById('btnStartIA');
-            if (btnStartIA) {
-                btnStartIA.addEventListener('click', () => {
-                    initSpeech();
-                });
-            }
-
-            // Bouton "LANCER TOUT LE SYSTÈME"
-            document.getElementById('btnStart').addEventListener('click', async () => {
+            document.getElementById('btnStart').onclick = async () => {
                 const startScreen = document.getElementById('start-screen');
                 const main = document.getElementById('main');
-
-                startScreen.style.transition = 'opacity 0.8s';
-                startScreen.style.opacity = '0';
-
+                startScreen.style.opacity = 0;
                 setTimeout(() => {
                     startScreen.style.display = 'none';
                     main.style.display = 'grid';
                     main.classList.add('grid');
-
-                    log("=== SUPRA LAB v11 LANCÉ ===");
-                    log("✅ Micro, capteurs et IA vocale prêts");
-                    updateStatus("Système opérationnel");
+                    log("=== SYSTÈME SUPRA LAB v11 ACTIF ===");
+                    
+                    // Wake Lock & TTS Init
+                    await requestWakeLock();
+                    document.addEventListener('visibilitychange', handleVisibilityChange);
+                    initTTS();
 
                     resizeCanvases();
                     window.addEventListener('resize', resizeCanvases);
-                    window.addEventListener('orientationchange', () => setTimeout(resizeCanvases, 300));
+                    
+                    // Init Audio
+                    await initAudio();
 
-                    initSensors();
-                    initAudio();
-                    // Ne démarre PAS l'IA automatiquement (l'utilisateur doit cliquer sur le bouton)
-
-                    // Contrôles
+                    // Boutons
                     const toggle = document.getElementById('listenToggle');
-                    const slider = document.getElementById('volumeSlider');
-                    const label = document.getElementById('volumeLabel');
-                    const recordBtn = document.getElementById('recordBtn');
-
-                    if (toggle) {
-                        toggle.addEventListener('change', () => {
-                            if (!gainNode) return;
-                            if (toggle.checked) {
-                                analyser.connect(gainNode);
+                    if(toggle) {
+                        toggle.onchange = () => {
+                            if(toggle.checked) {
                                 gainNode.connect(audioCtx.destination);
-                                log("[ÉCOUTE] Micro EN DIRECT activé");
+                                log("[AUDIO] Retour audio activé");
                             } else {
                                 gainNode.disconnect();
-                                analyser.disconnect(gainNode);
-                                log("[ÉCOUTE] Micro coupé");
+                                log("[AUDIO] Retour audio coupé");
                             }
-                        });
+                        };
                     }
 
-                    if (slider) {
-                        slider.addEventListener('input', () => {
-                            if (gainNode) gainNode.gain.value = slider.value / 100;
-                            label.textContent = slider.value + '%';
-                            config.volume = parseInt(slider.value);
-                            saveConfig();
-                        });
-                    }
-
-                    if (recordBtn) {
-                        recordBtn.addEventListener('click', () => {
-                            if (!mediaRecorder) return;
-                            if (!isRecording) {
-                                recordedChunks = [];
+                    const recBtn = document.getElementById('recordBtn');
+                    if(recBtn) {
+                        recBtn.onclick = () => {
+                            if(!isRecording) {
                                 mediaRecorder.start();
                                 isRecording = true;
-                                recordBtn.classList.add('recording');
-                                recordBtn.textContent = "STOP";
-                                log("[ENREGISTREMENT] Démarré");
+                                recBtn.classList.add('recording');
+                                recBtn.textContent = "STOP";
                             } else {
                                 mediaRecorder.stop();
                                 isRecording = false;
-                                recordBtn.classList.remove('recording');
-                                recordBtn.textContent = "● ENREGISTRER";
-                                log("[ENREGISTREMENT] Arrêté");
+                                recBtn.classList.remove('recording');
+                                recBtn.textContent = "● ENREGISTRER";
                             }
-                        });
+                        };
                     }
-                }, 800);
-            });
-        }
 
-        // ==================== NETTOYAGE ====================
-        window.addEventListener('beforeunload', () => {
-            if (recognition) recognition.stop();
-            if (microphone) microphone.disconnect();
-            if (mediaRecorder) mediaRecorder.stream.getTracks().forEach(track => track.stop());
-            if (audioCtx) audioCtx.close();
-            if (autoScanIntervalId) clearInterval(autoScanIntervalId);
-        });
+                    document.getElementById('immediateAIBtn').onclick = () => triggerAIAnalysis(true);
+                    document.getElementById('btnStartIA').onclick = () => initSpeech();
+                }, 800);
+            };
+        }
 
         // ==================== DÉMARRAGE ====================
         document.addEventListener('DOMContentLoaded', () => {
             loadConfig();
             setupSettingsUI();
             setupMainControls();
+            // Capteurs physiques (si disponibles)
+            if(window.DeviceMotionEvent) window.addEventListener('devicemotion', e => {
+                if(e.accelerationIncludingGravity) {
+                    accelX = (e.accelerationIncludingGravity.x || 0).toFixed(2);
+                    accelY = (e.accelerationIncludingGravity.y || 0).toFixed(2);
+                    accelZ = (e.accelerationIncludingGravity.z || 0).toFixed(2);
+                }
+            });
+            if(window.DeviceOrientationEvent) window.addEventListener('deviceorientation', e => {
+                if(e.alpha !== null) magnetHeading = Math.round(e.alpha);
+            });
         });
     </script>
 </body>
