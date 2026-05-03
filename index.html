@@ -3,80 +3,178 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SUPRA LAB - TOUT FONCTIONNE</title>
+    <title>SUPRA LAB - TOUT, VRAIMENT TOUT</title>
     <style>
-        body {
+        :root {
+            --primary: #00ff41;
+            --secondary: #00cc33;
+            --danger: #ff0044;
+            --warning: #ffaa00;
+            --bg-dark: #001100;
+            --bg-darker: #000000;
+        }
+
+        * {
             margin: 0;
-            padding: 10px;
-            background: #000;
-            color: #00ff41;
-            font-family: 'Courier New', monospace;
-            font-size: 14px;
+            padding: 0;
+            box-sizing: border-box;
             touch-action: manipulation;
+            font-family: 'Courier New', monospace;
         }
-        #app {
-            max-width: 600px;
-            margin: 0 auto;
-        }
-        h1 {
-            text-align: center;
-            color: #00ff41;
-            text-shadow: 0 0 10px #00ff41;
-        }
-        button {
-            display: block;
-            width: 100%;
-            padding: 12px;
-            margin: 8px 0;
-            background: #001100;
-            color: #00ff41;
-            border: 2px solid #00ff41;
+
+        body {
+            background: var(--bg-darker);
+            color: var(--primary);
             font-size: 14px;
+            line-height: 1.4;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Effet CRT */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background:
+                radial-gradient(circle at 10% 20%, rgba(0, 255, 65, 0.03) 0%, transparent 20%),
+                repeating-linear-gradient(to bottom, rgba(0, 255, 65, 0.02) 0px, rgba(0, 255, 65, 0.02) 2px, transparent 2px, transparent 4px);
+            pointer-events: none;
+            z-index: 9999;
+            animation: crt 0.15s linear infinite;
+        }
+        @keyframes crt {
+            0% { opacity: 0.9; }
+            100% { opacity: 1; }
+        }
+
+        #start-screen {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-darker);
+            border: 4px solid var(--primary);
+            z-index: 1000;
+            padding: 20px;
+            text-align: center;
+        }
+        #main {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            display: none;
+            padding: 10px;
+            overflow-y: auto;
+            background: var(--bg-darker);
+        }
+        .boot-text {
+            font-size: 24px;
+            margin-bottom: 20px;
+            text-shadow: 0 0 20px var(--primary);
+            animation: boot 1.2s steps(20, end) infinite;
+        }
+        @keyframes boot {
+            from { opacity: 0.2; }
+            to { opacity: 1; }
+        }
+        #btnStart {
+            background: transparent;
+            color: var(--primary);
+            border: 4px solid var(--primary);
+            padding: 15px 40px;
+            font-size: 22px;
             cursor: pointer;
-            border-radius: 5px;
-        }
-        button:hover {
-            background: #00ff41;
-            color: #000;
-        }
-        button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-        #visualizer {
-            width: 100%;
-            height: 150px;
-            background: #000;
+            box-shadow: 0 0 30px var(--primary);
+            transition: all 0.3s;
             margin: 10px 0;
-            display: block;
         }
+        #btnStart:hover {
+            background: var(--primary);
+            color: var(--bg-dark);
+            transform: scale(1.05);
+        }
+
+        /* Panneaux */
+        .panel {
+            background: var(--bg-dark);
+            border: 2px solid var(--primary);
+            padding: 8px;
+            margin: 8px;
+            position: relative;
+            min-height: 150px;
+        }
+        .panel-header {
+            position: absolute;
+            top: -12px;
+            left: 10px;
+            background: var(--bg-dark);
+            padding: 0 8px;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+        canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+            background: #000;
+        }
+
+        /* Log */
         #log {
             height: 180px;
             overflow-y: auto;
-            background: #001100;
-            border: 1px solid #00ff41;
-            padding: 10px;
-            margin: 10px 0;
+            background: var(--bg-dark);
+            border: 1px solid var(--primary);
+            padding: 8px;
+            margin: 8px;
             font-size: 14px;
             line-height: 1.4;
         }
         .log-line {
-            margin: 3px 0;
+            margin: 2px 0;
             word-break: break-word;
         }
         .log-line::before {
             content: "> ";
-            color: #00cc33;
+            color: var(--secondary);
         }
         .log-line.important {
-            color: #ff0044;
+            color: var(--danger);
         }
-        .status {
+
+        /* Status */
+        #status {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--bg-dark);
+            border-top: 2px solid var(--primary);
+            padding: 5px 10px;
+            font-size: 12px;
             display: flex;
             justify-content: space-between;
-            margin: 10px 0;
-            font-size: 14px;
         }
+
+        /* Boutons */
+        button {
+            background: transparent;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+            padding: 8px 12px;
+            font-size: 14px;
+            cursor: pointer;
+            margin: 3px;
+            font-family: 'Courier New', monospace;
+        }
+        button:hover {
+            background: var(--primary);
+            color: var(--bg-dark);
+        }
+
+        /* Indicateurs */
         .indicator {
             display: inline-block;
             width: 12px;
@@ -85,64 +183,117 @@
             margin-left: 8px;
         }
         .indicator.ready {
-            background: #00ff41;
+            background: var(--primary);
         }
         .indicator.error {
-            background: #ff0044;
+            background: var(--danger);
+        }
+
+        /* Boutons flottants */
+        #voiceToggle {
+            position: fixed;
+            bottom: 60px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--primary);
+            border: none;
+            color: var(--bg-dark);
+            font-size: 24px;
+            cursor: pointer;
+            z-index: 1000;
+            box-shadow: 0 0 20px var(--primary);
+        }
+        #micIndicator {
+            position: fixed;
+            bottom: 60px;
+            left: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--bg-dark);
+            border: 2px solid var(--secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            z-index: 1000;
+        }
+        #micIndicator.ready {
+            background: var(--primary);
+            border-color: var(--primary);
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
         }
     </style>
 </head>
 <body>
-    <div id="app">
-        <h1>🎤 SUPRA LAB - TOUT FONCTIONNE</h1>
-
-        <!-- Étape 1: Initialiser le micro -->
-        <button id="initMicroBtn">1️⃣ Initialiser le Micro</button>
-        <div class="status">
-            <span>Micro:</span>
-            <span class="indicator" id="microIndicator"></span>
+    <!-- ÉCRAN DE DÉMARRAGE -->
+    <div id="start-screen">
+        <div class="boot-text">
+            SUPRA LAB FINAL<br>
+            <span style="color: var(--warning);">TOUT, VRAIMENT TOUT</span>
         </div>
+        <button id="btnStart">🚀 LANCER LE SYSTÈME</button>
+    </div>
 
-        <!-- Étape 2: Initialiser l'IA vocale -->
-        <button id="initSpeechBtn" disabled>2️⃣ Initialiser l'IA Vocale</button>
-        <div class="status">
-            <span>IA Vocale:</span>
-            <span class="indicator" id="voiceIndicator"></span>
-        </div>
-
-        <!-- Étape 3: Tout lancer -->
-        <button id="startAllBtn" disabled>3️⃣ TOUT LANCER (Écoute + Voix)</button>
-
+    <!-- INTERFACE PRINCIPALE -->
+    <div id="main">
         <!-- Visualiseur -->
-        <div>
-            <div>Visualiseur sonore:</div>
+        <div class="panel">
+            <div class="panel-header">VISUALISEUR SONORE</div>
             <canvas id="visualizer"></canvas>
             <div>Niveau: <span id="volumeLevel">--</span> dB</div>
         </div>
 
+        <!-- Oscilloscope -->
+        <div class="panel">
+            <div class="panel-header">OSCILLOSCOPE</div>
+            <canvas id="scope"></canvas>
+        </div>
+
         <!-- Log -->
-        <div>
-            <div>LOG (TOUT ce qui est capté):</div>
+        <div class="panel">
+            <div class="panel-header">LOG (TOUT EST AFFICHÉ)</div>
             <div id="log"></div>
         </div>
+
+        <div id="status">
+            <span id="statusText">En attente...</span>
+        </div>
     </div>
+
+    <!-- BOUTONS FLOTTANTS -->
+    <button id="voiceToggle" title="Activer/Désactiver la voix">🎤</button>
+    <div id="micIndicator" title="État du micro">🎙️</div>
 
     <script>
         // ========== VARIABLES GLOBALES ==========
         let audioCtx = null;
         let analyser = null;
         let microphone = null;
-        let frequencyData = null;
-        let isMicroReady = false;
-        let isSpeechReady = false;
+        let gainNode = null;
+        let mediaRecorder = null;
+        let audioStream = null;
         let recognition = null;
         let synthesis = window.speechSynthesis;
+        let frequencyArray = null;
+        let timeArray = null;
+        let spectroHistory = [];
+        let isRunning = false;
+        let isRecording = false;
+        let isVoiceEnabled = true;
+        let recordedChunks = [];
         let lastSoundTime = 0;
         let animationId = null;
 
         // ========== CONFIG ==========
         const config = {
-            noiseThreshold: 30,  // Seuil en valeur brute (0-255)
+            noiseThreshold: 0.4,
             voiceRate: 1.0,
             voiceVolume: 1.0,
             voiceLanguage: 'fr-FR'
@@ -155,7 +306,7 @@
 
             const line = document.createElement('div');
             line.className = `log-line ${type === 'error' ? 'important' : ''}`;
-            line.innerHTML = `<span style="color: #00cc33;">[${new Date().toLocaleTimeString('fr-FR')}]</span> ${message}`;
+            line.innerHTML = `<span style="color: var(--secondary);">[${new Date().toLocaleTimeString('fr-FR')}]</span> ${message}`;
             logDiv.appendChild(line);
             logDiv.scrollTop = logDiv.scrollHeight;
 
@@ -164,14 +315,21 @@
             }
         }
 
-        // ========== SYNTHÈSE VOCALE ==========
+        function updateStatus(message) {
+            document.getElementById('statusText').textContent = message;
+        }
+
+        // ========== SYNTHÈSE VOCALE (FORCÉE) ==========
         function speak(text) {
-            if (!synthesis) {
-                log("Synthèse vocale non disponible.", "error");
-                return;
-            }
+            if (!synthesis || !isVoiceEnabled) return;
 
             try {
+                // Forcer le chargement des voix si nécessaire
+                if (synthesis.getVoices().length === 0) {
+                    synthesis.onvoiceschanged = () => speak(text);
+                    return;
+                }
+
                 synthesis.cancel(); // Annuler toute lecture en cours
 
                 const utterance = new SpeechSynthesisUtterance(text);
@@ -182,29 +340,62 @@
                 // Choisir la meilleure voix française
                 const voices = synthesis.getVoices();
                 const frenchVoice = voices.find(v => v.lang.includes('fr')) || voices[0];
-                if (frenchVoice) {
-                    utterance.voice = frenchVoice;
-                }
+                if (frenchVoice) utterance.voice = frenchVoice;
 
                 utterance.onerror = (e) => {
-                    log(`Erreur voix: ${e.error}`, "error");
+                    log(`[VOIX] Erreur: ${e.error}`, "error");
                 };
 
                 synthesis.speak(utterance);
                 log(`[VOIX] "${text}"`, "normal");
             } catch (e) {
-                log(`Erreur synthèse: ${e.message}`, "error");
+                log(`[VOIX] Erreur critique: ${e.message}`, "error");
+            }
+        }
+
+        // ========== INITIALISATION COMPLÈTE ==========
+        async function initAll() {
+            try {
+                log("Démarrage du système...", "normal");
+                updateStatus("Initialisation en cours...");
+
+                // 1. Initialiser le micro
+                await initMicro();
+                log("✅ Micro prêt", "success");
+
+                // 2. Initialiser l'IA vocale
+                initSpeech();
+                log("✅ IA vocale prête", "success");
+
+                // 3. Démarrer la boucle
+                if (!isRunning) {
+                    isRunning = true;
+                    requestAnimationFrame(loop);
+                }
+
+                // 4. Message de bienvenue
+                setTimeout(() => {
+                    speak("Système SUPRA LAB prêt. TOUT est capté et lu à voix haute. Parlez maintenant.");
+                }, 1000);
+
+                updateStatus("✅ TOUT EST PRÊT !");
+                document.getElementById('micIndicator').className = 'ready';
+
+            } catch (err) {
+                log(`❌ Erreur: ${err.message}`, "error");
+                updateStatus(`❌ Erreur: ${err.message}`);
             }
         }
 
         // ========== INITIALISATION DU MICRO ==========
         async function initMicro() {
             try {
-                log("Initialisation du micro...", "normal");
-
                 // Fermer l'ancien contexte
                 if (audioCtx) {
                     await audioCtx.close().catch(() => {});
+                }
+                if (audioStream) {
+                    audioStream.getTracks().forEach(t => t.stop());
                 }
 
                 // Créer un nouveau contexte
@@ -212,7 +403,7 @@
                 await audioCtx.resume();
 
                 // Demander le micro (TOUS LES SONS)
-                const stream = await navigator.mediaDevices.getUserMedia({
+                audioStream = await navigator.mediaDevices.getUserMedia({
                     audio: {
                         echoCancellation: false,
                         noiseSuppression: false,
@@ -221,92 +412,51 @@
                 });
 
                 // Créer les nœuds audio
-                microphone = audioCtx.createMediaStreamSource(stream);
+                microphone = audioCtx.createMediaStreamSource(audioStream);
                 analyser = audioCtx.createAnalyser();
                 analyser.fftSize = 2048;
                 analyser.smoothingTimeConstant = 0.1;
 
+                gainNode = audioCtx.createGain();
+                gainNode.gain.value = 1.0;
+
                 microphone.connect(analyser);
+                analyser.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
 
-                frequencyData = new Uint8Array(analyser.frequencyBinCount);
+                frequencyArray = new Uint8Array(analyser.frequencyBinCount);
+                timeArray = new Uint8Array(analyser.frequencyBinCount);
 
-                // Démarrer le visualiseur
-                startVisualizer();
-
-                isMicroReady = true;
-                document.getElementById('microIndicator').className = 'indicator ready';
-                document.getElementById('initSpeechBtn').disabled = false;
-                log("✅ Micro prêt !", "success");
+                // Initialiser l'enregistreur
+                mediaRecorder = new MediaRecorder(audioStream);
+                recordedChunks = [];
+                mediaRecorder.ondataavailable = (e) => recordedChunks.push(e.data);
+                mediaRecorder.onstop = () => {
+                    const blob = new Blob(recordedChunks, { type: 'audio/webm' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `rec-${Date.now()}.webm`;
+                    a.click();
+                    recordedChunks = [];
+                    log("Enregistrement sauvegardé.", "success");
+                };
 
                 return true;
-            } catch (error) {
-                log(`❌ Erreur micro: ${error.message}`, "error");
-                document.getElementById('microIndicator').className = 'indicator error';
-                return false;
+            } catch (err) {
+                throw new Error(`Micro: ${err.message}`);
             }
-        }
-
-        // ========== VISUALISEUR + DÉTECTION DE SONS ==========
-        function startVisualizer() {
-            if (animationId) {
-                cancelAnimationFrame(animationId);
-            }
-
-            const canvas = document.getElementById('visualizer');
-            const ctx = canvas.getContext('2d');
-
-            function draw() {
-                if (!analyser) {
-                    animationId = requestAnimationFrame(draw);
-                    return;
-                }
-
-                analyser.getByteFrequencyData(frequencyData);
-
-                ctx.fillStyle = 'black';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-                const barWidth = (canvas.width / frequencyData.length) * 2.5;
-                let x = 0;
-
-                for (let i = 0; i < frequencyData.length; i++) {
-                    const barHeight = frequencyData[i] / 2;
-                    ctx.fillStyle = `hsl(${i * 2}, 100%, 50%)`;
-                    ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
-                    x += barWidth + 1;
-                }
-
-                // Calculer le niveau sonore moyen
-                const average = frequencyData.reduce((a, b) => a + b, 0) / frequencyData.length;
-                document.getElementById('volumeLevel').textContent = `${Math.round(average)}`;
-
-                // Détecter les sons forts
-                if (average > config.noiseThreshold) {
-                    const now = Date.now();
-                    if (now - lastSoundTime > 2000) { // Éviter les répétitions
-                        lastSoundTime = now;
-                        log(`[BRUIT] Niveau sonore élevé: ${Math.round(average)}`, "important");
-                        speak(`Bruit détecté !`);
-                    }
-                }
-
-                animationId = requestAnimationFrame(draw);
-            }
-
-            draw();
         }
 
         // ========== INITIALISATION DE L'IA VOCALE ==========
         function initSpeech() {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             if (!SpeechRecognition) {
-                log("❌ Reconnaissance vocale non supportée. Utilise Chrome.", "error");
-                return false;
+                log("⚠️ Reconnaissance vocale non supportée. Utilise Chrome pour une meilleure expérience.", "error");
+                return;
             }
 
             try {
-                log("Initialisation de l'IA vocale...", "normal");
-
                 if (recognition) {
                     recognition.stop();
                 }
@@ -340,12 +490,10 @@
 
                 recognition.onstart = () => {
                     log("✅ IA vocale démarrée. TOUT est capté.", "success");
-                    document.getElementById('voiceIndicator').className = 'indicator ready';
-                    document.getElementById('startAllBtn').disabled = false;
                 };
 
                 recognition.onend = () => {
-                    if (isSpeechReady) {
+                    if (isRunning) {
                         setTimeout(() => {
                             try { recognition.start(); } catch (e) {}
                         }, 1000);
@@ -353,35 +501,127 @@
                 };
 
                 recognition.start();
-                isSpeechReady = true;
-                log("✅ IA vocale prête !", "success");
-                return true;
             } catch (e) {
                 log(`❌ Erreur IA vocale: ${e.message}`, "error");
-                document.getElementById('voiceIndicator').className = 'indicator error';
-                return false;
             }
         }
 
-        // ========== TOUT LANCER ==========
-        function startAll() {
-            log("Démarrage complet...", "normal");
-            speak("Système lancé. Je capte TOUT et je lis TOUT à voix haute.");
+        // ========== BOUCLE PRINCIPALE ==========
+        function loop() {
+            if (!audioCtx || !analyser) {
+                animationId = requestAnimationFrame(loop);
+                return;
+            }
+
+            analyser.getByteFrequencyData(frequencyArray);
+            const rms = Math.sqrt(frequencyArray.reduce((a, b) => a + b * b, 0) / frequencyArray.length) / 128;
+
+            // Mettre à jour le niveau sonore
+            document.getElementById('volumeLevel').textContent = `${rms.toFixed(2)}`;
+
+            // Détecter les bruits forts
+            if (rms > config.noiseThreshold) {
+                const now = Date.now();
+                if (now - lastSoundTime > 2000) {
+                    lastSoundTime = now;
+                    log(`[BRUIT] Niveau sonore élevé: ${rms.toFixed(2)} dB`, "important");
+                    speak(`Attention, bruit détecté à ${rms.toFixed(1)} décibels !`);
+                }
+            }
+
+            drawVisualizer();
+            drawScope();
+
+            animationId = requestAnimationFrame(loop);
         }
 
-        // ========== BOUTONS ==========
-        document.getElementById('initMicroBtn').addEventListener('click', initMicro);
-        document.getElementById('initSpeechBtn').addEventListener('click', () => {
-            initSpeech();
-        });
-        document.getElementById('startAllBtn').addEventListener('click', startAll);
+        // ========== VISUALISEUR ==========
+        function drawVisualizer() {
+            const canvas = document.getElementById('visualizer');
+            if (!canvas || !analyser) return;
 
-        // Message initial
-        log("SUPRA LAB - TOUT FONCTIONNE");
-        log("1. Cliquez sur 'Initialiser le Micro'");
-        log("2. Cliquez sur 'Initialiser l'IA Vocale'");
-        log("3. Cliquez sur 'TOUT LANCER'");
-        log("Parlez, claquez, sifflez... TOUT sera capté et lu !");
+            const ctx = canvas.getContext('2d');
+            analyser.getByteFrequencyData(frequencyArray);
+
+            spectroHistory.unshift([...frequencyArray]);
+            if (spectroHistory.length > 100) spectroHistory.pop();
+
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            const w = canvas.width / frequencyArray.length;
+            for (let y = 0; y < spectroHistory.length; y++) {
+                for (let x = 0; x < spectroHistory[y].length; x++) {
+                    const val = spectroHistory[y][x];
+                    ctx.fillStyle = `hsl(${90 + val/2.5}, 100%, ${val/2.8}%)`;
+                    ctx.fillRect(x * w, y * 2, w + 1, 2);
+                }
+            }
+        }
+
+        // ========== OSCILLOSCOPE ==========
+        function drawScope() {
+            const canvas = document.getElementById('scope');
+            if (!canvas || !analyser) return;
+
+            const ctx = canvas.getContext('2d');
+            analyser.getByteTimeDomainData(timeArray);
+
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.strokeStyle = '#00ff41';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+
+            const slice = canvas.width / timeArray.length;
+            for (let i = 0; i < timeArray.length; i++) {
+                const y = (timeArray[i] / 128) * canvas.height / 2;
+                i === 0 ? ctx.moveTo(0, y) : ctx.lineTo(i * slice, y);
+            }
+            ctx.stroke();
+        }
+
+        // ========== GESTION DES BOUTONS ==========
+        function setupButtons() {
+            document.getElementById('btnStart').addEventListener('click', async () => {
+                document.getElementById('start-screen').style.display = 'none';
+                document.getElementById('main').style.display = 'block';
+                await initAll();
+            });
+
+            document.getElementById('voiceToggle').addEventListener('click', () => {
+                isVoiceEnabled = !isVoiceEnabled;
+                if (isVoiceEnabled) {
+                    speak("Voix activée. TOUT sera lu à voix haute.");
+                    document.getElementById('voiceToggle').style.background = '#ff0044';
+                } else {
+                    speak("Voix désactivée.");
+                    document.getElementById('voiceToggle').style.background = '#00ff41';
+                }
+            });
+        }
+
+        // ========== INITIALISATION ==========
+        window.addEventListener('DOMContentLoaded', () => {
+            log("SUPRA LAB - TOUT, VRAIMENT TOUT");
+            log("Cliquez sur 'LANCER LE SYSTÈME' pour tout démarrer.");
+            setupButtons();
+
+            // Forcer le chargement des voix
+            if (synthesis.getVoices().length === 0) {
+                synthesis.onvoiceschanged = () => {
+                    log(`[VOIX] ${synthesis.getVoices().length} voix disponibles.`, "normal");
+                };
+            }
+        });
+
+        window.addEventListener('beforeunload', () => {
+            if (recognition) recognition.stop();
+            if (audioStream) audioStream.getTracks().forEach(t => t.stop());
+            if (audioCtx) audioCtx.close().catch(() => {});
+            if (animationId) cancelAnimationFrame(animationId);
+        });
     </script>
 </body>
 </html>
