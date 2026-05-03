@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SUPRA LAB - TOUT CAPTURER</title>
+    <title>SUPRA LAB - TOUT FONCTIONNE</title>
     <style>
         body {
             margin: 0;
@@ -13,7 +13,6 @@
             font-family: 'Courier New', monospace;
             font-size: 14px;
             touch-action: manipulation;
-            overflow: hidden;
         }
         #app {
             max-width: 600px;
@@ -27,18 +26,22 @@
         button {
             display: block;
             width: 100%;
-            padding: 15px;
-            margin: 10px 0;
+            padding: 12px;
+            margin: 8px 0;
             background: #001100;
             color: #00ff41;
             border: 2px solid #00ff41;
-            font-size: 16px;
+            font-size: 14px;
             cursor: pointer;
             border-radius: 5px;
         }
         button:hover {
             background: #00ff41;
             color: #000;
+        }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
         #visualizer {
             width: 100%;
@@ -48,7 +51,7 @@
             display: block;
         }
         #log {
-            height: 200px;
+            height: 180px;
             overflow-y: auto;
             background: #001100;
             border: 1px solid #00ff41;
@@ -68,16 +71,11 @@
         .log-line.important {
             color: #ff0044;
         }
-        #status {
-            text-align: center;
+        .status {
+            display: flex;
+            justify-content: space-between;
             margin: 10px 0;
             font-size: 14px;
-        }
-        .controls {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin: 10px 0;
         }
         .indicator {
             display: inline-block;
@@ -85,7 +83,6 @@
             height: 12px;
             border-radius: 50%;
             margin-left: 8px;
-            vertical-align: middle;
         }
         .indicator.ready {
             background: #00ff41;
@@ -93,41 +90,41 @@
         .indicator.error {
             background: #ff0044;
         }
-        #micStatus, #voiceStatus {
-            margin-left: 8px;
-        }
     </style>
 </head>
 <body>
     <div id="app">
-        <h1>🎤 SUPRA LAB - TOUT CAPTURER</h1>
+        <h1>🎤 SUPRA LAB - TOUT FONCTIONNE</h1>
 
-        <button id="startBtn">🚀 LANCER (TOUT est capté et lu)</button>
-
-        <div class="controls">
-            <button id="testMicroBtn">🎙️ Tester Micro</button>
+        <!-- Étape 1: Initialiser le micro -->
+        <button id="initMicroBtn">1️⃣ Initialiser le Micro</button>
+        <div class="status">
+            <span>Micro:</span>
             <span class="indicator" id="microIndicator"></span>
-            <span id="micStatus"></span>
         </div>
 
-        <div class="controls">
-            <button id="testVoiceBtn">🗣️ Tester Voix</button>
+        <!-- Étape 2: Initialiser l'IA vocale -->
+        <button id="initSpeechBtn" disabled>2️⃣ Initialiser l'IA Vocale</button>
+        <div class="status">
+            <span>IA Vocale:</span>
             <span class="indicator" id="voiceIndicator"></span>
-            <span id="voiceStatus"></span>
         </div>
 
+        <!-- Étape 3: Tout lancer -->
+        <button id="startAllBtn" disabled>3️⃣ TOUT LANCER (Écoute + Voix)</button>
+
+        <!-- Visualiseur -->
         <div>
             <div>Visualiseur sonore:</div>
             <canvas id="visualizer"></canvas>
             <div>Niveau: <span id="volumeLevel">--</span> dB</div>
         </div>
 
+        <!-- Log -->
         <div>
             <div>LOG (TOUT ce qui est capté):</div>
             <div id="log"></div>
         </div>
-
-        <div id="status">En attente...</div>
     </div>
 
     <script>
@@ -136,15 +133,16 @@
         let analyser = null;
         let microphone = null;
         let frequencyData = null;
-        let isRunning = false;
+        let isMicroReady = false;
+        let isSpeechReady = false;
         let recognition = null;
         let synthesis = window.speechSynthesis;
         let lastSoundTime = 0;
-        let spectroHistory = [];
+        let animationId = null;
 
         // ========== CONFIG ==========
         const config = {
-            noiseThreshold: 0.3,  // Seuil de détection de bruit (plus bas = plus sensible)
+            noiseThreshold: 30,  // Seuil en valeur brute (0-255)
             voiceRate: 1.0,
             voiceVolume: 1.0,
             voiceLanguage: 'fr-FR'
@@ -166,11 +164,7 @@
             }
         }
 
-        function updateStatus(message) {
-            document.getElementById('status').textContent = message;
-        }
-
-        // ========== SYNTHÈSE VOCALE (TOUT EST LU) ==========
+        // ========== SYNTHÈSE VOCALE ==========
         function speak(text) {
             if (!synthesis) {
                 log("Synthèse vocale non disponible.", "error");
@@ -178,8 +172,7 @@
             }
 
             try {
-                // Annuler toute lecture en cours
-                synthesis.cancel();
+                synthesis.cancel(); // Annuler toute lecture en cours
 
                 const utterance = new SpeechSynthesisUtterance(text);
                 utterance.lang = config.voiceLanguage;
@@ -207,6 +200,8 @@
         // ========== INITIALISATION DU MICRO ==========
         async function initMicro() {
             try {
+                log("Initialisation du micro...", "normal");
+
                 // Fermer l'ancien contexte
                 if (audioCtx) {
                     await audioCtx.close().catch(() => {});
@@ -216,11 +211,11 @@
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 await audioCtx.resume();
 
-                // Demander le micro (TOUS LES SONS, sans filtrage)
+                // Demander le micro (TOUS LES SONS)
                 const stream = await navigator.mediaDevices.getUserMedia({
                     audio: {
-                        echoCancellation: false,  // Désactivé pour capturer TOUT
-                        noiseSuppression: false,  // Désactivé pour capturer TOUT
+                        echoCancellation: false,
+                        noiseSuppression: false,
                         autoGainControl: false
                     }
                 });
@@ -235,119 +230,34 @@
 
                 frequencyData = new Uint8Array(analyser.frequencyBinCount);
 
-                // Initialiser l'IA vocale
-                initSpeechRecognition();
+                // Démarrer le visualiseur
+                startVisualizer();
 
-                // Initialiser le visualiseur
-                drawVisualizer();
-
+                isMicroReady = true;
                 document.getElementById('microIndicator').className = 'indicator ready';
-                document.getElementById('micStatus').textContent = "✅ Prêt";
+                document.getElementById('initSpeechBtn').disabled = false;
+                log("✅ Micro prêt !", "success");
+
                 return true;
             } catch (error) {
-                log(`Erreur micro: ${error.message}`, "error");
-                updateStatus("❌ Micro non disponible");
+                log(`❌ Erreur micro: ${error.message}`, "error");
                 document.getElementById('microIndicator').className = 'indicator error';
-                document.getElementById('micStatus').textContent = "❌ Erreur";
                 return false;
             }
         }
 
-        // ========== INITIALISATION DE L'IA VOCALE ==========
-        function initSpeechRecognition() {
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (!SpeechRecognition) {
-                log("Reconnaissance vocale non supportée. Utilise Chrome.", "error");
-                return;
+        // ========== VISUALISEUR + DÉTECTION DE SONS ==========
+        function startVisualizer() {
+            if (animationId) {
+                cancelAnimationFrame(animationId);
             }
 
-            try {
-                if (recognition) {
-                    recognition.stop();
-                }
-
-                recognition = new SpeechRecognition();
-                recognition.continuous = true;
-                recognition.interimResults = true;  // Capturer TOUT, même les fragments
-                recognition.lang = config.voiceLanguage.split('-')[0];
-                recognition.maxAlternatives = 1;
-
-                let finalTranscript = '';
-                let interimTranscript = '';
-
-                recognition.onresult = (event) => {
-                    interimTranscript = '';
-                    for (let i = event.resultIndex; i < event.results.length; i++) {
-                        const transcript = event.results[i][0].transcript;
-                        if (event.results[i].isFinal) {
-                            finalTranscript += transcript + ' ';
-                            // Lire TOUT ce qui est dit
-                            speak(transcript);
-                            log(`[PAROLE] "${transcript}"`, "normal");
-                        } else {
-                            interimTranscript += transcript;
-                            // Afficher les fragments en temps réel
-                            log(`[FRAGMENT] "${interimTranscript}"`, "normal");
-                        }
-                    }
-                };
-
-                recognition.onerror = (event) => {
-                    log(`Erreur reconnaissance: ${event.error}`, "error");
-                };
-
-                recognition.onstart = () => {
-                    log("IA vocale démarrée. TOUT est capté.", "normal");
-                    document.getElementById('voiceIndicator').className = 'indicator ready';
-                    document.getElementById('voiceStatus').textContent = "🎤 Écoute...";
-                };
-
-                recognition.onend = () => {
-                    if (isRunning) {
-                        setTimeout(() => {
-                            try { recognition.start(); } catch (e) {}
-                        }, 1000);
-                    }
-                };
-
-                recognition.start();
-                isRunning = true;
-            } catch (e) {
-                log(`Erreur IA vocale: ${e.message}`, "error");
-                document.getElementById('voiceIndicator').className = 'indicator error';
-                document.getElementById('voiceStatus').textContent = "❌ Erreur";
-            }
-        }
-
-        // ========== DÉTECTION DE BRUITS NON VERBAUX ==========
-        function detectSounds() {
-            if (!analyser) return;
-
-            analyser.getByteFrequencyData(frequencyData);
-            const average = frequencyData.reduce((a, b) => a + b, 0) / frequencyData.length;
-
-            // Mettre à jour le niveau sonore
-            document.getElementById('volumeLevel').textContent = `${(average / 2.5).toFixed(1)}`;
-
-            // Détecter les bruits forts (non verbaux)
-            if (average > config.noiseThreshold * 255) {
-                const now = Date.now();
-                if (now - lastSoundTime > 2000) {  // Éviter les répétitions
-                    lastSoundTime = now;
-                    log(`[BRUIT] Niveau sonore élevé détecté: ${(average / 2.5).toFixed(1)}%`, "important");
-                    speak(`Attention, bruit détecté !`);
-                }
-            }
-        }
-
-        // ========== VISUALISEUR ==========
-        function drawVisualizer() {
             const canvas = document.getElementById('visualizer');
             const ctx = canvas.getContext('2d');
 
             function draw() {
                 if (!analyser) {
-                    requestAnimationFrame(draw);
+                    animationId = requestAnimationFrame(draw);
                     return;
                 }
 
@@ -366,47 +276,112 @@
                     x += barWidth + 1;
                 }
 
-                // Détecter les sons
-                detectSounds();
+                // Calculer le niveau sonore moyen
+                const average = frequencyData.reduce((a, b) => a + b, 0) / frequencyData.length;
+                document.getElementById('volumeLevel').textContent = `${Math.round(average)}`;
 
-                requestAnimationFrame(draw);
+                // Détecter les sons forts
+                if (average > config.noiseThreshold) {
+                    const now = Date.now();
+                    if (now - lastSoundTime > 2000) { // Éviter les répétitions
+                        lastSoundTime = now;
+                        log(`[BRUIT] Niveau sonore élevé: ${Math.round(average)}`, "important");
+                        speak(`Bruit détecté !`);
+                    }
+                }
+
+                animationId = requestAnimationFrame(draw);
             }
 
             draw();
         }
 
-        // ========== DÉMARRAGE COMPLET ==========
-        async function start() {
-            log("Démarrage du système... TOUT sera capté et lu.");
-            updateStatus("Initialisation en cours...");
+        // ========== INITIALISATION DE L'IA VOCALE ==========
+        function initSpeech() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                log("❌ Reconnaissance vocale non supportée. Utilise Chrome.", "error");
+                return false;
+            }
 
-            const success = await initMicro();
-            if (success) {
-                updateStatus("✅ TOUT EST PRÊT ! Parlez, claquez, sifflez...");
-                log("Système prêt. TOUT est capté et lu à voix haute.", "normal");
-                speak("Système prêt. Je capte TOUT et je lis TOUT à voix haute.");
+            try {
+                log("Initialisation de l'IA vocale...", "normal");
+
+                if (recognition) {
+                    recognition.stop();
+                }
+
+                recognition = new SpeechRecognition();
+                recognition.continuous = true;
+                recognition.interimResults = true;
+                recognition.lang = config.voiceLanguage.split('-')[0];
+                recognition.maxAlternatives = 1;
+
+                let finalTranscript = '';
+
+                recognition.onresult = (event) => {
+                    let interimTranscript = '';
+                    for (let i = event.resultIndex; i < event.results.length; i++) {
+                        const transcript = event.results[i][0].transcript;
+                        if (event.results[i].isFinal) {
+                            finalTranscript += transcript + ' ';
+                            log(`[PAROLE] "${transcript}"`, "normal");
+                            speak(transcript); // Lire TOUT ce qui est dit
+                        } else {
+                            interimTranscript += transcript;
+                            log(`[FRAGMENT] "${interimTranscript}"`, "normal");
+                        }
+                    }
+                };
+
+                recognition.onerror = (event) => {
+                    log(`❌ Erreur IA vocale: ${event.error}`, "error");
+                };
+
+                recognition.onstart = () => {
+                    log("✅ IA vocale démarrée. TOUT est capté.", "success");
+                    document.getElementById('voiceIndicator').className = 'indicator ready';
+                    document.getElementById('startAllBtn').disabled = false;
+                };
+
+                recognition.onend = () => {
+                    if (isSpeechReady) {
+                        setTimeout(() => {
+                            try { recognition.start(); } catch (e) {}
+                        }, 1000);
+                    }
+                };
+
+                recognition.start();
+                isSpeechReady = true;
+                log("✅ IA vocale prête !", "success");
+                return true;
+            } catch (e) {
+                log(`❌ Erreur IA vocale: ${e.message}`, "error");
+                document.getElementById('voiceIndicator').className = 'indicator error';
+                return false;
             }
         }
 
+        // ========== TOUT LANCER ==========
+        function startAll() {
+            log("Démarrage complet...", "normal");
+            speak("Système lancé. Je capte TOUT et je lis TOUT à voix haute.");
+        }
+
         // ========== BOUTONS ==========
-        document.getElementById('startBtn').addEventListener('click', start);
-
-        document.getElementById('testMicroBtn').addEventListener('click', async () => {
-            try {
-                await initMicro();
-                log("Micro testé avec succès.", "normal");
-            } catch (err) {
-                log(`Test micro échoué: ${err.message}`, "error");
-            }
+        document.getElementById('initMicroBtn').addEventListener('click', initMicro);
+        document.getElementById('initSpeechBtn').addEventListener('click', () => {
+            initSpeech();
         });
-
-        document.getElementById('testVoiceBtn').addEventListener('click', () => {
-            speak("Test de la voix. Si vous entendez ceci, TOUT fonctionne.");
-        });
+        document.getElementById('startAllBtn').addEventListener('click', startAll);
 
         // Message initial
-        log("SUPRA LAB - TOUT CAPTURER, TOUT LIRE");
-        log("Cliquez sur 'LANCER' pour commencer. TOUT sera capté et lu.");
+        log("SUPRA LAB - TOUT FONCTIONNE");
+        log("1. Cliquez sur 'Initialiser le Micro'");
+        log("2. Cliquez sur 'Initialiser l'IA Vocale'");
+        log("3. Cliquez sur 'TOUT LANCER'");
+        log("Parlez, claquez, sifflez... TOUT sera capté et lu !");
     </script>
 </body>
 </html>
