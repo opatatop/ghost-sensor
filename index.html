@@ -2,18 +2,26 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>SUPRA LAB v12 — FONCTIONNEL</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>SUPRA LAB v12 — TOUS LES SONS</title>
     <style>
-        body {
+        * {
             margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            font-family: 'Courier New', monospace;
+        }
+
+        body {
             background: #000;
             color: #00ff41;
-            font-family: 'Courier New', monospace;
-            font-size: 16px;
+            font-size: 14px;
             overflow: hidden;
-            touch-action: manipulation;
+            min-height: 100vh;
         }
+
         #start-screen, #main {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
@@ -22,47 +30,98 @@
             align-items: center;
             justify-content: center;
             background: #001100;
-            border: 4px solid #00ff41;
-            box-shadow: 0 0 30px #00ff41;
+            border: 3px solid #00ff41;
+            box-shadow: 0 0 20px #00ff41;
+            z-index: 1000;
         }
-        #main { display: none; padding: 10px; }
-        #start-screen { text-align: center; }
+        #main { display: none; padding: 8px; }
+
+        #start-screen {
+            text-align: center;
+            padding: 20px;
+        }
+        h1 { color: #00ff41; text-shadow: 0 0 10px #00ff41; margin-bottom: 10px; }
+        p { color: #00cc33; margin-bottom: 20px; }
+
         button {
             background: transparent;
             color: #00ff41;
-            border: 3px solid #00ff41;
-            padding: 12px 24px;
-            font-size: 18px;
+            border: 2px solid #00ff41;
+            padding: 10px 20px;
+            font-size: 16px;
             cursor: pointer;
             margin: 8px;
-            font-family: 'Courier New', monospace;
+            width: 80%;
+            max-width: 300px;
         }
         button:hover { background: #00ff41; color: #000; }
+        button:active { background: #00cc33; }
+
         #log {
             position: fixed;
-            bottom: 60px;
+            bottom: 100px;
             left: 10px;
             right: 10px;
             max-height: 150px;
             overflow-y: auto;
             background: #001100;
-            border: 2px solid #00ff41;
+            border: 1px solid #00ff41;
             padding: 8px;
-            font-size: 14px;
+            font-size: 12px;
+            line-height: 1.2;
         }
-        .log-line { margin: 2px 0; }
+        .log-line { margin: 2px 0; word-break: break-word; }
         .log-line::before { content: "> "; color: #00cc33; }
+        .log-line.important { color: #ff0044 !important; }
+
         #status {
             position: fixed;
             bottom: 10px;
             left: 10px;
             right: 10px;
             background: #001100;
-            border-top: 2px solid #00ff41;
+            border-top: 1px solid #00ff41;
             padding: 5px;
-            font-size: 14px;
+            font-size: 12px;
             text-align: center;
+            display: flex;
+            justify-content: space-between;
         }
+
+        .panel {
+            background: #001100;
+            border: 2px solid #00ff41;
+            padding: 8px;
+            margin: 5px;
+            position: relative;
+            min-height: 150px;
+        }
+        .panel-header {
+            position: absolute;
+            top: -12px;
+            left: 10px;
+            background: #001100;
+            padding: 0 8px;
+            font-size: 12px;
+        }
+        canvas {
+            background: #000;
+            display: block;
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        #rms-value, #noise-value {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 12px;
+            background: rgba(0, 17, 0, 0.8);
+            padding: 3px 6px;
+            border: 1px solid #00ff41;
+        }
+        #noise-value { top: 40px; }
+
         #voiceToggle {
             position: fixed;
             bottom: 60px;
@@ -77,6 +136,9 @@
             cursor: pointer;
             z-index: 1000;
         }
+        #voiceToggle.active { background: #ff0044; animation: pulse 1s infinite; }
+        #voiceToggle.error { background: #ff0000; }
+
         #micIndicator {
             position: fixed;
             bottom: 60px;
@@ -85,38 +147,24 @@
             height: 50px;
             border-radius: 50%;
             background: #001100;
-            border: 3px solid #00cc33;
+            border: 2px solid #00cc33;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 20px;
+            z-index: 1000;
         }
         #micIndicator.listening { background: #00ff41; border-color: #00ff41; animation: pulse 1s infinite; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-        canvas {
-            background: #001100;
-            border: 2px solid #00ff41;
-            margin: 5px;
-            display: block;
+        #micIndicator.error { background: #ff0000; border-color: #ff0000; }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
         }
-        .panel {
-            background: #001100;
-            border: 2px solid #00ff41;
-            padding: 8px;
-            margin: 5px;
-            position: relative;
-        }
-        .panel-header {
-            position: absolute;
-            top: -12px;
-            left: 10px;
-            background: #001100;
-            padding: 0 8px;
-            font-size: 14px;
-        }
+
         #ai-report {
             background: #000;
-            border: 2px dashed #00ff41;
+            border: 1px dashed #00ff41;
             padding: 8px;
             margin: 5px;
             max-height: 150px;
@@ -124,14 +172,76 @@
             font-size: 12px;
             white-space: pre-wrap;
         }
+
+        #settings-page {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: #000;
+            z-index: 2000;
+            padding: 15px;
+            border: 2px solid #00ff41;
+            overflow-y: auto;
+        }
+        .settings-section {
+            background: #001100;
+            border: 1px solid #00ff41;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        .settings-section h3 {
+            color: #00ff41;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        .form-group {
+            margin: 8px 0;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 4px;
+            font-size: 12px;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 6px;
+            background: #000;
+            color: #00ff41;
+            border: 1px solid #00ff41;
+            font-size: 12px;
+        }
+        .btn-close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 20px;
+            background: none;
+            border: none;
+            color: #00ff41;
+            cursor: pointer;
+        }
+        .alert {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #001100;
+            border: 2px solid #ff0044;
+            padding: 15px;
+            font-size: 14px;
+            text-align: center;
+            z-index: 3000;
+            display: none;
+        }
+        .alert.active { display: block; }
     </style>
 </head>
 <body>
     <!-- ÉCRAN DE DÉMARRAGE -->
     <div id="start-screen">
-        <h1 style="color: #00ff41; text-shadow: 0 0 10px #00ff41;">SUPRA LAB v12</h1>
-        <p style="color: #00cc33;">IA Vocale + Micro + Détection</p>
-        <button id="btnStart">🚀 LANCER LE SYSTÈME</button>
+        <h1>SUPRA LAB v12</h1>
+        <p>Détection de TOUS les sons (parole + bruits)</p>
+        <button id="btnStart">🚀 LANCER</button>
         <button id="btnSettings">⚙️ PARAMÈTRES</button>
     </div>
 
@@ -139,45 +249,62 @@
     <div id="main">
         <div class="panel">
             <div class="panel-header">SPECTROGRAMME</div>
-            <canvas id="spectrogram" width="400" height="200"></canvas>
-            <div style="position: absolute; top: 10px; right: 10px; font-size: 14px;" id="dominant-freq">Fréq: -- MHz</div>
+            <canvas id="spectrogram"></canvas>
+            <div id="rms-value">RMS: -- dB</div>
+            <div id="noise-value">Bruit: --</div>
         </div>
 
         <div class="panel">
             <div class="panel-header">OSCILLOSCOPE</div>
-            <canvas id="scope" width="400" height="200"></canvas>
+            <canvas id="scope"></canvas>
         </div>
 
         <div class="panel">
             <div class="panel-header">RAPPORT IA</div>
-            <div id="ai-report">[En attente d'analyse...]</div>
-            <button id="readReportBtn" style="margin-top: 5px;">🔊 Lire le rapport</button>
+            <div id="ai-report">[En attente...]</div>
+            <button id="readReportBtn" style="margin-top: 5px; width: auto;">🔊 Lire</button>
         </div>
 
         <div id="log"></div>
-        <div id="status">En attente...</div>
+        <div id="status">
+            <span id="status-text">En attente...</span>
+            <span id="device-info">v12 | Realme Note 60</span>
+        </div>
+    </div>
+
+    <!-- ALERTE -->
+    <div class="alert" id="criticalAlert">
+        ⚠️ ALERTE ⚠️<br>
+        <span id="alert-message">--</span>
     </div>
 
     <!-- BOUTONS FLOTTANTS -->
-    <button id="voiceToggle" title="Activer/Désactiver la voix">🎤</button>
-    <div id="micIndicator" title="État du micro">🎙️</div>
+    <button id="voiceToggle" title="Voix ON/OFF">🎤</button>
+    <div id="micIndicator" title="Micro">🎙️</div>
 
-    <!-- PAGE DE PARAMÈTRES -->
-    <div id="settings-page" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: #000; z-index: 1000; padding: 20px; border: 4px solid #00ff41;">
-        <h2 style="color: #00ff41; text-align: center;">⚙️ PARAMÈTRES</h2>
-        <div style="margin: 10px 0;">
-            <label style="display: block; margin: 5px 0;">
-                <input type="checkbox" id="autoStartVoice" checked> Démarrer l'IA vocale automatiquement
-            </label>
-            <label style="display: block; margin: 5px 0;">
-                <input type="checkbox" id="voiceFeedback" checked> Activer la voix pour les rapports
-            </label>
-            <label style="display: block; margin: 5px 0;">
-                Clé API Groq: <input type="text" id="groqApiKey" style="background: #001100; color: #00ff41; border: 1px solid #00ff41; width: 100%;">
-            </label>
+    <!-- PARAMÈTRES -->
+    <div id="settings-page">
+        <button class="btn-close" id="closeSettings">✕</button>
+        <div class="settings-section">
+            <h3>🎤 Micro & Voix</h3>
+            <div class="form-group">
+                <label><input type="checkbox" id="autoStartVoice" checked> Démarrer l'IA vocale automatiquement</label>
+            </div>
+            <div class="form-group">
+                <label><input type="checkbox" id="voiceFeedback" checked> Activer la voix pour les rapports</label>
+            </div>
+            <div class="form-group">
+                <label>Seuil de bruit (dB): <input type="range" id="noiseThreshold" min="0.1" max="1.0" step="0.1" value="0.4">
+                <span id="noiseThresholdValue">0.4</span></label>
+            </div>
         </div>
-        <button id="saveSettings" style="margin-top: 10px;">💾 Sauvegarder</button>
-        <button id="closeSettings" style="margin-top: 10px;">✕ Fermer</button>
+        <div class="settings-section">
+            <h3>🔑 Clé API Groq</h3>
+            <div class="form-group">
+                <label>Clé API: <input type="text" id="groqApiKey" placeholder="Ton clé Groq..."></label>
+            </div>
+        </div>
+        <button id="saveSettings" style="margin-top: 10px; width: 100%;">💾 Sauvegarder</button>
     </div>
 
     <script>
@@ -185,7 +312,8 @@
         let config = {
             autoStartVoice: true,
             voiceFeedback: true,
-            groqApiKey: ''
+            groqApiKey: '',
+            noiseThreshold: 0.4
         };
 
         // ========== GLOBALS ==========
@@ -196,38 +324,51 @@
         let isRunning = false;
         let isVoiceEnabled = false;
         let isListening = false;
-        let frequencyArray, timeArray;
-        let spectroHistory = [];
+        let frequencyArray, timeArray, spectroHistory = [];
+        let noiseDetected = false;
+        let lastNoiseTime = 0;
+        let noiseCooldown = 1000; // 1 seconde entre chaque détection de bruit
 
         // ========== FREQUENCY DB ==========
         const FREQUENCY_DB = {
             'AVIATION_EMERGENCY': { min: 121.4, max: 121.6, label: 'Aviation Emergency', critical: true },
             'DRONE_2_4': { min: 2400, max: 2483.5, label: 'Drone 2.4GHz', critical: true },
-            'FM_RADIO': { min: 87.5, max: 108, label: 'FM Radio', critical: false }
+            'FM_RADIO': { min: 87.5, max: 108, label: 'FM Radio', critical: false },
+            'HUMAN_VOICE': { min: 85, max: 255, label: 'Voix humaine', critical: false }
         };
-        const KEYWORDS = ['avion', 'drone', 'urgence', 'sos', 'alerte', 'danger'];
+        const KEYWORDS = ['avion', 'drone', 'urgence', 'sos', 'alerte', 'danger', 'bruit', 'son', 'clac', 'siffle', 'coup'];
 
         // ========== UTILS ==========
         function log(text, important = false) {
             const logDiv = document.getElementById('log');
             if (!logDiv) return;
             const line = document.createElement('div');
-            line.className = 'log-line';
-            if (important) line.style.color = '#ff0044';
+            line.className = 'log-line' + (important ? ' important' : '');
             line.innerHTML = `<span style="color: #00cc33;">[${new Date().toLocaleTimeString('fr-FR')}]</span> ${text}`;
             logDiv.appendChild(line);
             logDiv.scrollTop = logDiv.scrollHeight;
+            if (logDiv.children.length > 50) logDiv.removeChild(logDiv.children[0]);
         }
 
         function updateStatus(text) {
-            const statusDiv = document.getElementById('status');
+            const statusDiv = document.getElementById('status-text');
             if (statusDiv) statusDiv.textContent = text;
+        }
+
+        function showAlert(message) {
+            const alertBox = document.getElementById('criticalAlert');
+            const alertMsg = document.getElementById('alert-message');
+            if (alertMsg) alertMsg.textContent = message;
+            if (alertBox) {
+                alertBox.classList.add('active');
+                setTimeout(() => alertBox.classList.remove('active'), 3000);
+            }
         }
 
         function speak(text) {
             if (!config.voiceFeedback || !isVoiceEnabled || !synthesis) return;
             try {
-                synthesis.cancel(); // Annule toute lecture en cours
+                synthesis.cancel();
                 const utterance = new SpeechSynthesisUtterance(text);
                 utterance.lang = 'fr-FR';
                 utterance.rate = 1.0;
@@ -245,40 +386,37 @@
             }
 
             try {
-                // Fermer l'ancien contexte et stream
                 if (audioCtx) await audioCtx.close().catch(() => {});
                 if (audioStream) audioStream.getTracks().forEach(t => t.stop());
 
-                // Créer un nouveau contexte audio
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 await audioCtx.resume();
 
-                // Demander le stream micro
                 audioStream = await navigator.mediaDevices.getUserMedia({
                     audio: {
-                        echoCancellation: true,
-                        noiseSuppression: true,
+                        echoCancellation: false, // Désactivé pour capturer TOUS les sons
+                        noiseSuppression: false, // Désactivé pour capturer TOUS les sons
                         autoGainControl: false
                     }
                 });
 
-                // Initialiser les nœuds audio
                 microphone = audioCtx.createMediaStreamSource(audioStream);
                 analyser = audioCtx.createAnalyser();
-                analyser.fftSize = 4096;
+                analyser.fftSize = 2048; // Taille optimisée pour mobile
+                analyser.smoothingTimeConstant = 0.1;
+
                 gainNode = audioCtx.createGain();
-                gainNode.gain.value = 0.5;
+                gainNode.gain.value = 1.0; // Gain maximal pour capturer les bruits
 
                 microphone.connect(analyser);
                 analyser.connect(gainNode);
                 gainNode.connect(audioCtx.destination);
 
-                // Initialiser les tableaux de données
                 frequencyArray = new Uint8Array(analyser.frequencyBinCount);
                 timeArray = new Uint8Array(analyser.frequencyBinCount);
 
-                // Initialiser l'enregistreur
                 mediaRecorder = new MediaRecorder(audioStream);
+                recordedChunks = [];
                 mediaRecorder.ondataavailable = (e) => {
                     const blob = new Blob([e.data], { type: 'audio/webm' });
                     const url = URL.createObjectURL(blob);
@@ -286,16 +424,14 @@
                     a.href = url;
                     a.download = `rec-${Date.now()}.webm`;
                     a.click();
+                    recordedChunks = [];
                 };
 
                 isRunning = true;
                 updateStatus("✅ Micro prêt");
-                log("[AUDIO] Système audio activé");
+                log("[AUDIO] Système audio activé (TOUS les sons captés)");
 
-                // Démarrer la boucle principale
                 requestAnimationFrame(loop);
-
-                // Démarrer l'IA vocale si configuré
                 if (config.autoStartVoice) {
                     setTimeout(initSpeech, 500);
                 }
@@ -309,19 +445,16 @@
             }
         }
 
-        // ========== SPEECH RECOGNITION ==========
+        // ========== SPEECH RECOGNITION (TOUS LES MOTS) ==========
         function initSpeech() {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             if (!SpeechRecognition) {
-                log("[IA] Reconnaissance vocale non supportée (essayez Chrome/Firefox)", true);
+                log("[IA] ❌ Reconnaissance vocale non supportée (Chrome requis)", true);
                 return;
             }
 
             try {
-                if (recognition) {
-                    recognition.stop();
-                    recognition = null;
-                }
+                if (recognition) recognition.stop();
 
                 recognition = new SpeechRecognition();
                 recognition.continuous = true;
@@ -330,28 +463,30 @@
                 recognition.maxAlternatives = 1;
 
                 let finalTranscript = '';
+                let interimTranscript = '';
 
                 recognition.onresult = (event) => {
-                    let interimTranscript = '';
+                    interimTranscript = '';
                     for (let i = event.resultIndex; i < event.results.length; i++) {
                         const transcript = event.results[i][0].transcript;
                         if (event.results[i].isFinal) {
                             finalTranscript += transcript + ' ';
-                            processTranscript(finalTranscript.trim());
+                            processFinalTranscript(finalTranscript.trim());
                         } else {
                             interimTranscript += transcript;
                         }
                     }
+                    // AFFICHER LES FRAGMENTS EN TEMPS RÉEL
                     if (interimTranscript) {
-                        log(`[IA] (en cours) "${interimTranscript}"`);
+                        log(`[SON] 🎤 "${interimTranscript}"`);
                     }
                 };
 
                 recognition.onerror = (event) => {
                     log(`[IA ERREUR] ${event.error}`, true);
-                    document.getElementById('micIndicator').classList.add('error');
                     if (event.error === 'not-allowed') {
                         updateStatus("❌ Permission micro refusée");
+                        document.getElementById('micIndicator').classList.add('error');
                     }
                 };
 
@@ -360,23 +495,19 @@
                     isVoiceEnabled = true;
                     document.getElementById('micIndicator').classList.add('listening');
                     document.getElementById('micIndicator').textContent = '🎤';
-                    updateStatus("🎤 Écoute en cours...");
-                    log("[IA] Reconnaissance vocale activée");
+                    updateStatus("🎤 Écoute TOUS les sons...");
+                    log("[IA] ✅ Détection de TOUS les sons activée");
                 };
 
                 recognition.onend = () => {
                     isListening = false;
                     document.getElementById('micIndicator').classList.remove('listening');
                     document.getElementById('micIndicator').textContent = '🎙️';
-                    // Redémarrer automatiquement si l'IA vocale est activée
                     if (isVoiceEnabled) {
                         setTimeout(() => {
-                            try {
-                                if (recognition) recognition.start();
-                            } catch (e) {
-                                log(`[IA] Erreur redémarrage: ${e.message}`);
-                            }
-                        }, 1000);
+                            try { if (recognition) recognition.start(); }
+                            catch (e) { log(`[IA] Erreur redémarrage: ${e.message}`); }
+                        }, 100);
                     }
                 };
 
@@ -395,29 +526,44 @@
                 document.getElementById('micIndicator').classList.remove('listening');
                 document.getElementById('micIndicator').textContent = '🎙️';
                 updateStatus("IA: Désactivée");
-                log("[IA] Reconnaissance vocale arrêtée");
             }
         }
 
-        function processTranscript(transcript) {
+        function processFinalTranscript(transcript) {
             if (!transcript) return;
             log(`[IA] 🎤 "${transcript}"`);
 
-            // Vérifier les mots-clés
-            const hasKeyword = KEYWORDS.some(kw => transcript.toLowerCase().includes(kw));
+            const transcriptLower = transcript.toLowerCase();
+            const hasKeyword = KEYWORDS.some(kw => transcriptLower.includes(kw));
             if (hasKeyword) {
-                log("[IA] ⚡ Mot-clé détecté ! Analyse IA déclenchée", true);
+                log(`[IA] ⚡ Mot-clé détecté ! Analyse IA déclenchée`, true);
                 triggerAIAnalysis(transcript);
-                if (config.voiceAlerts) speak("Mot-clé détecté. Analyse IA en cours.");
+            }
+        }
+
+        // ========== DÉTECTION DE BRUITS NON VERBAUX ==========
+        function detectNoise(rms) {
+            const now = Date.now();
+            if (rms > config.noiseThreshold && now - lastNoiseTime > noiseCooldown) {
+                lastNoiseTime = now;
+                log(`[BRUIT] 🔊 Niveau sonore élevé détecté: ${rms.toFixed(2)} dB`, true);
+                document.getElementById('noise-value').textContent = `Bruit: 🔴 ${rms.toFixed(2)} dB`;
+                if (config.voiceFeedback && isVoiceEnabled) {
+                    speak(`Bruit détecté: ${rms.toFixed(1)} décibels`);
+                }
+                return true;
+            } else {
+                document.getElementById('noise-value').textContent = `Bruit: ${rms.toFixed(2)} dB`;
+                return false;
             }
         }
 
         // ========== BAND DETECTION ==========
         function detectFrequencyBand(freq) {
             if (freq <= 0) return null;
-            const freqMHz = freq / 1e6;
+            const freqHz = freq;
             for (const [name, data] of Object.entries(FREQUENCY_DB)) {
-                if (freqMHz >= data.min && freqMHz <= data.max) return data;
+                if (freqHz >= data.min * 1e6 && freqHz <= data.max * 1e6) return data;
             }
             return null;
         }
@@ -427,9 +573,7 @@
             analyser.getByteFrequencyData(frequencyArray);
             let maxIndex = 0;
             let maxValue = 0;
-            // Ignorer les très basses fréquences (bruit)
-            const startIndex = Math.floor(100 / (audioCtx.sampleRate / analyser.fftSize));
-            for (let i = startIndex; i < frequencyArray.length; i++) {
+            for (let i = 0; i < frequencyArray.length; i++) {
                 if (frequencyArray[i] > maxValue) {
                     maxValue = frequencyArray[i];
                     maxIndex = i;
@@ -441,40 +585,12 @@
         function updateBandDetection() {
             const dominantFreq = findDominantFrequency();
             const band = detectFrequencyBand(dominantFreq);
-            const freqEl = document.getElementById('dominant-freq');
+            const freqEl = document.getElementById('rms-value');
             if (freqEl) {
-                freqEl.textContent = `Fréq: ${(dominantFreq/1e6).toFixed(3)} MHz${band ? ` (${band.label})` : ''}`;
-                if (band && band.critical) {
-                    freqEl.style.color = '#ff0044';
-                    showAlert(`🚨 Bande critique: ${band.label}`);
-                } else {
-                    freqEl.style.color = '#00ff41';
-                }
+                freqEl.textContent = `RMS: ${(dominantFreq/1e6).toFixed(3)} MHz${band ? ` (${band.label})` : ''}`;
+                if (band && band.critical) freqEl.style.color = '#ff0044';
+                else freqEl.style.color = '#00ff41';
             }
-        }
-
-        function showAlert(message) {
-            const alertBox = document.getElementById('criticalAlert') || (() => {
-                const div = document.createElement('div');
-                div.id = 'criticalAlert';
-                div.style.position = 'fixed';
-                div.style.top = '50%';
-                div.style.left = '50%';
-                div.style.transform = 'translate(-50%, -50%)';
-                div.style.background = '#001100';
-                div.style.border = '3px solid #ff0044';
-                div.style.padding = '20px';
-                div.style.color = '#ff0044';
-                div.style.fontSize = '18px';
-                div.style.textAlign = 'center';
-                div.style.zIndex = '10000';
-                div.style.display = 'none';
-                document.body.appendChild(div);
-                return div;
-            })();
-            alertBox.textContent = message;
-            alertBox.style.display = 'block';
-            setTimeout(() => alertBox.style.display = 'none', 3000);
         }
 
         // ========== DRAWING FUNCTIONS ==========
@@ -484,7 +600,7 @@
             const ctx = canvas.getContext('2d');
             analyser.getByteFrequencyData(frequencyArray);
             spectroHistory.unshift([...frequencyArray]);
-            if (spectroHistory.length > 100) spectroHistory.pop();
+            if (spectroHistory.length > 80) spectroHistory.pop();
             ctx.fillStyle = '#000';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             const w = canvas.width / frequencyArray.length;
@@ -517,7 +633,21 @@
 
         // ========== MAIN LOOP ==========
         function loop() {
-            if (!isRunning) return;
+            if (!isRunning || !analyser) return;
+
+            analyser.getByteFrequencyData(frequencyArray);
+            const rms = Math.sqrt(frequencyArray.reduce((a, b) => a + b * b, 0) / frequencyArray.length) / 128;
+
+            // Détecter les bruits non verbaux
+            detectNoise(rms);
+
+            // Mettre à jour l'affichage RMS
+            const rmsEl = document.getElementById('rms-value');
+            if (rmsEl) {
+                rmsEl.textContent = `RMS: ${rms.toFixed(2)} dB`;
+                rmsEl.style.color = rms > config.noiseThreshold ? '#ff0044' : '#00ff41';
+            }
+
             updateBandDetection();
             drawSpectrogram();
             drawScope();
@@ -527,12 +657,12 @@
         // ========== AI ANALYSIS ==========
         function generateReport(rms, freq, band, transcript) {
             return `
-[RAPPORT SIGINT - ${new Date().toLocaleTimeString('fr-FR')}]
-Fréquence: ${(freq/1e6).toFixed(3)} MHz
+[RAPPORT - ${new Date().toLocaleTimeString('fr-FR')}]
+Niveau sonore: ${rms.toFixed(2)} dB
+Fréquence dominante: ${(freq/1e6).toFixed(3)} MHz
 Bande: ${band ? band.label : 'Inconnue'}
-RMS: ${rms.toFixed(2)} dB
 Transcription: "${transcript || 'Aucune'}"
-Statut: ${band && band.critical ? '🚨 CRITIQUE' : '✅ Normal'}
+Statut: ${band && band.critical ? '🚨 CRITIQUE' : rms > config.noiseThreshold ? '⚠️ BRUIT FORT' : '✅ Normal'}
             `.trim();
         }
 
@@ -540,15 +670,13 @@ Statut: ${band && band.critical ? '🚨 CRITIQUE' : '✅ Normal'}
             if (!isRunning) return;
 
             analyser.getByteFrequencyData(frequencyArray);
-            const rms = Math.sqrt(frequencyArray.reduce((a,b) => a + b*b, 0) / frequencyArray.length) / 128;
+            const rms = Math.sqrt(frequencyArray.reduce((a, b) => a + b * b, 0) / frequencyArray.length) / 128;
             const freq = findDominantFrequency();
             const band = detectFrequencyBand(freq);
 
             const report = generateReport(rms, freq, band, transcript);
             const reportDiv = document.getElementById('ai-report');
             if (reportDiv) reportDiv.textContent = report;
-
-            log(`[IA] Rapport généré: ${band ? band.label : 'Aucune bande'}`);
 
             if (config.voiceFeedback && isVoiceEnabled) {
                 speak(report);
@@ -571,7 +699,7 @@ Statut: ${band && band.critical ? '🚨 CRITIQUE' : '✅ Normal'}
                         model: "mixtral-8x7b-32768",
                         messages: [{
                             role: "user",
-                            content: `Analyse ce rapport SIGINT:\n${report}\nClassifie la menace et donne des recommandations en français.`
+                            content: `Analyse ce rapport de détection sonore:\n${report}\nClassifie le type de son (parole, bruit, etc.) et donne des recommandations. Réponds en français.`
                         }],
                         temperature: 0.3,
                         max_tokens: 512
@@ -583,20 +711,18 @@ Statut: ${band && band.critical ? '🚨 CRITIQUE' : '✅ Normal'}
                 if (aiReportDiv) {
                     aiReportDiv.textContent += `\n\n[RÉPONSE GROQ]\n${data.choices[0].message.content}`;
                 }
-                log("[GROQ] Analyse terminée");
             } catch (e) {
-                log(`[GROQ] Erreur: ${e.message}`, true);
+                log(`[GROQ] Erreur: ${e.message}`);
             }
         }
 
         // ========== SETUP UI ==========
         function setupUI() {
-            // Bouton Lancer le système
+            // Bouton Lancer
             document.getElementById('btnStart').addEventListener('click', async () => {
                 document.getElementById('start-screen').style.display = 'none';
                 document.getElementById('main').style.display = 'block';
 
-                // Initialiser tout
                 await initAudio();
                 resizeCanvases();
                 window.addEventListener('resize', resizeCanvases);
@@ -606,17 +732,17 @@ Statut: ${band && band.critical ? '🚨 CRITIQUE' : '✅ Normal'}
                     isVoiceEnabled = !isVoiceEnabled;
                     if (isVoiceEnabled) {
                         initSpeech();
-                        document.getElementById('voiceToggle').style.background = '#ff0044';
+                        document.getElementById('voiceToggle').classList.add('active');
                     } else {
                         stopSpeechRecognition();
-                        document.getElementById('voiceToggle').style.background = '#00ff41';
+                        document.getElementById('voiceToggle').classList.remove('active');
                     }
                 });
 
                 // Bouton Lire le rapport
                 document.getElementById('readReportBtn').addEventListener('click', () => {
                     const report = document.getElementById('ai-report').textContent;
-                    if (report && report !== '[En attente d\'analyse...]') {
+                    if (report && report !== '[En attente...]') {
                         speak(report);
                     }
                 });
@@ -632,33 +758,42 @@ Statut: ${band && band.critical ? '🚨 CRITIQUE' : '✅ Normal'}
                 document.getElementById('settings-page').style.display = 'none';
             });
 
-            // Bouton Sauvegarder les paramètres
+            // Bouton Sauvegarder
             document.getElementById('saveSettings').addEventListener('click', () => {
                 config.autoStartVoice = document.getElementById('autoStartVoice').checked;
                 config.voiceFeedback = document.getElementById('voiceFeedback').checked;
                 config.groqApiKey = document.getElementById('groqApiKey').value;
+                config.noiseThreshold = parseFloat(document.getElementById('noiseThreshold').value);
                 localStorage.setItem('supraLabConfig', JSON.stringify(config));
                 document.getElementById('settings-page').style.display = 'none';
                 log("[PARAM] Configuration sauvegardée");
             });
 
-            // Charger la config sauvegardée
+            // Charger la config
             const savedConfig = localStorage.getItem('supraLabConfig');
             if (savedConfig) {
                 try {
-                    config = { ...config, ...JSON.parse(savedConfig) };
+                    const loadedConfig = JSON.parse(savedConfig);
+                    config = { ...config, ...loadedConfig };
                     document.getElementById('autoStartVoice').checked = config.autoStartVoice;
                     document.getElementById('voiceFeedback').checked = config.voiceFeedback;
                     document.getElementById('groqApiKey').value = config.groqApiKey;
+                    document.getElementById('noiseThreshold').value = config.noiseThreshold;
+                    document.getElementById('noiseThresholdValue').textContent = config.noiseThreshold;
                 } catch (e) {
                     console.error("Erreur chargement config:", e);
                 }
             }
+
+            // Mettre à jour le seuil de bruit en temps réel
+            document.getElementById('noiseThreshold').addEventListener('input', (e) => {
+                config.noiseThreshold = parseFloat(e.target.value);
+                document.getElementById('noiseThresholdValue').textContent = e.target.value;
+            });
         }
 
         function resizeCanvases() {
-            const canvases = document.querySelectorAll('canvas');
-            canvases.forEach(canvas => {
+            document.querySelectorAll('canvas').forEach(canvas => {
                 const container = canvas.parentElement;
                 if (container) {
                     const rect = container.getBoundingClientRect();
@@ -672,7 +807,8 @@ Statut: ${band && band.critical ? '🚨 CRITIQUE' : '✅ Normal'}
         window.addEventListener('DOMContentLoaded', () => {
             setupUI();
             log("=== SUPRA LAB v12 PRÊT ===");
-            log("Cliquez sur 'LANCER LE SYSTÈME' pour commencer");
+            log("Optimisé pour Realme Note 60 (Android 15)");
+            log("Cliquez sur 'LANCER' pour commencer");
         });
 
         window.addEventListener('beforeunload', () => {
