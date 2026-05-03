@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>SUPRA LAB v11 — PRO MILITAIRE SIGINT + IA GROQ</title>
+    <title>SUPRA LAB v11 — PRO MILITAIRE SIGINT + IA GROQ + TTS</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
 
@@ -508,6 +508,16 @@
         </div>
 
         <div class="settings-section">
+            <h3>🗣️ Interface Vocale (IA)</h3>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="voiceResponseEnabled" checked> Activer la réponse vocale (Synthèse)
+                </label>
+                <small style="color: var(--text-dim);">L'IA vous lira ses rapports d'analyse.</small>
+            </div>
+        </div>
+
+        <div class="settings-section">
             <h3>🎤 Paramètres Micro</h3>
             <div class="form-group">
                 <label for="micSensitivity">Sensibilité du micro (%): <span id="micSensitivityValue" class="range-value">50</span></label>
@@ -570,7 +580,7 @@
         <div class="boot-text">
             SUPRA LAB v11<br>
             <span style="color: var(--warning);">PRO MILITAIRE SIGINT</span><br>
-            + IA GROQ + DÉTECTION BANDES<br>
+            + IA GROQ + TTS<br>
             <span style="font-size: 20px;">NIVEAU 5 • BLACK OPS</span>
         </div>
         <button id="btnStart">LANCER TOUT LE SYSTÈME<br><small style="font-size: 16px;">(Appuyez pour démarrer)</small></button>
@@ -579,7 +589,7 @@
         <div class="features-list">
             <div>✅ Micro optimisé Android/iOS</div>
             <div>✅ Capteurs physiques (accéléromètre + boussole)</div>
-            <div>✅ IA vocale avec gestion d'erreurs avancée</div>
+            <div>✅ IA vocale avec RÉPONSE VOCALE ajoutée</div>
             <div>✅ Base de données de fréquences intégrée</div>
             <div>✅ Analyse IA Groq (rapports SIGINT)</div>
             <div>✅ Détection automatique des bandes critiques</div>
@@ -588,7 +598,7 @@
 
     <!-- INTERFACE PRINCIPALE -->
     <div id="main">
-        <header>SUPRA LAB v11 — PRO SIGINT + IA GROQ + DÉTECTION BANDES</header>
+        <header>SUPRA LAB v11 — PRO SIGINT + IA GROQ + TTS</header>
 
         <!-- Ligne 1: Spectrogramme + Polar -->
         <div class="panel">
@@ -676,7 +686,8 @@
             groqApiKey: '',
             autoScanInterval: 10,
             autoTriggerIA: true,
-            keywordSensitivity: 70
+            keywordSensitivity: 70,
+            voiceResponseEnabled: true // NOUVEAU: Activation de la synthèse vocale
         };
         let config = { ...DEFAULT_CONFIG };
 
@@ -686,7 +697,7 @@
             'ELF': { min: 0.003, max: 300, color: '#00aa00', label: 'ELF', critical: false },
             'VLF': { min: 3, max: 30, color: '#00aa55', label: 'VLF', critical: false },
 
-            // EVP/Paranormal (Fréquences typiques pour les "voix électroniques")
+            // EVP/Paranormal
             'EVP': { min: 0.01, max: 20, color: '#aa00aa', label: 'EVP', critical: false },
 
             // Aviation
@@ -741,6 +752,29 @@
         let autoScanIntervalId = null;
         let lastAIAnalysisTime = 0;
 
+        // ==================== SYSTÈME DE SYNTHÈSE VOCALE (TTS) ====================
+        function speakText(text) {
+            if (!config.voiceResponseEnabled || !('speechSynthesis' in window)) return;
+
+            // Annule tout discours en cours pour éviter les superpositions
+            window.speechSynthesis.cancel();
+
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'fr-FR';
+            
+            // Réglages pour une voix plus "Robo-Militaire"
+            utterance.rate = 1.1; // Un peu plus rapide
+            utterance.pitch = 0.9; // Voix plus grave (sérieuse)
+            utterance.volume = 1.0;
+
+            // Essaie de trouver une voix spécifique si disponible (ex: Google Français ou Amelie)
+            const voices = window.speechSynthesis.getVoices();
+            const frenchVoice = voices.find(v => v.lang.includes('fr')) || null;
+            if (frenchVoice) utterance.voice = frenchVoice;
+
+            window.speechSynthesis.speak(utterance);
+        }
+
         // ==================== FONCTIONS DE BASE ====================
         function log(text, important = false) {
             const logDiv = document.getElementById('log');
@@ -766,6 +800,8 @@
                 alertBox.classList.add('active');
                 if (isCritical) {
                     new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2teleQAA').play().catch(e => {});
+                    // Vocaliser l'alerte critique
+                    speakText("Alerte critique. " + message);
                 }
                 setTimeout(() => alertBox.classList.remove('active'), 5000);
             }
@@ -836,6 +872,9 @@
                 document.getElementById('keywordSensitivity').value = config.keywordSensitivity;
                 document.getElementById('keywordSensitivityValue').textContent = config.keywordSensitivity;
             }
+            if (document.getElementById('voiceResponseEnabled')) {
+                document.getElementById('voiceResponseEnabled').checked = config.voiceResponseEnabled;
+            }
 
             // Met à jour le statut de l'API Groq
             updateGroqStatus();
@@ -851,6 +890,7 @@
             config.autoScanInterval = parseInt(document.getElementById('autoScanInterval').value);
             config.autoTriggerIA = document.getElementById('autoTriggerIA').checked;
             config.keywordSensitivity = parseInt(document.getElementById('keywordSensitivity').value);
+            config.voiceResponseEnabled = document.getElementById('voiceResponseEnabled').checked;
 
             localStorage.setItem('supraLabConfig', JSON.stringify(config));
             log("[PARAMÈTRES] Configuration sauvegardée !");
@@ -914,7 +954,7 @@
             }
         }
 
-        // ==================== INITIALISATION DE L'IA VOCALE ====================
+        // ==================== INITIALISATION DE L'IA VOCALE (STT) ====================
         function initSpeech() {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
@@ -1016,7 +1056,7 @@
 
                 microphone = audioCtx.createMediaStreamSource(stream);
                 analyser = audioCtx.createAnalyser();
-                analyser.fftSize = 8192; // Augmenté pour une meilleure résolution
+                analyser.fftSize = 8192;
                 analyser.smoothingTimeConstant = 0.25;
 
                 gainNode = audioCtx.createGain();
@@ -1200,13 +1240,12 @@
             });
         }
 
-        // ==================== ANALYSE IA (Simulée + Groq) ====================
+        // ==================== ANALYSE IA (Simulée + Groq + TTS) ====================
         function generateSIGINTReport(rms, dominantFreq, band, transcript = "", sensors = {}) {
             const now = new Date().toISOString().slice(0, 19).replace('T', ' ');
             const bandLabel = band ? band.label : "Inconnue";
             const bandCritical = band ? band.critical : false;
 
-            // Simulation d'un rapport style SIGINT militaire
             const report = `
 // ============================================
 // RAPPORT SIGINT — SUPRA LAB v11
@@ -1235,8 +1274,8 @@
 > Confiance: ${transcript ? `${config.keywordSensitivity}%` : "N/A"}
 
 [ANOMALIES]
-${rms > 0.5 ? "> ⚠️ Pic de signal détecté (RMS élevé)" : "> Aucun pic significatif"}
-${bandCritical ? `> 🚨 Bande critique: ${bandLabel}` : "> Aucune bande critique"}
+ ${rms > 0.5 ? "> ⚠️ Pic de signal détecté (RMS élevé)" : "> Aucun pic significatif"}
+ ${bandCritical ? `> 🚨 Bande critique: ${bandLabel}` : "> Aucune bande critique"}
 
 [ANALYSE]
 > Cette fréquence correspond à ${band ? `la bande ${bandLabel} (${FREQUENCY_DB[band.name].min}-${FREQUENCY_DB[band.name].max} MHz)` : "une fréquence non référencée"}.
@@ -1254,7 +1293,6 @@ ${bandCritical ? `> 🚨 Bande critique: ${bandLabel}` : "> Aucune bande critiqu
                 return;
             }
 
-            // Évite les déclenchements trop fréquents
             const now = Date.now();
             if (!force && now - lastAIAnalysisTime < 5000) {
                 log("[IA] ⏳ Analyse récente, attente de 5s...");
@@ -1290,6 +1328,12 @@ ${bandCritical ? `> 🚨 Bande critique: ${bandLabel}` : "> Aucune bande critiqu
                 await sendToGroqAPI(rms, dominantFreq, band, report);
             } else {
                 log("[IA] ⚠️ Clé API Groq non configurée. Utilisation du mode local.", true);
+                // Synthèse vocale locale si pas de Groq
+                if (config.voiceResponseEnabled) {
+                    const threatLevel = (band && band.critical) ? "Critique" : "Faible";
+                    const spokenText = `Analyse terminée. Niveau de menace : ${threatLevel}. Fréquence : ${(dominantFreq/1e6).toFixed(2)} MégaHertz.`;
+                    speakText(spokenText);
+                }
             }
         }
 
@@ -1298,38 +1342,7 @@ ${bandCritical ? `> 🚨 Bande critique: ${bandLabel}` : "> Aucune bande critiqu
                 log("[IA] 📤 Envoi des données à Groq API...", true);
                 updateStatus("🔄 Envoi à Groq en cours...");
 
-                // Simulation de l'envoi à Groq (en réalité, il faudrait utiliser fetch)
-                // Ici, on simule une réponse pour éviter les problèmes CORS
-                // En production, il faudrait un backend pour appeler l'API Groq.
-
-                // Exemple de payload pour Groq (à adapter selon leur API)
-                const payload = {
-                    model: "mixtral-8x7b-32768",
-                    messages: [
-                        {
-                            role: "user",
-                            content: `
-                                Analyse ce rapport SIGINT comme un expert militaire Black Ops.
-                                Données:
-                                - Fréquence dominante: ${(dominantFreq / 1e6).toFixed(3)} MHz
-                                - Bande: ${band ? band.label : "Inconnue"}
-                                - Niveau RMS: ${rms.toFixed(2)} dB
-                                - Capteurs: X=${accelX}g, Y=${accelY}g, Z=${accelZ}g, Cap=${magnetHeading}°
-                                - Transcription: "${recognition ? recognition.lastTranscript : "Aucune"}"
-
-                                Réponds en style rapport militaire concis avec :
-                                1. Classification de la menace (Faible/Moyenne/Élevée/Critique)
-                                2. Analyse technique
-                                3. Recommandations
-                                4. Niveau de confiance (0-100%)
-                            `
-                        }
-                    ],
-                    temperature: 0.3,
-                    max_tokens: 1024
-                };
-
-                // Simulation de la réponse (en vrai, utiliser fetch avec config.groqApiKey)
+                // Simulation de l'envoi à Groq
                 const mockResponse = `
 // ============================================
 // RÉPONSE IA GROQ — ANALYSE APPROFONDIE
@@ -1340,12 +1353,12 @@ ${bandCritical ? `> 🚨 Bande critique: ${bandLabel}` : "> Aucune bande critiqu
 > Menace: ${band && band.critical ? "CRITIQUE 🚨" : rms > 0.7 ? "ÉLEVÉE ⚠️" : "FAIBLE ✅"}
 
 [ANALYSE TECHNIQUE]
-> La fréquence ${(dominantFreq / 1e6).toFixed(3)} MHz correspond à ${band ? `la bande ${band.label}` : "une fréquence non identifiée"}.
+> La fréquence ${(dominantFrequency / 1e6).toFixed(3)} MHz correspond à ${band ? `la bande ${band.label}` : "une fréquence non identifiée"}.
 > Niveau RMS de ${rms.toFixed(2)} dB indique un signal ${rms > 0.7 ? "fort" : rms > 0.4 ? "modéré" : "faible"}.
 > ${band && band.critical ? `> Cette bande est associée à des communications ${band.label.includes('Drone') ? 'de drones' : band.label.includes('Aviation') ? 'aéronautiques critiques' : 'militaires'}.` : ""}
 
 [RECOMMANDATIONS]
-${band && band.critical ? `> 1. Isoler la source du signal immédiatement.
+ ${band && band.critical ? `> 1. Isoler la source du signal immédiatement.
 > 2. Notifier les autorités si confirmation de menace.
 > 3. Activer le mode silencieux pour éviter la détection.` : `> 1. Continuer la surveillance.
 > 2. Vérifier les capteurs pour anomalies.`}
@@ -1364,6 +1377,22 @@ ${band && band.critical ? `> 1. Isoler la source du signal immédiatement.
                     }
                     log("[IA] ✅ Analyse Groq terminée (simulée)", true);
                     updateStatus("✅ Analyse IA terminée");
+
+                    // --- NOUVEAU : DÉCLENCHEMENT DE LA RÉPONSE VOCALE ---
+                    if (config.voiceResponseEnabled) {
+                        let spokenText = "";
+                        
+                        if (band && band.critical) {
+                            spokenText = `Attention. Menace critique confirmée sur la bande ${band.label}. Fréquence : ${(dominantFreq/1e6).toFixed(2)} MégaHertz. Recommandation : Isoler la source immédiatement.`;
+                        } else if (rms > 0.7) {
+                            spokenText = `Niveau de menace élevé détecté. Signal fort sur ${(dominantFreq/1e6).toFixed(2)} MégaHertz. Surveillance renforcée activée.`;
+                        } else {
+                            spokenText = `Analyse terminée. Niveau de menace faible. Fréquence dominante : ${(dominantFreq/1e6).toFixed(2)} MégaHertz. Situation nominale.`;
+                        }
+                        
+                        speakText(spokenText);
+                    }
+
                 }, 1500);
 
             } catch (error) {
@@ -1650,7 +1679,11 @@ ${band && band.critical ? `> 1. Isoler la source du signal immédiatement.
 
                     initSensors();
                     initAudio();
-                    // Ne démarre PAS l'IA automatiquement (l'utilisateur doit cliquer sur le bouton)
+                    
+                    // Précharge les voix pour le TTS
+                    if ('speechSynthesis' in window) {
+                        window.speechSynthesis.getVoices();
+                    }
 
                     // Contrôles
                     const toggle = document.getElementById('listenToggle');
@@ -1712,6 +1745,7 @@ ${band && band.critical ? `> 1. Isoler la source du signal immédiatement.
             if (mediaRecorder) mediaRecorder.stream.getTracks().forEach(track => track.stop());
             if (audioCtx) audioCtx.close();
             if (autoScanIntervalId) clearInterval(autoScanIntervalId);
+            if ('speechSynthesis' in window) window.speechSynthesis.cancel();
         });
 
         // ==================== DÉMARRAGE ====================
