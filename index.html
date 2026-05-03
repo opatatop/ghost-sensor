@@ -2,20 +2,20 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>SUPRA LAB - Simple & Robuste</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SUPRA LAB - TOUT CAPTURER</title>
     <style>
         body {
             margin: 0;
+            padding: 10px;
             background: #000;
             color: #00ff41;
             font-family: 'Courier New', monospace;
             font-size: 14px;
-            overflow: hidden;
             touch-action: manipulation;
+            overflow: hidden;
         }
         #app {
-            padding: 10px;
             max-width: 600px;
             margin: 0 auto;
         }
@@ -23,75 +23,68 @@
             text-align: center;
             color: #00ff41;
             text-shadow: 0 0 10px #00ff41;
-            margin-bottom: 20px;
         }
         button {
-            background: transparent;
-            color: #00ff41;
-            border: 2px solid #00ff41;
-            padding: 10px 20px;
-            margin: 5px;
-            font-size: 14px;
-            cursor: pointer;
             display: block;
             width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            background: #001100;
+            color: #00ff41;
+            border: 2px solid #00ff41;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
         }
         button:hover {
             background: #00ff41;
             color: #000;
         }
-        button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
+        #visualizer {
+            width: 100%;
+            height: 150px;
+            background: #000;
+            margin: 10px 0;
+            display: block;
         }
         #log {
             height: 200px;
             overflow-y: auto;
             background: #001100;
             border: 1px solid #00ff41;
-            padding: 8px;
+            padding: 10px;
             margin: 10px 0;
-            font-size: 12px;
-            line-height: 1.2;
+            font-size: 14px;
+            line-height: 1.4;
         }
         .log-line {
-            margin: 2px 0;
+            margin: 3px 0;
             word-break: break-word;
         }
         .log-line::before {
             content: "> ";
             color: #00cc33;
         }
-        .log-line.error {
+        .log-line.important {
             color: #ff0044;
         }
-        .log-line.success {
-            color: #00ff41;
-        }
-        canvas {
-            width: 100%;
-            height: 150px;
-            background: #000;
-            display: block;
-            margin: 10px 0;
-        }
         #status {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: #001100;
-            border-top: 1px solid #00ff41;
-            padding: 5px;
-            font-size: 12px;
             text-align: center;
+            margin: 10px 0;
+            font-size: 14px;
+        }
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 10px 0;
         }
         .indicator {
             display: inline-block;
             width: 12px;
             height: 12px;
             border-radius: 50%;
-            margin-left: 5px;
+            margin-left: 8px;
             vertical-align: middle;
         }
         .indicator.ready {
@@ -100,225 +93,213 @@
         .indicator.error {
             background: #ff0044;
         }
+        #micStatus, #voiceStatus {
+            margin-left: 8px;
+        }
     </style>
 </head>
 <body>
     <div id="app">
-        <h1>SUPRA LAB - Simple & Robuste</h1>
+        <h1>🎤 SUPRA LAB - TOUT CAPTURER</h1>
 
-        <button id="startBtn">🚀 LANCER TOUT</button>
+        <button id="startBtn">🚀 LANCER (TOUT est capté et lu)</button>
 
-        <div>
-            <button id="testMicroBtn">🎙️ Tester le micro</button>
+        <div class="controls">
+            <button id="testMicroBtn">🎙️ Tester Micro</button>
             <span class="indicator" id="microIndicator"></span>
+            <span id="micStatus"></span>
         </div>
 
-        <div>
-            <button id="testVoiceBtn">🗣️ Tester la voix</button>
+        <div class="controls">
+            <button id="testVoiceBtn">🗣️ Tester Voix</button>
             <span class="indicator" id="voiceIndicator"></span>
-        </div>
-
-        <div class="panel">
-            <div>SPECTROGRAMME</div>
-            <canvas id="spectrogram"></canvas>
-            <div>RMS: <span id="rmsValue">-- dB</span></div>
-        </div>
-
-        <div class="panel">
-            <div>OSCILLOSCOPE</div>
-            <canvas id="scope"></canvas>
+            <span id="voiceStatus"></span>
         </div>
 
         <div>
-            <div>LOG</div>
+            <div>Visualiseur sonore:</div>
+            <canvas id="visualizer"></canvas>
+            <div>Niveau: <span id="volumeLevel">--</span> dB</div>
+        </div>
+
+        <div>
+            <div>LOG (TOUT ce qui est capté):</div>
             <div id="log"></div>
         </div>
+
+        <div id="status">En attente...</div>
     </div>
 
-    <div id="status">En attente...</div>
-
     <script>
-        // ========== VARIABLES ==========
+        // ========== VARIABLES GLOBALES ==========
         let audioCtx = null;
         let analyser = null;
         let microphone = null;
-        let gainNode = null;
-        let mediaRecorder = null;
-        let audioStream = null;
+        let frequencyData = null;
+        let isRunning = false;
         let recognition = null;
         let synthesis = window.speechSynthesis;
-        let frequencyArray = null;
-        let timeArray = null;
+        let lastSoundTime = 0;
         let spectroHistory = [];
-        let isRunning = false;
-        let isRecording = false;
-        let recordedChunks = [];
 
         // ========== CONFIG ==========
         const config = {
-            noiseThreshold: 0.4,
+            noiseThreshold: 0.3,  // Seuil de détection de bruit (plus bas = plus sensible)
             voiceRate: 1.0,
             voiceVolume: 1.0,
             voiceLanguage: 'fr-FR'
         };
 
-        // ========== LOG ==========
-        function log(text, type = "normal") {
+        // ========== FONCTIONS DE BASE ==========
+        function log(message, type = "normal") {
             const logDiv = document.getElementById('log');
             if (!logDiv) return;
 
             const line = document.createElement('div');
-            line.className = `log-line ${type === 'error' ? 'error' : type === 'success' ? 'success' : ''}`;
-            line.innerHTML = `<span style="color: #00cc33;">[${new Date().toLocaleTimeString('fr-FR')}]</span> ${text}`;
+            line.className = `log-line ${type === 'error' ? 'important' : ''}`;
+            line.innerHTML = `<span style="color: #00cc33;">[${new Date().toLocaleTimeString('fr-FR')}]</span> ${message}`;
             logDiv.appendChild(line);
             logDiv.scrollTop = logDiv.scrollHeight;
 
-            if (logDiv.children.length > 30) {
+            if (logDiv.children.length > 50) {
                 logDiv.removeChild(logDiv.children[0]);
             }
         }
 
-        // ========== STATUS ==========
-        function updateStatus(text) {
-            document.getElementById('status').textContent = text;
+        function updateStatus(message) {
+            document.getElementById('status').textContent = message;
         }
 
-        // ========== INITIALISATION COMPLÈTE ==========
-        async function initAll() {
+        // ========== SYNTHÈSE VOCALE (TOUT EST LU) ==========
+        function speak(text) {
+            if (!synthesis) {
+                log("Synthèse vocale non disponible.", "error");
+                return;
+            }
+
             try {
-                log("Démarrage...", "normal");
-                updateStatus("Initialisation en cours...");
+                // Annuler toute lecture en cours
+                synthesis.cancel();
 
-                // 1. Initialiser le micro
-                await initMicro();
-                log("✅ Micro prêt", "success");
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = config.voiceLanguage;
+                utterance.rate = config.voiceRate;
+                utterance.volume = config.voiceVolume;
 
-                // 2. Initialiser l'IA vocale
-                await initSpeech();
-                log("✅ IA vocale prête", "success");
-
-                // 3. Démarrer la boucle
-                if (!isRunning) {
-                    isRunning = true;
-                    requestAnimationFrame(loop);
+                // Choisir la meilleure voix française
+                const voices = synthesis.getVoices();
+                const frenchVoice = voices.find(v => v.lang.includes('fr')) || voices[0];
+                if (frenchVoice) {
+                    utterance.voice = frenchVoice;
                 }
 
-                // 4. Tester la voix
-                setTimeout(() => {
-                    speak("Système prêt. Parlez maintenant.");
-                }, 1000);
+                utterance.onerror = (e) => {
+                    log(`Erreur voix: ${e.error}`, "error");
+                };
 
-                updateStatus("✅ TOUT EST PRÊT !");
-                document.getElementById('microIndicator').className = 'indicator ready';
-                document.getElementById('voiceIndicator').className = 'indicator ready';
-
-            } catch (err) {
-                log(`❌ Erreur: ${err.message}`, "error");
-                updateStatus(`Erreur: ${err.message}`);
+                synthesis.speak(utterance);
+                log(`[VOIX] "${text}"`, "normal");
+            } catch (e) {
+                log(`Erreur synthèse: ${e.message}`, "error");
             }
         }
 
-        // ========== INIT MICRO ==========
+        // ========== INITIALISATION DU MICRO ==========
         async function initMicro() {
-            if (audioStream && !audioStream.getAudioTracks().some(t => t.readyState === 'ended')) {
-                return true;
-            }
-
             try {
                 // Fermer l'ancien contexte
-                if (audioCtx) await audioCtx.close().catch(() => {});
-                if (audioStream) audioStream.getTracks().forEach(t => t.stop());
+                if (audioCtx) {
+                    await audioCtx.close().catch(() => {});
+                }
 
-                // Nouveau contexte
+                // Créer un nouveau contexte
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 await audioCtx.resume();
 
-                // Stream micro (TOUS LES SONS)
-                audioStream = await navigator.mediaDevices.getUserMedia({
+                // Demander le micro (TOUS LES SONS, sans filtrage)
+                const stream = await navigator.mediaDevices.getUserMedia({
                     audio: {
-                        echoCancellation: false,
-                        noiseSuppression: false,
+                        echoCancellation: false,  // Désactivé pour capturer TOUT
+                        noiseSuppression: false,  // Désactivé pour capturer TOUT
                         autoGainControl: false
                     }
                 });
 
-                // Nœuds audio
-                microphone = audioCtx.createMediaStreamSource(audioStream);
+                // Créer les nœuds audio
+                microphone = audioCtx.createMediaStreamSource(stream);
                 analyser = audioCtx.createAnalyser();
                 analyser.fftSize = 2048;
                 analyser.smoothingTimeConstant = 0.1;
 
-                gainNode = audioCtx.createGain();
-                gainNode.gain.value = 1.0;
-
                 microphone.connect(analyser);
-                analyser.connect(gainNode);
-                gainNode.connect(audioCtx.destination);
 
-                frequencyArray = new Uint8Array(analyser.frequencyBinCount);
-                timeArray = new Uint8Array(analyser.frequencyBinCount);
+                frequencyData = new Uint8Array(analyser.frequencyBinCount);
 
-                // Enregistreur
-                mediaRecorder = new MediaRecorder(audioStream);
-                recordedChunks = [];
-                mediaRecorder.ondataavailable = (e) => recordedChunks.push(e.data);
-                mediaRecorder.onstop = () => {
-                    const blob = new Blob(recordedChunks, { type: 'audio/webm' });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `rec-${Date.now()}.webm`;
-                    a.click();
-                    recordedChunks = [];
-                    log("Enregistrement sauvegardé.", "success");
-                };
+                // Initialiser l'IA vocale
+                initSpeechRecognition();
 
+                // Initialiser le visualiseur
+                drawVisualizer();
+
+                document.getElementById('microIndicator').className = 'indicator ready';
+                document.getElementById('micStatus').textContent = "✅ Prêt";
                 return true;
-            } catch (err) {
-                throw new Error(`Micro: ${err.message}`);
+            } catch (error) {
+                log(`Erreur micro: ${error.message}`, "error");
+                updateStatus("❌ Micro non disponible");
+                document.getElementById('microIndicator').className = 'indicator error';
+                document.getElementById('micStatus').textContent = "❌ Erreur";
+                return false;
             }
         }
 
-        // ========== INIT SPEECH ==========
-        async function initSpeech() {
+        // ========== INITIALISATION DE L'IA VOCALE ==========
+        function initSpeechRecognition() {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             if (!SpeechRecognition) {
-                throw new Error("Reconnaissance vocale non supportée (Chrome requis)");
+                log("Reconnaissance vocale non supportée. Utilise Chrome.", "error");
+                return;
             }
 
             try {
-                if (recognition) recognition.stop();
+                if (recognition) {
+                    recognition.stop();
+                }
 
                 recognition = new SpeechRecognition();
                 recognition.continuous = true;
-                recognition.interimResults = true;
+                recognition.interimResults = true;  // Capturer TOUT, même les fragments
                 recognition.lang = config.voiceLanguage.split('-')[0];
                 recognition.maxAlternatives = 1;
 
                 let finalTranscript = '';
+                let interimTranscript = '';
 
                 recognition.onresult = (event) => {
-                    let interimTranscript = '';
+                    interimTranscript = '';
                     for (let i = event.resultIndex; i < event.results.length; i++) {
                         const transcript = event.results[i][0].transcript;
                         if (event.results[i].isFinal) {
                             finalTranscript += transcript + ' ';
-                            processTranscript(finalTranscript.trim());
+                            // Lire TOUT ce qui est dit
+                            speak(transcript);
+                            log(`[PAROLE] "${transcript}"`, "normal");
                         } else {
                             interimTranscript += transcript;
+                            // Afficher les fragments en temps réel
+                            log(`[FRAGMENT] "${interimTranscript}"`, "normal");
                         }
-                    }
-                    if (interimTranscript) {
-                        log(`Fragment: "${interimTranscript}"`, "normal");
                     }
                 };
 
                 recognition.onerror = (event) => {
-                    log(`Erreur IA vocale: ${event.error}`, "error");
+                    log(`Erreur reconnaissance: ${event.error}`, "error");
                 };
 
                 recognition.onstart = () => {
-                    log("IA vocale démarrée.", "success");
+                    log("IA vocale démarrée. TOUT est capté.", "normal");
+                    document.getElementById('voiceIndicator').className = 'indicator ready';
+                    document.getElementById('voiceStatus').textContent = "🎤 Écoute...";
                 };
 
                 recognition.onend = () => {
@@ -330,182 +311,102 @@
                 };
 
                 recognition.start();
-                return true;
+                isRunning = true;
             } catch (e) {
-                throw new Error(`IA vocale: ${e.message}`);
+                log(`Erreur IA vocale: ${e.message}`, "error");
+                document.getElementById('voiceIndicator').className = 'indicator error';
+                document.getElementById('voiceStatus').textContent = "❌ Erreur";
             }
         }
 
-        // ========== TRAITEMENT TRANSCRIPTION ==========
-        function processTranscript(transcript) {
-            if (!transcript) return;
-            log(`Transcription: "${transcript}"`, "success");
+        // ========== DÉTECTION DE BRUITS NON VERBAUX ==========
+        function detectSounds() {
+            if (!analyser) return;
 
-            const keywords = ['avion', 'drone', 'urgence', 'sos', 'alerte', 'danger', 'bruit', 'son'];
-            if (keywords.some(kw => transcript.toLowerCase().includes(kw))) {
-                log(`Mot-clé détecté: "${transcript}"`, "success");
-                triggerAIAnalysis(transcript);
-            }
-        }
+            analyser.getByteFrequencyData(frequencyData);
+            const average = frequencyData.reduce((a, b) => a + b, 0) / frequencyData.length;
 
-        // ========== SYNTHÈSE VOCALE ==========
-        function speak(text) {
-            if (!synthesis) {
-                log("Synthèse vocale non supportée.", "error");
-                return;
-            }
+            // Mettre à jour le niveau sonore
+            document.getElementById('volumeLevel').textContent = `${(average / 2.5).toFixed(1)}`;
 
-            try {
-                if (synthesis.speaking || synthesis.pending) {
-                    synthesis.cancel();
-                }
-
-                const utterance = new SpeechSynthesisUtterance(text);
-                utterance.lang = config.voiceLanguage;
-                utterance.rate = config.voiceRate;
-                utterance.volume = config.voiceVolume;
-
-                // Meilleure voix française disponible
-                const voices = synthesis.getVoices();
-                const frenchVoice = voices.find(v => v.lang.includes('fr')) || voices[0];
-                if (frenchVoice) utterance.voice = frenchVoice;
-
-                utterance.onerror = (e) => {
-                    log(`Erreur voix: ${e.error}`, "error");
-                };
-
-                synthesis.speak(utterance);
-                log(`Voix: "${text}"`, "success");
-            } catch (e) {
-                log(`Erreur: ${e.message}`, "error");
-            }
-        }
-
-        // ========== DÉTECTION BRUITS ==========
-        function detectNoise(rms) {
-            const rmsEl = document.getElementById('rmsValue');
-            if (rmsEl) {
-                rmsEl.textContent = `${rms.toFixed(2)} dB`;
-                rmsEl.style.color = rms > config.noiseThreshold ? '#ff0044' : '#00ff41';
-            }
-
-            if (rms > config.noiseThreshold) {
-                log(`Bruit détecté: ${rms.toFixed(2)} dB`, "success");
-                speak(`Attention, bruit détecté à ${rms.toFixed(1)} décibels.`);
-            }
-        }
-
-        // ========== ANALYSE IA ==========
-        function triggerAIAnalysis(transcript) {
-            if (!audioCtx || !analyser) return;
-
-            analyser.getByteFrequencyData(frequencyArray);
-            const rms = Math.sqrt(frequencyArray.reduce((a, b) => a + b * b, 0) / frequencyArray.length) / 128;
-
-            const report = `
-[RAPPORT - ${new Date().toLocaleTimeString('fr-FR')}]
-Transcription: "${transcript}"
-Niveau sonore: ${rms.toFixed(2)} dB
-Statut: ${rms > config.noiseThreshold ? "⚠️ BRUIT FORT" : "✅ Normal"}
-            `.trim();
-
-            log(report, "success");
-            speak(report);
-        }
-
-        // ========== BOUCLE PRINCIPALE ==========
-        function loop() {
-            if (!audioCtx || !analyser) {
-                requestAnimationFrame(loop);
-                return;
-            }
-
-            analyser.getByteFrequencyData(frequencyArray);
-            const rms = Math.sqrt(frequencyArray.reduce((a, b) => a + b * b, 0) / frequencyArray.length) / 128;
-
-            detectNoise(rms);
-            drawSpectrogram();
-            drawScope();
-
-            requestAnimationFrame(loop);
-        }
-
-        // ========== DESSINS ==========
-        function drawSpectrogram() {
-            const canvas = document.getElementById('spectrogram');
-            if (!canvas || !analyser) return;
-
-            const ctx = canvas.getContext('2d');
-            analyser.getByteFrequencyData(frequencyArray);
-
-            spectroHistory.unshift([...frequencyArray]);
-            if (spectroHistory.length > 80) spectroHistory.pop();
-
-            ctx.fillStyle = '#000';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            const w = canvas.width / frequencyArray.length;
-            for (let y = 0; y < spectroHistory.length; y++) {
-                for (let x = 0; x < spectroHistory[y].length; x++) {
-                    const val = spectroHistory[y][x];
-                    ctx.fillStyle = `hsl(${90 + val/2.5}, 100%, ${val/2.8}%)`;
-                    ctx.fillRect(x * w, y * 2, w + 1, 2);
+            // Détecter les bruits forts (non verbaux)
+            if (average > config.noiseThreshold * 255) {
+                const now = Date.now();
+                if (now - lastSoundTime > 2000) {  // Éviter les répétitions
+                    lastSoundTime = now;
+                    log(`[BRUIT] Niveau sonore élevé détecté: ${(average / 2.5).toFixed(1)}%`, "important");
+                    speak(`Attention, bruit détecté !`);
                 }
             }
         }
 
-        function drawScope() {
-            const canvas = document.getElementById('scope');
-            if (!canvas || !analyser) return;
-
+        // ========== VISUALISEUR ==========
+        function drawVisualizer() {
+            const canvas = document.getElementById('visualizer');
             const ctx = canvas.getContext('2d');
-            analyser.getByteTimeDomainData(timeArray);
 
-            ctx.fillStyle = '#000';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            function draw() {
+                if (!analyser) {
+                    requestAnimationFrame(draw);
+                    return;
+                }
 
-            ctx.strokeStyle = '#00ff41';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
+                analyser.getByteFrequencyData(frequencyData);
 
-            const slice = canvas.width / timeArray.length;
-            for (let i = 0; i < timeArray.length; i++) {
-                const y = (timeArray[i] / 128) * canvas.height / 2;
-                i === 0 ? ctx.moveTo(0, y) : ctx.lineTo(i * slice, y);
+                ctx.fillStyle = 'black';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                const barWidth = (canvas.width / frequencyData.length) * 2.5;
+                let x = 0;
+
+                for (let i = 0; i < frequencyData.length; i++) {
+                    const barHeight = frequencyData[i] / 2;
+                    ctx.fillStyle = `hsl(${i * 2}, 100%, 50%)`;
+                    ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
+                    x += barWidth + 1;
+                }
+
+                // Détecter les sons
+                detectSounds();
+
+                requestAnimationFrame(draw);
             }
-            ctx.stroke();
+
+            draw();
+        }
+
+        // ========== DÉMARRAGE COMPLET ==========
+        async function start() {
+            log("Démarrage du système... TOUT sera capté et lu.");
+            updateStatus("Initialisation en cours...");
+
+            const success = await initMicro();
+            if (success) {
+                updateStatus("✅ TOUT EST PRÊT ! Parlez, claquez, sifflez...");
+                log("Système prêt. TOUT est capté et lu à voix haute.", "normal");
+                speak("Système prêt. Je capte TOUT et je lis TOUT à voix haute.");
+            }
         }
 
         // ========== BOUTONS ==========
-        function setupButtons() {
-            document.getElementById('startBtn').addEventListener('click', initAll);
+        document.getElementById('startBtn').addEventListener('click', start);
 
-            document.getElementById('testMicroBtn').addEventListener('click', async () => {
-                try {
-                    await initMicro();
-                    log("Micro testé avec succès.", "success");
-                } catch (err) {
-                    log(`Test micro échoué: ${err.message}`, "error");
-                }
-            });
-
-            document.getElementById('testVoiceBtn').addEventListener('click', () => {
-                speak("Test de la voix. Si vous entendez ceci, tout fonctionne.");
-            });
-        }
-
-        // ========== INIT ==========
-        window.addEventListener('DOMContentLoaded', () => {
-            log("SUPRA LAB - Simple & Robuste prêt.", "success");
-            log("Cliquez sur 'LANCER TOUT' pour démarrer.", "normal");
-            setupButtons();
+        document.getElementById('testMicroBtn').addEventListener('click', async () => {
+            try {
+                await initMicro();
+                log("Micro testé avec succès.", "normal");
+            } catch (err) {
+                log(`Test micro échoué: ${err.message}`, "error");
+            }
         });
 
-        window.addEventListener('beforeunload', () => {
-            if (recognition) recognition.stop();
-            if (audioStream) audioStream.getTracks().forEach(t => t.stop());
-            if (audioCtx) audioCtx.close().catch(() => {});
+        document.getElementById('testVoiceBtn').addEventListener('click', () => {
+            speak("Test de la voix. Si vous entendez ceci, TOUT fonctionne.");
         });
+
+        // Message initial
+        log("SUPRA LAB - TOUT CAPTURER, TOUT LIRE");
+        log("Cliquez sur 'LANCER' pour commencer. TOUT sera capté et lu.");
     </script>
 </body>
 </html>
