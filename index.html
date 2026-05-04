@@ -6,7 +6,7 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <title>SUPRA LAB - TOUT FONCTIONNE</title>
+    <title>SUPRA LAB - TOUTES OPTIONS + SANS BRUIT</title>
     <style>
         :root {
             --primary: #00ff41;
@@ -89,21 +89,80 @@
             padding: 20px;
             overflow-y: auto;
             border: 4px solid var(--primary);
-            display: none; /* MASQUÉ PAR DÉFAUT */
+            display: none;
         }
         #settings-page.active {
-            display: block !important; /* FORCER L'AFFICHAGE */
+            display: block !important;
+        }
+        .settings-header {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 20px;
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 10px;
+        }
+        .settings-section {
+            background: var(--bg-dark);
+            border: 2px solid var(--primary);
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .settings-section h3 {
+            margin-bottom: 10px;
+            font-size: 18px;
+            color: var(--secondary);
+        }
+        .form-group {
+            margin-bottom: 12px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 16px;
+        }
+        .form-group input[type="text"],
+        .form-group input[type="password"],
+        .form-group input[type="range"],
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 8px;
+            background: #000;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+        }
+        .form-group input[type="range"] {
+            padding: 0;
+            height: 10px;
+        }
+        .range-value {
+            text-align: center;
+            font-size: 16px;
+            margin-top: 5px;
+            display: block;
+        }
+        .btn-close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 24px;
+            background: none;
+            border: none;
+            color: var(--primary);
+            cursor: pointer;
         }
 
         /* Boutons */
         button {
             background: transparent;
             color: var(--primary);
-            border: 3px solid var(--primary);
-            padding: 12px 24px;
-            font-size: 16px;
+            border: 2px solid var(--primary);
+            padding: 8px 12px;
+            font-size: 14px;
             cursor: pointer;
-            margin: 8px;
+            margin: 5px;
             font-family: 'Courier New', monospace;
         }
         button:hover {
@@ -113,10 +172,18 @@
         button.record {
             background: #330000;
             color: #ff0000;
-            border: 3px solid #ff0000;
+            border: 2px solid #ff0000;
+            padding: 8px 20px;
         }
         button.record.recording {
             animation: pulse 1s infinite;
+        }
+
+        /* Écran de démarrage */
+        #btnStart {
+            padding: 15px 30px;
+            font-size: 18px;
+            margin: 10px 0;
         }
 
         /* Panneaux */
@@ -216,25 +283,10 @@
         #permission-message.active {
             display: block;
         }
-
-        /* Boutons flottants */
-        #voiceToggle {
-            position: fixed;
-            bottom: 60px;
-            right: 20px;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
+        #permission-message button {
+            margin-top: 15px;
             background: var(--primary);
-            border: none;
             color: var(--bg-dark);
-            font-size: 24px;
-            cursor: pointer;
-            z-index: 10000;
-        }
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
         }
 
         /* Histogramme */
@@ -256,6 +308,26 @@
         .band-bar.danger {
             background: var(--danger);
         }
+
+        /* Boutons flottants */
+        #voiceToggle {
+            position: fixed;
+            bottom: 60px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--primary);
+            border: none;
+            color: var(--bg-dark);
+            font-size: 24px;
+            cursor: pointer;
+            z-index: 10000;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
     </style>
 </head>
 <body>
@@ -267,49 +339,100 @@
 
     <!-- Écran de démarrage -->
     <div id="start-screen">
-        <h1>SUPRA LAB - TOUT FONCTIONNE</h1>
+        <h1>SUPRA LAB FINAL</h1>
         <button id="btnStart">🚀 LANCER TOUT</button>
         <button id="btnSettings">⚙️ PARAMÈTRES</button>
     </div>
 
-    <!-- Page de paramètres -->
+    <!-- Page de paramètres (TOUTES LES OPTIONS) -->
     <div id="settings-page">
-        <div style="text-align: center; margin-bottom: 20px; font-size: 20px; border-bottom: 2px solid var(--primary); padding-bottom: 10px;">
-            ⚙️ PARAMÈTRES
-        </div>
-        <div style="margin-bottom: 15px;">
-            <button id="closeSettings" style="float: right;">✕ FERMER</button>
-            <div style="clear: both;"></div>
-        </div>
-        <div style="background: var(--bg-dark); border: 2px solid var(--primary); padding: 15px; margin-bottom: 15px;">
-            <h3 style="color: var(--secondary); margin-bottom: 10px;">🎤 Micro & Voix</h3>
-            <div style="margin-bottom: 10px;">
-                <label style="display: block; margin-bottom: 5px;">Sensibilité micro: <span id="micSensitivityValue">50</span>%</label>
-                <input type="range" id="micSensitivity" min="10" max="100" value="50" style="width: 100%;">
+        <button class="btn-close" id="closeSettings">✕</button>
+        <div class="settings-header">⚙️ PARAMÈTRES</div>
+
+        <div class="settings-section">
+            <h3>🔑 Clé API Groq</h3>
+            <div class="form-group">
+                <label for="groqApiKey">Clé API Groq (pour l'analyse avancée)</label>
+                <div style="display: flex; gap: 5px;">
+                    <input type="password" id="groqApiKey" placeholder="Entrez votre clé API Groq..." autocomplete="on">
+                    <button id="pasteApiKeyBtn" style="padding: 6px 10px; font-size: 14px;">📋 Coller</button>
+                </div>
             </div>
-            <div style="margin-bottom: 10px;">
-                <label style="display: block; margin-bottom: 5px;">Volume voix: <span id="voiceVolumeValue">100</span>%</label>
-                <input type="range" id="voiceVolume" min="0" max="100" value="100" style="width: 100%;">
+        </div>
+
+        <div class="settings-section">
+            <h3>🎤 Micro & Voix</h3>
+            <div class="form-group">
+                <label for="micSensitivity">Sensibilité micro: <span id="micSensitivityValue" class="range-value">50</span>%</label>
+                <input type="range" id="micSensitivity" min="10" max="100" value="50">
             </div>
-            <div style="margin-bottom: 10px;">
+            <div class="form-group">
+                <label for="voiceVolume">Volume voix: <span id="voiceVolumeValue" class="range-value">100</span>%</label>
+                <input type="range" id="voiceVolume" min="0" max="100" value="100">
+            </div>
+            <div class="form-group">
                 <label><input type="checkbox" id="voiceEnabled" checked> Activer la voix</label>
             </div>
+            <div class="form-group">
+                <label for="voiceLanguage">Langue:</label>
+                <select id="voiceLanguage">
+                    <option value="fr-FR">Français</option>
+                    <option value="en-US">Anglais</option>
+                </select>
+            </div>
         </div>
+
+        <div class="settings-section">
+            <h3>🎨 Affichage</h3>
+            <div class="form-group">
+                <label for="colorTheme">Thème:</label>
+                <select id="colorTheme">
+                    <option value="green">Vert militaire</option>
+                    <option value="red">Rouge cyber</option>
+                    <option value="blue">Bleu SIGINT</option>
+                    <option value="amber">Ambre rétro</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="settings-section">
+            <h3>⚡ Détection</h3>
+            <div class="form-group">
+                <label for="autoScanInterval">Scan (secondes): <span id="autoScanIntervalValue" class="range-value">10</span></label>
+                <input type="range" id="autoScanInterval" min="5" max="60" value="10">
+            </div>
+            <div class="form-group">
+                <label><input type="checkbox" id="autoTriggerIA" checked> Déclencher IA automatiquement</label>
+            </div>
+            <div class="form-group">
+                <label for="keywordSensitivity">Sensibilité mots-clés: <span id="keywordSensitivityValue" class="range-value">70</span>%</label>
+                <input type="range" id="keywordSensitivity" min="50" max="95" value="70">
+            </div>
+        </div>
+
+        <div class="settings-section">
+            <h3>🔍 Mots-clés</h3>
+            <div class="form-group">
+                <label for="customKeywords">Mots-clés (séparés par des virgules):</label>
+                <textarea id="customKeywords" rows="3" placeholder="Ex: avion, drone, urgence"></textarea>
+            </div>
+        </div>
+
         <div style="text-align: center; margin-top: 20px;">
             <button id="saveSettings">💾 SAUVEGARDER</button>
             <button id="testVoiceBtn">🔊 TESTER LA VOIX</button>
+            <button id="resetSettings">🔄 RÉINITIALISER</button>
         </div>
     </div>
 
     <!-- Interface principale -->
     <div id="main">
-        <!-- Visualiseur -->
+        <!-- Visualisations -->
         <div class="panel">
             <div class="panel-header">SPECTROGRAMME</div>
             <canvas id="spectrogram"></canvas>
             <div>RMS: <span id="rmsValue">-- dB</span></div>
         </div>
-
         <div class="panel">
             <div class="panel-header">OSCILLOSCOPE</div>
             <canvas id="scope"></canvas>
@@ -355,6 +478,22 @@
     <button id="voiceToggle" title="Activer/Désactiver la voix">🎤</button>
 
     <script>
+        // ========== CONFIGURATION ==========
+        const DEFAULT_CONFIG = {
+            micSensitivity: 50,
+            voiceVolume: 100,
+            voiceEnabled: true,
+            voiceLanguage: 'fr-FR',
+            colorTheme: 'green',
+            autoScanInterval: 10,
+            autoTriggerIA: true,
+            keywordSensitivity: 70,
+            customKeywords: '',
+            groqApiKey: ''
+        };
+        let config = { ...DEFAULT_CONFIG };
+        let KEYWORDS = ['avion', 'drone', 'urgence', 'sos', 'alerte', 'danger', 'bruit', 'son'];
+
         // ========== BASE DE DONNÉES DE FRÉQUENCES ==========
         const FREQUENCY_DB = {
             'DRONE_433': { min: 433, max: 434.8, label: 'Drone 433MHz', critical: true },
@@ -364,7 +503,6 @@
             'AVIATION_EMERGENCY': { min: 121.4, max: 121.6, label: 'Guard 121.5', critical: true },
             'FM_RADIO': { min: 87.5, max: 108, label: 'FM Radio', critical: false }
         };
-        const KEYWORDS = ['avion', 'drone', 'urgence', 'sos', 'alerte', 'danger', 'bruit', 'son'];
 
         // ========== VARIABLES GLOBALES ==========
         let audioCtx, analyser, microphone, gainNode, mediaRecorder, audioStream;
@@ -373,7 +511,6 @@
         let accelX = 0, accelY = 0, accelZ = 0, magnetHeading = 0;
         let recognition, synthesis = window.speechSynthesis;
         let dominantFrequency = 0, detectedBand = null, bandDetectionHistory = {};
-        let config = { micSensitivity: 50, voiceVolume: 100, voiceEnabled: true };
 
         // ========== FONCTIONS DE BASE ==========
         function log(text, isError = false) {
@@ -407,14 +544,14 @@
         function speak(text) {
             if (!config.voiceEnabled || !isVoiceEnabled || !synthesis) return;
             try {
-                // Forcer le chargement des voix si nécessaire
+                // Forcer le chargement des voix
                 if (synthesis.getVoices().length === 0) {
                     synthesis.onvoiceschanged = () => speak(text);
                     return;
                 }
                 synthesis.cancel();
                 const utterance = new SpeechSynthesisUtterance(text);
-                utterance.lang = 'fr-FR';
+                utterance.lang = config.voiceLanguage;
                 utterance.rate = 1.0;
                 utterance.volume = config.voiceVolume / 100;
                 const voices = synthesis.getVoices();
@@ -470,7 +607,7 @@
                 recognition = new SpeechRecognition();
                 recognition.continuous = true;
                 recognition.interimResults = true;
-                recognition.lang = 'fr-FR';
+                recognition.lang = config.voiceLanguage;
                 recognition.maxAlternatives = 1;
 
                 recognition.onresult = (event) => {
@@ -479,7 +616,6 @@
                         if (event.results[i].isFinal) {
                             log(`[IA] 🎤 "${transcript}"`, "success");
                             speak(transcript);
-                            // Détecter les mots-clés
                             if (KEYWORDS.some(kw => transcript.toLowerCase().includes(kw))) {
                                 triggerAIAnalysis(transcript);
                             }
@@ -516,7 +652,7 @@
             }
         }
 
-        // ========== INITIALISATION AUDIO ==========
+        // ========== INITIALISATION AUDIO (SANS BRUIT) ==========
         async function initAudio() {
             try {
                 log("[AUDIO] Initialisation du micro...", "normal");
@@ -529,12 +665,12 @@
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 await audioCtx.resume();
 
-                // Demander le micro
+                // Demander le micro (SANS FEEDBACK AUDIO POUR ÉVITER LE BRUIT)
                 audioStream = await navigator.mediaDevices.getUserMedia({
                     audio: {
-                        echoCancellation: false,
-                        noiseSuppression: false,
-                        autoGainControl: false
+                        echoCancellation: true,  // ACTIVÉ POUR ÉVITER LE BRUIT
+                        noiseSuppression: true,  // ACTIVÉ POUR ÉVITER LE BRUIT
+                        autoGainControl: true    // ACTIVÉ POUR ÉVITER LE BRUIT
                     }
                 });
 
@@ -547,14 +683,15 @@
                 gainNode = audioCtx.createGain();
                 gainNode.gain.value = config.micSensitivity / 100;
 
+                // NE PAS CONNECTER AU HAUT-PARLEUR (évite le feedback)
                 microphone.connect(analyser);
                 analyser.connect(gainNode);
-                gainNode.connect(audioCtx.destination);
+                // gainNode.connect(audioCtx.destination); // <-- COMMENTÉ POUR ÉVITER LE BRUIT
 
                 frequencyArray = new Uint8Array(analyser.frequencyBinCount);
                 timeArray = new Uint8Array(analyser.frequencyBinCount);
 
-                // Enregistreur
+                // Enregistreur (sans feedback)
                 mediaRecorder = new MediaRecorder(audioStream);
                 let recordedChunks = [];
                 mediaRecorder.ondataavailable = e => recordedChunks.push(e.data);
@@ -572,7 +709,7 @@
                 isRunning = true;
                 hidePermissionMessage();
                 updateStatus();
-                log("[AUDIO] ✅ Micro prêt", "success");
+                log("[AUDIO] ✅ Micro prêt (SANS BRUIT)", "success");
                 return true;
 
             } catch (err) {
@@ -607,14 +744,12 @@
                     maxIndex = i;
                 }
             }
-            // Calculer la fréquence en Hz
             return maxIndex * (audioCtx.sampleRate / analyser.fftSize);
         }
 
         function updateBandDetection() {
             if (!analyser) return;
             dominantFrequency = findDominantFrequency();
-            log(`[DEBUG] Fréquence dominante: ${dominantFrequency} Hz`, "normal"); // NOUVEAU: Log de debug
             const detected = detectFrequencyBand(dominantFrequency);
             if (detected) {
                 detectedBand = detected;
@@ -686,13 +821,11 @@ ${band && band.critical ? "⚠️ BANDE CRITIQUE" : "✅ Normal"}
             const aiReportDiv = document.getElementById('ai-report');
             if (aiReportDiv) aiReportDiv.textContent = report;
 
-            // FORCER LA VOIX À RÉPONDRE
+            // FORCER LA RÉPONSE VOCALE
             if (config.voiceEnabled && isVoiceEnabled) {
                 const summary = band ? `Bande détectée: ${band.label}.` : 'Aucune bande détectée.';
                 speak(summary);
                 log(`[VOIX] Réponse IA: "${summary}"`, "success");
-            } else {
-                log("[VOIX] ❌ Voix désactivée dans les paramètres", "error");
             }
         }
 
@@ -768,9 +901,120 @@ ${band && band.critical ? "⚠️ BANDE CRITIQUE" : "✅ Normal"}
             requestAnimationFrame(loop);
         }
 
+        // ========== GESTION DES PARAMÈTRES ==========
+        function loadConfig() {
+            const savedConfig = localStorage.getItem('supraLabConfig');
+            if (savedConfig) {
+                try {
+                    const parsedConfig = JSON.parse(savedConfig);
+                    config = { ...DEFAULT_CONFIG, ...parsedConfig };
+                    if (config.customKeywords) {
+                        const custom = config.customKeywords.split(',')
+                            .map(k => k.trim().toLowerCase())
+                            .filter(k => k.length > 0);
+                        KEYWORDS = [...new Set([...KEYWORDS, ...custom])];
+                    }
+                    log("[PARAM] Configuration chargée", "success");
+                } catch (e) {
+                    log(`[ERREUR] ${e.message}`, true);
+                }
+            }
+            applyConfig();
+        }
+
+        function applyConfig() {
+            // Appliquer les valeurs de l'UI
+            if (document.getElementById('micSensitivity')) {
+                document.getElementById('micSensitivity').value = config.micSensitivity;
+                document.getElementById('micSensitivityValue').textContent = config.micSensitivity;
+            }
+            if (document.getElementById('voiceVolume')) {
+                document.getElementById('voiceVolume').value = config.voiceVolume;
+                document.getElementById('voiceVolumeValue').textContent = config.voiceVolume;
+            }
+            if (document.getElementById('voiceEnabled')) {
+                document.getElementById('voiceEnabled').checked = config.voiceEnabled;
+            }
+            if (document.getElementById('voiceLanguage')) {
+                document.getElementById('voiceLanguage').value = config.voiceLanguage;
+            }
+            if (document.getElementById('colorTheme')) {
+                document.getElementById('colorTheme').value = config.colorTheme;
+                applyTheme();
+            }
+            if (document.getElementById('autoScanInterval')) {
+                document.getElementById('autoScanInterval').value = config.autoScanInterval;
+                document.getElementById('autoScanIntervalValue').textContent = config.autoScanInterval;
+            }
+            if (document.getElementById('autoTriggerIA')) {
+                document.getElementById('autoTriggerIA').checked = config.autoTriggerIA;
+            }
+            if (document.getElementById('keywordSensitivity')) {
+                document.getElementById('keywordSensitivity').value = config.keywordSensitivity;
+                document.getElementById('keywordSensitivityValue').textContent = config.keywordSensitivity;
+            }
+            if (document.getElementById('customKeywords')) {
+                document.getElementById('customKeywords').value = config.customKeywords;
+            }
+            if (document.getElementById('groqApiKey')) {
+                document.getElementById('groqApiKey').value = config.groqApiKey;
+            }
+        }
+
+        function applyTheme() {
+            const root = document.documentElement;
+            switch (config.colorTheme) {
+                case 'red':
+                    root.style.setProperty('--primary', '#ff4444');
+                    root.style.setProperty('--secondary', '#cc0000');
+                    break;
+                case 'blue':
+                    root.style.setProperty('--primary', '#44aaff');
+                    root.style.setProperty('--secondary', '#0088cc');
+                    break;
+                case 'amber':
+                    root.style.setProperty('--primary', '#ffaa00');
+                    root.style.setProperty('--secondary', '#cc8800');
+                    break;
+                default:
+                    root.style.setProperty('--primary', '#00ff41');
+                    root.style.setProperty('--secondary', '#00cc33');
+            }
+        }
+
+        function saveConfig() {
+            config.micSensitivity = parseInt(document.getElementById('micSensitivity').value);
+            config.voiceVolume = parseInt(document.getElementById('voiceVolume').value);
+            config.voiceEnabled = document.getElementById('voiceEnabled').checked;
+            config.voiceLanguage = document.getElementById('voiceLanguage').value;
+            config.colorTheme = document.getElementById('colorTheme').value;
+            config.autoScanInterval = parseInt(document.getElementById('autoScanInterval').value);
+            config.autoTriggerIA = document.getElementById('autoTriggerIA').checked;
+            config.keywordSensitivity = parseInt(document.getElementById('keywordSensitivity').value);
+            config.customKeywords = document.getElementById('customKeywords').value;
+            config.groqApiKey = document.getElementById('groqApiKey').value;
+
+            const custom = config.customKeywords.split(',')
+                .map(k => k.trim().toLowerCase())
+                .filter(k => k.length > 0);
+            KEYWORDS = [...new Set([...KEYWORDS, ...custom])];
+
+            try {
+                localStorage.setItem('supraLabConfig', JSON.stringify(config));
+                log("[PARAM] ✅ Configuration sauvegardée", "success");
+            } catch (e) {
+                log(`[ERREUR] Impossible de sauvegarder: ${e.message}`, true);
+            }
+
+            applyConfig();
+            // Appliquer la sensibilité du micro
+            if (gainNode) gainNode.gain.value = config.micSensitivity / 100;
+        }
+
         // ========== DÉMARRAGE ==========
         window.addEventListener('DOMContentLoaded', () => {
             log("✅ DOM chargé. Initialisation...", "success");
+            loadConfig();
 
             // Vérifier que tous les éléments existent
             const requiredElements = [
@@ -778,7 +1022,7 @@ ${band && band.critical ? "⚠️ BANDE CRITIQUE" : "✅ Normal"}
                 'spectrogram', 'scope', 'sensors', 'log', 'band-histogram',
                 'permission-message', 'requestMicroBtn', 'voiceToggle',
                 'immediateAIBtn', 'recordBtn', 'settings-page', 'closeSettings',
-                'saveSettings', 'testVoiceBtn'
+                'saveSettings', 'testVoiceBtn', 'resetSettings'
             ];
 
             for (const id of requiredElements) {
@@ -789,7 +1033,7 @@ ${band && band.critical ? "⚠️ BANDE CRITIQUE" : "✅ Normal"}
             }
             log("✅ Tous les éléments DOM présents", "success");
 
-            // Attacher les écouteurs UN PAR UN
+            // Attacher les écouteurs
             document.getElementById('btnStart').addEventListener('click', async () => {
                 log("🚀 Bouton LANCER cliqué !", "success");
                 document.getElementById('start-screen').style.display = 'none';
@@ -804,8 +1048,8 @@ ${band && band.critical ? "⚠️ BANDE CRITIQUE" : "✅ Normal"}
                     isRunning = true;
                     requestAnimationFrame(loop);
                     updateStatus();
-                    log("✅ TOUT EST PRÊT !", "success");
-                    setTimeout(() => speak("Système prêt. TOUT fonctionne."), 1000);
+                    log("✅ TOUT EST PRÊT (SANS BRUIT) !", "success");
+                    setTimeout(() => speak("Système prêt. TOUTES les options sont activées."), 1000);
                 } catch (err) {
                     log(`❌ ERREUR: ${err.message}`, "error");
                     showPermissionMessage();
@@ -813,7 +1057,7 @@ ${band && band.critical ? "⚠️ BANDE CRITIQUE" : "✅ Normal"}
             });
 
             document.getElementById('btnSettings').addEventListener('click', () => {
-                log("⚙️ Bouton PARAMÈTRES cliqué !", "success");
+                log("⚙️ Ouverture des paramètres", "success");
                 document.getElementById('settings-page').classList.add('active');
             });
 
@@ -823,21 +1067,24 @@ ${band && band.critical ? "⚠️ BANDE CRITIQUE" : "✅ Normal"}
             });
 
             document.getElementById('saveSettings').addEventListener('click', () => {
-                config.micSensitivity = parseInt(document.getElementById('micSensitivity').value);
-                config.voiceVolume = parseInt(document.getElementById('voiceVolume').value);
-                config.voiceEnabled = document.getElementById('voiceEnabled').checked;
-                log("✅ Paramètres sauvegardés", "success");
+                saveConfig();
                 document.getElementById('settings-page').classList.remove('active');
-                // Appliquer la sensibilité du micro
-                if (gainNode) gainNode.gain.value = config.micSensitivity / 100;
-                // Appliquer le volume de la voix
-                if (synthesis) {
-                    synthesis.cancel(); // Réinitialiser avec le nouveau volume
-                }
             });
 
             document.getElementById('testVoiceBtn').addEventListener('click', () => {
-                speak("Test de la voix. Si vous m'entendez, la synthèse vocale fonctionne.");
+                speak("Test de la voix. Si vous m'entendez, tout fonctionne.");
+            });
+
+            document.getElementById('resetSettings').addEventListener('click', () => {
+                if (confirm("Réinitialiser tous les paramètres ?")) {
+                    config = { ...DEFAULT_CONFIG };
+                    KEYWORDS = ['avion', 'drone', 'urgence', 'sos', 'alerte', 'danger', 'bruit', 'son'];
+                    try {
+                        localStorage.removeItem('supraLabConfig');
+                    } catch (e) {}
+                    applyConfig();
+                    log("[PARAM] Réinitialisation effectuée", "success");
+                }
             });
 
             document.getElementById('requestMicroBtn').addEventListener('click', async () => {
@@ -884,6 +1131,17 @@ ${band && band.critical ? "⚠️ BANDE CRITIQUE" : "✅ Normal"}
                     document.getElementById('recordBtn').classList.remove('recording');
                     document.getElementById('recordBtn').textContent = "● ENREGISTRER";
                     log("Enregistrement arrêté", "success");
+                }
+            });
+
+            document.getElementById('pasteApiKeyBtn').addEventListener('click', async () => {
+                try {
+                    const text = await navigator.clipboard.readText();
+                    document.getElementById('groqApiKey').value = text;
+                    config.groqApiKey = text;
+                    log("[PARAM] Clé API collée", "success");
+                } catch (e) {
+                    log(`[ERREUR] ${e.message}`, "error");
                 }
             });
 
