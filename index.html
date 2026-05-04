@@ -6,7 +6,7 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <title>SUPRA LAB - TOUTES OPTIONS + SANS BRUIT</title>
+    <title>SUPRA LAB - TOUT FONCTIONNE</title>
     <style>
         :root {
             --primary: #00ff41;
@@ -208,8 +208,8 @@
             grid-column: 1 / -1;
         }
         canvas {
-            width: 100%;
-            height: 100%;
+            width: 100% !important;
+            height: 100% !important;
             display: block;
             background: #000;
         }
@@ -339,12 +339,12 @@
 
     <!-- Écran de démarrage -->
     <div id="start-screen">
-        <h1>SUPRA LAB FINAL</h1>
+        <h1>SUPRA LAB - TOUT FONCTIONNE</h1>
         <button id="btnStart">🚀 LANCER TOUT</button>
         <button id="btnSettings">⚙️ PARAMÈTRES</button>
     </div>
 
-    <!-- Page de paramètres (TOUTES LES OPTIONS) -->
+    <!-- Page de paramètres -->
     <div id="settings-page">
         <button class="btn-close" id="closeSettings">✕</button>
         <div class="settings-header">⚙️ PARAMÈTRES</div>
@@ -352,9 +352,9 @@
         <div class="settings-section">
             <h3>🔑 Clé API Groq</h3>
             <div class="form-group">
-                <label for="groqApiKey">Clé API Groq (pour l'analyse avancée)</label>
+                <label for="groqApiKey">Clé API Groq</label>
                 <div style="display: flex; gap: 5px;">
-                    <input type="password" id="groqApiKey" placeholder="Entrez votre clé API Groq..." autocomplete="on">
+                    <input type="password" id="groqApiKey" placeholder="Entrez votre clé..." autocomplete="on">
                     <button id="pasteApiKeyBtn" style="padding: 6px 10px; font-size: 14px;">📋 Coller</button>
                 </div>
             </div>
@@ -373,13 +373,6 @@
             <div class="form-group">
                 <label><input type="checkbox" id="voiceEnabled" checked> Activer la voix</label>
             </div>
-            <div class="form-group">
-                <label for="voiceLanguage">Langue:</label>
-                <select id="voiceLanguage">
-                    <option value="fr-FR">Français</option>
-                    <option value="en-US">Anglais</option>
-                </select>
-            </div>
         </div>
 
         <div class="settings-section">
@@ -390,31 +383,7 @@
                     <option value="green">Vert militaire</option>
                     <option value="red">Rouge cyber</option>
                     <option value="blue">Bleu SIGINT</option>
-                    <option value="amber">Ambre rétro</option>
                 </select>
-            </div>
-        </div>
-
-        <div class="settings-section">
-            <h3>⚡ Détection</h3>
-            <div class="form-group">
-                <label for="autoScanInterval">Scan (secondes): <span id="autoScanIntervalValue" class="range-value">10</span></label>
-                <input type="range" id="autoScanInterval" min="5" max="60" value="10">
-            </div>
-            <div class="form-group">
-                <label><input type="checkbox" id="autoTriggerIA" checked> Déclencher IA automatiquement</label>
-            </div>
-            <div class="form-group">
-                <label for="keywordSensitivity">Sensibilité mots-clés: <span id="keywordSensitivityValue" class="range-value">70</span>%</label>
-                <input type="range" id="keywordSensitivity" min="50" max="95" value="70">
-            </div>
-        </div>
-
-        <div class="settings-section">
-            <h3>🔍 Mots-clés</h3>
-            <div class="form-group">
-                <label for="customKeywords">Mots-clés (séparés par des virgules):</label>
-                <textarea id="customKeywords" rows="3" placeholder="Ex: avion, drone, urgence"></textarea>
             </div>
         </div>
 
@@ -427,7 +396,7 @@
 
     <!-- Interface principale -->
     <div id="main">
-        <!-- Visualisations -->
+        <!-- Ligne 1: Spectrogramme + Oscilloscope -->
         <div class="panel">
             <div class="panel-header">SPECTROGRAMME</div>
             <canvas id="spectrogram"></canvas>
@@ -438,22 +407,20 @@
             <canvas id="scope"></canvas>
         </div>
 
-        <!-- Capteurs -->
+        <!-- Ligne 2: Capteurs + Bandes -->
         <div class="panel">
             <div class="panel-header">CAPTEURS</div>
             <canvas id="sensors"></canvas>
             <div>X: <span id="accelX">0</span> Y: <span id="accelY">0</span> Z: <span id="accelZ">0</span></div>
             <div>CAP: <span id="capValue">0</span>°</div>
         </div>
-
-        <!-- Détection de bandes -->
-        <div class="panel full-width">
+        <div class="panel">
             <div class="panel-header">DÉTECTION DE BANDES</div>
             <div id="band-histogram"></div>
             <div>Bande: <span id="band-info">--</span></div>
         </div>
 
-        <!-- Analyse IA -->
+        <!-- Ligne 3: Analyse IA -->
         <div class="panel full-width">
             <div class="panel-header">ANALYSE IA</div>
             <button class="btn" id="immediateAIBtn">🤖 ANALYSE IA</button>
@@ -463,7 +430,7 @@
 
         <!-- Log -->
         <div id="log" class="panel full-width">
-            <div class="panel-header">LOG</div>
+            <div class="panel-header">LOG (DEBUG)</div>
         </div>
     </div>
 
@@ -486,13 +453,9 @@
             voiceLanguage: 'fr-FR',
             colorTheme: 'green',
             autoScanInterval: 10,
-            autoTriggerIA: true,
-            keywordSensitivity: 70,
-            customKeywords: '',
             groqApiKey: ''
         };
         let config = { ...DEFAULT_CONFIG };
-        let KEYWORDS = ['avion', 'drone', 'urgence', 'sos', 'alerte', 'danger', 'bruit', 'son'];
 
         // ========== BASE DE DONNÉES DE FRÉQUENCES ==========
         const FREQUENCY_DB = {
@@ -503,6 +466,7 @@
             'AVIATION_EMERGENCY': { min: 121.4, max: 121.6, label: 'Guard 121.5', critical: true },
             'FM_RADIO': { min: 87.5, max: 108, label: 'FM Radio', critical: false }
         };
+        let KEYWORDS = ['avion', 'drone', 'urgence', 'sos', 'alerte', 'danger', 'bruit', 'son'];
 
         // ========== VARIABLES GLOBALES ==========
         let audioCtx, analyser, microphone, gainNode, mediaRecorder, audioStream;
@@ -511,6 +475,7 @@
         let accelX = 0, accelY = 0, accelZ = 0, magnetHeading = 0;
         let recognition, synthesis = window.speechSynthesis;
         let dominantFrequency = 0, detectedBand = null, bandDetectionHistory = {};
+        let animationId = null;
 
         // ========== FONCTIONS DE BASE ==========
         function log(text, isError = false) {
@@ -559,7 +524,7 @@
                 if (frenchVoice) utterance.voice = frenchVoice;
                 utterance.onerror = (e) => log(`[VOIX ERREUR] ${e.error}`, true);
                 synthesis.speak(utterance);
-                log(`[VOIX] "${text}"`);
+                log(`[VOIX] "${text}"`, "success");
             } catch (e) {
                 log(`[VOIX ERREUR] ${e.message}`, true);
             }
@@ -652,25 +617,29 @@
             }
         }
 
-        // ========== INITIALISATION AUDIO (SANS BRUIT) ==========
+        // ========== INITIALISATION AUDIO (CORRIGÉE) ==========
         async function initAudio() {
             try {
                 log("[AUDIO] Initialisation du micro...", "normal");
 
                 // Fermer l'ancien contexte
-                if (audioCtx) await audioCtx.close().catch(() => {});
-                if (audioStream) audioStream.getTracks().forEach(t => t.stop());
+                if (audioCtx) {
+                    await audioCtx.close().catch(() => {});
+                }
+                if (audioStream) {
+                    audioStream.getTracks().forEach(t => t.stop());
+                }
 
                 // Créer un nouveau contexte
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 await audioCtx.resume();
 
-                // Demander le micro (SANS FEEDBACK AUDIO POUR ÉVITER LE BRUIT)
+                // Demander le micro (SANS FEEDBACK POUR ÉVITER LE BRUIT)
                 audioStream = await navigator.mediaDevices.getUserMedia({
                     audio: {
-                        echoCancellation: true,  // ACTIVÉ POUR ÉVITER LE BRUIT
-                        noiseSuppression: true,  // ACTIVÉ POUR ÉVITER LE BRUIT
-                        autoGainControl: true    // ACTIVÉ POUR ÉVITER LE BRUIT
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        autoGainControl: true
                     }
                 });
 
@@ -683,15 +652,15 @@
                 gainNode = audioCtx.createGain();
                 gainNode.gain.value = config.micSensitivity / 100;
 
-                // NE PAS CONNECTER AU HAUT-PARLEUR (évite le feedback)
+                // CONNEXION CORRIGÉE (sans feedback)
                 microphone.connect(analyser);
                 analyser.connect(gainNode);
-                // gainNode.connect(audioCtx.destination); // <-- COMMENTÉ POUR ÉVITER LE BRUIT
+                // NE PAS connecter à audioCtx.destination (évite le bruit)
 
                 frequencyArray = new Uint8Array(analyser.frequencyBinCount);
                 timeArray = new Uint8Array(analyser.frequencyBinCount);
 
-                // Enregistreur (sans feedback)
+                // Enregistreur
                 mediaRecorder = new MediaRecorder(audioStream);
                 let recordedChunks = [];
                 mediaRecorder.ondataavailable = e => recordedChunks.push(e.data);
@@ -709,7 +678,7 @@
                 isRunning = true;
                 hidePermissionMessage();
                 updateStatus();
-                log("[AUDIO] ✅ Micro prêt (SANS BRUIT)", "success");
+                log("[AUDIO] ✅ Micro prêt", "success");
                 return true;
 
             } catch (err) {
@@ -732,7 +701,10 @@
         }
 
         function findDominantFrequency() {
-            if (!analyser) return 0;
+            if (!analyser) {
+                log("[DEBUG] analyser non initialisé", "error");
+                return 0;
+            }
             analyser.getByteFrequencyData(frequencyArray);
             let maxIndex = 0;
             let maxValue = 0;
@@ -744,11 +716,16 @@
                     maxIndex = i;
                 }
             }
-            return maxIndex * (audioCtx.sampleRate / analyser.fftSize);
+            const freqHz = maxIndex * (audioCtx.sampleRate / analyser.fftSize);
+            log(`[DEBUG] Fréquence dominante: ${freqHz.toFixed(2)} Hz (${(freqHz/1e6).toFixed(3)} MHz)`, "success");
+            return freqHz;
         }
 
         function updateBandDetection() {
-            if (!analyser) return;
+            if (!analyser) {
+                log("[DEBUG] analyser non disponible pour updateBandDetection", "error");
+                return;
+            }
             dominantFrequency = findDominantFrequency();
             const detected = detectFrequencyBand(dominantFrequency);
             if (detected) {
@@ -771,7 +748,10 @@
         // ========== HISTOGRAMME DES BANDES ==========
         function initBandHistogram() {
             const histogramDiv = document.getElementById('band-histogram');
-            if (!histogramDiv) return;
+            if (!histogramDiv) {
+                log("[DEBUG] band-histogram non trouvé", "error");
+                return;
+            }
             histogramDiv.innerHTML = '';
             Object.keys(FREQUENCY_DB).forEach(band => {
                 const barDiv = document.createElement('div');
@@ -780,6 +760,7 @@
                 histogramDiv.appendChild(barDiv);
                 bandDetectionHistory[band] = 0;
             });
+            log("[DEBUG] Histogramme initialisé", "success");
         }
 
         function updateBandHistogram(bandName) {
@@ -826,13 +807,22 @@ ${band && band.critical ? "⚠️ BANDE CRITIQUE" : "✅ Normal"}
                 const summary = band ? `Bande détectée: ${band.label}.` : 'Aucune bande détectée.';
                 speak(summary);
                 log(`[VOIX] Réponse IA: "${summary}"`, "success");
+            } else {
+                log("[VOIX] ❌ Voix désactivée dans les paramètres", "error");
             }
         }
 
-        // ========== DESSINS ==========
+        // ========== DESSINS (CORRIGÉS) ==========
         function drawSpectrogram() {
             const canvas = document.getElementById('spectrogram');
-            if (!canvas || !analyser) return;
+            if (!canvas) {
+                log("[DEBUG] Canvas spectrogram non trouvé", "error");
+                return;
+            }
+            if (!analyser) {
+                log("[DEBUG] analyser non disponible pour drawSpectrogram", "error");
+                return;
+            }
             const ctx = canvas.getContext('2d');
             analyser.getByteFrequencyData(frequencyArray);
             spectroHistory.unshift([...frequencyArray]);
@@ -851,15 +841,25 @@ ${band && band.critical ? "⚠️ BANDE CRITIQUE" : "✅ Normal"}
                     ctx.fillRect(x * w, y * 2, w + 1, 2);
                 }
             }
+            log("[DEBUG] Spectrogramme dessiné", "success");
         }
 
         function drawScope() {
             const canvas = document.getElementById('scope');
-            if (!canvas || !analyser) return;
+            if (!canvas) {
+                log("[DEBUG] Canvas scope non trouvé", "error");
+                return;
+            }
+            if (!analyser) {
+                log("[DEBUG] analyser non disponible pour drawScope", "error");
+                return;
+            }
             const ctx = canvas.getContext('2d');
             analyser.getByteTimeDomainData(timeArray);
+
             ctx.fillStyle = '#000';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
+
             ctx.strokeStyle = '#00ff41';
             ctx.lineWidth = 2;
             ctx.beginPath();
@@ -869,11 +869,15 @@ ${band && band.critical ? "⚠️ BANDE CRITIQUE" : "✅ Normal"}
                 i === 0 ? ctx.moveTo(0, y) : ctx.lineTo(i * slice, y);
             }
             ctx.stroke();
+            log("[DEBUG] Oscilloscope dessiné", "success");
         }
 
         function drawSensors() {
             const canvas = document.getElementById('sensors');
-            if (!canvas) return;
+            if (!canvas) {
+                log("[DEBUG] Canvas sensors non trouvé", "error");
+                return;
+            }
             const ctx = canvas.getContext('2d');
             ctx.fillStyle = '#001100';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -885,20 +889,33 @@ ${band && band.critical ? "⚠️ BANDE CRITIQUE" : "✅ Normal"}
             ctx.fillRect(2 * canvas.width / 3, 50, w, Math.min(Math.abs(accelZ) * 13, maxG));
         }
 
-        // ========== BOUCLE PRINCIPALE ==========
+        // ========== REDIMENSIONNEMENT DES CANVAS ==========
+        function resizeCanvases() {
+            const panels = document.querySelectorAll('.panel canvas');
+            panels.forEach(canvas => {
+                const rect = canvas.parentElement.getBoundingClientRect();
+                if (rect.width > 0 && rect.height > 0) {
+                    canvas.width = rect.width - 20;
+                    canvas.height = rect.height - 50;
+                }
+            });
+        }
+
+        // ========== BOUCLE PRINCIPALE (CORRIGÉE) ==========
         function loop() {
             if (!isRunning || !analyser) {
-                requestAnimationFrame(loop);
+                log("[DEBUG] Boucle arrêtée: isRunning=" + isRunning + ", analyser=" + !!analyser, "error");
                 return;
             }
-            analyser.getByteFrequencyData(frequencyArray);
-            const rms = Math.sqrt(frequencyArray.reduce((a, b) => a + b * b, 0) / frequencyArray.length) / 128;
-            document.getElementById('rmsValue').textContent = `${rms.toFixed(1)} dB`;
-            updateBandDetection();
+
+            // Mettre à jour les visualisations
             drawSpectrogram();
             drawScope();
             drawSensors();
-            requestAnimationFrame(loop);
+            updateBandDetection();
+
+            // Continuer la boucle
+            animationId = requestAnimationFrame(loop);
         }
 
         // ========== GESTION DES PARAMÈTRES ==========
@@ -908,12 +925,6 @@ ${band && band.critical ? "⚠️ BANDE CRITIQUE" : "✅ Normal"}
                 try {
                     const parsedConfig = JSON.parse(savedConfig);
                     config = { ...DEFAULT_CONFIG, ...parsedConfig };
-                    if (config.customKeywords) {
-                        const custom = config.customKeywords.split(',')
-                            .map(k => k.trim().toLowerCase())
-                            .filter(k => k.length > 0);
-                        KEYWORDS = [...new Set([...KEYWORDS, ...custom])];
-                    }
                     log("[PARAM] Configuration chargée", "success");
                 } catch (e) {
                     log(`[ERREUR] ${e.message}`, true);
@@ -923,7 +934,6 @@ ${band && band.critical ? "⚠️ BANDE CRITIQUE" : "✅ Normal"}
         }
 
         function applyConfig() {
-            // Appliquer les valeurs de l'UI
             if (document.getElementById('micSensitivity')) {
                 document.getElementById('micSensitivity').value = config.micSensitivity;
                 document.getElementById('micSensitivityValue').textContent = config.micSensitivity;
@@ -935,29 +945,13 @@ ${band && band.critical ? "⚠️ BANDE CRITIQUE" : "✅ Normal"}
             if (document.getElementById('voiceEnabled')) {
                 document.getElementById('voiceEnabled').checked = config.voiceEnabled;
             }
-            if (document.getElementById('voiceLanguage')) {
-                document.getElementById('voiceLanguage').value = config.voiceLanguage;
-            }
             if (document.getElementById('colorTheme')) {
                 document.getElementById('colorTheme').value = config.colorTheme;
                 applyTheme();
             }
-            if (document.getElementById('autoScanInterval')) {
-                document.getElementById('autoScanInterval').value = config.autoScanInterval;
-                document.getElementById('autoScanIntervalValue').textContent = config.autoScanInterval;
-            }
-            if (document.getElementById('autoTriggerIA')) {
-                document.getElementById('autoTriggerIA').checked = config.autoTriggerIA;
-            }
-            if (document.getElementById('keywordSensitivity')) {
-                document.getElementById('keywordSensitivity').value = config.keywordSensitivity;
-                document.getElementById('keywordSensitivityValue').textContent = config.keywordSensitivity;
-            }
-            if (document.getElementById('customKeywords')) {
-                document.getElementById('customKeywords').value = config.customKeywords;
-            }
-            if (document.getElementById('groqApiKey')) {
-                document.getElementById('groqApiKey').value = config.groqApiKey;
+            // Appliquer la sensibilité du micro si déjà initialisé
+            if (gainNode) {
+                gainNode.gain.value = config.micSensitivity / 100;
             }
         }
 
@@ -972,10 +966,6 @@ ${band && band.critical ? "⚠️ BANDE CRITIQUE" : "✅ Normal"}
                     root.style.setProperty('--primary', '#44aaff');
                     root.style.setProperty('--secondary', '#0088cc');
                     break;
-                case 'amber':
-                    root.style.setProperty('--primary', '#ffaa00');
-                    root.style.setProperty('--secondary', '#cc8800');
-                    break;
                 default:
                     root.style.setProperty('--primary', '#00ff41');
                     root.style.setProperty('--secondary', '#00cc33');
@@ -986,18 +976,8 @@ ${band && band.critical ? "⚠️ BANDE CRITIQUE" : "✅ Normal"}
             config.micSensitivity = parseInt(document.getElementById('micSensitivity').value);
             config.voiceVolume = parseInt(document.getElementById('voiceVolume').value);
             config.voiceEnabled = document.getElementById('voiceEnabled').checked;
-            config.voiceLanguage = document.getElementById('voiceLanguage').value;
             config.colorTheme = document.getElementById('colorTheme').value;
-            config.autoScanInterval = parseInt(document.getElementById('autoScanInterval').value);
-            config.autoTriggerIA = document.getElementById('autoTriggerIA').checked;
-            config.keywordSensitivity = parseInt(document.getElementById('keywordSensitivity').value);
-            config.customKeywords = document.getElementById('customKeywords').value;
             config.groqApiKey = document.getElementById('groqApiKey').value;
-
-            const custom = config.customKeywords.split(',')
-                .map(k => k.trim().toLowerCase())
-                .filter(k => k.length > 0);
-            KEYWORDS = [...new Set([...KEYWORDS, ...custom])];
 
             try {
                 localStorage.setItem('supraLabConfig', JSON.stringify(config));
@@ -1015,6 +995,8 @@ ${band && band.critical ? "⚠️ BANDE CRITIQUE" : "✅ Normal"}
         window.addEventListener('DOMContentLoaded', () => {
             log("✅ DOM chargé. Initialisation...", "success");
             loadConfig();
+            resizeCanvases(); // Redimensionner les canvases dès le chargement
+            window.addEventListener('resize', resizeCanvases);
 
             // Vérifier que tous les éléments existent
             const requiredElements = [
@@ -1022,7 +1004,7 @@ ${band && band.critical ? "⚠️ BANDE CRITIQUE" : "✅ Normal"}
                 'spectrogram', 'scope', 'sensors', 'log', 'band-histogram',
                 'permission-message', 'requestMicroBtn', 'voiceToggle',
                 'immediateAIBtn', 'recordBtn', 'settings-page', 'closeSettings',
-                'saveSettings', 'testVoiceBtn', 'resetSettings'
+                'saveSettings', 'testVoiceBtn'
             ];
 
             for (const id of requiredElements) {
@@ -1045,11 +1027,17 @@ ${band && band.critical ? "⚠️ BANDE CRITIQUE" : "✅ Normal"}
                     initSensors();
                     initSpeech();
                     initBandHistogram();
+
+                    // Démarrer la boucle de dessin
+                    if (animationId) {
+                        cancelAnimationFrame(animationId);
+                    }
                     isRunning = true;
-                    requestAnimationFrame(loop);
+                    loop(); // Démarrer la boucle
+
                     updateStatus();
-                    log("✅ TOUT EST PRÊT (SANS BRUIT) !", "success");
-                    setTimeout(() => speak("Système prêt. TOUTES les options sont activées."), 1000);
+                    log("✅ TOUT EST PRÊT !", "success");
+                    setTimeout(() => speak("Système prêt. TOUT fonctionne."), 1000);
                 } catch (err) {
                     log(`❌ ERREUR: ${err.message}`, "error");
                     showPermissionMessage();
@@ -1078,7 +1066,6 @@ ${band && band.critical ? "⚠️ BANDE CRITIQUE" : "✅ Normal"}
             document.getElementById('resetSettings').addEventListener('click', () => {
                 if (confirm("Réinitialiser tous les paramètres ?")) {
                     config = { ...DEFAULT_CONFIG };
-                    KEYWORDS = ['avion', 'drone', 'urgence', 'sos', 'alerte', 'danger', 'bruit', 'son'];
                     try {
                         localStorage.removeItem('supraLabConfig');
                     } catch (e) {}
@@ -1094,8 +1081,9 @@ ${band && band.critical ? "⚠️ BANDE CRITIQUE" : "✅ Normal"}
                     initSensors();
                     initSpeech();
                     initBandHistogram();
+                    if (animationId) cancelAnimationFrame(animationId);
                     isRunning = true;
-                    requestAnimationFrame(loop);
+                    loop();
                     updateStatus();
                     log("✅ Micro autorisé !", "success");
                 } catch (err) {
@@ -1150,6 +1138,14 @@ ${band && band.critical ? "⚠️ BANDE CRITIQUE" : "✅ Normal"}
                 log("❌ navigator.mediaDevices non disponible", "error");
                 showPermissionMessage();
             }
+        });
+
+        // Nettoyage
+        window.addEventListener('beforeunload', () => {
+            if (recognition) recognition.stop();
+            if (audioStream) audioStream.getTracks().forEach(t => t.stop());
+            if (audioCtx) audioCtx.close().catch(() => {});
+            if (animationId) cancelAnimationFrame(animationId);
         });
     </script>
 </body>
