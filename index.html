@@ -6,7 +6,7 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <title>SUPRA LAB - ULTRA ROBUSTE</title>
+    <title>SUPRA LAB - TOUT FONCTIONNE</title>
     <style>
         :root {
             --primary: #00ff41;
@@ -45,6 +45,7 @@
             z-index: 9999;
         }
 
+        /* Écran de démarrage */
         #start-screen {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
@@ -58,7 +59,6 @@
             padding: 20px;
             text-align: center;
         }
-
         #start-screen h1 {
             color: var(--primary);
             text-shadow: 0 0 10px var(--primary);
@@ -66,6 +66,36 @@
             font-size: 24px;
         }
 
+        /* Interface principale */
+        #main {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            display: none;
+            padding: 10px;
+            overflow-y: auto;
+            background: var(--bg-darker);
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        }
+        #main.grid {
+            display: grid;
+        }
+
+        /* Page de paramètres */
+        #settings-page {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: var(--bg-darker);
+            z-index: 10001;
+            padding: 20px;
+            overflow-y: auto;
+            border: 4px solid var(--primary);
+            display: none; /* MASQUÉ PAR DÉFAUT */
+        }
+        #settings-page.active {
+            display: block !important; /* FORCER L'AFFICHAGE */
+        }
+
+        /* Boutons */
         button {
             background: transparent;
             color: var(--primary);
@@ -80,26 +110,16 @@
             background: var(--primary);
             color: var(--bg-dark);
         }
-
-        #btnStart {
-            padding: 15px 30px;
-            font-size: 18px;
-            margin: 10px 0;
+        button.record {
+            background: #330000;
+            color: #ff0000;
+            border: 3px solid #ff0000;
+        }
+        button.record.recording {
+            animation: pulse 1s infinite;
         }
 
-        #main {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            display: none;
-            padding: 10px;
-            overflow-y: auto;
-            background: var(--bg-darker);
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        }
-        #main.grid {
-            display: grid;
-        }
-
+        /* Panneaux */
         .panel {
             background: var(--bg-dark);
             border: 2px solid var(--primary);
@@ -127,6 +147,7 @@
             background: #000;
         }
 
+        /* Log */
         #log {
             max-height: 200px;
             overflow-y: auto;
@@ -153,6 +174,7 @@
             color: var(--primary);
         }
 
+        /* Status */
         #status {
             position: fixed;
             bottom: 0;
@@ -165,6 +187,7 @@
             text-align: center;
         }
 
+        /* Indicateurs */
         .indicator {
             display: inline-block;
             width: 12px;
@@ -176,6 +199,7 @@
             background: var(--primary);
         }
 
+        /* Message de permission */
         #permission-message {
             position: fixed;
             top: 50%;
@@ -192,12 +216,8 @@
         #permission-message.active {
             display: block;
         }
-        #permission-message button {
-            margin-top: 15px;
-            background: var(--primary);
-            color: var(--bg-dark);
-        }
 
+        /* Boutons flottants */
         #voiceToggle {
             position: fixed;
             bottom: 60px;
@@ -216,21 +236,69 @@
             0%, 100% { opacity: 1; }
             50% { opacity: 0.5; }
         }
+
+        /* Histogramme */
+        #band-histogram {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 5px;
+            height: 100px;
+            padding: 10px;
+        }
+        .band-bar {
+            background: var(--bg-dark);
+            border: 1px solid var(--primary);
+            transition: height 0.3s;
+        }
+        .band-bar.fill {
+            background: var(--primary);
+        }
+        .band-bar.danger {
+            background: var(--danger);
+        }
     </style>
 </head>
 <body>
     <!-- Message de permission micro -->
     <div id="permission-message">
         <div style="color: var(--warning);">⚠️ PERMISSION MICRO REQUISE</div>
-        <div style="margin-top: 10px;">Cliquez pour autoriser le micro.</div>
         <button id="requestMicroBtn">🎤 AUTORISER LE MICRO</button>
     </div>
 
     <!-- Écran de démarrage -->
     <div id="start-screen">
-        <h1>SUPRA LAB - ULTRA ROBUSTE</h1>
+        <h1>SUPRA LAB - TOUT FONCTIONNE</h1>
         <button id="btnStart">🚀 LANCER TOUT</button>
         <button id="btnSettings">⚙️ PARAMÈTRES</button>
+    </div>
+
+    <!-- Page de paramètres -->
+    <div id="settings-page">
+        <div style="text-align: center; margin-bottom: 20px; font-size: 20px; border-bottom: 2px solid var(--primary); padding-bottom: 10px;">
+            ⚙️ PARAMÈTRES
+        </div>
+        <div style="margin-bottom: 15px;">
+            <button id="closeSettings" style="float: right;">✕ FERMER</button>
+            <div style="clear: both;"></div>
+        </div>
+        <div style="background: var(--bg-dark); border: 2px solid var(--primary); padding: 15px; margin-bottom: 15px;">
+            <h3 style="color: var(--secondary); margin-bottom: 10px;">🎤 Micro & Voix</h3>
+            <div style="margin-bottom: 10px;">
+                <label style="display: block; margin-bottom: 5px;">Sensibilité micro: <span id="micSensitivityValue">50</span>%</label>
+                <input type="range" id="micSensitivity" min="10" max="100" value="50" style="width: 100%;">
+            </div>
+            <div style="margin-bottom: 10px;">
+                <label style="display: block; margin-bottom: 5px;">Volume voix: <span id="voiceVolumeValue">100</span>%</label>
+                <input type="range" id="voiceVolume" min="0" max="100" value="100" style="width: 100%;">
+            </div>
+            <div style="margin-bottom: 10px;">
+                <label><input type="checkbox" id="voiceEnabled" checked> Activer la voix</label>
+            </div>
+        </div>
+        <div style="text-align: center; margin-top: 20px;">
+            <button id="saveSettings">💾 SAUVEGARDER</button>
+            <button id="testVoiceBtn">🔊 TESTER LA VOIX</button>
+        </div>
     </div>
 
     <!-- Interface principale -->
@@ -301,10 +369,11 @@
         // ========== VARIABLES GLOBALES ==========
         let audioCtx, analyser, microphone, gainNode, mediaRecorder, audioStream;
         let frequencyArray, timeArray, spectroHistory = [];
-        let isRunning = false, isRecording = false, isListening = false, isVoiceEnabled = false;
+        let isRunning = false, isRecording = false, isListening = false, isVoiceEnabled = true;
         let accelX = 0, accelY = 0, accelZ = 0, magnetHeading = 0;
         let recognition, synthesis = window.speechSynthesis;
         let dominantFrequency = 0, detectedBand = null, bandDetectionHistory = {};
+        let config = { micSensitivity: 50, voiceVolume: 100, voiceEnabled: true };
 
         // ========== FONCTIONS DE BASE ==========
         function log(text, isError = false) {
@@ -336,16 +405,22 @@
         }
 
         function speak(text) {
-            if (!isVoiceEnabled || !synthesis) return;
+            if (!config.voiceEnabled || !isVoiceEnabled || !synthesis) return;
             try {
+                // Forcer le chargement des voix si nécessaire
+                if (synthesis.getVoices().length === 0) {
+                    synthesis.onvoiceschanged = () => speak(text);
+                    return;
+                }
                 synthesis.cancel();
                 const utterance = new SpeechSynthesisUtterance(text);
                 utterance.lang = 'fr-FR';
                 utterance.rate = 1.0;
-                utterance.volume = 1.0;
+                utterance.volume = config.voiceVolume / 100;
                 const voices = synthesis.getVoices();
                 const frenchVoice = voices.find(v => v.lang.includes('fr')) || voices[0];
                 if (frenchVoice) utterance.voice = frenchVoice;
+                utterance.onerror = (e) => log(`[VOIX ERREUR] ${e.error}`, true);
                 synthesis.speak(utterance);
                 log(`[VOIX] "${text}"`);
             } catch (e) {
@@ -366,7 +441,7 @@
                         document.getElementById('accelZ').textContent = accelZ;
                     }
                 });
-                log("[CAPTEURS] Accéléromètre activé", "success");
+                log("[CAPTEURS] ✅ Accéléromètre activé", "success");
             }
 
             if (window.DeviceOrientationEvent) {
@@ -376,7 +451,7 @@
                         document.getElementById('capValue').textContent = magnetHeading;
                     }
                 });
-                log("[CAPTEURS] Boussole activée", "success");
+                log("[CAPTEURS] ✅ Boussole activée", "success");
             }
             updateStatus();
         }
@@ -385,7 +460,7 @@
         function initSpeech() {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             if (!SpeechRecognition) {
-                log("[IA] Reconnaissance vocale non supportée", "error");
+                log("[IA] ❌ Reconnaissance vocale non supportée. Essayez Chrome.", "error");
                 return;
             }
 
@@ -404,8 +479,9 @@
                         if (event.results[i].isFinal) {
                             log(`[IA] 🎤 "${transcript}"`, "success");
                             speak(transcript);
+                            // Détecter les mots-clés
                             if (KEYWORDS.some(kw => transcript.toLowerCase().includes(kw))) {
-                                triggerAIAnalysis(true, transcript);
+                                triggerAIAnalysis(transcript);
                             }
                         }
                     }
@@ -418,7 +494,7 @@
 
                 recognition.onstart = () => {
                     isListening = true;
-                    log("[IA] Écoute activée", "success");
+                    log("[IA] ✅ Écoute activée", "success");
                     updateStatus();
                 };
 
@@ -433,8 +509,7 @@
                 };
 
                 recognition.start();
-                isVoiceEnabled = true;
-                log("[IA] IA vocale démarrée", "success");
+                log("[IA] ✅ IA vocale démarrée", "success");
 
             } catch (e) {
                 log(`[IA ERREUR] ${e.message}`, "error");
@@ -470,7 +545,7 @@
                 analyser.smoothingTimeConstant = 0.1;
 
                 gainNode = audioCtx.createGain();
-                gainNode.gain.value = 1.0;
+                gainNode.gain.value = config.micSensitivity / 100;
 
                 microphone.connect(analyser);
                 analyser.connect(gainNode);
@@ -491,13 +566,13 @@
                     a.download = `rec-${Date.now()}.webm`;
                     a.click();
                     recordedChunks = [];
-                    log("[ENREGISTREMENT] Fichier sauvegardé", "success");
+                    log("[ENREGISTREMENT] ✅ Fichier sauvegardé", "success");
                 };
 
                 isRunning = true;
                 hidePermissionMessage();
                 updateStatus();
-                log("[AUDIO] Micro prêt", "success");
+                log("[AUDIO] ✅ Micro prêt", "success");
                 return true;
 
             } catch (err) {
@@ -508,12 +583,12 @@
         }
 
         // ========== DÉTECTION DE BANDES ==========
-        function detectFrequencyBand(frequency) {
-            if (frequency <= 0) return null;
-            const freqMHz = frequency / 1e6;
+        function detectFrequencyBand(frequencyHz) {
+            if (frequencyHz <= 0) return null;
+            const freqMHz = frequencyHz / 1e6; // Convertir en MHz
             for (const [bandName, bandData] of Object.entries(FREQUENCY_DB)) {
                 if (freqMHz >= bandData.min && freqMHz <= bandData.max) {
-                    return { label: bandData.label, color: bandData.color, critical: bandData.critical };
+                    return { label: bandData.label, critical: bandData.critical };
                 }
             }
             return null;
@@ -522,7 +597,9 @@
         function findDominantFrequency() {
             if (!analyser) return 0;
             analyser.getByteFrequencyData(frequencyArray);
-            let maxIndex = 0, maxValue = 0;
+            let maxIndex = 0;
+            let maxValue = 0;
+            // Ignorer les très basses fréquences (bruit)
             const startIndex = Math.floor(100 / (audioCtx.sampleRate / analyser.fftSize));
             for (let i = startIndex; i < frequencyArray.length; i++) {
                 if (frequencyArray[i] > maxValue) {
@@ -530,12 +607,14 @@
                     maxIndex = i;
                 }
             }
+            // Calculer la fréquence en Hz
             return maxIndex * (audioCtx.sampleRate / analyser.fftSize);
         }
 
         function updateBandDetection() {
             if (!analyser) return;
             dominantFrequency = findDominantFrequency();
+            log(`[DEBUG] Fréquence dominante: ${dominantFrequency} Hz`, "normal"); // NOUVEAU: Log de debug
             const detected = detectFrequencyBand(dominantFrequency);
             if (detected) {
                 detectedBand = detected;
@@ -545,7 +624,12 @@
                     bandInfoEl.style.color = detected.critical ? 'var(--danger)' : 'var(--primary)';
                 }
                 updateBandHistogram(detected.label);
-                if (detected.critical) speak(`Attention ! Bande critique détectée : ${detected.label}`);
+                if (detected.critical) {
+                    speak(`Attention ! Bande critique détectée : ${detected.label}`);
+                }
+            } else {
+                const bandInfoEl = document.getElementById('band-info');
+                if (bandInfoEl) bandInfoEl.textContent = "Bande: --";
             }
         }
 
@@ -581,9 +665,9 @@
         }
 
         // ========== ANALYSE IA ==========
-        function triggerAIAnalysis(force = false, customTranscript = "") {
+        function triggerAIAnalysis(transcript = "") {
             if (!isRunning || !analyser) {
-                log("[IA] Système non prêt", "error");
+                log("[IA] ❌ Système non prêt", "error");
                 return;
             }
 
@@ -591,7 +675,6 @@
             const rms = Math.sqrt(frequencyArray.reduce((a, b) => a + b * b, 0) / frequencyArray.length) / 128;
             const dominantFreq = findDominantFrequency();
             const band = detectFrequencyBand(dominantFreq);
-            const transcript = customTranscript || (recognition ? recognition.finalTranscript : "");
 
             const report = `
 [RAPPORT SIGINT - ${new Date().toLocaleTimeString('fr-FR')}]
@@ -603,9 +686,13 @@ ${band && band.critical ? "⚠️ BANDE CRITIQUE" : "✅ Normal"}
             const aiReportDiv = document.getElementById('ai-report');
             if (aiReportDiv) aiReportDiv.textContent = report;
 
-            if (isVoiceEnabled) {
-                const summary = band ? `Bande: ${band.label}. ${rms > 0.5 ? 'Niveau élevé.' : ''}` : 'Aucune bande détectée.';
+            // FORCER LA VOIX À RÉPONDRE
+            if (config.voiceEnabled && isVoiceEnabled) {
+                const summary = band ? `Bande détectée: ${band.label}.` : 'Aucune bande détectée.';
                 speak(summary);
+                log(`[VOIX] Réponse IA: "${summary}"`, "success");
+            } else {
+                log("[VOIX] ❌ Voix désactivée dans les paramètres", "error");
             }
         }
 
@@ -683,62 +770,77 @@ ${band && band.critical ? "⚠️ BANDE CRITIQUE" : "✅ Normal"}
 
         // ========== DÉMARRAGE ==========
         window.addEventListener('DOMContentLoaded', () => {
-            log("✅ DOM chargé. Initialisation des écouteurs...", "success");
+            log("✅ DOM chargé. Initialisation...", "success");
 
-            // Vérifier que les éléments existent
-            const startBtn = document.getElementById('btnStart');
-            const btnSettings = document.getElementById('btnSettings');
-            const requestMicroBtn = document.getElementById('requestMicroBtn');
-            const voiceToggle = document.getElementById('voiceToggle');
-            const immediateAIBtn = document.getElementById('immediateAIBtn');
-            const recordBtn = document.getElementById('recordBtn');
+            // Vérifier que tous les éléments existent
+            const requiredElements = [
+                'btnStart', 'btnSettings', 'start-screen', 'main',
+                'spectrogram', 'scope', 'sensors', 'log', 'band-histogram',
+                'permission-message', 'requestMicroBtn', 'voiceToggle',
+                'immediateAIBtn', 'recordBtn', 'settings-page', 'closeSettings',
+                'saveSettings', 'testVoiceBtn'
+            ];
 
-            if (!startBtn || !btnSettings || !requestMicroBtn || !voiceToggle || !immediateAIBtn || !recordBtn) {
-                log("[ERREUR] Un ou plusieurs éléments DOM manquants !", "error");
-                return;
+            for (const id of requiredElements) {
+                if (!document.getElementById(id)) {
+                    log(`[ERREUR] Élément ${id} MANQUANT !`, "error");
+                    return;
+                }
             }
+            log("✅ Tous les éléments DOM présents", "success");
 
             // Attacher les écouteurs UN PAR UN
-            startBtn.addEventListener('click', async () => {
+            document.getElementById('btnStart').addEventListener('click', async () => {
                 log("🚀 Bouton LANCER cliqué !", "success");
                 document.getElementById('start-screen').style.display = 'none';
                 document.getElementById('main').style.display = 'block';
                 document.getElementById('main').classList.add('grid');
 
                 try {
-                    log("Initialisation du micro...", "normal");
                     await initAudio();
-                    log("✅ Micro prêt", "success");
-
-                    log("Initialisation des capteurs...", "normal");
                     initSensors();
-                    log("✅ Capteurs prêts", "success");
-
-                    log("Initialisation de l'IA vocale...", "normal");
                     initSpeech();
-                    log("✅ IA vocale prête", "success");
-
-                    log("Initialisation de l'histogramme...", "normal");
                     initBandHistogram();
-                    log("✅ Histogramme prêt", "success");
-
                     isRunning = true;
                     requestAnimationFrame(loop);
                     updateStatus();
-
                     log("✅ TOUT EST PRÊT !", "success");
-                    setTimeout(() => speak("Système prêt. TOUTES les options sont activées."), 1000);
+                    setTimeout(() => speak("Système prêt. TOUT fonctionne."), 1000);
                 } catch (err) {
                     log(`❌ ERREUR: ${err.message}`, "error");
                     showPermissionMessage();
                 }
             });
 
-            btnSettings.addEventListener('click', () => {
+            document.getElementById('btnSettings').addEventListener('click', () => {
                 log("⚙️ Bouton PARAMÈTRES cliqué !", "success");
+                document.getElementById('settings-page').classList.add('active');
             });
 
-            requestMicroBtn.addEventListener('click', async () => {
+            document.getElementById('closeSettings').addEventListener('click', () => {
+                document.getElementById('settings-page').classList.remove('active');
+                log("Paramètres fermés", "normal");
+            });
+
+            document.getElementById('saveSettings').addEventListener('click', () => {
+                config.micSensitivity = parseInt(document.getElementById('micSensitivity').value);
+                config.voiceVolume = parseInt(document.getElementById('voiceVolume').value);
+                config.voiceEnabled = document.getElementById('voiceEnabled').checked;
+                log("✅ Paramètres sauvegardés", "success");
+                document.getElementById('settings-page').classList.remove('active');
+                // Appliquer la sensibilité du micro
+                if (gainNode) gainNode.gain.value = config.micSensitivity / 100;
+                // Appliquer le volume de la voix
+                if (synthesis) {
+                    synthesis.cancel(); // Réinitialiser avec le nouveau volume
+                }
+            });
+
+            document.getElementById('testVoiceBtn').addEventListener('click', () => {
+                speak("Test de la voix. Si vous m'entendez, la synthèse vocale fonctionne.");
+            });
+
+            document.getElementById('requestMicroBtn').addEventListener('click', async () => {
                 hidePermissionMessage();
                 try {
                     await initAudio();
@@ -748,39 +850,39 @@ ${band && band.critical ? "⚠️ BANDE CRITIQUE" : "✅ Normal"}
                     isRunning = true;
                     requestAnimationFrame(loop);
                     updateStatus();
-                    log("✅ Micro autorisé ! Tout est prêt.", "success");
+                    log("✅ Micro autorisé !", "success");
                 } catch (err) {
                     log(`❌ ERREUR: ${err.message}`, "error");
                     showPermissionMessage();
                 }
             });
 
-            voiceToggle.addEventListener('click', () => {
+            document.getElementById('voiceToggle').addEventListener('click', () => {
                 isVoiceEnabled = !isVoiceEnabled;
-                voiceToggle.style.background = isVoiceEnabled ? '#ff0044' : '#00ff41';
+                document.getElementById('voiceToggle').style.background = isVoiceEnabled ? '#ff0044' : '#00ff41';
                 if (isVoiceEnabled && !isListening) initSpeech();
                 if (!isVoiceEnabled && recognition) recognition.stop();
                 log(isVoiceEnabled ? "Voix activée" : "Voix désactivée", "success");
             });
 
-            immediateAIBtn.addEventListener('click', () => {
-                triggerAIAnalysis(true);
+            document.getElementById('immediateAIBtn').addEventListener('click', () => {
+                triggerAIAnalysis();
             });
 
-            recordBtn.addEventListener('click', () => {
+            document.getElementById('recordBtn').addEventListener('click', () => {
                 if (!isRecording) {
                     const recordedChunks = [];
                     mediaRecorder.ondataavailable = e => recordedChunks.push(e.data);
                     mediaRecorder.start();
                     isRecording = true;
-                    recordBtn.classList.add('recording');
-                    recordBtn.textContent = "STOP";
+                    document.getElementById('recordBtn').classList.add('recording');
+                    document.getElementById('recordBtn').textContent = "STOP";
                     log("Enregistrement démarré", "success");
                 } else {
                     mediaRecorder.stop();
                     isRecording = false;
-                    recordBtn.classList.remove('recording');
-                    recordBtn.textContent = "● ENREGISTRER";
+                    document.getElementById('recordBtn').classList.remove('recording');
+                    document.getElementById('recordBtn').textContent = "● ENREGISTRER";
                     log("Enregistrement arrêté", "success");
                 }
             });
