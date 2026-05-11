@@ -2,192 +2,305 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SUPRA LAB - 100% RÉEL</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SUPRA LAB v11 — 100% RÉEL (Pas de Simulation)</title>
     <style>
-        body {
-            font-family: 'Courier New', monospace;
-            background: #000;
-            color: #0f0;
+        :root {
+            --primary: #00ff41;
+            --secondary: #00cc33;
+            --danger: #ff0044;
+            --warning: #ffaa00;
+            --bg-dark: #001100;
+            --bg-darker: #000000;
+        }
+        * {
             margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            touch-action: manipulation;
+            user-select: none;
+            font-family: 'Courier New', monospace;
+        }
+        body {
+            background: var(--bg-darker);
+            color: var(--primary);
+            min-height: 100vh;
+            overflow: hidden;
             padding: 10px;
+        }
+        #start-screen, #main {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            border: 4px solid var(--primary);
+            background: var(--bg-darker);
+        }
+        #main {
+            display: none;
+            padding: 10px;
+            gap: 10px;
+            overflow-y: auto;
+        }
+        #start-screen {
             text-align: center;
         }
-        #container {
-            max-width: 600px;
-            margin: 0 auto;
-        }
-        #log {
-            background: #111;
-            border: 1px solid #0f0;
-            padding: 15px;
-            height: 300px;
-            overflow-y: auto;
-            margin: 10px 0;
-            text-align: left;
-            font-size: 14px;
-            white-space: pre-wrap;
+        .boot-text {
+            font-size: 24px;
+            margin-bottom: 30px;
+            text-shadow: 0 0 15px var(--primary);
         }
         button {
-            background: #000;
-            color: #0f0;
-            border: 2px solid #0f0;
-            padding: 12px 24px;
-            margin: 10px;
-            font-family: 'Courier New', monospace;
-            font-size: 16px;
+            background: transparent;
+            color: var(--primary);
+            border: 3px solid var(--primary);
+            padding: 10px 20px;
+            font-size: 18px;
             cursor: pointer;
-            border-radius: 5px;
+            margin: 8px;
+            transition: all 0.2s;
         }
         button:hover {
-            background: #0f0;
-            color: #000;
+            background: var(--primary);
+            color: var(--bg-dark);
+        }
+        #btnStart {
+            border-width: 4px;
+            padding: 15px 40px;
+            font-size: 22px;
+        }
+        #log {
+            background: var(--bg-dark);
+            border: 2px solid var(--primary);
+            padding: 15px;
+            height: 200px;
+            overflow-y: auto;
+            font-size: 16px;
+            line-height: 1.4;
+            white-space: pre-wrap;
+            text-align: left;
+        }
+        .log-line::before {
+            content: "> ";
+            color: var(--secondary);
+        }
+        .log-line.important {
+            color: var(--danger) !important;
+            font-size: 18px !important;
+        }
+        .panel {
+            background: var(--bg-dark);
+            border: 2px solid var(--primary);
+            padding: 10px;
+            margin-bottom: 10px;
+            position: relative;
+        }
+        .panel-header {
+            position: absolute;
+            top: -10px;
+            left: 10px;
+            background: var(--bg-dark);
+            padding: 0 8px;
+            font-size: 14px;
+        }
+        #ai-report {
+            background: var(--bg-dark);
+            border: 2px dashed var(--primary);
+            padding: 15px;
+            font-size: 14px;
+            line-height: 1.4;
+            white-space: pre-wrap;
+            min-height: 150px;
+            max-height: 250px;
+            overflow-y: auto;
+        }
+        .status-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--bg-dark);
+            border-top: 2px solid var(--primary);
+            padding: 8px;
+            font-size: 14px;
+            display: flex;
+            justify-content: space-between;
+        }
+        #settings-page {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: var(--bg-darker);
+            padding: 20px;
+            overflow-y: auto;
+            z-index: 1001;
+            border: 2px solid var(--primary);
+        }
+        #settings-page.active {
+            display: block;
+        }
+        .settings-section {
+            background: var(--bg-dark);
+            border: 1px solid var(--primary);
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .form-group {
+            margin-bottom: 10px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: var(--secondary);
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 8px;
+            background: #000;
+            color: var(--primary);
+            border: 1px solid var(--primary);
+            font-family: 'Courier New', monospace;
         }
         #voiceToggle {
             position: fixed;
             bottom: 20px;
             right: 20px;
-            width: 60px;
-            height: 60px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
-            background: #0f0;
+            background: var(--primary);
             border: none;
-            color: #000;
-            font-size: 24px;
+            color: var(--bg-dark);
+            font-size: 20px;
             cursor: pointer;
-            box-shadow: 0 0 15px #0f0;
         }
-        #voiceToggle:active {
-            background: #f00;
-            box-shadow: 0 0 15px #f00;
+        #voiceToggle.active {
+            background: var(--danger);
+            animation: pulse 1s infinite;
         }
         #micIndicator {
             position: fixed;
             bottom: 20px;
             left: 20px;
-            width: 60px;
-            height: 60px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
-            background: #111;
-            border: 2px solid #0f0;
+            background: var(--bg-dark);
+            border: 2px solid var(--secondary);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 24px;
-            color: #0f0;
+            font-size: 20px;
         }
         #micIndicator.listening {
-            background: #0f0;
-            border-color: #0f0;
+            background: var(--primary);
+            border-color: var(--primary);
             animation: pulse 1s infinite;
         }
         @keyframes pulse {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.5; }
         }
-        #ai-report {
-            background: #111;
-            border: 1px dashed #0f0;
+        .alert {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--bg-dark);
+            border: 2px solid var(--danger);
             padding: 15px;
-            margin: 10px 0;
-            text-align: left;
-            font-size: 14px;
-            white-space: pre-wrap;
-            min-height: 100px;
-        }
-        .status {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: #111;
-            border-top: 1px solid #0f0;
-            padding: 8px;
-            font-size: 14px;
-        }
-        #settings {
+            font-size: 18px;
+            text-align: center;
+            z-index: 1002;
             display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.95);
-            padding: 20px;
-            z-index: 1000;
-            overflow-y: auto;
         }
-        #settings input, #settings select, #settings button {
-            width: 100%;
-            margin: 10px 0;
-            padding: 10px;
-            background: #111;
-            color: #0f0;
-            border: 1px solid #0f0;
-            font-family: 'Courier New', monospace;
-        }
-        #settings h3 {
-            color: #0f0;
-            margin-top: 0;
-        }
-        .error {
-            color: #f00 !important;
-        }
-        .success {
-            color: #0f0 !important;
+        .alert.active {
+            display: block;
         }
     </style>
 </head>
 <body>
-    <div id="container">
-        <h1 style="color: #0f0;">SUPRA LAB</h1>
-        <h2 style="color: #00ff00; font-size: 16px;">100% RÉEL - ZÉRO SIMULATION</h2>
+    <!-- ÉCRAN DE DÉMARRAGE -->
+    <div id="start-screen">
+        <div class="boot-text">SUPRA LAB v11</div>
+        <button id="btnStart">LANCER LE SYSTÈME</button>
+        <button id="btnSettings">PARAMÈTRES</button>
+    </div>
 
-        <div id="log"></div>
-
-        <div id="ai-report">[EN ATTENTE DE DONNÉES RÉELLES...]</div>
-
-        <div style="margin: 20px 0;">
-            <button id="btnStartIA">🎤 ACTIVER IA VOCALE</button>
-            <button id="testVoiceBtn">🔊 TESTER VOIX</button>
-            <button id="sendToGroqBtn">📤 ENVOYER À GROQ</button>
-            <button id="btnSettings">⚙️ PARAMÈTRES</button>
+    <!-- INTERFACE PRINCIPALE -->
+    <div id="main">
+        <div class="panel">
+            <div class="panel-header">TRANSCRIPTION & IA</div>
+            <div id="ai-report">[EN ATTENTE DE DONNÉES RÉELLES...]</div>
+            <div style="margin-top: 10px; display: flex; gap: 10px; justify-content: center;">
+                <button id="sendToGroqBtn">ENVOYER À GROQ</button>
+                <button id="readReportBtn">LIRE RAPPORT</button>
+            </div>
+        </div>
+        <div class="panel">
+            <div class="panel-header">LOG (100% RÉEL)</div>
+            <div id="log"></div>
         </div>
     </div>
 
-    <div id="settings">
-        <h3>⚙️ PARAMÈTRES (100% RÉEL)</h3>
-        <div>
-            <label style="color: #00ff00;">Clé API Groq:</label>
-            <input type="password" id="groqApiKey" placeholder="Ta clé API Groq (100% réel)">
-            <button id="testApiKeyBtn">🧪 Tester la clé</button>
-            <div id="apiTestResult"></div>
+    <!-- PAGE DE PARAMÈTRES -->
+    <div id="settings-page">
+        <button id="closeSettings" style="position: absolute; top: 10px; right: 10px; font-size: 24px; background: none; border: none; color: var(--primary); cursor: pointer;">✕</button>
+        <div style="text-align: center; margin-bottom: 20px; font-size: 20px; color: var(--primary);">PARAMÈTRES</div>
+        <div class="settings-section">
+            <div class="form-group">
+                <label for="groqApiKey">Clé API Groq:</label>
+                <input type="password" id="groqApiKey" placeholder="Votre clé API Groq">
+                <button id="testApiKeyBtn" style="margin-top: 10px;">Tester la clé</button>
+                <div id="apiTestResult" style="margin-top: 10px; font-size: 14px;"></div>
+            </div>
         </div>
-        <div>
-            <label style="color: #00ff00;"><input type="checkbox" id="voiceFeedback" checked> L'IA PARLE (réel)</label>
-        </div>
-        <div>
-            <label style="color: #00ff00;"><input type="checkbox" id="voiceAlerts" checked> ALERTES VOCALES (réel)</label>
+        <div class="settings-section">
+            <div class="form-group">
+                <label><input type="checkbox" id="voiceFeedback" checked> Réponses vocales IA</label>
+            </div>
+            <div class="form-group">
+                <label><input type="checkbox" id="voiceAlerts" checked> Alertes vocales</label>
+            </div>
+            <div class="form-group">
+                <label for="voiceLanguage">Langue:</label>
+                <select id="voiceLanguage">
+                    <option value="fr-FR">Français</option>
+                    <option value="en-US">Anglais</option>
+                </select>
+            </div>
         </div>
         <div style="text-align: center; margin-top: 20px;">
-            <button id="saveSettings">💾 Sauvegarder</button>
-            <button id="closeSettings">✕ Fermer</button>
+            <button id="saveSettings">Sauvegarder</button>
+            <button id="resetSettings">Réinitialiser</button>
         </div>
     </div>
 
-    <div class="status" id="status">En attente de données réelles...</div>
+    <!-- ALERTE -->
+    <div class="alert" id="criticalAlert">ALERTE: <span id="alert-message"></span></div>
 
+    <!-- BOUTONS VOIX -->
     <button id="voiceToggle" title="Activer/Désactiver la voix">🎤</button>
-    <div id="micIndicator" title="État du micro (réel)">🎤</div>
+    <div id="micIndicator" title="État du micro">🎤</div>
+
+    <!-- BARRE DE STATUS -->
+    <div class="status-bar">
+        <span id="status-text">En attente...</span>
+        <span>v11 - 100% RÉEL</span>
+    </div>
 
     <script>
-        // ========== VARIABLES GLOBALES (100% RÉELLES) ==========
-        let config = {
+        // ========== CONFIGURATION ==========
+        const DEFAULT_CONFIG = {
             groqApiKey: localStorage.getItem('groqApiKey') || '',
             voiceFeedback: true,
             voiceAlerts: true,
             voiceLanguage: 'fr-FR'
         };
+        let config = {...DEFAULT_CONFIG};
         let finalTranscript = '';
         let recognition = null;
         let isListening = false;
@@ -200,33 +313,34 @@
             setupUI();
             loadVoices();
             checkPermissions();
-
-            // Charger la clé API si elle existe
-            if (config.groqApiKey) {
-                document.getElementById('groqApiKey').value = config.groqApiKey;
-            }
         });
 
-        // ========== FONCTIONS DE BASE (100% RÉELLES) ==========
+        // ========== FONCTIONS DE BASE ==========
         function log(text, important = false) {
             const logDiv = document.getElementById('log');
             if (!logDiv) return;
             const line = document.createElement('div');
-            if (important) line.className = 'error';
-            line.innerHTML = `<span style="color: #00ff00;">[${new Date().toLocaleTimeString('fr-FR')}]</span> ${text}`;
+            line.className = 'log-line' + (important ? ' important' : '');
+            line.innerHTML = `<span style="color: var(--secondary);">[${new Date().toLocaleTimeString('fr-FR')}]</span> ${text}`;
             logDiv.appendChild(line);
             logDiv.scrollTop = logDiv.scrollHeight;
         }
 
         function updateStatus(txt) {
-            document.getElementById('status').textContent = txt;
+            document.getElementById('status-text').textContent = txt;
         }
 
         function showAlert(message) {
-            if (config.voiceAlerts && isVoiceEnabled) {
-                speakText(`Alerte: ${message}`);
+            const alertBox = document.getElementById('criticalAlert');
+            const alertMsg = document.getElementById('alert-message');
+            if (alertMsg) alertMsg.textContent = message;
+            if (alertBox) {
+                alertBox.classList.add('active');
+                if (config.voiceAlerts && isVoiceEnabled) {
+                    speakText(`Alerte: ${message}`);
+                }
+                setTimeout(() => alertBox.classList.remove('active'), 5000);
             }
-            log(`⚠️ ALERTE RÉELLE: ${message}`, true);
         }
 
         function loadVoices() {
@@ -264,9 +378,9 @@
                 utterance.onend = () => isSpeaking = false;
                 utterance.onerror = () => isSpeaking = false;
                 synthesis.speak(utterance);
-                log(`[VOIX RÉELLE] "${text}"`);
+                log(`[VOIX] "${text}"`);
             } catch (e) {
-                log(`[VOIX ERREUR RÉELLE] ${e.message}`, true);
+                log(`[VOIX ERREUR] ${e.message}`, true);
             }
         }
 
@@ -277,11 +391,11 @@
             }
         }
 
-        // ========== VÉRIFIE LES PERMISSIONS (100% RÉELLES) ==========
+        // ========== VÉRIFIE LES PERMISSIONS ==========
         function checkPermissions() {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             if (!SpeechRecognition) {
-                log("[ERREUR RÉELLE] Reconnaissance vocale non supportée ! Utilisez Chrome.", true);
+                log("[ERREUR] Reconnaissance vocale non supportée ! Utilisez Chrome.", true);
                 document.getElementById('micIndicator').classList.add('error');
                 return false;
             }
@@ -292,37 +406,36 @@
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 stream.getTracks().forEach(track => track.stop());
-                log("[PERMISSION RÉELLE] ✅ Micro autorisé !", true);
                 return true;
             } catch (err) {
-                log(`[PERMISSION ERREUR RÉELLE] ❌ ${err.message}`, true);
+                log(`[ERREUR] ${err.message}`, true);
                 if (err.name === 'NotAllowedError') {
-                    showAlert("Activez la permission MICROPHONE dans les paramètres (100% réel) !");
+                    showAlert("Activez la permission MICROPHONE dans les paramètres !");
                     document.getElementById('micIndicator').classList.add('error');
                 }
                 return false;
             }
         }
 
-        // ========== TEST DE CLÉ API GROQ (100% RÉEL) ==========
+        // ========== TEST DE CLÉ API GROQ ==========
         async function testGroqApiKey() {
             const apiKey = document.getElementById('groqApiKey').value.trim();
             if (!apiKey) {
-                log("[GROQ RÉEL] ⚠️ Aucune clé API à tester.", true);
+                log("[GROQ] Aucune clé API à tester.", true);
                 document.getElementById('apiTestResult').textContent = "⚠️ Aucune clé API saisie";
-                document.getElementById('apiTestResult').className = 'error';
+                document.getElementById('apiTestResult').style.color = "#ffaa00";
                 return;
             }
 
-            log("[GROQ RÉEL] 🧪 Test de la clé API en cours...", true);
-            updateStatus("Test API Groq (100% réel)...");
+            log("[GROQ] Test de la clé API en cours...", true);
+            updateStatus("Test API Groq...");
 
             try {
                 const testPayload = {
                     model: "mixtral-8x7b-32768",
                     messages: [{
                         role: "user",
-                        content: "Réponds simplement 'OK' si tu reçois ce message (100% réel)."
+                        content: "Réponds simplement 'OK' si tu reçois ce message."
                     }],
                     temperature: 0.3,
                     max_tokens: 10
@@ -339,30 +452,30 @@
 
                 if (!response.ok) {
                     const errorData = await response.json().catch(() => ({}));
-                    throw new Error(`Erreur réelle ${response.status}: ${errorData.message || response.statusText}`);
+                    throw new Error(`Erreur ${response.status}: ${errorData.message || response.statusText}`);
                 }
 
                 const data = await response.json();
                 const result = data.choices[0].message.content.trim();
 
                 if (result === "OK" || result.includes("OK")) {
-                    log("[GROQ RÉEL] ✅ Clé API VALIDE ! (100% réel)", true);
-                    document.getElementById('apiTestResult').textContent = "✅ Clé API valide (100% réel)";
-                    document.getElementById('apiTestResult').className = 'success';
+                    log("[GROQ] ✅ Clé API VALIDE !", true);
+                    document.getElementById('apiTestResult').textContent = "✅ Clé API valide";
+                    document.getElementById('apiTestResult').style.color = "#00ff41";
                     config.groqApiKey = apiKey;
                     localStorage.setItem('groqApiKey', apiKey);
-                    updateStatus("Prêt (100% réel)");
+                    updateStatus("Prêt");
                 } else {
-                    log("[GROQ RÉEL] ⚠️ Réponse inattendue: " + result, true);
-                    document.getElementById('apiTestResult').textContent = "⚠️ Réponse inattendue (100% réel)";
-                    document.getElementById('apiTestResult').className = 'error';
+                    log("[GROQ] Réponse inattendue: " + result, true);
+                    document.getElementById('apiTestResult').textContent = "⚠️ Réponse inattendue";
+                    document.getElementById('apiTestResult').style.color = "#ffaa00";
                 }
 
             } catch (error) {
-                log(`[GROQ ERREUR RÉELLE] ❌ ${error.message}`, true);
-                document.getElementById('apiTestResult').textContent = `❌ Erreur réelle: ${error.message}`;
-                document.getElementById('apiTestResult').className = 'error';
-                updateStatus("Erreur API Groq (100% réel)");
+                log(`[GROQ ERREUR] ${error.message}`, true);
+                document.getElementById('apiTestResult').textContent = `❌ Erreur: ${error.message}`;
+                document.getElementById('apiTestResult').style.color = "#ff0044";
+                updateStatus("Erreur API Groq");
             }
         }
 
@@ -371,8 +484,8 @@
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
             if (!SpeechRecognition) {
-                log("[ERREUR RÉELLE] ❌ Reconnaissance vocale non supportée ! Utilisez Chrome (100% réel).", true);
-                showAlert("Utilisez Chrome et activez le micro (100% réel).");
+                log("[ERREUR] Reconnaissance vocale non supportée ! Utilisez Chrome.", true);
+                showAlert("Utilisez Chrome et activez le micro.");
                 document.getElementById('micIndicator').classList.add('error');
                 return;
             }
@@ -384,9 +497,9 @@
                 }
 
                 recognition = new SpeechRecognition();
-                recognition.continuous = true; // Écoute en continu (100% réel)
-                recognition.interimResults = true; // Résultats intermédiaires (100% réel)
-                recognition.lang = 'fr-FR'; // Français (100% réel)
+                recognition.continuous = true;
+                recognition.interimResults = true;
+                recognition.lang = 'fr-FR';
                 recognition.maxAlternatives = 1;
 
                 finalTranscript = '';
@@ -405,38 +518,38 @@
                     }
 
                     if (interimTranscript) {
-                        log(`[IA RÉELLE] 💬 "${interimTranscript}"`);
+                        log(`[IA] "${interimTranscript}"`);
                     }
 
                     if (finalTranscriptPart) {
                         finalTranscript = finalTranscriptPart;
-                        log(`[IA RÉELLE] ✅ "${finalTranscript}"`);
+                        log(`[IA] ✅ "${finalTranscript}"`);
                         processFinalTranscript(finalTranscript);
                     }
                 };
 
                 recognition.onerror = (event) => {
-                    log(`[IA ERREUR RÉELLE] ❌ ${event.error}`, true);
+                    log(`[IA ERREUR] ${event.error}`, true);
                     if (event.error === 'not-allowed') {
                         document.getElementById('micIndicator').classList.add('error');
-                        showAlert("Activez la permission MICROPHONE (100% réel) !");
+                        showAlert("Activez la permission MICROPHONE !");
                     }
                     if (isVoiceEnabled) setTimeout(initSpeech, 1000);
                 };
 
                 recognition.onstart = () => {
                     isListening = true;
-                    log("[IA RÉELLE] 🎤 Écoute ACTIVE ! Parlez ou claquez des doigts (100% réel).", true);
-                    updateStatus("IA: Écoute en cours (100% réel)...");
+                    log("[IA] Écoute active. Parlez !", true);
+                    updateStatus("IA: Écoute en cours...");
                     document.getElementById('micIndicator').classList.add('listening');
-                    document.getElementById('btnStartIA').textContent = 'ARRÊTER IA';
+                    document.getElementById('voiceToggle').classList.add('active');
                 };
 
                 recognition.onend = () => {
                     isListening = false;
-                    updateStatus("IA: En attente (100% réel)");
+                    updateStatus("IA: En attente");
                     document.getElementById('micIndicator').classList.remove('listening');
-                    document.getElementById('btnStartIA').textContent = 'ACTIVER IA';
+                    document.getElementById('voiceToggle').classList.remove('active');
 
                     if (isVoiceEnabled) {
                         setTimeout(() => {
@@ -447,11 +560,10 @@
 
                 recognition.start();
                 isVoiceEnabled = true;
-                document.getElementById('micIndicator').classList.remove('error');
-                log("[IA RÉELLE] ✅ Transmission vocale ACTIVE (100% réel).", true);
+                log("[IA] Transmission vocale active.", true);
 
             } catch (e) {
-                log(`[IA ERREUR CRITIQUE RÉELLE] ❌ ${e.message}`, true);
+                log(`[IA ERREUR] ${e.message}`, true);
                 document.getElementById('micIndicator').classList.add('error');
                 setTimeout(initSpeech, 2000);
             }
@@ -463,68 +575,66 @@
                 isVoiceEnabled = false;
                 isListening = false;
                 document.getElementById('micIndicator').classList.remove('listening');
-                document.getElementById('btnStartIA').textContent = 'ACTIVER IA';
-                updateStatus("IA: Désactivée (100% réel)");
-                log("[IA RÉELLE] ❌ Transmission arrêtée (100% réel).");
+                document.getElementById('voiceToggle').classList.remove('active');
+                updateStatus("IA: Désactivée");
+                log("[IA] Transmission arrêtée.");
             }
         }
 
         function processFinalTranscript(transcript) {
             if (!transcript) return;
 
-            log(`[IA RÉELLE] 📝 Texte reçu: "${transcript}"`);
-
-            // Génère un rapport 100% réel basé sur la transcription
+            // Génère un rapport basé sur la transcription réelle
             const report = `
 // ======================
 // RAPPORT RÉEL - SUPRA LAB
 // Généré le: ${new Date().toLocaleString('fr-FR')}
 // ======================
-[TRANSMISSION RÉELLE]
+[TRANSMISSION]
 > "${transcript}"
 
-[ANOMALIES RÉELLES]
-> ${['drone', 'avion', 'esprit', 'EVP', 'fantôme', 'SOS', 'alerte', 'clic', 'son', 'urgence'].some(k => transcript.toLowerCase().includes(k)) ? "🎯 Mot-clé détecté (100% réel)" : "Aucun mot-clé (100% réel)"}
+[ANOMALIES]
+> ${['drone', 'avion', 'esprit', 'EVP', 'fantôme', 'SOS', 'alerte', 'clic', 'son', 'urgence'].some(k => transcript.toLowerCase().includes(k)) ? "Mot-clé détecté" : "Aucun mot-clé"}
 
-[ANALYSE RÉELLE]
+[ANALYSE]
 > ${['drone', 'avion', 'esprit', 'EVP', 'fantôme', 'SOS', 'alerte', 'clic', 'son', 'urgence'].some(k => transcript.toLowerCase().includes(k)) ?
-        "⚡ RECOMMANDATION RÉELLE: Investiguer !" : "Aucune menace détectée (100% réel)."}
+        "RECOMMANDATION: Investiguer !" : "Aucune menace détectée."}
 // ======================
             `;
 
             document.getElementById('ai-report').textContent = report;
 
-            // Lit le rapport à voix haute (100% réel)
+            // Lit le rapport à voix haute
             if (config.voiceFeedback && isVoiceEnabled) {
-                speakText(`Analyse réelle terminée pour: ${transcript}`);
+                speakText(`Analyse terminée pour: ${transcript}`);
             }
 
-            // Envoie à Groq si clé API valide (100% réel)
+            // Envoie à Groq si clé API valide
             if (config.groqApiKey) {
                 sendToGroq(transcript, report);
             } else {
-                log("[IA RÉELLE] ⚠️ Clé API Groq manquante. Mode local (100% réel).", true);
+                log("[IA] Clé API Groq manquante. Mode local.", true);
             }
         }
 
-        // ========== ENVOI À GROQ (100% RÉEL) ==========
+        // ========== ENVOI À GROQ ==========
         async function sendToGroq(transcript, localReport) {
             try {
-                log("[GROQ RÉEL] 📤 Envoi à Groq API (100% réel)...", true);
-                updateStatus("Envoi à Groq (100% réel)...");
+                log("[GROQ] Envoi à Groq API...", true);
+                updateStatus("Envoi à Groq...");
 
                 const payload = {
                     model: "mixtral-8x7b-32768",
                     messages: [{
                         role: "user",
                         content: `
-                            Analyse cette transmission RÉELLE en français:
+                            Analyse cette transmission en français:
                             "${transcript}"
 
-                            Instructions RÉELLES:
+                            Instructions:
                             1. Classifie la menace (Faible/Moyenne/Élevée/Critique)
-                            2. Donne une analyse RÉELLE en 2-3 phrases max.
-                            3. Recommande une action RÉELLE si nécessaire.
+                            2. Donne une analyse en 2-3 phrases max.
+                            3. Recommande une action si nécessaire.
                         `
                     }],
                     temperature: 0.3,
@@ -548,84 +658,124 @@
 
                 if (!response.ok) {
                     const errorData = await response.json().catch(() => ({}));
-                    throw new Error(`Erreur réelle ${response.status}: ${errorData.message || response.statusText}`);
+                    throw new Error(`Erreur ${response.status}: ${errorData.message || response.statusText}`);
                 }
 
                 const data = await response.json();
                 const groqResponse = data.choices[0].message.content;
 
                 document.getElementById('ai-report').textContent =
-                    localReport + `\n\n// 🤖 RÉPONSE GROQ RÉELLE\n${groqResponse}\n// ======================`;
+                    localReport + `\n\n// RÉPONSE GROQ\n${groqResponse}\n// ======================`;
 
                 if (config.voiceFeedback && isVoiceEnabled) {
                     const firstLine = groqResponse.split('\n')[0].trim();
-                    speakText(`Groq répond (100% réel): ${firstLine}`);
+                    speakText(`Groq répond: ${firstLine}`);
                 }
 
-                log("[GROQ RÉEL] ✅ Réponse reçue (100% réel).", true);
-                updateStatus("Prêt (100% réel)");
+                log("[GROQ] Réponse reçue.", true);
+                updateStatus("Prêt");
 
             } catch (error) {
-                log(`[GROQ ERREUR RÉELLE] ❌ ${error.message}`, true);
-                updateStatus("Erreur API Groq (100% réel)");
+                log(`[GROQ ERREUR] ${error.message}`, true);
+                updateStatus("Erreur API Groq");
                 document.getElementById('ai-report').textContent =
-                    localReport + `\n\n// ❌ ERREUR GROQ RÉELLE: ${error.message}\n// ======================`;
+                    localReport + `\n\n// ERREUR GROQ: ${error.message}\n// ======================`;
             }
         }
 
-        // ========== GESTION DE L'INTERFACE (100% RÉELLE) ==========
+        // ========== GESTION DE L'INTERFACE ==========
         function setupUI() {
+            // Bouton de démarrage
+            document.getElementById('btnStart')?.addEventListener('click', async () => {
+                const startScreen = document.getElementById('start-screen');
+                const main = document.getElementById('main');
+
+                if (!startScreen || !main) return;
+
+                const microAllowed = await checkMicrophonePermission();
+                if (!microAllowed) {
+                    log("[ERREUR] Permission micro refusée !", true);
+                    return;
+                }
+
+                startScreen.style.display = 'none';
+                main.style.display = 'block';
+                log("=== SUPRA LAB v11 LANCÉ (100% RÉEL) ===");
+                updateStatus("Système prêt");
+            });
+
             // Bouton paramètres
             document.getElementById('btnSettings')?.addEventListener('click', () => {
-                document.getElementById('settings').style.display = 'block';
+                document.getElementById('settings-page').classList.add('active');
             });
 
             document.getElementById('closeSettings')?.addEventListener('click', () => {
-                document.getElementById('settings').style.display = 'none';
+                document.getElementById('settings-page').classList.remove('active');
             });
 
             // Bouton IA vocale
-            document.getElementById('btnStartIA')?.addEventListener('click', () => {
-                isVoiceEnabled ? stopSpeechRecognition() : initSpeech();
+            document.getElementById('voiceToggle')?.addEventListener('click', () => {
+                isVoiceEnabled = !isVoiceEnabled;
+                if (isVoiceEnabled && !isListening) {
+                    initSpeech();
+                } else if (!isVoiceEnabled) {
+                    stopSpeechRecognition();
+                }
             });
 
             // Bouton tester voix
             document.getElementById('testVoiceBtn')?.addEventListener('click', () => {
-                speakText("Test voix RÉEL: si vous m'entendez, la synthèse vocale fonctionne (100% réel).");
+                speakText("Test voix: si vous m'entendez, la synthèse vocale fonctionne.");
             });
-
-            // Bouton tester clé API
-            document.getElementById('testApiKeyBtn')?.addEventListener('click', testGroqApiKey);
 
             // Bouton envoyer à Groq
             document.getElementById('sendToGroqBtn')?.addEventListener('click', () => {
                 if (!config.groqApiKey) {
-                    log("[GROQ RÉEL] ⚠️ Clé API manquante (100% réel).", true);
+                    log("[GROQ] Clé API manquante.", true);
                     return;
                 }
                 if (!finalTranscript) {
-                    log("[ERREUR RÉELLE] ❌ Aucune transmission disponible (100% réel).", true);
+                    log("[ERREUR] Aucune transmission disponible.", true);
                     return;
                 }
                 processFinalTranscript(finalTranscript);
             });
+
+            // Bouton lire rapport
+            document.getElementById('readReportBtn')?.addEventListener('click', () => {
+                const report = document.getElementById('ai-report').textContent;
+                if (report && report !== "[EN ATTENTE DE DONNÉES RÉELLES...]") {
+                    speakText(report);
+                } else {
+                    log("[VOIX] Aucun rapport à lire.", true);
+                }
+            });
+
+            // Bouton tester clé API
+            document.getElementById('testApiKeyBtn')?.addEventListener('click', testGroqApiKey);
 
             // Bouton sauvegarder
             document.getElementById('saveSettings')?.addEventListener('click', () => {
                 config.groqApiKey = document.getElementById('groqApiKey').value;
                 config.voiceFeedback = document.getElementById('voiceFeedback').checked;
                 config.voiceAlerts = document.getElementById('voiceAlerts').checked;
+                config.voiceLanguage = document.getElementById('voiceLanguage').value;
                 localStorage.setItem('groqApiKey', config.groqApiKey);
-                log("[PARAM RÉEL] ✅ Configuration sauvegardée (100% réel).");
-                document.getElementById('settings').style.display = 'none';
+                log("[PARAM] Configuration sauvegardée.");
+                document.getElementById('settings-page').classList.remove('active');
             });
 
-            // Bouton voiceToggle
-            document.getElementById('voiceToggle')?.addEventListener('click', () => {
-                isVoiceEnabled = !isVoiceEnabled;
-                if (isVoiceEnabled && !isListening) initSpeech();
-                else if (!isVoiceEnabled) stopSpeechRecognition();
-                document.getElementById('voiceToggle').classList.toggle('active');
+            // Bouton réinitialiser
+            document.getElementById('resetSettings')?.addEventListener('click', () => {
+                if (confirm("Réinitialiser tous les paramètres ?")) {
+                    config = {...DEFAULT_CONFIG};
+                    localStorage.removeItem('groqApiKey');
+                    document.getElementById('groqApiKey').value = '';
+                    document.getElementById('voiceFeedback').checked = true;
+                    document.getElementById('voiceAlerts').checked = true;
+                    document.getElementById('voiceLanguage').value = 'fr-FR';
+                    log("[PARAM] Réinitialisation effectuée.");
+                }
             });
         }
 
