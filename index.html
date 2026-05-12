@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>🛡️ SUPRA LAB v11 - Free Mobile Optimisé</title>
+    <title>🛡️ SUPRA LAB v11 - Free Mobile FIX</title>
     <style>
         :root {
             --primary: #00ff41;
@@ -174,12 +174,6 @@
             font-size: 12px;
             border-radius: 5px;
         }
-        #connectionStatus.connected {
-            color: var(--primary);
-        }
-        #connectionStatus.disconnected {
-            color: var(--danger);
-        }
     </style>
 </head>
 <body>
@@ -187,17 +181,17 @@
     <div id="start-screen">
         <div class="boot-text">
             🛡️ SUPRA LAB v11
-            <div style="color: var(--warning);">Optimisé Free Mobile</div>
+            <div style="color: var(--warning);">FIX Free Mobile</div>
         </div>
         <button id="btnStart">🚀 LANCER LE SYSTÈME</button>
         <button id="btnSettings">⚙️ PARAMÈTRES</button>
-        <div id="connectionStatus" class="disconnected">⚠️ Vérification connexion...</div>
+        <div id="connectionStatus">⚠️ Vérification...</div>
     </div>
 
     <!-- INTERFACE PRINCIPALE -->
     <div id="main">
         <div class="panel">
-            <div class="panel-header">🤖 ANALYSE IA (Free Mobile)</div>
+            <div class="panel-header">🤖 ANALYSE IA</div>
             <div id="ai-report">[EN ATTENTE...]</div>
             <div style="margin-top: 10px; text-align: center;">
                 <button id="sendToGroqBtn">📤 ENVOYER À GROQ</button>
@@ -238,14 +232,6 @@
                     <option value="en-US">Anglais</option>
                 </select>
             </div>
-            <div style="margin-bottom: 10px;">
-                <label for="proxyMode" style="display: block; margin-bottom: 5px;">Mode Free Mobile:</label>
-                <select id="proxyMode" style="width: 100%; padding: 8px; background: #000; color: var(--primary); border: 1px solid var(--primary);">
-                    <option value="auto">Auto (recommandé)</option>
-                    <option value="direct">Direct (sans proxy)</option>
-                    <option value="proxy">Proxy forcé</option>
-                </select>
-            </div>
         </div>
         <div style="text-align: center; margin-top: 20px;">
             <button id="saveSettings" style="padding: 10px 20px; margin: 0 10px;">💾 Sauvegarder</button>
@@ -260,33 +246,29 @@
     <!-- BARRE DE STATUS -->
     <div class="status-bar">
         <span id="status-text">En attente...</span>
-        <span>v11 - Free Mobile</span>
+        <span>v11 - FIX Free Mobile</span>
     </div>
 
     <!-- ALERTE -->
     <div class="alert" id="criticalAlert">⚠️ ALERTE: <span id="alert-message"></span></div>
 
     <script>
-        // ========== CONFIGURATION SPÉCIFIQUE FREE MOBILE ==========
+        // ========== CONFIGURATION ==========
         let config = {
             groqApiKey: localStorage.getItem('groqApiKey') || '',
             voiceFeedback: true,
             voiceAlerts: true,
             voiceLanguage: 'fr-FR',
-            proxyMode: 'auto', // auto, direct, proxy
-            currentApiUrl: 'https://api.groq.com/v1/chat/completions',
             useProxy: false,
-            lastProxyIndex: 0
+            currentApiUrl: 'https://api.groq.com/v1/chat/completions'
         };
 
-        // Liste des proxies CORS optimisés pour Free Mobile
+        // Liste des proxies CORS (définis comme tableau global)
         const PROXY_LIST = [
-            '', // Direct (sans proxy)
+            '', // Pas de proxy (direct)
             'https://cors-anywhere.herokuapp.com/',
             'https://thingproxy.freeboard.io/fetch/',
-            'https://api.allorigins.win/get?url=',
-            'https://corsproxy.io/?',
-            'https://proxy.cors.sh/'
+            'https://api.allorigins.win/get?url='
         ];
 
         let finalTranscript = '';
@@ -295,7 +277,7 @@
         let isVoiceEnabled = false;
         let synthesis = window.speechSynthesis;
         let isSpeaking = false;
-        let isOnline = false;
+        let proxyIndex = 0;
 
         // ========== INITIALISATION ==========
         document.addEventListener('DOMContentLoaded', async () => {
@@ -306,12 +288,9 @@
                     const parsedConfig = JSON.parse(savedConfig);
                     config = { ...config, ...parsedConfig };
                 } catch (e) {
-                    console.error("Erreur de chargement de la config:", e);
+                    console.error("Erreur de chargement:", e);
                 }
             }
-
-            // Applique le mode Free Mobile
-            document.getElementById('proxyMode').value = config.proxyMode;
 
             // Vérifie la connexion
             await checkInternetConnection();
@@ -322,12 +301,12 @@
             if (config.groqApiKey) document.getElementById('groqApiKey').value = config.groqApiKey;
         });
 
-        // ========== VÉRIFIE LA CONNEXION INTERNET (SPÉCIAL FREE MOBILE) ==========
+        // ========== VÉRIFIE LA CONNEXION INTERNET ==========
         async function checkInternetConnection() {
             const connectionStatus = document.getElementById('connectionStatus');
             try {
-                // Teste la connexion directe à Groq
-                const testResponse = await fetch(config.currentApiUrl, {
+                // Teste la connexion directe
+                const testResponse = await fetch('https://api.groq.com/v1/models', {
                     method: 'GET',
                     headers: {
                         'Authorization': `Bearer ${config.groqApiKey || 'fake-key'}`
@@ -335,113 +314,56 @@
                 });
 
                 if (testResponse.ok) {
-                    isOnline = true;
                     if (connectionStatus) {
                         connectionStatus.textContent = "✅ Connexion directe OK";
-                        connectionStatus.className = "connected";
+                        connectionStatus.style.color = "#00ff41";
                     }
-                    config.useProxy = false;
                     return true;
                 }
             } catch (error) {
-                log(`[CONNEXION] Erreur directe: ${error.message}`, true);
-                isOnline = false;
                 if (connectionStatus) {
-                    connectionStatus.textContent = "⚠️ Mode Free Mobile détecté";
-                    connectionStatus.className = "disconnected";
+                    connectionStatus.textContent = "⚠️ Proxy nécessaire";
+                    connectionStatus.style.color = "#ffaa00";
                 }
+                // Active le proxy
+                config.useProxy = true;
+                return await tryNextProxy();
+            }
+        }
 
-                // Active le mode proxy pour Free Mobile
-                if (config.proxyMode === 'auto' || config.proxyMode === 'proxy') {
-                    config.useProxy = true;
-                    await selectBestProxyForFreeMobile();
-                }
+        // ========== ESSAIE LE PROCHAIN PROXY ==========
+        async function tryNextProxy() {
+            if (proxyIndex >= PROXY_LIST.length) {
+                proxyIndex = 0;
+                log("[PROXY] Aucun proxy fonctionnel trouvé", true);
                 return false;
             }
-        }
 
-        // ========== SÉLECTION DU MEILLEUR PROXY POUR FREE MOBILE ==========
-        async function selectBestProxyForFreeMobile() {
-            log("[PROXY] Recherche du meilleur proxy pour Free Mobile...", true);
-            updateStatus("Recherche proxy Free Mobile...");
+            const proxy = PROXY_LIST[proxyIndex];
+            proxyIndex++;
 
-            // On commence par le proxy le plus fiable pour Free Mobile
-            const freeMobileProxies = [
-                'https://cors-anywhere.herokuapp.com/',
-                'https://thingproxy.freeboard.io/fetch/',
-                'https://api.allorigins.win/get?url='
-            ];
-
-            for (const proxy of freeMobileProxies) {
-                try {
-                    const testUrl = proxy + 'https://api.groq.com/v1/models';
-                    const response = await fetch(testUrl, {
-                        method: 'GET',
-                        headers: {
-                            'Authorization': `Bearer ${config.groqApiKey || 'fake-key'}`
-                        }
-                    });
-
-                    if (response.ok) {
-                        config.currentApiUrl = proxy + 'https://api.groq.com/v1/chat/completions';
-                        config.useProxy = true;
-                        log(`[PROXY] ✅ Proxy Free Mobile: ${proxy}`, true);
-                        updateStatus("Proxy configuré pour Free Mobile");
-                        if (document.getElementById('connectionStatus')) {
-                            document.getElementById('connectionStatus').textContent = `✅ Proxy: ${proxy}`;
-                            document.getElementById('connectionStatus').className = "connected";
-                        }
-                        return;
+            try {
+                const testUrl = proxy + 'https://api.groq.com/v1/models';
+                const response = await fetch(testUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${config.groqApiKey || 'fake-key'}`
                     }
-                } catch (error) {
-                    log(`[PROXY] ❌ Échec avec ${proxy}: ${error.message}`, true);
-                }
-            }
+                });
 
-            // Si aucun proxy Free Mobile ne fonctionne, essaye la liste complète
-            log("[PROXY] Essai de la liste complète de proxies...", true);
-            await selectBestProxy();
-        }
-
-        // ========== SÉLECTION DU MEILLEUR PROXY (GÉNÉRIQUE) ==========
-        async function selectBestProxy() {
-            log("[PROXY] Recherche du meilleur proxy...", true);
-            updateStatus("Recherche proxy...");
-
-            for (let i = 0; i < PROXY_LIST.length; i++) {
-                try {
-                    const proxy = PROXY_LIST[i];
-                    const testUrl = proxy + 'https://api.groq.com/v1/models';
-
-                    const response = await fetch(testUrl, {
-                        method: 'GET',
-                        headers: {
-                            'Authorization': `Bearer ${config.groqApiKey || 'fake-key'}`
-                        }
-                    });
-
-                    if (response.ok) {
-                        config.currentApiUrl = proxy + 'https://api.groq.com/v1/chat/completions';
-                        config.useProxy = proxy !== '';
-                        config.lastProxyIndex = i;
-                        log(`[PROXY] ✅ Proxy trouvé: ${proxy || 'Aucun (direct)'}`, true);
-                        updateStatus("Proxy configuré");
-                        if (document.getElementById('connectionStatus')) {
-                            document.getElementById('connectionStatus').textContent = `✅ Proxy: ${proxy || 'Direct'}`;
-                            document.getElementById('connectionStatus').className = "connected";
-                        }
-                        return;
+                if (response.ok) {
+                    config.currentApiUrl = proxy + 'https://api.groq.com/v1/chat/completions';
+                    config.useProxy = proxy !== '';
+                    log(`[PROXY] ✅ Proxy trouvé: ${proxy || 'Aucun (direct)'}`, true);
+                    if (document.getElementById('connectionStatus')) {
+                        document.getElementById('connectionStatus').textContent = `✅ Proxy: ${proxy || 'Direct'}`;
+                        document.getElementById('connectionStatus').style.color = "#00ff41";
                     }
-                } catch (error) {
-                    log(`[PROXY] ❌ Échec avec ${proxy || 'direct'}: ${error.message}`, true);
+                    return true;
                 }
-            }
-
-            log("[PROXY] ❌ Aucun proxy fonctionnel trouvé. Mode hors ligne.", true);
-            updateStatus("Mode hors ligne");
-            if (document.getElementById('connectionStatus')) {
-                document.getElementById('connectionStatus').textContent = "❌ Aucun proxy fonctionnel";
-                document.getElementById('connectionStatus').className = "disconnected";
+            } catch (error) {
+                log(`[PROXY] ❌ Échec avec ${proxy || 'direct'}: ${error.message}`, true);
+                return tryNextProxy();
             }
         }
 
@@ -451,7 +373,7 @@
             if (!logDiv) return;
             const line = document.createElement('div');
             line.className = 'log-line' + (important ? ' important' : '');
-            line.innerHTML = `<span style="color: var(--secondary);">[${new Date().toLocaleTimeString('fr-FR')}]</span> ${text}`;
+            line.innerHTML = `<span style="color: #00ff00;">[${new Date().toLocaleTimeString('fr-FR')}]</span> ${text}`;
             logDiv.appendChild(line);
             logDiv.scrollTop = logDiv.scrollHeight;
         }
@@ -540,7 +462,7 @@
             }
         }
 
-        // ========== TEST DE CLÉ API GROQ (SPÉCIAL FREE MOBILE) ==========
+        // ========== TEST DE CLÉ API GROQ ==========
         async function testGroqApiKey() {
             const apiKey = document.getElementById('groqApiKey').value.trim();
             if (!apiKey) {
@@ -557,7 +479,6 @@
             updateStatus("Test API Groq...");
 
             try {
-                // Utilise l'URL configurée (avec ou sans proxy)
                 const response = await fetch(config.currentApiUrl, {
                     method: 'POST',
                     headers: {
@@ -573,14 +494,15 @@
                 });
 
                 if (!response.ok) {
-                    // Si erreur 404 ou CORS, essaye avec un proxy
-                    if (response.status === 404 || response.status === 0) {
-                        log("[GROQ] Erreur 404/CORS détectée. Activation du mode Free Mobile...", true);
-                        config.useProxy = true;
-                        config.proxyMode = 'proxy';
-                        await selectBestProxyForFreeMobile();
-                        // Reteste avec le nouveau proxy
-                        return testGroqApiKey();
+                    // Si erreur, essaye avec un proxy
+                    if (response.status === 0 || response.status === 404) {
+                        log("[GROQ] Erreur détectée. Tentative avec proxy...", true);
+                        proxyIndex = 0;
+                        const proxyFound = await tryNextProxy();
+                        if (!proxyFound) {
+                            throw new Error("Aucun proxy fonctionnel");
+                        }
+                        return testGroqApiKey(); // Reteste avec le nouveau proxy
                     }
                     throw new Error(`Erreur ${response.status}`);
                 }
@@ -602,13 +524,6 @@
                 document.getElementById('apiTestResult').textContent = `❌ Erreur: ${error.message}`;
                 document.getElementById('apiTestResult').style.color = "#ff0044";
                 updateStatus("Erreur API Groq");
-
-                // Si erreur de réseau ou CORS, active le proxy
-                if (error.message.includes("Failed to fetch") || error.message.includes("NetworkError")) {
-                    config.useProxy = true;
-                    config.proxyMode = 'proxy';
-                    await selectBestProxyForFreeMobile();
-                }
             }
         }
 
@@ -705,7 +620,7 @@
 
             const report = `
 // ======================
-// RAPPORT RÉEL (Free Mobile)
+// RAPPORT RÉEL
 // Généré le: ${new Date().toLocaleString('fr-FR')}
 // ======================
 [TRANSMISSION]
@@ -717,7 +632,7 @@
 [ANALYSE]
 > ${['drone','avion','esprit','EVP','fantôme','SOS','alerte','clic','son','urgence'].some(k => transcript.toLowerCase().includes(k)) ? "RECOMMANDATION: Investiguer !" : "Aucune menace détectée."}
 
-// Mode: ${config.proxyMode === 'proxy' ? 'Proxy (Free Mobile)' : 'Direct'}
+// Mode: ${config.useProxy ? 'Proxy' : 'Direct'}
 // ======================
             `;
 
@@ -727,7 +642,7 @@
             else log("[IA] Clé API Groq manquante. Mode local.", true);
         }
 
-        // ========== ENVOI À GROQ (AVEC GESTION FREE MOBILE) ==========
+        // ========== ENVOI À GROQ ==========
         async function sendToGroq(transcript, localReport) {
             if (!config.groqApiKey) {
                 log("[GROQ] Clé API manquante.", true);
@@ -756,12 +671,15 @@
                 });
 
                 if (!response.ok) {
-                    // Si erreur 404 ou CORS, réessaye avec un autre proxy
-                    if (response.status === 404 || response.status === 0) {
-                        log("[GROQ] Erreur 404/CORS détectée. Changement de proxy...", true);
-                        config.lastProxyIndex = (config.lastProxyIndex + 1) % PROXY_LIST.length;
-                        config.currentApiUrl = PROXY_LIST[config.lastProxyIndex] + 'https://api.groq.com/v1/chat/completions';
-                        return sendToGroq(transcript, localReport); // Réessaye avec le nouveau proxy
+                    // Si erreur, essaye avec un autre proxy
+                    if (response.status === 0 || response.status === 404) {
+                        log("[GROQ] Erreur détectée. Changement de proxy...", true);
+                        proxyIndex = 0;
+                        const proxyFound = await tryNextProxy();
+                        if (!proxyFound) {
+                            throw new Error("Aucun proxy fonctionnel");
+                        }
+                        return sendToGroq(transcript, localReport);
                     }
                     throw new Error(`Erreur ${response.status}`);
                 }
@@ -779,13 +697,6 @@
                 log(`[GROQ ERREUR] ${error.message}`, true);
                 updateStatus("Erreur API Groq");
                 document.getElementById('ai-report').textContent = localReport + `\n\n// ERREUR GROQ: ${error.message}\n// ======================`;
-
-                // Si erreur de réseau ou CORS, change de proxy
-                if (error.message.includes("Failed to fetch") || error.message.includes("NetworkError")) {
-                    config.lastProxyIndex = (config.lastProxyIndex + 1) % PROXY_LIST.length;
-                    config.currentApiUrl = PROXY_LIST[config.lastProxyIndex] + 'https://api.groq.com/v1/chat/completions';
-                    log(`[PROXY] Changement pour: ${PROXY_LIST[config.lastProxyIndex] || 'direct'}`, true);
-                }
             }
         }
 
@@ -802,7 +713,7 @@
 
                 startScreen.style.display = 'none';
                 main.style.display = 'block';
-                log("=== SUPRA LAB v11 LANCÉ (Free Mobile) ===");
+                log("=== SUPRA LAB v11 LANCÉ (FIX Free Mobile) ===");
                 updateStatus("Système prêt");
             });
 
@@ -837,16 +748,6 @@
                 config.voiceFeedback = document.getElementById('voiceFeedback').checked;
                 config.voiceAlerts = document.getElementById('voiceAlerts').checked;
                 config.voiceLanguage = document.getElementById('voiceLanguage').value;
-                config.proxyMode = document.getElementById('proxyMode').value;
-
-                // Si mode auto ou proxy, active le proxy
-                if (config.proxyMode === 'auto' || config.proxyMode === 'proxy') {
-                    config.useProxy = true;
-                    selectBestProxyForFreeMobile();
-                } else {
-                    config.useProxy = false;
-                    config.currentApiUrl = 'https://api.groq.com/v1/chat/completions';
-                }
 
                 localStorage.setItem('supraLabConfig', JSON.stringify(config));
                 log("[PARAM] Configuration sauvegardée.");
@@ -880,18 +781,6 @@
                     speakText(report);
                 } else {
                     log("[VOIX] Aucun rapport à lire.", true);
-                }
-            });
-
-            // Mode proxy
-            document.getElementById('proxyMode')?.addEventListener('change', function() {
-                config.proxyMode = this.value;
-                if (config.proxyMode === 'auto' || config.proxyMode === 'proxy') {
-                    config.useProxy = true;
-                    selectBestProxyForFreeMobile();
-                } else {
-                    config.useProxy = false;
-                    config.currentApiUrl = 'https://api.groq.com/v1/chat/completions';
                 }
             });
         }
