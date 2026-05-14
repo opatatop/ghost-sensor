@@ -2,26 +2,24 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>🎤 SUPRA LAB - RELAIS FREE MOBILE</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>🛡️ SUPRA LAB v11 - MODE TOTAL</title>
     <style>
         :root {
             --primary: #00ff41;
+            --secondary: #00cc33;
             --danger: #ff0044;
-            --bg: #000;
+            --warning: #ffaa00;
             --bg-dark: #001100;
+            --bg-darker: #000000;
         }
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Courier New', monospace;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Courier New', monospace; }
         body {
-            background: var(--bg);
+            background: var(--bg-darker);
             color: var(--primary);
             min-height: 100vh;
-            padding: 15px;
+            padding: 10px;
+            overflow-x: hidden;
         }
         #start-screen, #main {
             position: fixed;
@@ -31,14 +29,15 @@
             align-items: center;
             justify-content: center;
             z-index: 100;
-            background: var(--bg);
+            background: var(--bg-darker);
         }
-        #main { display: none; }
+        #main { display: none; padding: 10px; gap: 10px; overflow-y: auto; justify-content: flex-start; padding-bottom: 60px; }
         .boot-text {
-            font-size: 22px;
-            margin-bottom: 25px;
+            font-size: 24px;
+            margin-bottom: 30px;
             text-shadow: 0 0 10px var(--primary);
             text-align: center;
+            padding: 0 20px;
         }
         button {
             background: var(--bg-dark);
@@ -48,47 +47,75 @@
             margin: 10px;
             cursor: pointer;
             font-size: 16px;
+            transition: 0.2s;
         }
-        button:hover { background: var(--primary); color: var(--bg); }
-        #btnStart { padding: 15px 30px; font-size: 18px; }
+        button:hover { background: var(--primary); color: var(--bg-darker); }
+        button:active { transform: scale(0.95); }
+        #btnStart { padding: 15px 30px; font-size: 18px; border-width: 3px; }
+        
         .panel {
             background: var(--bg-dark);
             border: 1px solid var(--primary);
             padding: 15px;
             margin: 10px 0;
             width: 100%;
+            max-width: 600px;
+            box-shadow: 0 0 15px rgba(0, 255, 65, 0.1);
         }
         .panel-header {
             margin-bottom: 10px;
-            font-size: 16px;
-            color: #00cc33;
+            font-size: 18px;
+            color: var(--secondary);
+            text-transform: uppercase;
+            border-bottom: 1px solid var(--primary);
+            padding-bottom: 5px;
         }
         #log {
-            height: 250px;
+            height: 200px;
             overflow-y: auto;
             font-size: 14px;
             white-space: pre-wrap;
+            background: #000;
+            padding: 10px;
+            border: 1px dashed var(--secondary);
         }
-        .log-line { margin-bottom: 5px; }
-        .log-line::before { content: "> "; color: #00cc33; }
+        .log-line { margin-bottom: 5px; border-bottom: 1px solid #002200; padding-bottom: 2px; }
+        .log-line::before { content: "> "; color: var(--secondary); }
+        .log-line.important { color: var(--danger) !important; font-weight: bold; }
         #ai-report {
             min-height: 150px;
             font-size: 14px;
             white-space: pre-wrap;
-            background: var(--bg-dark);
+            background: #000;
             border: 1px dashed var(--primary);
             padding: 15px;
+            color: #ccc;
         }
+        
+        /* Page Paramètres */
         #settings-page {
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,0.9);
+            background: rgba(0,0,0,0.95);
             padding: 20px;
             z-index: 101;
             overflow-y: auto;
         }
         #settings-page.active { display: block; }
+        .input-group { margin-bottom: 20px; }
+        .input-group label { display: block; margin-bottom: 8px; color: var(--secondary); }
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 10px;
+            background: #000;
+            color: var(--primary);
+            border: 1px solid var(--primary);
+            font-family: inherit;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+
         .status-bar {
             position: fixed;
             bottom: 0;
@@ -100,43 +127,55 @@
             font-size: 14px;
             display: flex;
             justify-content: space-between;
+            z-index: 200;
         }
+        
         #voiceToggle {
             position: fixed;
             bottom: 20px;
             right: 20px;
-            width: 50px;
-            height: 50px;
+            width: 60px;
+            height: 60px;
             border-radius: 50%;
             background: var(--primary);
             border: none;
-            color: var(--bg);
-            font-size: 20px;
+            color: var(--bg-darker);
+            font-size: 24px;
             cursor: pointer;
+            z-index: 150;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 20px var(--primary);
         }
+        #voiceToggle.active {
+            background: var(--danger);
+            box-shadow: 0 0 20px var(--danger);
+            animation: pulse 1s infinite;
+        }
+        
         #micIndicator {
             position: fixed;
             bottom: 20px;
             left: 20px;
-            width: 50px;
-            height: 50px;
+            width: 60px;
+            height: 60px;
             border-radius: 50%;
             background: var(--bg-dark);
-            border: 2px solid #00cc33;
+            border: 2px solid var(--secondary);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 20px;
+            font-size: 24px;
+            z-index: 150;
         }
         #micIndicator.listening {
             background: var(--primary);
             border-color: var(--primary);
             animation: pulse 1s infinite;
         }
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
+        @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(0.95); } }
+        
         .alert {
             position: fixed;
             top: 50%;
@@ -144,11 +183,12 @@
             transform: translate(-50%, -50%);
             background: var(--bg-dark);
             border: 2px solid var(--danger);
-            padding: 15px;
-            font-size: 16px;
+            padding: 20px;
+            font-size: 18px;
             text-align: center;
             z-index: 20000;
             display: none;
+            box-shadow: 0 0 50px rgba(255, 0, 0, 0.3);
         }
         .alert.active { display: block; }
     </style>
@@ -156,67 +196,91 @@
 <body>
     <!-- ÉCRAN DE DÉMARRAGE -->
     <div id="start-screen">
-        <div class="boot-text">
-            🎤 SUPRA LAB
-            <div style="color: #ffaa00;">SOLUTION 404 FREE MOBILE</div>
-        </div>
-        <button id="btnStart">🚀 LANCER</button>
+        <div class="boot-text">🛡️ SUPRA LAB v11<br><span style="color: var(--warning);">MODE TOTAL (SANS MOTS-CLÉS)</span></div>
+        <button id="btnStart">🚀 LANCER LE SYSTÈME</button>
         <button id="btnSettings">⚙️ PARAMÈTRES</button>
     </div>
 
     <!-- INTERFACE PRINCIPALE -->
     <div id="main">
         <div class="panel">
-            <div class="panel-header">🤖 TRANSCRIPTION</div>
-            <div id="ai-report">[PRÊT]</div>
+            <div class="panel-header">🤖 ANALYSE IA (Mode Total)</div>
+            <div id="ai-report">[EN ATTENTE DE VOUS PARLER...]</div>
             <div style="margin-top: 10px; text-align: center;">
-                <button id="sendToGroqBtn">📤 ENVOYER À GROQ</button>
+                <button id="sendToGroqBtn">📤 FORCER ENVOI À GROQ</button>
+                <button id="readReportBtn">🔊 LIRE RAPPORT</button>
             </div>
         </div>
+        
         <div class="panel">
-            <div class="panel-header">📜 JOURNAL</div>
+            <div class="panel-header">📜 LOG SYSTÈME</div>
             <div id="log"></div>
         </div>
     </div>
 
     <!-- PAGE DE PARAMÈTRES -->
     <div id="settings-page">
-        <div style="text-align: center; margin-bottom: 20px; color: var(--primary);">
+        <div style="text-align: center; margin-bottom: 20px; color: var(--primary); font-size: 24px;">
             ⚙️ PARAMÈTRES
-            <button id="closeSettings" style="position: absolute; top: 10px; right: 10px; background: none; border: none; color: var(--primary); font-size: 24px; cursor: pointer;">✕</button>
+            <button id="closeSettings" style="position: absolute; top: 15px; right: 15px; background: none; border: none; color: var(--primary); font-size: 30px; cursor: pointer;">✕</button>
         </div>
-        <div style="background: var(--bg-dark); border: 1px solid var(--primary); padding: 15px; margin-bottom: 15px;">
-            <div style="margin-bottom: 10px;">
-                <label for="groqApiKey" style="display: block; margin-bottom: 5px;">Clé API Groq :</label>
-                <input type="text" id="groqApiKey" placeholder="Ta clé API" style="width: 100%; padding: 8px; background: #000; color: var(--primary); border: 1px solid var(--primary);">
-                <button id="testApiKeyBtn" style="margin-top: 10px; width: 100%;">🧪 TESTER LA CLÉ</button>
-                <div id="apiTestResult" style="margin-top: 10px; font-size: 14px;"></div>
+
+        <!-- Section API -->
+        <div class="panel">
+            <div class="panel-header">🔑 Configuration API Groq</div>
+            <div class="input-group">
+                <label for="groqApiKey">Clé API Groq:</label>
+                <input type="password" id="groqApiKey" placeholder="gsk_..." autocomplete="off">
+                <div style="margin-top: 5px; font-size: 12px; color: #888;">Obtenez-la gratuitement sur console.groq.com</div>
+            </div>
+            <button id="testApiKeyBtn" style="width: 100%;">🧪 TESTER LA CLÉ (Corrige l'erreur 404)</button>
+            <div id="apiTestResult" style="margin-top: 10px; font-size: 14px; text-align: center; min-height: 20px;"></div>
+        </div>
+
+        <!-- Section Voix -->
+        <div class="panel">
+            <div class="panel-header">🎤 Voix & Langue</div>
+            <div class="input-group">
+                <label><input type="checkbox" id="voiceFeedback" checked> L'IA doit lire ses réponses</label>
+            </div>
+            <div class="input-group">
+                <label><input type="checkbox" id="voiceAlerts" checked> Alertes vocales</label>
+            </div>
+            <div class="input-group">
+                <label for="voiceLanguage">Langue de l'IA:</label>
+                <select id="voiceLanguage">
+                    <option value="fr-FR">Français</option>
+                    <option value="en-US">Anglais</option>
+                    <option value="es-ES">Espagnol</option>
+                    <option value="de-DE">Allemand</option>
+                </select>
             </div>
         </div>
-        <div style="text-align: center; margin-top: 20px;">
-            <button id="saveSettings">💾 SAUVEGARDER</button>
-            <button id="closeSettings2">FERMER</button>
+
+        <div style="text-align: center; margin-top: 30px;">
+            <button id="saveSettings" style="padding: 15px 40px; font-size: 18px;">💾 SAUVEGARDER</button>
         </div>
     </div>
 
-    <!-- BOUTONS VOIX -->
-    <button id="voiceToggle" title="Activer/Désactiver la voix">🎤</button>
+    <!-- BOUTONS FLOTTANTS -->
+    <button id="voiceToggle" title="Activer/Désactiver le micro">🎤</button>
     <div id="micIndicator" title="État du micro">🎤</div>
 
     <!-- BARRE DE STATUS -->
     <div class="status-bar">
         <span id="status-text">En attente...</span>
-        <span>v11 - Solution 404</span>
+        <span>v11 - Mode Total</span>
     </div>
 
     <!-- ALERTE -->
-    <div class="alert" id="criticalAlert">⚠️ ALERTE : <span id="alert-message"></span></div>
+    <div class="alert" id="criticalAlert">⚠️ ALERTE: <span id="alert-message"></span></div>
 
     <script>
-        // ========== CONFIG ==========
+        // ========== CONFIGURATION ==========
         let config = {
             groqApiKey: localStorage.getItem('groqApiKey') || '',
             voiceFeedback: true,
+            voiceAlerts: true,
             voiceLanguage: 'fr-FR'
         };
         let finalTranscript = '';
@@ -226,20 +290,22 @@
         let synthesis = window.speechSynthesis;
         let isSpeaking = false;
 
-        // ========== INIT ==========
+        // ========== INITIALISATION ==========
         document.addEventListener('DOMContentLoaded', () => {
             setupUI();
             loadVoices();
             if (config.groqApiKey) document.getElementById('groqApiKey').value = config.groqApiKey;
+            checkPermissions();
         });
 
-        // ========== BASE FUNCTIONS ==========
+        // ========== FONCTIONS DE BASE ==========
         function log(text, important = false) {
             const logDiv = document.getElementById('log');
             if (!logDiv) return;
             const line = document.createElement('div');
             line.className = 'log-line' + (important ? ' important' : '');
-            line.innerHTML = `<span style="color: #00ff00;">[${new Date().toLocaleTimeString('fr-FR')}]</span> ${text}`;
+            const time = new Date().toLocaleTimeString('fr-FR');
+            line.innerHTML = `<span style="color: #00aa00;">[${time}]</span> ${text}`;
             logDiv.appendChild(line);
             logDiv.scrollTop = logDiv.scrollHeight;
         }
@@ -248,15 +314,15 @@
             document.getElementById('status-text').textContent = txt;
         }
 
-        function showAlert(message) {
+        function showAlert(message, speak = true) {
             const alertBox = document.getElementById('criticalAlert');
             const alertMsg = document.getElementById('alert-message');
             if (alertMsg) alertMsg.textContent = message;
             if (alertBox) {
                 alertBox.classList.add('active');
+                if (speak && config.voiceAlerts && isVoiceEnabled) speakText(`Alerte: ${message}`);
                 setTimeout(() => alertBox.classList.remove('active'), 5000);
             }
-            log(`⚠️ ALERTE: ${message}`, true);
         }
 
         function loadVoices() {
@@ -271,97 +337,114 @@
             return voices.find(v => v.lang.startsWith(lang)) || voices[0];
         }
 
-        function speakText(text) {
+        function speakText(text, interrupt = true) {
             if (!config.voiceFeedback || !isVoiceEnabled || !synthesis) return;
-            if (isSpeaking) synthesis.cancel();
+            if (isSpeaking) {
+                if (interrupt) {
+                    synthesis.cancel();
+                    isSpeaking = false;
+                } else {
+                    setTimeout(() => speakText(text, false), 500);
+                    return;
+                }
+            }
             try {
                 const utterance = new SpeechSynthesisUtterance(text);
                 utterance.lang = config.voiceLanguage;
                 utterance.voice = getVoice(config.voiceLanguage);
+                utterance.onstart = () => isSpeaking = true;
                 utterance.onend = () => isSpeaking = false;
+                utterance.onerror = () => isSpeaking = false;
                 synthesis.speak(utterance);
-                isSpeaking = true;
-                log(`[VOIX] "${text}"`);
+                log(`[VOIX] Lecture: "${text.substring(0, 30)}..."`);
             } catch (e) {
                 log(`[VOIX ERREUR] ${e.message}`, true);
             }
         }
 
         function stopSpeaking() {
-            if (synthesis) synthesis.cancel();
-            isSpeaking = false;
+            if (synthesis && isSpeaking) {
+                synthesis.cancel();
+                isSpeaking = false;
+            }
         }
 
         // ========== PERMISSIONS ==========
+        function checkPermissions() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                log("[ERREUR] Navigateur incompatible. Utilisez Chrome.", true);
+                showAlert("Erreur navigateur");
+            }
+        }
+
         async function checkMicrophonePermission() {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 stream.getTracks().forEach(track => track.stop());
-                log("[OK] Micro autorisé", true);
+                log("[PERMISSION] ✅ Micro autorisé !");
                 return true;
             } catch (err) {
-                log(`[ERREUR] ${err.message}`, true);
-                showAlert("Activez le micro dans les paramètres !");
+                log(`[PERMISSION ERREUR] ${err.message}`, true);
+                if (err.name === 'NotAllowedError') showAlert("Autorisez le micro !");
                 return false;
             }
         }
 
-        // ========== RELAIS POUR FREE MOBILE ==========
-        // Utilise un relais public qui contourne les restrictions
-        const RELAY_URL = "https://supra-lab-relay.glitch.me";
-
-        // ========== TEST CLÉ API VIA RELAIS ==========
+        // ========== TEST CLÉ API (Correction 404) ==========
         async function testGroqApiKey() {
             const apiKey = document.getElementById('groqApiKey').value.trim();
+            const resultDiv = document.getElementById('apiTestResult');
+            
+            resultDiv.textContent = "Test en cours...";
+            resultDiv.style.color = "#ffaa00";
+
             if (!apiKey) {
-                document.getElementById('apiTestResult').textContent = "⚠️ Clé manquante";
-                document.getElementById('apiTestResult').style.color = "#ffaa00";
+                resultDiv.textContent = "Veuillez entrer une clé.";
+                resultDiv.style.color = "#ff0044";
                 return;
             }
 
-            log("[GROQ] Test de la clé via relais...", true);
-            updateStatus("Test API...");
-
             try {
-                const response = await fetch(`${RELAY_URL}/test-key`, {
+                // URL CORRIGÉE : Ajout de /openai/ dans le chemin
+                const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ apiKey })
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify({
+                        model: "llama3-70b-8192", // Modèle stable et rapide
+                        messages: [{ role: "user", content: "Dis uniquement 'OK'." }],
+                        max_tokens: 5
+                    })
                 });
 
                 if (!response.ok) {
-                    const error = await response.json().catch(() => ({}));
-                    throw new Error(`Erreur ${response.status}: ${error.error || 'Inconnue'}`);
+                    const errData = await response.json().catch(() => ({}));
+                    throw new Error(`HTTP ${response.status}: ${errData.error?.message || response.statusText}`);
                 }
 
                 const data = await response.json();
-                if (data.choices && data.choices[0].message.content.trim() === "OK") {
-                    log("[OK] Clé API VALIDE !", true);
-                    document.getElementById('apiTestResult').textContent = "✅ VALIDE";
-                    document.getElementById('apiTestResult').style.color = "#00ff41";
-                    config.groqApiKey = apiKey;
-                    localStorage.setItem('groqApiKey', apiKey);
+                if (data.choices && data.choices[0]) {
+                    resultDiv.textContent = "✅ Clé API VALIDE ! Connexion OK.";
+                    resultDiv.style.color = "#00ff41";
+                    log("[API] Test réussi.");
                 } else {
-                    document.getElementById('apiTestResult').textContent = "⚠️ Réponse inattendue";
-                    document.getElementById('apiTestResult').style.color = "#ffaa00";
+                    throw new Error("Réponse invalide de l'API");
                 }
-                updateStatus("Prêt");
+
             } catch (error) {
-                log(`[ERREUR] ${error.message}`, true);
-                document.getElementById('apiTestResult').textContent = `❌ Erreur: ${error.message}`;
-                document.getElementById('apiTestResult').style.color = "#ff0044";
-                updateStatus("Erreur");
+                log(`[API ERREUR] ${error.message}`, true);
+                resultDiv.textContent = `❌ Erreur: ${error.message}`;
+                resultDiv.style.color = "#ff0044";
             }
         }
 
-        // ========== RECONNAISSANCE VOCALE ==========
+        // ========== RECONNAISSANCE VOCALE (Mode Total) ==========
         function initSpeech() {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (!SpeechRecognition) {
-                log("[ERREUR] Reconnaissance vocale non supportée", true);
-                showAlert("Utilisez Chrome");
-                return;
-            }
+            if (!SpeechRecognition) return;
 
             try {
                 if (recognition) recognition.stop();
@@ -369,181 +452,198 @@
                 recognition = new SpeechRecognition();
                 recognition.continuous = true;
                 recognition.interimResults = true;
-                recognition.lang = 'fr-FR';
-
-                finalTranscript = '';
+                recognition.lang = config.voiceLanguage;
 
                 recognition.onresult = (event) => {
-                    let interim = '';
-                    let final = '';
+                    let interimTranscript = '';
+                    
                     for (let i = event.resultIndex; i < event.results.length; i++) {
-                        const trans = event.results[i][0].transcript;
-                        if (event.results[i].isFinal) final += trans;
-                        else interim += trans;
+                        const transcript = event.results[i][0].transcript;
+                        
+                        if (event.results[i].isFinal) {
+                            // MODE TOTAL : On traite TOUT, sans filtre de mots-clés
+                            if (transcript.trim().length > 0) {
+                                log(`[VOICE] Détecté: "${transcript}"`);
+                                processTranscript(transcript);
+                            }
+                        } else {
+                            interimTranscript += transcript;
+                        }
                     }
-                    if (interim) log(`[IA] "${interim}"`);
-                    if (final) {
-                        finalTranscript = final.trim();
-                        log(`[IA] ✅ "${finalTranscript}"`);
-                        document.getElementById('ai-report').textContent =
-                            `// TRANSCRIPTION\n> "${finalTranscript}"\n\n// STATUT: Prêt pour analyse`;
-                        if (config.groqApiKey) sendToGroq(finalTranscript);
-                        if (config.voiceFeedback) speakText(`Reçu: ${finalTranscript}`);
+                    
+                    if (interimTranscript) {
+                        updateStatus(`Écoute... "${interimTranscript}"`);
                     }
                 };
 
                 recognition.onerror = (event) => {
-                    log(`[ERREUR] ${event.error}`, true);
-                    if (event.error === 'not-allowed') showAlert("Micro bloqué !");
+                    log(`[VOICE ERREUR] ${event.error}`);
+                    if (event.error === 'not-allowed') showAlert("Micro refusé");
                     if (isVoiceEnabled) setTimeout(initSpeech, 1000);
                 };
 
-                recognition.onstart = () => {
-                    isListening = true;
-                    isVoiceEnabled = true;
-                    log("[OK] Écoute activée", true);
-                    updateStatus("Écoute...");
-                    document.getElementById('micIndicator').classList.add('listening');
-                    document.getElementById('voiceToggle').classList.add('active');
-                };
-
                 recognition.onend = () => {
-                    isListening = false;
-                    updateStatus("Prêt");
-                    document.getElementById('micIndicator').classList.remove('listening');
-                    document.getElementById('voiceToggle').classList.remove('active');
-                    if (isVoiceEnabled) setTimeout(initSpeech, 100);
+                    if (isVoiceEnabled) setTimeout(() => { try { recognition.start(); } catch(e){} }, 500);
                 };
 
                 recognition.start();
+                isVoiceEnabled = true;
+                document.getElementById('voiceToggle').classList.add('active');
+                document.getElementById('micIndicator').classList.add('listening');
+                log("[VOICE] Écoute active (Mode Total)");
+
             } catch (e) {
-                log(`[ERREUR] ${e.message}`, true);
+                log(`[VOICE ERREUR] ${e.message}`, true);
             }
         }
 
         function stopSpeechRecognition() {
-            if (recognition) {
-                recognition.stop();
-                isVoiceEnabled = false;
-                isListening = false;
-                updateStatus("Désactivé");
-                document.getElementById('micIndicator').classList.remove('listening');
-                document.getElementById('voiceToggle').classList.remove('active');
+            if (recognition) recognition.stop();
+            isVoiceEnabled = false;
+            document.getElementById('voiceToggle').classList.remove('active');
+            document.getElementById('micIndicator').classList.remove('listening');
+            updateStatus("Micro désactivé");
+        }
+
+        // ========== TRAITEMENT (SANS MOTS-CLÉS) ==========
+        function processTranscript(text) {
+            const timestamp = new Date().toLocaleString('fr-FR');
+            
+            // Rapport local immédiat
+            const localReport = `
+// ==========================================
+// RAPPORT - ${timestamp}
+// ==========================================
+> TRANSMISSION : "${text}"
+
+> STATUT : Analyse en cours...
+// ==========================================
+            `;
+            
+            document.getElementById('ai-report').textContent = localReport;
+
+            // Envoi immédiat à Groq si la clé est présente
+            if (config.groqApiKey) {
+                sendToGroq(text, localReport);
+            } else {
+                document.getElementById('ai-report').textContent += "\n\n[INFO] Clé API manquante. Configurez-la dans les paramètres pour l'analyse IA.";
             }
         }
 
-        // ========== ENVOI À GROQ VIA RELAIS ==========
-        async function sendToGroq(transcript) {
-            if (!config.groqApiKey) {
-                log("[ERREUR] Clé API manquante", true);
-                return;
-            }
-
+        async function sendToGroq(text, currentReport) {
             try {
-                log("[GROQ] Envoi via relais...", true);
-                updateStatus("Envoi à Groq...");
+                log("[GROQ] Envoi en cours...");
+                updateStatus("Analyse IA...");
 
-                const response = await fetch(`${RELAY_URL}/send`, {
+                // URL CORRIGÉE
+                const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${config.groqApiKey}`
+                    },
                     body: JSON.stringify({
-                        apiKey: config.groqApiKey,
-                        transcript: transcript
+                        model: "llama3-70b-8192", // Utilisation d'un modèle puissant
+                        messages: [{
+                            role: "system",
+                            content: "Tu es une IA d'analyse SIGINT avancée. Analyse le texte suivant de manière technique et concise. Donne la nature du message, le ton, et une éventuelle réponse ou action si pertinent."
+                        }, {
+                            role: "user",
+                            content: text
+                        }],
+                        temperature: 0.5,
+                        max_tokens: 300
                     })
                 });
 
                 if (!response.ok) {
-                    const error = await response.json().catch(() => ({}));
-                    throw new Error(`Erreur ${response.status}: ${error.error || 'Inconnue'}`);
+                    const err = await response.json();
+                    throw new Error(err.error?.message || `Erreur ${response.status}`);
                 }
 
                 const data = await response.json();
-                const reply = data.choices[0].message.content;
-                document.getElementById('ai-report').textContent += `\n\n// RÉPONSE GROQ\n${reply}\n// =====`;
-                if (config.voiceFeedback) speakText(`Groq: ${reply.split('\n')[0]}`);
-                log("[OK] Réponse reçue", true);
+                const aiResponse = data.choices[0].message.content;
+
+                const finalReport = `
+// ==========================================
+// RAPPORT - ${new Date().toLocaleString('fr-FR')}
+// ==========================================
+> TRANSMISSION : "${text}"
+
+> ANALYSE IA GROQ :
+ ${aiResponse}
+// ==========================================
+                `;
+
+                document.getElementById('ai-report').textContent = finalReport;
+                log("[GROQ] Réponse reçue.");
+                
+                if (config.voiceFeedback) speakText(aiResponse);
                 updateStatus("Prêt");
+
             } catch (error) {
-                log(`[ERREUR] ${error.message}`, true);
-                updateStatus("Erreur Groq");
+                log(`[GROQ ERREUR] ${error.message}`, true);
+                document.getElementById('ai-report').textContent = currentReport + `\n\n[ERREUR API] ${error.message}`;
+                updateStatus("Erreur API");
             }
         }
 
-        // ========== UI SETUP ==========
+        // ========== GESTION UI ==========
         function setupUI() {
-            // LANCER
             document.getElementById('btnStart').addEventListener('click', async () => {
-                const start = document.getElementById('start-screen');
-                const main = document.getElementById('main');
-                if (!start || !main) return;
-
-                const ok = await checkMicrophonePermission();
-                if (!ok) return;
-
-                start.style.display = 'none';
-                main.style.display = 'block';
-                log("=== SYSTÈME LANCÉ ===");
-                updateStatus("Prêt");
-
-                // Ajoute le bouton IA
-                const btnIA = document.createElement('button');
-                btnIA.textContent = '🎤 ACTIVER VOIX';
-                btnIA.id = 'btnStartIA';
-                btnIA.style.cssText = 'margin: 10px;';
-                document.querySelector('#main .panel:first-child').appendChild(btnIA);
-
-                btnIA.addEventListener('click', () => {
-                    isVoiceEnabled ? stopSpeechRecognition() : initSpeech();
-                });
+                const allowed = await checkMicrophonePermission();
+                if (allowed) {
+                    document.getElementById('start-screen').style.display = 'none';
+                    document.getElementById('main').style.display = 'block';
+                    log("=== SYSTÈME DÉMARRÉ ===");
+                }
             });
 
-            // PARAMÈTRES
             document.getElementById('btnSettings').addEventListener('click', () => {
                 document.getElementById('settings-page').classList.add('active');
             });
 
-            // FERMER PARAMÈTRES
-            ['closeSettings', 'closeSettings2'].forEach(id => {
-                document.getElementById(id)?.addEventListener('click', () => {
-                    document.getElementById('settings-page').classList.remove('active');
-                });
-            });
-
-            // TEST CLÉ API
-            document.getElementById('testApiKeyBtn').addEventListener('click', testGroqApiKey);
-
-            // SAUVEGARDER
-            document.getElementById('saveSettings').addEventListener('click', () => {
-                config.groqApiKey = document.getElementById('groqApiKey').value;
-                localStorage.setItem('groqApiKey', config.groqApiKey);
-                localStorage.setItem('supraLabConfig', JSON.stringify(config));
-                log("[OK] Paramètres sauvegardés");
+            document.getElementById('closeSettings').addEventListener('click', () => {
                 document.getElementById('settings-page').classList.remove('active');
             });
 
-            // TOGGLE VOIX
             document.getElementById('voiceToggle').addEventListener('click', () => {
-                isVoiceEnabled = !isVoiceEnabled;
-                if (isVoiceEnabled && !isListening) initSpeech();
-                else if (!isVoiceEnabled) stopSpeechRecognition();
+                if (isVoiceEnabled) stopSpeechRecognition();
+                else initSpeech();
             });
 
-            // ENVOYER À GROQ
-            document.getElementById('sendToGroqBtn').addEventListener('click', () => {
-                if (!finalTranscript) {
-                    log("[ERREUR] Rien à envoyer", true);
-                    return;
+            document.getElementById('saveSettings').addEventListener('click', () => {
+                config.groqApiKey = document.getElementById('groqApiKey').value.trim();
+                config.voiceFeedback = document.getElementById('voiceFeedback').checked;
+                config.voiceAlerts = document.getElementById('voiceAlerts').checked;
+                config.voiceLanguage = document.getElementById('voiceLanguage').value;
+                
+                localStorage.setItem('groqApiKey', config.groqApiKey);
+                localStorage.setItem('supraLabConfig', JSON.stringify(config));
+                
+                log("[PARAM] Sauvegarde effectuée.");
+                document.getElementById('settings-page').classList.remove('active');
+                
+                // Redémarrage de la reconnaissance si la langue change
+                if (isVoiceEnabled) {
+                    stopSpeechRecognition();
+                    initSpeech();
                 }
-                sendToGroq(finalTranscript);
+            });
+
+            document.getElementById('testApiKeyBtn').addEventListener('click', testGroqApiKey);
+            
+            document.getElementById('sendToGroqBtn').addEventListener('click', () => {
+                 // Envoi manuel du dernier texte
+                 const lastText = finalTranscript || "Test manuel";
+                 processTranscript(lastText);
+            });
+
+            document.getElementById('readReportBtn').addEventListener('click', () => {
+                const text = document.getElementById('ai-report').textContent;
+                if (text && text !== "[EN ATTENTE...]") speakText(text);
             });
         }
-
-        // ========== CLEANUP ==========
-        window.addEventListener('beforeunload', () => {
-            stopSpeechRecognition();
-            stopSpeaking();
-            if (recognition) recognition.stop();
-        });
     </script>
 </body>
 </html>
