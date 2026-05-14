@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>🎤 SUPRA LAB - TOUT FONCTIONNE</title>
+    <title>🎤 SUPRA LAB - RELAIS FREE MOBILE</title>
     <style>
         :root {
             --primary: #00ff41;
@@ -35,7 +35,7 @@
         }
         #main { display: none; }
         .boot-text {
-            font-size: 24px;
+            font-size: 22px;
             margin-bottom: 25px;
             text-shadow: 0 0 10px var(--primary);
             text-align: center;
@@ -158,9 +158,9 @@
     <div id="start-screen">
         <div class="boot-text">
             🎤 SUPRA LAB
-            <div style="color: #ffaa00;">TOUT FONCTIONNE</div>
+            <div style="color: #ffaa00;">SOLUTION 404 FREE MOBILE</div>
         </div>
-        <button id="btnStart">🚀 LANCER LE SYSTÈME</button>
+        <button id="btnStart">🚀 LANCER</button>
         <button id="btnSettings">⚙️ PARAMÈTRES</button>
     </div>
 
@@ -168,10 +168,9 @@
     <div id="main">
         <div class="panel">
             <div class="panel-header">🤖 TRANSCRIPTION</div>
-            <div id="ai-report">[EN ATTENTE...]</div>
+            <div id="ai-report">[PRÊT]</div>
             <div style="margin-top: 10px; text-align: center;">
                 <button id="sendToGroqBtn">📤 ENVOYER À GROQ</button>
-                <button id="readReportBtn">🔊 LIRE</button>
             </div>
         </div>
         <div class="panel">
@@ -190,19 +189,8 @@
             <div style="margin-bottom: 10px;">
                 <label for="groqApiKey" style="display: block; margin-bottom: 5px;">Clé API Groq :</label>
                 <input type="text" id="groqApiKey" placeholder="Ta clé API" style="width: 100%; padding: 8px; background: #000; color: var(--primary); border: 1px solid var(--primary);">
-                <button id="testApiKeyBtn" style="margin-top: 10px; width: 100%;">🧪 TESTER</button>
+                <button id="testApiKeyBtn" style="margin-top: 10px; width: 100%;">🧪 TESTER LA CLÉ</button>
                 <div id="apiTestResult" style="margin-top: 10px; font-size: 14px;"></div>
-            </div>
-        </div>
-        <div style="background: var(--bg-dark); border: 1px solid var(--primary); padding: 15px; margin-bottom: 15px;">
-            <div style="margin-bottom: 10px;">
-                <label><input type="checkbox" id="voiceFeedback" checked style="margin-right: 8px;"> L'IA PARLE</label>
-            </div>
-            <div style="margin-bottom: 10px;">
-                <label for="voiceLanguage" style="display: block; margin-bottom: 5px;">Langue :</label>
-                <select id="voiceLanguage" style="width: 100%; padding: 8px; background: #000; color: var(--primary); border: 1px solid var(--primary);">
-                    <option value="fr-FR">Français</option>
-                </select>
             </div>
         </div>
         <div style="text-align: center; margin-top: 20px;">
@@ -218,18 +206,17 @@
     <!-- BARRE DE STATUS -->
     <div class="status-bar">
         <span id="status-text">En attente...</span>
-        <span>v11 - Tout fonctionne</span>
+        <span>v11 - Solution 404</span>
     </div>
 
     <!-- ALERTE -->
     <div class="alert" id="criticalAlert">⚠️ ALERTE : <span id="alert-message"></span></div>
 
     <script>
-        // ========== CONFIGURATION ==========
+        // ========== CONFIG ==========
         let config = {
             groqApiKey: localStorage.getItem('groqApiKey') || '',
             voiceFeedback: true,
-            voiceAlerts: true,
             voiceLanguage: 'fr-FR'
         };
         let finalTranscript = '';
@@ -239,32 +226,14 @@
         let synthesis = window.speechSynthesis;
         let isSpeaking = false;
 
-        // ========== INITIALISATION COMPLÈTE ==========
+        // ========== INIT ==========
         document.addEventListener('DOMContentLoaded', () => {
-            // Charger la config
-            const savedConfig = localStorage.getItem('supraLabConfig');
-            if (savedConfig) {
-                try {
-                    const parsed = JSON.parse(savedConfig);
-                    config = { ...config, ...parsed };
-                } catch (e) {}
-            }
-
-            // Initialiser TOUT
             setupUI();
             loadVoices();
-            checkPermissions();
-
-            // Remplir les champs
-            if (config.groqApiKey) {
-                document.getElementById('groqApiKey').value = config.groqApiKey;
-            }
-            document.getElementById('voiceFeedback').checked = config.voiceFeedback;
-            document.getElementById('voiceAlerts').checked = config.voiceAlerts;
-            document.getElementById('voiceLanguage').value = config.voiceLanguage;
+            if (config.groqApiKey) document.getElementById('groqApiKey').value = config.groqApiKey;
         });
 
-        // ========== FONCTIONS DE BASE ==========
+        // ========== BASE FUNCTIONS ==========
         function log(text, important = false) {
             const logDiv = document.getElementById('log');
             if (!logDiv) return;
@@ -276,8 +245,7 @@
         }
 
         function updateStatus(txt) {
-            const statusEl = document.getElementById('status-text');
-            if (statusEl) statusEl.textContent = txt;
+            document.getElementById('status-text').textContent = txt;
         }
 
         function showAlert(message) {
@@ -294,9 +262,7 @@
         function loadVoices() {
             if ('speechSynthesis' in window) {
                 synthesis.getVoices();
-                if (synthesis.onvoiceschanged) {
-                    synthesis.onvoiceschanged = loadVoices;
-                }
+                if (synthesis.onvoiceschanged) synthesis.onvoiceschanged = loadVoices;
             }
         }
 
@@ -326,14 +292,7 @@
             isSpeaking = false;
         }
 
-        // ========== VÉRIFIE LES PERMISSIONS ==========
-        function checkPermissions() {
-            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-                log("[ERREUR] Reconnaissance vocale non supportée !", true);
-                showAlert("Utilisez Chrome pour la reconnaissance vocale.");
-            }
-        }
-
+        // ========== PERMISSIONS ==========
         async function checkMicrophonePermission() {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -342,12 +301,16 @@
                 return true;
             } catch (err) {
                 log(`[ERREUR] ${err.message}`, true);
-                showAlert("Activez le micro dans les paramètres du navigateur !");
+                showAlert("Activez le micro dans les paramètres !");
                 return false;
             }
         }
 
-        // ========== TEST DE CLÉ API GROQ ==========
+        // ========== RELAIS POUR FREE MOBILE ==========
+        // Utilise un relais public qui contourne les restrictions
+        const RELAY_URL = "https://supra-lab-relay.glitch.me";
+
+        // ========== TEST CLÉ API VIA RELAIS ==========
         async function testGroqApiKey() {
             const apiKey = document.getElementById('groqApiKey').value.trim();
             if (!apiKey) {
@@ -356,29 +319,24 @@
                 return;
             }
 
-            log("[GROQ] Test de la clé...", true);
+            log("[GROQ] Test de la clé via relais...", true);
             updateStatus("Test API...");
 
             try {
-                const response = await fetch('https://api.groq.com/v1/chat/completions', {
+                const response = await fetch(`${RELAY_URL}/test-key`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${apiKey}`
-                    },
-                    body: JSON.stringify({
-                        model: "mixtral-8x7b-32768",
-                        messages: [{ role: "user", content: "Réponds 'OK'" }],
-                        temperature: 0.3,
-                        max_tokens: 10
-                    })
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ apiKey })
                 });
 
-                if (!response.ok) throw new Error(`Erreur ${response.status}`);
+                if (!response.ok) {
+                    const error = await response.json().catch(() => ({}));
+                    throw new Error(`Erreur ${response.status}: ${error.error || 'Inconnue'}`);
+                }
 
                 const data = await response.json();
-                if (data.choices[0].message.content.trim() === "OK") {
-                    log("[OK] Clé API valide !", true);
+                if (data.choices && data.choices[0].message.content.trim() === "OK") {
+                    log("[OK] Clé API VALIDE !", true);
                     document.getElementById('apiTestResult').textContent = "✅ VALIDE";
                     document.getElementById('apiTestResult').style.color = "#00ff41";
                     config.groqApiKey = apiKey;
@@ -396,7 +354,7 @@
             }
         }
 
-        // ========== RECONNAISSANCE VOCALE (CORRIGÉE) ==========
+        // ========== RECONNAISSANCE VOCALE ==========
         function initSpeech() {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             if (!SpeechRecognition) {
@@ -428,7 +386,7 @@
                         finalTranscript = final.trim();
                         log(`[IA] ✅ "${finalTranscript}"`);
                         document.getElementById('ai-report').textContent =
-                            `// ======================\n// TRANSCRIPTION\n// ======================\n[TEXTE]\n> "${finalTranscript}"\n\n[STATUT]\n> Prêt pour analyse\n// ======================`;
+                            `// TRANSCRIPTION\n> "${finalTranscript}"\n\n// STATUT: Prêt pour analyse`;
                         if (config.groqApiKey) sendToGroq(finalTranscript);
                         if (config.voiceFeedback) speakText(`Reçu: ${finalTranscript}`);
                     }
@@ -474,7 +432,7 @@
             }
         }
 
-        // ========== ENVOI À GROQ ==========
+        // ========== ENVOI À GROQ VIA RELAIS ==========
         async function sendToGroq(transcript) {
             if (!config.groqApiKey) {
                 log("[ERREUR] Clé API manquante", true);
@@ -482,31 +440,26 @@
             }
 
             try {
-                log("[GROQ] Envoi...", true);
+                log("[GROQ] Envoi via relais...", true);
                 updateStatus("Envoi à Groq...");
 
-                const response = await fetch('https://api.groq.com/v1/chat/completions', {
+                const response = await fetch(`${RELAY_URL}/send`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${config.groqApiKey}`
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        model: "mixtral-8x7b-32768",
-                        messages: [{
-                            role: "user",
-                            content: `Analyse cette phrase: "${transcript}". Réponds en français.`
-                        }],
-                        temperature: 0.3,
-                        max_tokens: 256
+                        apiKey: config.groqApiKey,
+                        transcript: transcript
                     })
                 });
 
-                if (!response.ok) throw new Error(`Erreur ${response.status}`);
+                if (!response.ok) {
+                    const error = await response.json().catch(() => ({}));
+                    throw new Error(`Erreur ${response.status}: ${error.error || 'Inconnue'}`);
+                }
 
                 const data = await response.json();
                 const reply = data.choices[0].message.content;
-                document.getElementById('ai-report').textContent += `\n\n// RÉPONSE GROQ\n${reply}\n// ======================`;
+                document.getElementById('ai-report').textContent += `\n\n// RÉPONSE GROQ\n${reply}\n// =====`;
                 if (config.voiceFeedback) speakText(`Groq: ${reply.split('\n')[0]}`);
                 log("[OK] Réponse reçue", true);
                 updateStatus("Prêt");
@@ -516,10 +469,10 @@
             }
         }
 
-        // ========== GESTION DE L'INTERFACE (CORRIGÉE) ==========
+        // ========== UI SETUP ==========
         function setupUI() {
-            // ÉCRAN DE DÉMARRAGE
-            document.getElementById('btnStart')?.addEventListener('click', async () => {
+            // LANCER
+            document.getElementById('btnStart').addEventListener('click', async () => {
                 const start = document.getElementById('start-screen');
                 const main = document.getElementById('main');
                 if (!start || !main) return;
@@ -532,7 +485,7 @@
                 log("=== SYSTÈME LANCÉ ===");
                 updateStatus("Prêt");
 
-                // Ajoute le bouton IA dans l'interface
+                // Ajoute le bouton IA
                 const btnIA = document.createElement('button');
                 btnIA.textContent = '🎤 ACTIVER VOIX';
                 btnIA.id = 'btnStartIA';
@@ -545,59 +498,47 @@
             });
 
             // PARAMÈTRES
-            document.getElementById('btnSettings')?.addEventListener('click', () => {
+            document.getElementById('btnSettings').addEventListener('click', () => {
                 document.getElementById('settings-page').classList.add('active');
             });
 
+            // FERMER PARAMÈTRES
             ['closeSettings', 'closeSettings2'].forEach(id => {
                 document.getElementById(id)?.addEventListener('click', () => {
                     document.getElementById('settings-page').classList.remove('active');
                 });
             });
 
-            // TEST VOIX
-            document.getElementById('testVoiceBtn')?.addEventListener('click', () => {
-                speakText("Test voix OK");
-            });
-
             // TEST CLÉ API
-            document.getElementById('testApiKeyBtn')?.addEventListener('click', testGroqApiKey);
+            document.getElementById('testApiKeyBtn').addEventListener('click', testGroqApiKey);
 
             // SAUVEGARDER
-            document.getElementById('saveSettings')?.addEventListener('click', () => {
+            document.getElementById('saveSettings').addEventListener('click', () => {
                 config.groqApiKey = document.getElementById('groqApiKey').value;
-                config.voiceFeedback = document.getElementById('voiceFeedback').checked;
-                config.voiceAlerts = document.getElementById('voiceAlerts').checked;
-                config.voiceLanguage = document.getElementById('voiceLanguage').value;
+                localStorage.setItem('groqApiKey', config.groqApiKey);
                 localStorage.setItem('supraLabConfig', JSON.stringify(config));
                 log("[OK] Paramètres sauvegardés");
                 document.getElementById('settings-page').classList.remove('active');
             });
 
             // TOGGLE VOIX
-            document.getElementById('voiceToggle')?.addEventListener('click', () => {
+            document.getElementById('voiceToggle').addEventListener('click', () => {
                 isVoiceEnabled = !isVoiceEnabled;
                 if (isVoiceEnabled && !isListening) initSpeech();
                 else if (!isVoiceEnabled) stopSpeechRecognition();
             });
 
             // ENVOYER À GROQ
-            document.getElementById('sendToGroqBtn')?.addEventListener('click', () => {
+            document.getElementById('sendToGroqBtn').addEventListener('click', () => {
                 if (!finalTranscript) {
                     log("[ERREUR] Rien à envoyer", true);
                     return;
                 }
                 sendToGroq(finalTranscript);
             });
-
-            // LIRE RAPPORT
-            document.getElementById('readReportBtn')?.addEventListener('click', () => {
-                const report = document.getElementById('ai-report').textContent;
-                if (report && report !== "[EN ATTENTE...]") speakText(report);
-            });
         }
 
-        // ========== NETTOYAGE ==========
+        // ========== CLEANUP ==========
         window.addEventListener('beforeunload', () => {
             stopSpeechRecognition();
             stopSpeaking();
