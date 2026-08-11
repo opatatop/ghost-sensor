@@ -2,8 +2,8 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>SUPRA LAB v11 — PARANORMAL PRO</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>SUPRA LAB v13 — ULTIMATE PRO + RECORDER</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
 
@@ -14,6 +14,7 @@
   --warning: #ffaa00;
   --bg: #000000;
   --panel: #001100;
+  --text-glow: 0 0 10px var(--primary);
 }
 
 * {
@@ -22,16 +23,15 @@
   box-sizing: border-box;
   touch-action: manipulation;
   user-select: none;
-  -webkit-user-select: none;
+  font-family: 'VT323', monospace;
 }
 
 body {
   background: var(--bg);
   color: var(--primary);
-  font-family: 'VT323', monospace;
   font-size: 18px;
-  overflow: hidden;
   height: 100vh;
+  overflow: hidden;
   image-rendering: pixelated;
 }
 
@@ -39,13 +39,14 @@ body::before {
   content: "";
   position: fixed;
   inset: 0;
-  background: repeating-linear-gradient(
-    to bottom,
-    rgba(0, 255, 65, 0.03) 0px,
-    rgba(0, 255, 65, 0.03) 2px,
-    transparent 2px,
-    transparent 4px
-  );
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      rgba(0, 255, 65, 0.03) 0px,
+      rgba(0, 255, 65, 0.03) 2px,
+      transparent 2px,
+      transparent 4px
+    );
   pointer-events: none;
   z-index: 9999;
 }
@@ -71,8 +72,8 @@ body::before {
   display: none;
   padding: 10px;
   gap: 10px;
-  overflow-y: auto;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  overflow-y: auto;
 }
 
 #main.active {
@@ -83,7 +84,14 @@ body::before {
   font-size: 28px;
   line-height: 1.3;
   margin-bottom: 40px;
-  text-shadow: 0 0 18px var(--primary);
+  text-shadow: var(--text-glow);
+  animation: flicker 1.5s infinite alternate;
+}
+
+@keyframes flicker {
+  0% { text-shadow: var(--text-glow); }
+  50% { text-shadow: 0 0 5px var(--primary); }
+  100% { text-shadow: var(--text-glow); }
 }
 
 button {
@@ -92,20 +100,34 @@ button {
   border: 4px solid var(--primary);
   padding: 12px 28px;
   font-size: 20px;
-  font-family: 'VT323', monospace;
-  margin: 8px;
   cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 0 10px rgba(0, 255, 65, 0.3);
+}
+
+button:hover {
+  background: rgba(0, 255, 65, 0.1);
+  box-shadow: 0 0 15px rgba(0, 255, 65, 0.5);
 }
 
 button:active {
   background: var(--primary);
   color: #000;
+  box-shadow: 0 0 20px rgba(0, 255, 65, 0.7);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  border-color: var(--warning);
+  color: var(--warning);
 }
 
 #btnStart {
   font-size: 32px;
   padding: 22px 60px;
   border-width: 7px;
+  box-shadow: 0 0 20px rgba(0, 255, 65, 0.5);
 }
 
 header {
@@ -116,7 +138,10 @@ header {
   text-align: center;
   font-size: 24px;
   letter-spacing: 2px;
-  text-shadow: 0 0 10px var(--primary);
+  text-shadow: var(--text-glow);
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
 .panel {
@@ -125,6 +150,7 @@ header {
   padding: 12px;
   position: relative;
   min-height: 170px;
+  box-shadow: 0 0 15px rgba(0, 255, 65, 0.2);
 }
 
 .panel-header {
@@ -134,6 +160,7 @@ header {
   background: var(--panel);
   padding: 0 10px;
   font-size: 16px;
+  text-shadow: 0 0 5px var(--primary);
 }
 
 .panel.full {
@@ -145,6 +172,7 @@ canvas {
   height: 140px;
   background: #000;
   display: block;
+  image-rendering: pixelated;
 }
 
 #ai-report {
@@ -157,6 +185,7 @@ canvas {
   max-height: 320px;
   overflow-y: auto;
   min-height: 140px;
+  text-shadow: 0 0 5px rgba(0, 255, 65, 0.3);
 }
 
 #log {
@@ -164,15 +193,27 @@ canvas {
   overflow-y: auto;
   font-size: 15px;
   line-height: 1.35;
+  background: #000;
+  padding: 10px;
+  border: 2px dashed var(--warning);
 }
 
 .log-line {
   margin: 4px 0;
+  padding: 2px 5px;
+  border-radius: 3px;
 }
 
 .log-line.important {
   color: var(--danger);
   font-size: 16px;
+  background: rgba(255, 0, 68, 0.1);
+  border-left: 3px solid var(--danger);
+}
+
+.log-line.success {
+  color: var(--secondary);
+  background: rgba(0, 204, 51, 0.1);
 }
 
 .status-bar {
@@ -189,7 +230,6 @@ canvas {
   z-index: 200;
 }
 
-/* Bouton Maintenir pour parler */
 #pushToTalk {
   position: fixed;
   bottom: 75px;
@@ -208,19 +248,141 @@ canvas {
   justify-content: center;
   text-align: center;
   line-height: 1.2;
-  box-shadow: 0 0 28px var(--primary);
-  transition: 0.12s;
+  box-shadow:
+    0 0 20px var(--primary),
+    inset 0 0 20px rgba(0, 255, 65, 0.1);
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  cursor: pointer;
+}
+
+#pushToTalk:active {
+  transform: translateX(-50%) scale(0.95);
 }
 
 #pushToTalk.active {
   background: var(--danger);
-  border-color: #ff0044;
+  border-color: var(--danger);
   color: white;
-  box-shadow: 0 0 45px #ff0044;
-  transform: translateX(-50%) scale(1.07);
+  box-shadow:
+    0 0 40px var(--danger),
+    inset 0 0 20px rgba(255, 0, 68, 0.3);
+  animation: pulse 1s infinite;
 }
 
-/* Settings */
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(255, 0, 68, 0.7); }
+  70% { box-shadow: 0 0 0 15px rgba(255, 0, 68, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 0, 68, 0); }
+}
+
+#recordControls {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  padding: 10px;
+  background: var(--panel);
+  border: 2px solid var(--primary);
+  margin-bottom: 10px;
+}
+
+#recordBtn {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  font-size: 16px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.1;
+}
+
+#recordBtn.recording {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: white;
+  animation: pulse 1s infinite;
+}
+
+#stopBtn, #playBtn, #downloadBtn {
+  flex: 1;
+  max-width: 150px;
+  font-size: 16px;
+}
+
+#stopBtn:disabled {
+  background: rgba(255, 0, 68, 0.2);
+  border-color: var(--danger);
+}
+
+#capturesList {
+  grid-column: 1 / -1;
+  max-height: 250px;
+  overflow-y: auto;
+  background: var(--panel);
+  border: 2px solid var(--primary);
+  padding: 10px;
+}
+
+.capture-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px;
+  margin-bottom: 8px;
+  background: rgba(0, 255, 65, 0.05);
+  border: 1px solid rgba(0, 255, 65, 0.2);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.capture-item:hover {
+  background: rgba(0, 255, 65, 0.1);
+}
+
+.capture-info {
+  flex: 1;
+}
+
+.capture-name {
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.capture-time {
+  font-size: 12px;
+  color: var(--secondary);
+}
+
+.capture-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.capture-actions button {
+  padding: 4px 8px;
+  font-size: 12px;
+  border-width: 2px;
+}
+
+#recordTimer {
+  grid-column: 1 / -1;
+  text-align: center;
+  font-size: 24px;
+  padding: 10px;
+  background: var(--panel);
+  border: 2px solid var(--warning);
+  margin-bottom: 10px;
+  display: none;
+}
+
+#recordTimer.active {
+  display: block;
+  animation: pulse 1s infinite;
+}
+
 #settings-page {
   display: none;
   position: fixed;
@@ -242,6 +404,7 @@ canvas {
   margin-bottom: 25px;
   border-bottom: 3px solid var(--primary);
   padding-bottom: 12px;
+  text-shadow: var(--text-glow);
 }
 
 .settings-section {
@@ -249,6 +412,7 @@ canvas {
   border: 3px solid var(--primary);
   padding: 16px;
   margin-bottom: 18px;
+  box-shadow: 0 0 10px rgba(0, 255, 65, 0.2);
 }
 
 .form-group {
@@ -258,6 +422,7 @@ canvas {
 .form-group label {
   display: block;
   margin-bottom: 6px;
+  font-size: 16px;
 }
 
 .form-group input,
@@ -269,6 +434,14 @@ canvas {
   border: 2px solid var(--primary);
   font-family: 'VT323', monospace;
   font-size: 17px;
+  outline: none;
+  transition: border-color 0.3s;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  border-color: var(--secondary);
+  box-shadow: 0 0 10px rgba(0, 204, 51, 0.5);
 }
 
 .btn-close {
@@ -279,6 +452,68 @@ canvas {
   background: none;
   border: none;
   color: var(--primary);
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.btn-close:hover {
+  transform: scale(1.2);
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #001100;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--primary);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--secondary);
+}
+
+@media (max-width: 768px) {
+  body {
+    font-size: 16px;
+  }
+  .boot-text {
+    font-size: 22px;
+  }
+  #pushToTalk {
+    width: 130px;
+    height: 130px;
+    font-size: 16px;
+    bottom: 20px;
+  }
+  .panel {
+    min-height: 140px;
+  }
+  #recordControls {
+    flex-wrap: wrap;
+  }
+  #recordBtn {
+    width: 80px;
+    height: 80px;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  #main {
+    grid-template-columns: 1fr;
+  }
+  header {
+    font-size: 18px;
+  }
+  button {
+    padding: 10px 20px;
+    font-size: 16px;
+  }
 }
 </style>
 </head>
@@ -287,23 +522,34 @@ canvas {
 <!-- PAGE PARAMÈTRES -->
 <div id="settings-page">
   <button class="btn-close" id="closeSettings">✕</button>
-  <div class="settings-header">PARAMÈTRES SUPRA LAB</div>
+  <div class="settings-header">⚙️ PARAMÈTRES ULTIMATE PRO</div>
 
   <div class="settings-section">
-    <h3>🔑 Clé API Groq</h3>
+    <h3>🔑 Configuration API</h3>
     <div class="form-group">
-      <label>Colle ta clé (commence par gsk_)</label>
+      <label>Clé API Groq (obligatoire)</label>
       <input type="password" id="groqApiKey" placeholder="gsk_...">
+    </div>
+    <div class="form-group">
+      <label>Modèle IA</label>
+      <select id="aiModel">
+        <option value="llama-3.3-70b-versatile">Llama 3.3 70B (Recommandé)</option>
+        <option value="llama3-8b-8192">Llama 3 8B (Rapide)</option>
+        <option value="mixtral-8x7b-32768">Mixtral 8x7B (Précis)</option>
+        <option value="gemma2-9b-it">Gemma2 9B (Léger)</option>
+      </select>
     </div>
   </div>
 
   <div class="settings-section">
-    <h3>🎤 Options</h3>
+    <h3>🎤 Reconnaissance Vocale</h3>
     <div class="form-group">
-      <label>Langue de reconnaissance</label>
+      <label>Langue</label>
       <select id="voiceLanguage">
-        <option value="fr-FR">Français</option>
-        <option value="en-US">English</option>
+        <option value="fr-FR">Français (France)</option>
+        <option value="en-US">Anglais (États-Unis)</option>
+        <option value="es-ES">Espagnol</option>
+        <option value="de-DE">Allemand</option>
       </select>
     </div>
     <div class="form-group">
@@ -312,27 +558,84 @@ canvas {
         Lire les réponses à voix haute
       </label>
     </div>
+    <div class="form-group">
+      <label>
+        <input type="checkbox" id="autoListen">
+        Écoute automatique au démarrage
+      </label>
+    </div>
+  </div>
+
+  <div class="settings-section">
+    <h3>🎨 Apparence</h3>
+    <div class="form-group">
+      <label>Couleur principale</label>
+      <select id="primaryColor">
+        <option value="#00ff41">Vert électrique (Défaut)</option>
+        <option value="#00aaff">Bleu électrique</option>
+        <option value="#ff00aa">Rose néon</option>
+        <option value="#ffaa00">Orange néon</option>
+        <option value="#aa00ff">Violet néon</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>
+        <input type="checkbox" id="enableGlow" checked>
+        Effets de lueur activés
+      </label>
+    </div>
+  </div>
+
+  <div class="settings-section">
+    <h3>🔊 Audio & Enregistrement</h3>
+    <div class="form-group">
+      <label>Sensibilité du micro</label>
+      <input type="range" id="micSensitivity" min="0" max="100" value="70">
+    </div>
+    <div class="form-group">
+      <label>
+        <input type="checkbox" id="noiseSuppression" checked>
+        Réduction du bruit
+      </label>
+    </div>
+    <div class="form-group">
+      <label>Format d'enregistrement</label>
+      <select id="audioFormat">
+        <option value="wav">WAV (Non compressé)</option>
+        <option value="mp3" selected>MP3 (Compressé)</option>
+      </select>
+    </div>
   </div>
 
   <div style="text-align:center; margin-top:25px;">
-    <button id="saveSettings">💾 SAUVEGARDER</button>
+    <button id="saveSettings">💾 SAUVEGARDER & APPLIQUER</button>
+    <button id="resetSettings" style="margin-left: 15px; background: rgba(255, 0, 68, 0.1); border-color: var(--danger); color: var(--danger);">⚠️ RÉINITIALISER</button>
   </div>
 </div>
 
 <!-- ÉCRAN DE DÉMARRAGE -->
 <div id="start-screen">
   <div class="boot-text">
-    SUPRA LAB v11<br>
-    <span style="color:var(--warning)">PARANORMAL PRO</span><br>
-    + PUSH-TO-TALK + GROQ
+    SUPRA LAB v13<br>
+    <span style="color:var(--warning)">ULTIMATE PRO + RECORDER</span><br>
+    <span style="font-size: 16px; color: var(--secondary);">+ PUSH-TO-TALK + GROQ AI + AUDIO RECORDING</span>
   </div>
-  <button id="btnStart">LANCER LE SYSTÈME</button>
+  <button id="btnStart">🚀 LANCER LE SYSTÈME</button>
   <button id="btnSettings">⚙️ PARAMÈTRES</button>
 </div>
 
 <!-- INTERFACE PRINCIPALE -->
 <div id="main">
-  <header>SUPRA LAB v11 — PARANORMAL PRO</header>
+  <header>SUPRA LAB v13 — <span id="header-model">ULTIMATE PRO + RECORDER</span></header>
+
+  <div id="recordTimer">⏱️ 00:00:00</div>
+
+  <div id="recordControls">
+    <button id="recordBtn" title="Démarrer l'enregistrement">🎤 REC</button>
+    <button id="stopBtn" title="Arrêter l'enregistrement" disabled>⏹️ STOP</button>
+    <button id="playBtn" title="Lire l'enregistrement">▶️ PLAY</button>
+    <button id="downloadBtn" title="Télécharger l'enregistrement">💾 SAVE</button>
+  </div>
 
   <div class="panel">
     <div class="panel-header">📡 SPECTROGRAMME</div>
@@ -345,18 +648,46 @@ canvas {
   </div>
 
   <div class="panel full">
-    <div class="panel-header">🤖 AVIS RÉEL DE L'IA GROQ</div>
-    <div id="ai-report">Appuie et maintiens le bouton pour capturer l'environnement puis relâche.</div>
+    <div class="panel-header">🤖 ANALYSE IA (Groq)</div>
+    <div id="ai-report">
+      ✅ Système prêt.
+      Appuie sur 🎤 REC pour démarrer un enregistrement.
+      L'IA analysera le contenu une fois l'enregistrement arrêté.
+    </div>
   </div>
 
   <div class="panel full" id="log">
     <div class="panel-header">📜 LOG TEMPS RÉEL</div>
   </div>
+
+  <div class="panel full">
+    <div class="panel-header">💾 MES CAPTURES</div>
+    <div id="capturesList">
+      <div style="text-align: center; color: var(--secondary); padding: 20px;">
+        Aucune capture enregistrée pour l'instant.
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-header">🎚️ NIVEAU SONORE</div>
+    <canvas id="volume-meter" style="height: 100px;"></canvas>
+  </div>
+
+  <div class="panel">
+    <div class="panel-header">⚡ STATUT SYSTÈME</div>
+    <div id="system-status" style="padding: 10px; font-size: 14px;">
+      - Micro: ❌ Non connecté<br>
+      - API Groq: ❌ Non configurée<br>
+      - Reconnaissance: ❌ Inactive<br>
+      - Enregistreur: ✅ Prêt
+    </div>
+  </div>
 </div>
 
 <div class="status-bar">
   <span id="status-text">En attente du démarrage...</span>
-  <span>Realme Note 60</span>
+  <span>Realme Note 60 | v13.0 | <span id="current-time">--:--:--</span></span>
 </div>
 
 <!-- BOUTON MAINTENIR POUR PARLER -->
@@ -364,33 +695,63 @@ canvas {
   MAINTENIR<br>POUR PARLER
 </button>
 
+<!-- Lecteur audio caché -->
+<audio id="audioPlayer" style="display: none;"></audio>
+
 <script>
 // ====================== CONFIG ======================
 const DEFAULT_CONFIG = {
   groqApiKey: '',
   voiceLanguage: 'fr-FR',
-  voiceFeedback: true
+  voiceFeedback: true,
+  autoListen: false,
+  aiModel: 'llama-3.3-70b-versatile',
+  primaryColor: '#00ff41',
+  enableGlow: true,
+  noiseSuppression: true,
+  micSensitivity: 70,
+  audioFormat: 'mp3'
 };
 
 let config = { ...DEFAULT_CONFIG };
 let audioCtx, analyser, microphone, audioStream = null;
-let frequencyArray, timeArray;
+let frequencyArray, timeArray, volumeArray;
 let isRunning = false;
 let recognition = null;
 let finalTranscript = '';
 let isListening = false;
 let synthesis = window.speechSynthesis;
+let volumeMeterCtx, volumeMeterAnalyser;
+
+// ===== ENREGISTREUR AUDIO =====
+let mediaRecorder = null;
+let audioChunks = [];
+let recordedBlob = null;
+let isRecording = false;
+let recordingStartTime = 0;
+let audioURL = '';
+let captures = [];
 
 // ====================== UTILITAIRES ======================
-function log(msg, important = false) {
+function log(msg, type = 'normal') {
   const container = document.getElementById('log');
   if (!container) return;
+
   const line = document.createElement('div');
-  line.className = 'log-line' + (important ? ' important' : '');
-  line.textContent = `[${new Date().toLocaleTimeString('fr-FR')}] ${msg}`;
+  line.className = 'log-line';
+
+  if (type === 'important') line.classList.add('important');
+  else if (type === 'success') line.classList.add('success');
+
+  const timestamp = new Date().toLocaleTimeString('fr-FR');
+  line.innerHTML = `<strong>[${timestamp}]</strong> ${msg}`;
+
   container.appendChild(line);
   container.scrollTop = container.scrollHeight;
-  if (container.children.length > 35) container.removeChild(container.children[0]);
+
+  if (container.children.length > 50) {
+    container.removeChild(container.children[0]);
+  }
 }
 
 function updateStatus(text) {
@@ -398,29 +759,114 @@ function updateStatus(text) {
   if (el) el.textContent = text;
 }
 
+function updateSystemStatus() {
+  const statusEl = document.getElementById('system-status');
+  if (!statusEl) return;
+
+  const microStatus = audioStream ? '✅ Connecté' : '❌ Non connecté';
+  const apiStatus = config.groqApiKey ? '✅ Configurée' : '❌ Non configurée';
+  const recStatus = isRunning ? '✅ Active' : '❌ Inactive';
+  const recorderStatus = isRecording ? '🔴 En cours' : '✅ Prêt';
+  const modelName = config.aiModel.replace(/-gq|:free|:chat/g, '').toUpperCase();
+
+  statusEl.innerHTML = `
+    - Micro: ${microStatus}<br>
+    - API Groq: ${apiStatus}<br>
+    - Reconnaissance: ${recStatus}<br>
+    - Enregistreur: ${recorderStatus}<br>
+    - Modèle: ${modelName}
+  `;
+}
+
+function updateHeaderModel() {
+  const headerEl = document.getElementById('header-model');
+  if (headerEl) {
+    const modelName = config.aiModel.replace(/-gq|:free|:chat/g, '').toUpperCase();
+    headerEl.textContent = `${modelName} | ULTIMATE PRO + RECORDER`;
+  }
+}
+
 function loadConfig() {
   try {
     const saved = localStorage.getItem('supraLabConfig');
-    if (saved) config = { ...DEFAULT_CONFIG, ...JSON.parse(saved) };
-  } catch (e) {}
-  
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      config = { ...DEFAULT_CONFIG, ...parsed };
+    }
+  } catch (e) {
+    log('Erreur de chargement de la config: ' + e.message, 'important');
+  }
+
+  try {
+    const savedCaptures = localStorage.getItem('supraLabCaptures');
+    if (savedCaptures) {
+      captures = JSON.parse(savedCaptures);
+    }
+  } catch (e) {
+    log('Erreur de chargement des captures: ' + e.message, 'important');
+  }
+
+  applyConfig();
+  renderCapturesList();
+}
+
+function applyConfig() {
+  document.documentElement.style.setProperty('--primary', config.primaryColor);
+
   const keyInput = document.getElementById('groqApiKey');
   const langSelect = document.getElementById('voiceLanguage');
   const voiceCheck = document.getElementById('voiceFeedback');
-  
+  const autoListenCheck = document.getElementById('autoListen');
+  const modelSelect = document.getElementById('aiModel');
+  const colorSelect = document.getElementById('primaryColor');
+  const glowCheck = document.getElementById('enableGlow');
+  const noiseCheck = document.getElementById('noiseSuppression');
+  const sensitivityInput = document.getElementById('micSensitivity');
+  const audioFormatSelect = document.getElementById('audioFormat');
+
   if (keyInput) keyInput.value = config.groqApiKey || '';
   if (langSelect) langSelect.value = config.voiceLanguage || 'fr-FR';
   if (voiceCheck) voiceCheck.checked = config.voiceFeedback !== false;
+  if (autoListenCheck) autoListenCheck.checked = config.autoListen !== false;
+  if (modelSelect) modelSelect.value = config.aiModel || 'llama-3.3-70b-versatile';
+  if (colorSelect) colorSelect.value = config.primaryColor || '#00ff41';
+  if (glowCheck) glowCheck.checked = config.enableGlow !== false;
+  if (noiseCheck) noiseCheck.checked = config.noiseSuppression !== false;
+  if (sensitivityInput) sensitivityInput.value = config.micSensitivity || 70;
+  if (audioFormatSelect) audioFormatSelect.value = config.audioFormat || 'mp3';
+
+  updateHeaderModel();
+  updateSystemStatus();
 }
 
 function saveConfig() {
   config.groqApiKey = (document.getElementById('groqApiKey')?.value || '').trim();
   config.voiceLanguage = document.getElementById('voiceLanguage')?.value || 'fr-FR';
   config.voiceFeedback = document.getElementById('voiceFeedback')?.checked ?? true;
-  
+  config.autoListen = document.getElementById('autoListen')?.checked ?? false;
+  config.aiModel = document.getElementById('aiModel')?.value || 'llama-3.3-70b-versatile';
+  config.primaryColor = document.getElementById('primaryColor')?.value || '#00ff41';
+  config.enableGlow = document.getElementById('enableGlow')?.checked ?? true;
+  config.noiseSuppression = document.getElementById('noiseSuppression')?.checked ?? true;
+  config.micSensitivity = parseInt(document.getElementById('micSensitivity')?.value) || 70;
+  config.audioFormat = document.getElementById('audioFormat')?.value || 'mp3';
+
   localStorage.setItem('supraLabConfig', JSON.stringify(config));
-  log("Configuration sauvegardée");
-  updateStatus("Paramètres enregistrés");
+  localStorage.setItem('supraLabCaptures', JSON.stringify(captures));
+  applyConfig();
+  log('✅ Configuration sauvegardée et appliquée', 'success');
+}
+
+function resetConfig() {
+  if (confirm('⚠️ Réinitialiser tous les paramètres et supprimer les captures ?')) {
+    config = { ...DEFAULT_CONFIG };
+    captures = [];
+    localStorage.setItem('supraLabConfig', JSON.stringify(config));
+    localStorage.setItem('supraLabCaptures', JSON.stringify(captures));
+    applyConfig();
+    renderCapturesList();
+    log('⚠️ Tout a été réinitialisé', 'important');
+  }
 }
 
 function speak(text) {
@@ -429,17 +875,212 @@ function speak(text) {
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = config.voiceLanguage;
   utterance.rate = 0.95;
+  utterance.pitch = 1;
   synthesis.speak(utterance);
+}
+
+// ====================== HEURE EN TEMPS RÉEL ======================
+function updateClock() {
+  const now = new Date();
+  const timeString = now.toLocaleTimeString('fr-FR');
+  const clockEl = document.getElementById('current-time');
+  if (clockEl) clockEl.textContent = timeString;
+}
+
+setInterval(updateClock, 1000);
+updateClock();
+
+// ====================== ENREGISTREUR AUDIO ======================
+function startRecording() {
+  if (isRecording || !audioStream) return;
+
+  isRecording = true;
+  audioChunks = [];
+  recordingStartTime = Date.now();
+
+  const recordBtn = document.getElementById('recordBtn');
+  const stopBtn = document.getElementById('stopBtn');
+  const timerEl = document.getElementById('recordTimer');
+
+  recordBtn.classList.add('recording');
+  recordBtn.innerHTML = "⏺️ REC";
+  stopBtn.disabled = false;
+  timerEl.classList.add('active');
+
+  updateStatus("🎤 Enregistrement en cours...");
+  log('🎤 Enregistrement démarré', 'success');
+
+  const options = {
+    mimeType: config.audioFormat === 'wav' ? 'audio/wav' : 'audio/mpeg',
+    audioBitsPerSecond: config.audioFormat === 'wav' ? 128000 : 64000
+  };
+
+  mediaRecorder = new MediaRecorder(audioStream, options);
+
+  mediaRecorder.ondataavailable = (event) => {
+    if (event.data.size > 0) {
+      audioChunks.push(event.data);
+    }
+  };
+
+  mediaRecorder.onstop = () => {
+    recordedBlob = new Blob(audioChunks, { type: mediaRecorder.mimeType });
+    audioURL = URL.createObjectURL(recordedBlob);
+
+    const duration = Math.floor((Date.now() - recordingStartTime) / 1000);
+    const name = `Capture_${new Date().toLocaleDateString('fr-FR').replace(/\//g, '-')}_${new Date().toLocaleTimeString('fr-FR').replace(/:/g, '-')}`;
+
+    captures.unshift({
+      name: name,
+      url: audioURL,
+      blob: recordedBlob,
+      duration: duration,
+      timestamp: new Date().toISOString()
+    });
+
+    renderCapturesList();
+    saveConfig();
+
+    log(`✅ Enregistrement terminé (${duration}s)`, 'success');
+    updateStatus("✅ Enregistrement terminé");
+  };
+
+  mediaRecorder.start(100);
+  startTimer();
+}
+
+function stopRecording() {
+  if (!isRecording || !mediaRecorder) return;
+
+  isRecording = false;
+  const recordBtn = document.getElementById('recordBtn');
+  const stopBtn = document.getElementById('stopBtn');
+  const timerEl = document.getElementById('recordTimer');
+
+  recordBtn.classList.remove('recording');
+  recordBtn.innerHTML = "🎤 REC";
+  stopBtn.disabled = true;
+  timerEl.classList.remove('active');
+  timerEl.textContent = "⏱️ 00:00:00";
+
+  mediaRecorder.stop();
+  stopTimer();
+}
+
+function playRecording(url) {
+  const audioPlayer = document.getElementById('audioPlayer');
+  audioPlayer.src = url;
+  audioPlayer.play();
+  log('▶️ Lecture de l\'enregistrement', 'success');
+}
+
+function downloadRecording(blob, name) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${name}.${config.audioFormat}`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  log(`💾 Téléchargement: ${name}.${config.audioFormat}`, 'success');
+}
+
+function deleteRecording(index) {
+  if (confirm('⚠️ Supprimer cette capture ?')) {
+    const capture = captures[index];
+    if (capture.url) URL.revokeObjectURL(capture.url);
+    captures.splice(index, 1);
+    renderCapturesList();
+    saveConfig();
+    log(`🗑️ Capture supprimée`, 'success');
+  }
+}
+
+function analyzeRecording(index) {
+  const capture = captures[index];
+  if (!capture || !capture.url) return;
+
+  const audioPlayer = document.getElementById('audioPlayer');
+  audioPlayer.src = capture.url;
+
+  audioPlayer.onloadedmetadata = () => {
+    const duration = audioPlayer.duration;
+    log(`🔍 Analyse de la capture: ${capture.name} (${Math.round(duration)}s)`, 'success');
+    updateStatus("⏳ Analyse en cours...");
+
+    const prompt = `Analyse ce fichier audio: \"${capture.name}\" (durée: ${Math.round(duration)}s).
+    Donne une description de ce que tu entends (parole, bruit, musique, etc.) et une transcription si possible.
+    Sois précis, direct, et réponds en français (5-8 phrases max).`;
+
+    analyzeWithGroq(prompt);
+  };
+
+  audioPlayer.play();
+}
+
+// Timer pour l'enregistrement
+let timerInterval;
+
+function startTimer() {
+  const timerEl = document.getElementById('recordTimer');
+  let seconds = 0;
+
+  timerInterval = setInterval(() => {
+    seconds++;
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    timerEl.textContent = `⏱️ ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  }, 1000);
+}
+
+function stopTimer() {
+  if (timerInterval) {
+    clearInterval(timerInterval);
+    timerInterval = null;
+  }
+}
+
+// Afficher la liste des captures
+function renderCapturesList() {
+  const container = document.getElementById('capturesList');
+  if (!container) return;
+
+  if (captures.length === 0) {
+    container.innerHTML = '<div style="text-align: center; color: var(--secondary); padding: 20px;">Aucune capture enregistrée pour l\'instant.</div>';
+    return;
+  }
+
+  container.innerHTML = '';
+  captures.forEach((capture, index) => {
+    const item = document.createElement('div');
+    item.className = 'capture-item';
+    item.innerHTML = `
+      <div class="capture-info">
+        <div class="capture-name">${capture.name}</div>
+        <div class="capture-time">${capture.duration}s | ${new Date(capture.timestamp).toLocaleString('fr-FR')}</div>
+      </div>
+      <div class="capture-actions">
+        <button onclick="playRecording('${capture.url}')" title="Lire">▶️</button>
+        <button onclick="analyzeRecording(${index})" title="Analyser avec IA">🤖</button>
+        <button onclick="downloadRecording(captures[${index}].blob, captures[${index}].name)" title="Télécharger">💾</button>
+        <button onclick="deleteRecording(${index})" title="Supprimer" style="border-color: var(--danger); color: var(--danger);">❌</button>
+      </div>
+    `;
+    container.appendChild(item);
+  });
 }
 
 // ====================== PUSH-TO-TALK ======================
 function initPushToTalk() {
   const btn = document.getElementById('pushToTalk');
+  if (!btn) return;
 
   const startListen = (e) => {
     e.preventDefault();
     if (!isRunning) {
-      log("Lance d'abord le système", true);
+      log('⚠️ Lance d\'abord le système !', 'important');
       return;
     }
     if (isListening) return;
@@ -447,9 +1088,9 @@ function initPushToTalk() {
     isListening = true;
     finalTranscript = '';
     btn.classList.add('active');
-    btn.innerHTML = "ÉCOUTE...<br>parle clairement";
-    updateStatus("Écoute en cours...");
-    log("Écoute démarrée", true);
+    btn.innerHTML = "ÉCOUTE...<br><small>parle clairement</small>";
+    updateStatus("🎤 Écoute en cours...");
+    log('🎤 Écoute démarrée', 'success');
     startRecognition();
   };
 
@@ -460,17 +1101,16 @@ function initPushToTalk() {
     isListening = false;
     btn.classList.remove('active');
     btn.innerHTML = "MAINTENIR<br>POUR PARLER";
-    updateStatus("Analyse en cours...");
+    updateStatus("⏳ Analyse en cours...");
 
     setTimeout(() => {
       stopRecognition();
       const captured = finalTranscript.trim() || "(aucun mot clair détecté)";
-      log(`Capturé : "${captured}"`, true);
+      log(`🎤 Capturé : \"${captured}\"`, 'success');
       analyzeWithGroq(captured);
-    }, 450);
+    }, 300);
   };
 
-  // Support tactile + souris
   btn.addEventListener('touchstart', startListen, { passive: false });
   btn.addEventListener('touchend', stopListen, { passive: false });
   btn.addEventListener('touchcancel', stopListen, { passive: false });
@@ -482,7 +1122,7 @@ function initPushToTalk() {
 function startRecognition() {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SpeechRecognition) {
-    log("Reconnaissance vocale non supportée sur ce navigateur", true);
+    log('❌ Reconnaissance vocale non supportée sur ce navigateur', 'important');
     return;
   }
 
@@ -494,7 +1134,7 @@ function startRecognition() {
 
     recognition = new SpeechRecognition();
     recognition.lang = config.voiceLanguage || 'fr-FR';
-    recognition.continuous = false;
+    recognition.continuous = true;
     recognition.interimResults = true;
     recognition.maxAlternatives = 5;
 
@@ -505,19 +1145,27 @@ function startRecognition() {
       }
       if (text.trim().length > 0) {
         finalTranscript = text.trim();
-        log("En cours : " + finalTranscript);
+        log(`🔍 Transcription en cours: \"${finalTranscript}\"`);
       }
     };
 
     recognition.onerror = (event) => {
       if (event.error !== 'no-speech' && event.error !== 'aborted') {
-        log("Erreur reconnaissance : " + event.error, true);
+        log(`❌ Erreur reconnaissance: ${event.error}`, 'important');
+      }
+    };
+
+    recognition.onend = () => {
+      if (isListening) {
+        setTimeout(() => {
+          if (isListening) recognition.start();
+        }, 100);
       }
     };
 
     recognition.start();
   } catch (err) {
-    log("Impossible de démarrer la reconnaissance : " + err.message, true);
+    log('❌ Impossible de démarrer la reconnaissance: ' + err.message, 'important');
   }
 }
 
@@ -525,36 +1173,45 @@ function stopRecognition() {
   if (recognition) {
     try {
       recognition.stop();
+      recognition = null;
     } catch (e) {}
   }
 }
 
-// ====================== ANALYSE GROQ (AVIS RÉEL) ======================
+// ====================== ANALYSE GROQ ======================
 async function analyzeWithGroq(transcript) {
   const reportEl = document.getElementById('ai-report');
-  
+
   if (!config.groqApiKey) {
-    reportEl.textContent = "Aucune clé API Groq configurée.\nVa dans les paramètres et colle ta clé.";
-    log("Clé API manquante", true);
-    updateStatus("Clé API manquante");
+    reportEl.textContent = "❌ Aucune clé API Groq configurée.\n\nVa dans les paramètres (⚙️) et colle ta clé.";
+    log('❌ Clé API Groq manquante', 'important');
+    updateStatus("❌ Clé API manquante");
+    speak("Clé API Groq non configurée. Veuillez la renseigner dans les paramètres.");
     return;
   }
 
-  reportEl.textContent = "Analyse en cours par Groq...";
+  reportEl.textContent = "⏳ Analyse en cours par Groq AI...\n\nPatiente un instant.";
+  updateStatus("⏳ Analyse IA en cours...");
 
-  const prompt = `Tu es un analyste franc et direct. 
-Tu reçois une transcription brute provenant d'un micro (parole, bruit, silence ou reconnaissance imparfaite).
+  const prompt = `Tu es un analyste ultra-précis et franc. Tu reçois une transcription ou une description d'un fichier audio.
 
-Transcription reçue : "${transcript}"
+--- CONTEXTE ---
+Contenu à analyser: \"${transcript}\"
 
-Donne ton vrai avis sans détour :
-- Qu'est-ce que tu penses réellement de ce qui a été capté ?
-- Est-ce de la parole claire, du bruit, du silence, ou une mauvaise reconnaissance ?
-- Si tu arrives à distinguer des mots possibles, dis-les clairement.
-- Sois honnête et concis (maximum 5-6 phrases).
-- N'utilise pas de formules toutes faites du type "silence ou fond de bruit" si ce n'est pas vraiment le cas.
+--- INSTRUCTIONS ---
+1. Si c'est une transcription de parole:
+   - Corrige les éventuelles erreurs.
+   - Donne une interprétation claire et directe.
+2. Si c'est une description de fichier audio:
+   - Décris ce que tu entends (parole, bruit, musique, etc.).
+   - Si tu détectes de la parole, tente une transcription.
+3. Sois concis, direct, et réponds en français (5-8 phrases max).
 
-Réponds uniquement en français.`;
+--- EXEMPLE ---
+"La transcription semble être: \"Bonjour, comment ça va?\" (confiance: 90%).
+C'est une phrase de salutation standard."
+
+Donne ton analyse:`;
 
   try {
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -564,85 +1221,109 @@ Réponds uniquement en français.`;
         'Authorization': `Bearer ${config.groqApiKey}`
       },
       body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
+        model: config.aiModel,
         messages: [
           {
             role: 'system',
-            content: 'Tu es un analyste franc, précis et sans filtre. Tu dis ce que tu penses vraiment de ce que tu reçois.'
+            content: 'Tu es un analyste audio ultra-précis. Tu analyses les transcriptions ou descriptions avec rigueur et sans filtre. Réponds toujours en français.'
           },
           {
             role: 'user',
             content: prompt
           }
         ],
-        temperature: 0.55,
-        max_tokens: 550
+        temperature: 0.3,
+        max_tokens: 600,
+        stream: false
       })
     });
 
     if (!response.ok) {
       const errData = await response.json().catch(() => ({}));
-      throw new Error(errData.error?.message || `Erreur HTTP ${response.status}`);
+      throw new Error(errData.error?.message || `Erreur API: ${response.status}`);
     }
 
     const data = await response.json();
     const answer = data.choices?.[0]?.message?.content || "Aucune réponse reçue.";
 
-    reportEl.textContent = `Transcription capturée :
-"${transcript}"
+    reportEl.textContent = `📝 CONTENU:
+\"${transcript}\"
 
-———————————————
-AVIS RÉEL DE L'IA
-———————————————
+— — — — — — — — — —
+🤖 ANALYSE IA (${config.aiModel})
+— — — — — — — — — —
 
-${answer}`;
+${answer}
 
-    log("Analyse Groq terminée", true);
-    updateStatus("Analyse terminée");
+— — — — — — — — — —
+✅ Analyse terminée à ${new Date().toLocaleTimeString('fr-FR')}`;
 
-    if (config.voiceFeedback) {
-      speak(answer.substring(0, 260));
+    log('✅ Analyse Groq terminée', 'success');
+    updateStatus("✅ Analyse terminée");
+
+    if (config.voiceFeedback && answer.length > 0) {
+      speak(answer.substring(0, 300) + "...");
     }
 
   } catch (error) {
-    reportEl.textContent = `Erreur lors de l'analyse :\n${error.message}`;
-    log("Erreur Groq : " + error.message, true);
-    updateStatus("Erreur API Groq");
+    reportEl.textContent = `❌ Erreur lors de l'analyse:\n\n${error.message}\n\nVérifie ta clé API et ta connexion.`;
+    log(`❌ Erreur Groq: ${error.message}`, 'important');
+    updateStatus("❌ Erreur API Groq");
+    speak("Erreur lors de l'analyse. Vérifiez votre clé API ou votre connexion internet.");
   }
 }
 
-// ====================== AUDIO + VISUALISATION ======================
+// ====================== AUDIO & VISUALISATION ======================
 async function initAudio() {
   try {
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 48000 });
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)({
+      sampleRate: 48000,
+      latencyHint: 'interactive'
+    });
     await audioCtx.resume();
 
-    audioStream = await navigator.mediaDevices.getUserMedia({
+    const constraints = {
       audio: {
-        echoCancellation: true,
-        noiseSuppression: true,
-        autoGainControl: false
+        echoCancellation: config.noiseSuppression,
+        noiseSuppression: config.noiseSuppression,
+        autoGainControl: false,
+        channelCount: 1,
+        sampleRate: 48000
       }
-    });
+    };
+
+    audioStream = await navigator.mediaDevices.getUserMedia(constraints);
 
     microphone = audioCtx.createMediaStreamSource(audioStream);
     analyser = audioCtx.createAnalyser();
-    analyser.fftSize = 2048;
-    analyser.smoothingTimeConstant = 0.7;
+    analyser.fftSize = 4096;
+    analyser.smoothingTimeConstant = 0.85;
+    analyser.maxDecibels = -10;
+    analyser.minDecibels = -90;
+
+    volumeMeterAnalyser = audioCtx.createAnalyser();
+    volumeMeterAnalyser.fftSize = 256;
+    volumeMeterAnalyser.smoothingTimeConstant = 0.8;
+
     microphone.connect(analyser);
+    microphone.connect(volumeMeterAnalyser);
 
     frequencyArray = new Uint8Array(analyser.frequencyBinCount);
     timeArray = new Uint8Array(analyser.frequencyBinCount);
+    volumeArray = new Uint8Array(volumeMeterAnalyser.frequencyBinCount);
 
     isRunning = true;
     loop();
-    log("Système audio prêt");
-    updateStatus("Prêt — utilise le bouton central");
+    updateSystemStatus();
+    log('✅ Système audio prêt (48kHz)', 'success');
+    updateStatus("✅ Micro connecté - Prêt à enregistrer");
+
     return true;
 
   } catch (err) {
-    log("Erreur micro : " + err.message, true);
-    updateStatus("Permission micro refusée");
+    log(`❌ Erreur micro: ${err.message}`, 'important');
+    updateStatus("❌ Permission micro refusée");
+    updateSystemStatus();
     return false;
   }
 }
@@ -653,17 +1334,23 @@ function loop() {
   analyser.getByteFrequencyData(frequencyArray);
   analyser.getByteTimeDomainData(timeArray);
 
+  if (volumeMeterAnalyser) {
+    volumeMeterAnalyser.getByteFrequencyData(volumeArray);
+  }
+
   // Spectrogramme
   const canvas1 = document.getElementById('spectrogram');
   if (canvas1) {
     const ctx = canvas1.getContext('2d');
     ctx.fillStyle = '#000';
     ctx.fillRect(0, 0, canvas1.width, canvas1.height);
+
     const barWidth = canvas1.width / frequencyArray.length;
     for (let i = 0; i < frequencyArray.length; i++) {
       const value = frequencyArray[i];
-      ctx.fillStyle = `hsl(${90 + value / 3}, 100%, ${Math.max(15, value / 3)}%)`;
-      ctx.fillRect(i * barWidth, canvas1.height - value / 2, barWidth + 1, value / 2);
+      const height = Math.log10(value + 1) * 20;
+      ctx.fillStyle = `hsl(${90 + value / 4}, 100%, ${Math.max(10, value / 3)}%)`;
+      ctx.fillRect(i * barWidth, canvas1.height - height, barWidth + 1, height);
     }
   }
 
@@ -673,16 +1360,57 @@ function loop() {
     const ctx = canvas2.getContext('2d');
     ctx.fillStyle = '#000';
     ctx.fillRect(0, 0, canvas2.width, canvas2.height);
+
     ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--primary');
     ctx.lineWidth = 2;
     ctx.beginPath();
+
     const slice = canvas2.width / timeArray.length;
     for (let i = 0; i < timeArray.length; i++) {
-      const y = (timeArray[i] / 128) * (canvas2.height / 2);
+      const y = (timeArray[i] / 128 - 0.5) * canvas2.height * 0.8 + canvas2.height / 2;
       if (i === 0) ctx.moveTo(0, y);
       else ctx.lineTo(i * slice, y);
     }
     ctx.stroke();
+  }
+
+  // Compteur de volume
+  const volumeCanvas = document.getElementById('volume-meter');
+  if (volumeCanvas && volumeArray) {
+    const ctx = volumeCanvas.getContext('2d');
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, volumeCanvas.width, volumeCanvas.height);
+
+    let volumeSum = 0;
+    for (let i = 0; i < volumeArray.length; i++) {
+      volumeSum += volumeArray[i];
+    }
+    const avgVolume = volumeSum / volumeArray.length;
+    const volumePercent = (avgVolume / 255) * 100;
+
+    const barWidth = volumeCanvas.width * 0.8;
+    const barHeight = (volumePercent / 100) * volumeCanvas.height;
+    const x = (volumeCanvas.width - barWidth) / 2;
+    const y = volumeCanvas.height - barHeight;
+
+    const hue = 90 + (1 - volumePercent / 100) * 60;
+    ctx.fillStyle = `hsl(${hue}, 100%, 50%)`;
+    ctx.fillRect(x, y, barWidth, barHeight);
+
+    ctx.strokeStyle = '#00ff41';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (let i = 0; i <= 10; i++) {
+      const gradY = volumeCanvas.height * (1 - i / 10);
+      ctx.moveTo(x, gradY);
+      ctx.lineTo(x + barWidth, gradY);
+    }
+    ctx.stroke();
+
+    ctx.fillStyle = '#00ff41';
+    ctx.font = '14px VT323';
+    ctx.textAlign = 'center';
+    ctx.fillText(`${Math.round(volumePercent)}%`, volumeCanvas.width / 2, volumeCanvas.height / 2);
   }
 
   requestAnimationFrame(loop);
@@ -692,40 +1420,125 @@ function resizeCanvases() {
   document.querySelectorAll('canvas').forEach(canvas => {
     const parent = canvas.parentElement.getBoundingClientRect();
     canvas.width = parent.width - 24;
-    canvas.height = 140;
+    if (canvas.id === 'volume-meter') {
+      canvas.height = 100;
+    } else {
+      canvas.height = 140;
+    }
   });
 }
+
+// ====================== GESTION DES ERREURS ======================
+window.addEventListener('error', (e) => {
+  log(`❌ Erreur globale: ${e.message}`, 'important');
+});
+
+window.addEventListener('unhandledrejection', (e) => {
+  log(`❌ Rejet non géré: ${e.reason}`, 'important');
+});
 
 // ====================== DÉMARRAGE ======================
 document.addEventListener('DOMContentLoaded', () => {
   loadConfig();
   initPushToTalk();
 
-  // Settings
-  document.getElementById('btnSettings').addEventListener('click', () => {
+  // Gestion des paramètres
+  document.getElementById('btnSettings')?.addEventListener('click', () => {
     document.getElementById('settings-page').classList.add('active');
   });
-  
-  document.getElementById('closeSettings').addEventListener('click', () => {
-    document.getElementById('settings-page').classList.remove('active');
-  });
-  
-  document.getElementById('saveSettings').addEventListener('click', () => {
-    saveConfig();
+
+  document.getElementById('closeSettings')?.addEventListener('click', () => {
     document.getElementById('settings-page').classList.remove('active');
   });
 
-  // Lancement
-  document.getElementById('btnStart').addEventListener('click', async () => {
+  document.getElementById('saveSettings')?.addEventListener('click', () => {
+    saveConfig();
+    document.getElementById('settings-page').classList.remove('active');
+
+    if (isRunning) {
+      setTimeout(async () => {
+        isRunning = false;
+        if (audioStream) {
+          audioStream.getTracks().forEach(track => track.stop());
+        }
+        await initAudio();
+      }, 500);
+    }
+  });
+
+  document.getElementById('resetSettings')?.addEventListener('click', resetConfig);
+
+  // Gestion de l'enregistreur
+  document.getElementById('recordBtn')?.addEventListener('click', () => {
+    if (!isRunning) {
+      log('⚠️ Lance d\'abord le système !', 'important');
+      return;
+    }
+    if (isRecording) {
+      stopRecording();
+    } else {
+      startRecording();
+    }
+  });
+
+  document.getElementById('stopBtn')?.addEventListener('click', stopRecording);
+
+  document.getElementById('playBtn')?.addEventListener('click', () => {
+    if (captures.length > 0) {
+      playRecording(captures[0].url);
+    } else {
+      log('⚠️ Aucune capture à lire', 'important');
+    }
+  });
+
+  document.getElementById('downloadBtn')?.addEventListener('click', () => {
+    if (captures.length > 0) {
+      downloadRecording(captures[0].blob, captures[0].name);
+    } else {
+      log('⚠️ Aucune capture à télécharger', 'important');
+    }
+  });
+
+  // Lancement du système
+  document.getElementById('btnStart')?.addEventListener('click', async () => {
     document.getElementById('start-screen').style.display = 'none';
     const main = document.getElementById('main');
     main.classList.add('active');
-    
+
     resizeCanvases();
     window.addEventListener('resize', resizeCanvases);
-    
-    log("=== SUPRA LAB v11 démarré ===");
+
+    log('=== SUPRA LAB v13 démarré ===', 'success');
     await initAudio();
+
+    if (config.autoListen) {
+      setTimeout(() => {
+        isListening = true;
+        startRecognition();
+        log('🎤 Écoute automatique activée', 'success');
+        updateStatus("🎤 Écoute automatique activée");
+      }, 1000);
+    }
+  });
+});
+
+// Gestion de la fermeture de la page
+window.addEventListener('beforeunload', () => {
+  if (audioStream) {
+    audioStream.getTracks().forEach(track => track.stop());
+  }
+  if (recognition) {
+    recognition.abort();
+  }
+  if (synthesis.speaking) {
+    synthesis.cancel();
+  }
+  if (isRecording && mediaRecorder) {
+    mediaRecorder.stop();
+  }
+
+  captures.forEach(capture => {
+    if (capture.url) URL.revokeObjectURL(capture.url);
   });
 });
 </script>
