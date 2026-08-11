@@ -2,19 +2,29 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>SUPRA LAB v11 — PARANORMAL PRO</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+
 :root {
   --primary: #00ff41;
   --secondary: #00cc33;
   --danger: #ff0044;
   --warning: #ffaa00;
-  --bg: #000;
+  --bg: #000000;
   --panel: #001100;
 }
-* { margin:0; padding:0; box-sizing:border-box; touch-action:manipulation; user-select:none; }
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
 body {
   background: var(--bg);
   color: var(--primary);
@@ -22,120 +32,294 @@ body {
   font-size: 18px;
   overflow: hidden;
   height: 100vh;
+  image-rendering: pixelated;
 }
+
 body::before {
-  content:"";
-  position:fixed; inset:0;
-  background: repeating-linear-gradient(to bottom, rgba(0,255,65,0.03) 0px, rgba(0,255,65,0.03) 2px, transparent 2px, transparent 4px);
-  pointer-events:none; z-index:9999;
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(0, 255, 65, 0.03) 0px,
+    rgba(0, 255, 65, 0.03) 2px,
+    transparent 2px,
+    transparent 4px
+  );
+  pointer-events: none;
+  z-index: 9999;
 }
+
 #start-screen, #main {
-  position:fixed; inset:0;
-  display:flex; flex-direction:column; align-items:center; justify-content:center;
-  border: 8px solid var(--primary);
+  position: fixed;
+  inset: 0;
   background: var(--bg);
-  z-index:100;
+  border: 8px solid var(--primary);
+  z-index: 100;
 }
-#main { display:none; padding:10px; gap:10px; overflow-y:auto; }
-#main.grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
-.boot-text { font-size:28px; text-align:center; margin-bottom:30px; text-shadow:0 0 20px var(--primary); }
+
+#start-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 20px;
+}
+
+#main {
+  display: none;
+  padding: 10px;
+  gap: 10px;
+  overflow-y: auto;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+#main.active {
+  display: grid;
+}
+
+.boot-text {
+  font-size: 28px;
+  line-height: 1.3;
+  margin-bottom: 40px;
+  text-shadow: 0 0 18px var(--primary);
+}
+
 button {
-  background:transparent; color:var(--primary); border:4px solid var(--primary);
-  padding:12px 24px; font-size:20px; font-family:'VT323',monospace; margin:6px;
+  background: transparent;
+  color: var(--primary);
+  border: 4px solid var(--primary);
+  padding: 12px 28px;
+  font-size: 20px;
+  font-family: 'VT323', monospace;
+  margin: 8px;
+  cursor: pointer;
 }
-button:active { background:var(--primary); color:#000; }
-#btnStart { font-size:32px; padding:20px 50px; border-width:8px; }
+
+button:active {
+  background: var(--primary);
+  color: #000;
+}
+
+#btnStart {
+  font-size: 32px;
+  padding: 22px 60px;
+  border-width: 7px;
+}
+
 header {
-  grid-column:1/-1; background:var(--panel); border-bottom:5px solid var(--primary);
-  padding:12px; text-align:center; font-size:24px; letter-spacing:2px;
+  grid-column: 1 / -1;
+  background: var(--panel);
+  border-bottom: 5px solid var(--primary);
+  padding: 14px;
+  text-align: center;
+  font-size: 24px;
+  letter-spacing: 2px;
+  text-shadow: 0 0 10px var(--primary);
 }
+
 .panel {
-  background:var(--panel); border:4px solid var(--primary);
-  padding:12px; position:relative; min-height:180px;
+  background: var(--panel);
+  border: 4px solid var(--primary);
+  padding: 12px;
+  position: relative;
+  min-height: 170px;
 }
+
 .panel-header {
-  position:absolute; top:-12px; left:12px; background:var(--panel);
-  padding:0 10px; font-size:16px;
+  position: absolute;
+  top: -13px;
+  left: 14px;
+  background: var(--panel);
+  padding: 0 10px;
+  font-size: 16px;
 }
-.panel.full { grid-column:1/-1; }
-canvas { width:100%; height:140px; background:#000; display:block; }
-#log {
-  max-height:160px; overflow-y:auto; font-size:15px; line-height:1.3;
+
+.panel.full {
+  grid-column: 1 / -1;
 }
-.log-line { margin:3px 0; }
-.log-line.important { color:var(--danger); font-size:17px; }
+
+canvas {
+  width: 100%;
+  height: 140px;
+  background: #000;
+  display: block;
+}
+
 #ai-report {
-  background:#000; border:2px dashed var(--primary); padding:12px;
-  font-size:14px; white-space:pre-wrap; max-height:280px; overflow-y:auto; min-height:120px;
+  background: #000;
+  border: 2px dashed var(--primary);
+  padding: 14px;
+  font-size: 15px;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  max-height: 320px;
+  overflow-y: auto;
+  min-height: 140px;
 }
+
+#log {
+  max-height: 150px;
+  overflow-y: auto;
+  font-size: 15px;
+  line-height: 1.35;
+}
+
+.log-line {
+  margin: 4px 0;
+}
+
+.log-line.important {
+  color: var(--danger);
+  font-size: 16px;
+}
+
 .status-bar {
-  position:fixed; bottom:0; left:0; right:0; background:var(--panel);
-  border-top:4px solid var(--primary); padding:6px 12px; font-size:14px;
-  display:flex; justify-content:space-between; z-index:200;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--panel);
+  border-top: 4px solid var(--primary);
+  padding: 7px 14px;
+  font-size: 14px;
+  display: flex;
+  justify-content: space-between;
+  z-index: 200;
 }
+
+/* Bouton Maintenir pour parler */
 #pushToTalk {
-  position:fixed; bottom:70px; left:50%; transform:translateX(-50%);
-  width:150px; height:150px; border-radius:50%;
-  background:#001100; border:7px solid var(--primary); color:var(--primary);
-  font-size:20px; z-index:300; display:flex; align-items:center; justify-content:center;
-  text-align:center; line-height:1.15; box-shadow:0 0 25px var(--primary);
+  position: fixed;
+  bottom: 75px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 155px;
+  height: 155px;
+  border-radius: 50%;
+  background: #001100;
+  border: 7px solid var(--primary);
+  color: var(--primary);
+  font-size: 19px;
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  line-height: 1.2;
+  box-shadow: 0 0 28px var(--primary);
+  transition: 0.12s;
 }
+
 #pushToTalk.active {
-  background:var(--danger); border-color:#ff0044; color:#fff;
-  box-shadow:0 0 40px #ff0044; transform:translateX(-50%) scale(1.08);
+  background: var(--danger);
+  border-color: #ff0044;
+  color: white;
+  box-shadow: 0 0 45px #ff0044;
+  transform: translateX(-50%) scale(1.07);
 }
+
+/* Settings */
 #settings-page {
-  display:none; position:fixed; inset:0; background:#000; z-index:400;
-  padding:20px; overflow-y:auto; border:8px solid var(--primary);
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: #000;
+  z-index: 500;
+  padding: 20px;
+  overflow-y: auto;
+  border: 8px solid var(--primary);
 }
-#settings-page.active { display:block; }
+
+#settings-page.active {
+  display: block;
+}
+
+.settings-header {
+  text-align: center;
+  font-size: 24px;
+  margin-bottom: 25px;
+  border-bottom: 3px solid var(--primary);
+  padding-bottom: 12px;
+}
+
 .settings-section {
-  background:var(--panel); border:3px solid var(--primary); padding:15px; margin-bottom:15px;
+  background: var(--panel);
+  border: 3px solid var(--primary);
+  padding: 16px;
+  margin-bottom: 18px;
 }
-.form-group { margin-bottom:12px; }
-.form-group label { display:block; margin-bottom:4px; }
-.form-group input, .form-group select {
-  width:100%; padding:8px; background:#000; color:var(--primary);
-  border:2px solid var(--primary); font-family:'VT323',monospace;
+
+.form-group {
+  margin-bottom: 14px;
 }
-.btn-close { position:absolute; top:10px; right:15px; font-size:28px; background:none; border:none; color:var(--primary); }
+
+.form-group label {
+  display: block;
+  margin-bottom: 6px;
+}
+
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 10px;
+  background: #000;
+  color: var(--primary);
+  border: 2px solid var(--primary);
+  font-family: 'VT323', monospace;
+  font-size: 17px;
+}
+
+.btn-close {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  font-size: 30px;
+  background: none;
+  border: none;
+  color: var(--primary);
+}
 </style>
 </head>
 <body>
 
-<!-- SETTINGS -->
+<!-- PAGE PARAMÈTRES -->
 <div id="settings-page">
   <button class="btn-close" id="closeSettings">✕</button>
-  <div style="text-align:center;font-size:24px;margin-bottom:20px;border-bottom:3px solid var(--primary);padding-bottom:10px;">PARAMÈTRES</div>
+  <div class="settings-header">PARAMÈTRES SUPRA LAB</div>
 
   <div class="settings-section">
     <h3>🔑 Clé API Groq</h3>
     <div class="form-group">
-      <label>Clé API (commence par gsk_)</label>
-      <input type="password" id="groqApiKey" placeholder="Colle ta clé ici">
+      <label>Colle ta clé (commence par gsk_)</label>
+      <input type="password" id="groqApiKey" placeholder="gsk_...">
     </div>
   </div>
 
   <div class="settings-section">
-    <h3>🎤 Voix</h3>
+    <h3>🎤 Options</h3>
     <div class="form-group">
-      <label>Langue</label>
+      <label>Langue de reconnaissance</label>
       <select id="voiceLanguage">
         <option value="fr-FR">Français</option>
         <option value="en-US">English</option>
       </select>
     </div>
     <div class="form-group">
-      <label><input type="checkbox" id="voiceFeedback" checked> Lire les réponses à voix haute</label>
+      <label>
+        <input type="checkbox" id="voiceFeedback" checked>
+        Lire les réponses à voix haute
+      </label>
     </div>
   </div>
 
-  <div style="text-align:center;margin-top:20px;">
-    <button id="saveSettings">💾 Sauvegarder</button>
+  <div style="text-align:center; margin-top:25px;">
+    <button id="saveSettings">💾 SAUVEGARDER</button>
   </div>
 </div>
 
-<!-- START SCREEN -->
+<!-- ÉCRAN DE DÉMARRAGE -->
 <div id="start-screen">
   <div class="boot-text">
     SUPRA LAB v11<br>
@@ -146,7 +330,7 @@ canvas { width:100%; height:140px; background:#000; display:block; }
   <button id="btnSettings">⚙️ PARAMÈTRES</button>
 </div>
 
-<!-- MAIN -->
+<!-- INTERFACE PRINCIPALE -->
 <div id="main">
   <header>SUPRA LAB v11 — PARANORMAL PRO</header>
 
@@ -154,39 +338,42 @@ canvas { width:100%; height:140px; background:#000; display:block; }
     <div class="panel-header">📡 SPECTROGRAMME</div>
     <canvas id="spectrogram"></canvas>
   </div>
+
   <div class="panel">
     <div class="panel-header">📊 OSCILLOSCOPE</div>
     <canvas id="scope"></canvas>
   </div>
 
   <div class="panel full">
-    <div class="panel-header">🤖 RAPPORT IA GROQ (AVIS RÉEL)</div>
-    <div id="ai-report">[Appuie sur le bouton pour capturer et analyser]</div>
+    <div class="panel-header">🤖 AVIS RÉEL DE L'IA GROQ</div>
+    <div id="ai-report">Appuie et maintiens le bouton pour capturer l'environnement puis relâche.</div>
   </div>
 
   <div class="panel full" id="log">
-    <div class="panel-header">📜 LOG</div>
+    <div class="panel-header">📜 LOG TEMPS RÉEL</div>
   </div>
 </div>
 
 <div class="status-bar">
-  <span id="status-text">En attente...</span>
+  <span id="status-text">En attente du démarrage...</span>
   <span>Realme Note 60</span>
 </div>
 
-<!-- BOUTON MAINTENIR -->
+<!-- BOUTON MAINTENIR POUR PARLER -->
 <button id="pushToTalk">
   MAINTENIR<br>POUR PARLER
 </button>
 
 <script>
+// ====================== CONFIG ======================
 const DEFAULT_CONFIG = {
   groqApiKey: '',
   voiceLanguage: 'fr-FR',
   voiceFeedback: true
 };
-let config = {...DEFAULT_CONFIG};
-let audioCtx, analyser, microphone, gainNode, audioStream = null;
+
+let config = { ...DEFAULT_CONFIG };
+let audioCtx, analyser, microphone, audioStream = null;
 let frequencyArray, timeArray;
 let isRunning = false;
 let recognition = null;
@@ -194,54 +381,62 @@ let finalTranscript = '';
 let isListening = false;
 let synthesis = window.speechSynthesis;
 
-function log(msg, important=false) {
-  const div = document.getElementById('log');
-  if (!div) return;
+// ====================== UTILITAIRES ======================
+function log(msg, important = false) {
+  const container = document.getElementById('log');
+  if (!container) return;
   const line = document.createElement('div');
   line.className = 'log-line' + (important ? ' important' : '');
   line.textContent = `[${new Date().toLocaleTimeString('fr-FR')}] ${msg}`;
-  div.appendChild(line);
-  div.scrollTop = div.scrollHeight;
-  if (div.children.length > 40) div.removeChild(div.children[0]);
+  container.appendChild(line);
+  container.scrollTop = container.scrollHeight;
+  if (container.children.length > 35) container.removeChild(container.children[0]);
 }
 
-function updateStatus(t) {
+function updateStatus(text) {
   const el = document.getElementById('status-text');
-  if (el) el.textContent = t;
+  if (el) el.textContent = text;
 }
 
 function loadConfig() {
-  const saved = localStorage.getItem('supraLabConfig');
-  if (saved) {
-    try { config = {...DEFAULT_CONFIG, ...JSON.parse(saved)}; } catch(e){}
-  }
-  if (document.getElementById('groqApiKey')) document.getElementById('groqApiKey').value = config.groqApiKey || '';
-  if (document.getElementById('voiceLanguage')) document.getElementById('voiceLanguage').value = config.voiceLanguage;
-  if (document.getElementById('voiceFeedback')) document.getElementById('voiceFeedback').checked = config.voiceFeedback;
+  try {
+    const saved = localStorage.getItem('supraLabConfig');
+    if (saved) config = { ...DEFAULT_CONFIG, ...JSON.parse(saved) };
+  } catch (e) {}
+  
+  const keyInput = document.getElementById('groqApiKey');
+  const langSelect = document.getElementById('voiceLanguage');
+  const voiceCheck = document.getElementById('voiceFeedback');
+  
+  if (keyInput) keyInput.value = config.groqApiKey || '';
+  if (langSelect) langSelect.value = config.voiceLanguage || 'fr-FR';
+  if (voiceCheck) voiceCheck.checked = config.voiceFeedback !== false;
 }
 
 function saveConfig() {
   config.groqApiKey = (document.getElementById('groqApiKey')?.value || '').trim();
   config.voiceLanguage = document.getElementById('voiceLanguage')?.value || 'fr-FR';
   config.voiceFeedback = document.getElementById('voiceFeedback')?.checked ?? true;
+  
   localStorage.setItem('supraLabConfig', JSON.stringify(config));
-  log("Paramètres sauvegardés");
+  log("Configuration sauvegardée");
+  updateStatus("Paramètres enregistrés");
 }
 
 function speak(text) {
   if (!config.voiceFeedback || !synthesis) return;
   synthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text);
-  u.lang = config.voiceLanguage;
-  u.rate = 1.0;
-  synthesis.speak(u);
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = config.voiceLanguage;
+  utterance.rate = 0.95;
+  synthesis.speak(utterance);
 }
 
-// ====================== PUSH TO TALK AMÉLIORÉ ======================
+// ====================== PUSH-TO-TALK ======================
 function initPushToTalk() {
   const btn = document.getElementById('pushToTalk');
 
-  const start = (e) => {
+  const startListen = (e) => {
     e.preventDefault();
     if (!isRunning) {
       log("Lance d'abord le système", true);
@@ -254,12 +449,11 @@ function initPushToTalk() {
     btn.classList.add('active');
     btn.innerHTML = "ÉCOUTE...<br>parle clairement";
     updateStatus("Écoute en cours...");
-    log("Écoute démarrée — parle maintenant", true);
-
+    log("Écoute démarrée", true);
     startRecognition();
   };
 
-  const stop = (e) => {
+  const stopListen = (e) => {
     e.preventDefault();
     if (!isListening) return;
 
@@ -268,27 +462,27 @@ function initPushToTalk() {
     btn.innerHTML = "MAINTENIR<br>POUR PARLER";
     updateStatus("Analyse en cours...");
 
-    // On laisse un petit délai pour que le moteur finisse
     setTimeout(() => {
       stopRecognition();
-      const text = finalTranscript.trim() || "(aucun mot clair détecté)";
-      log(`Résultat capturé : "${text}"`, true);
-      analyzeWithGroq(text);
-    }, 400);
+      const captured = finalTranscript.trim() || "(aucun mot clair détecté)";
+      log(`Capturé : "${captured}"`, true);
+      analyzeWithGroq(captured);
+    }, 450);
   };
 
-  btn.addEventListener('touchstart', start, {passive:false});
-  btn.addEventListener('touchend', stop, {passive:false});
-  btn.addEventListener('touchcancel', stop, {passive:false});
-  btn.addEventListener('mousedown', start);
-  btn.addEventListener('mouseup', stop);
-  btn.addEventListener('mouseleave', stop);
+  // Support tactile + souris
+  btn.addEventListener('touchstart', startListen, { passive: false });
+  btn.addEventListener('touchend', stopListen, { passive: false });
+  btn.addEventListener('touchcancel', stopListen, { passive: false });
+  btn.addEventListener('mousedown', startListen);
+  btn.addEventListener('mouseup', stopListen);
+  btn.addEventListener('mouseleave', stopListen);
 }
 
 function startRecognition() {
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) {
-    log("Reconnaissance vocale non supportée", true);
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) {
+    log("Reconnaissance vocale non supportée sur ce navigateur", true);
     return;
   }
 
@@ -298,7 +492,7 @@ function startRecognition() {
       recognition = null;
     }
 
-    recognition = new SR();
+    recognition = new SpeechRecognition();
     recognition.lang = config.voiceLanguage || 'fr-FR';
     recognition.continuous = false;
     recognition.interimResults = true;
@@ -309,55 +503,61 @@ function startRecognition() {
       for (let i = event.resultIndex; i < event.results.length; i++) {
         text += event.results[i][0].transcript;
       }
-      if (text.trim()) {
+      if (text.trim().length > 0) {
         finalTranscript = text.trim();
-        log(`En cours : ${finalTranscript}`);
+        log("En cours : " + finalTranscript);
       }
     };
 
-    recognition.onerror = (e) => {
-      if (e.error !== 'no-speech' && e.error !== 'aborted') {
-        log(`Erreur reconnaissance : ${e.error}`, true);
+    recognition.onerror = (event) => {
+      if (event.error !== 'no-speech' && event.error !== 'aborted') {
+        log("Erreur reconnaissance : " + event.error, true);
       }
     };
 
     recognition.start();
   } catch (err) {
-    log(`Erreur démarrage reconnaissance : ${err.message}`, true);
+    log("Impossible de démarrer la reconnaissance : " + err.message, true);
   }
 }
 
 function stopRecognition() {
   if (recognition) {
-    try { recognition.stop(); } catch(e){}
+    try {
+      recognition.stop();
+    } catch (e) {}
   }
 }
 
-// ====================== GROQ — AVIS RÉEL ======================
+// ====================== ANALYSE GROQ (AVIS RÉEL) ======================
 async function analyzeWithGroq(transcript) {
+  const reportEl = document.getElementById('ai-report');
+  
   if (!config.groqApiKey) {
-    document.getElementById('ai-report').textContent = "Pas de clé API Groq configurée.";
-    log("Pas de clé API", true);
+    reportEl.textContent = "Aucune clé API Groq configurée.\nVa dans les paramètres et colle ta clé.";
+    log("Clé API manquante", true);
+    updateStatus("Clé API manquante");
     return;
   }
 
-  document.getElementById('ai-report').textContent = "Analyse en cours...";
+  reportEl.textContent = "Analyse en cours par Groq...";
 
-  const prompt = `Tu es un analyste honnête et direct. Tu reçois une transcription brute captée par un micro (peut contenir de la parole, du bruit, du silence, ou des mots mal reconnus).
+  const prompt = `Tu es un analyste franc et direct. 
+Tu reçois une transcription brute provenant d'un micro (parole, bruit, silence ou reconnaissance imparfaite).
 
 Transcription reçue : "${transcript}"
 
-Donne ton vrai avis sans langue de bois :
+Donne ton vrai avis sans détour :
 - Qu'est-ce que tu penses réellement de ce qui a été capté ?
-- Est-ce que ça ressemble à de la parole claire, à du bruit, à du silence, ou à une mauvaise reconnaissance ?
-- Si tu détectes des mots possibles, dis-les.
-- Sois franc et concis (4-6 phrases max).
-- Ne dis pas systématiquement "silence ou fond de bruit" si ce n'est pas vraiment le cas.
+- Est-ce de la parole claire, du bruit, du silence, ou une mauvaise reconnaissance ?
+- Si tu arrives à distinguer des mots possibles, dis-les clairement.
+- Sois honnête et concis (maximum 5-6 phrases).
+- N'utilise pas de formules toutes faites du type "silence ou fond de bruit" si ce n'est pas vraiment le cas.
 
 Réponds uniquement en français.`;
 
   try {
-    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -366,45 +566,55 @@ Réponds uniquement en français.`;
       body: JSON.stringify({
         model: 'llama-3.3-70b-versatile',
         messages: [
-          { role: 'system', content: 'Tu es un analyste franc, précis et sans filtre. Tu dis ce que tu penses vraiment.' },
-          { role: 'user', content: prompt }
+          {
+            role: 'system',
+            content: 'Tu es un analyste franc, précis et sans filtre. Tu dis ce que tu penses vraiment de ce que tu reçois.'
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
         ],
-        temperature: 0.5,
-        max_tokens: 500
+        temperature: 0.55,
+        max_tokens: 550
       })
     });
 
-    if (!res.ok) {
-      const err = await res.json().catch(()=>({}));
-      throw new Error(err.error?.message || `Erreur ${res.status}`);
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}));
+      throw new Error(errData.error?.message || `Erreur HTTP ${response.status}`);
     }
 
-    const data = await res.json();
-    const answer = data.choices?.[0]?.message?.content || "Pas de réponse";
+    const data = await response.json();
+    const answer = data.choices?.[0]?.message?.content || "Aucune réponse reçue.";
 
-    document.getElementById('ai-report').textContent = 
-`Transcription capturée :
+    reportEl.textContent = `Transcription capturée :
 "${transcript}"
 
-——— AVIS RÉEL DE L'IA ———
+———————————————
+AVIS RÉEL DE L'IA
+———————————————
 
 ${answer}`;
 
     log("Analyse Groq terminée", true);
     updateStatus("Analyse terminée");
-    if (config.voiceFeedback) speak(answer.substring(0, 280));
 
-  } catch (err) {
-    document.getElementById('ai-report').textContent = `Erreur : ${err.message}`;
-    log(`Erreur Groq : ${err.message}`, true);
-    updateStatus("Erreur API");
+    if (config.voiceFeedback) {
+      speak(answer.substring(0, 260));
+    }
+
+  } catch (error) {
+    reportEl.textContent = `Erreur lors de l'analyse :\n${error.message}`;
+    log("Erreur Groq : " + error.message, true);
+    updateStatus("Erreur API Groq");
   }
 }
 
-// ====================== AUDIO ======================
+// ====================== AUDIO + VISUALISATION ======================
 async function initAudio() {
   try {
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)({sampleRate:48000});
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 48000 });
     await audioCtx.resume();
 
     audioStream = await navigator.mediaDevices.getUserMedia({
@@ -418,6 +628,7 @@ async function initAudio() {
     microphone = audioCtx.createMediaStreamSource(audioStream);
     analyser = audioCtx.createAnalyser();
     analyser.fftSize = 2048;
+    analyser.smoothingTimeConstant = 0.7;
     microphone.connect(analyser);
 
     frequencyArray = new Uint8Array(analyser.frequencyBinCount);
@@ -425,11 +636,12 @@ async function initAudio() {
 
     isRunning = true;
     loop();
-    log("Audio prêt");
-    updateStatus("Prêt — utilise le bouton");
+    log("Système audio prêt");
+    updateStatus("Prêt — utilise le bouton central");
     return true;
-  } catch (e) {
-    log(`Erreur micro : ${e.message}`, true);
+
+  } catch (err) {
+    log("Erreur micro : " + err.message, true);
     updateStatus("Permission micro refusée");
     return false;
   }
@@ -437,35 +649,38 @@ async function initAudio() {
 
 function loop() {
   if (!isRunning || !analyser) return;
+
   analyser.getByteFrequencyData(frequencyArray);
   analyser.getByteTimeDomainData(timeArray);
 
-  // Spectrogramme simplifié
-  const c1 = document.getElementById('spectrogram');
-  if (c1) {
-    const ctx = c1.getContext('2d');
+  // Spectrogramme
+  const canvas1 = document.getElementById('spectrogram');
+  if (canvas1) {
+    const ctx = canvas1.getContext('2d');
     ctx.fillStyle = '#000';
-    ctx.fillRect(0,0,c1.width,c1.height);
-    const w = c1.width / frequencyArray.length;
-    for (let i=0;i<frequencyArray.length;i++){
-      const v = frequencyArray[i];
-      ctx.fillStyle = `hsl(${90+v/3},100%,${v/3}%)`;
-      ctx.fillRect(i*w, c1.height - v/2, w+1, v/2);
+    ctx.fillRect(0, 0, canvas1.width, canvas1.height);
+    const barWidth = canvas1.width / frequencyArray.length;
+    for (let i = 0; i < frequencyArray.length; i++) {
+      const value = frequencyArray[i];
+      ctx.fillStyle = `hsl(${90 + value / 3}, 100%, ${Math.max(15, value / 3)}%)`;
+      ctx.fillRect(i * barWidth, canvas1.height - value / 2, barWidth + 1, value / 2);
     }
   }
 
   // Oscilloscope
-  const c2 = document.getElementById('scope');
-  if (c2) {
-    const ctx = c2.getContext('2d');
+  const canvas2 = document.getElementById('scope');
+  if (canvas2) {
+    const ctx = canvas2.getContext('2d');
     ctx.fillStyle = '#000';
-    ctx.fillRect(0,0,c2.width,c2.height);
-    ctx.strokeStyle = varPrimary();
+    ctx.fillRect(0, 0, canvas2.width, canvas2.height);
+    ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--primary');
+    ctx.lineWidth = 2;
     ctx.beginPath();
-    const slice = c2.width / timeArray.length;
-    for (let i=0;i<timeArray.length;i++){
-      const y = (timeArray[i]/128) * c2.height/2;
-      i===0 ? ctx.moveTo(0,y) : ctx.lineTo(i*slice, y);
+    const slice = canvas2.width / timeArray.length;
+    for (let i = 0; i < timeArray.length; i++) {
+      const y = (timeArray[i] / 128) * (canvas2.height / 2);
+      if (i === 0) ctx.moveTo(0, y);
+      else ctx.lineTo(i * slice, y);
     }
     ctx.stroke();
   }
@@ -473,43 +688,45 @@ function loop() {
   requestAnimationFrame(loop);
 }
 
-function varPrimary() {
-  return getComputedStyle(document.documentElement).getPropertyValue('--primary') || '#00ff41';
-}
-
-function resize() {
-  document.querySelectorAll('canvas').forEach(c => {
-    const r = c.parentElement.getBoundingClientRect();
-    c.width = r.width - 24;
-    c.height = 140;
+function resizeCanvases() {
+  document.querySelectorAll('canvas').forEach(canvas => {
+    const parent = canvas.parentElement.getBoundingClientRect();
+    canvas.width = parent.width - 24;
+    canvas.height = 140;
   });
 }
 
-// ====================== START ======================
+// ====================== DÉMARRAGE ======================
 document.addEventListener('DOMContentLoaded', () => {
   loadConfig();
   initPushToTalk();
 
-  document.getElementById('btnSettings').onclick = () => {
+  // Settings
+  document.getElementById('btnSettings').addEventListener('click', () => {
     document.getElementById('settings-page').classList.add('active');
-  };
-  document.getElementById('closeSettings').onclick = () => {
+  });
+  
+  document.getElementById('closeSettings').addEventListener('click', () => {
     document.getElementById('settings-page').classList.remove('active');
-  };
-  document.getElementById('saveSettings').onclick = () => {
+  });
+  
+  document.getElementById('saveSettings').addEventListener('click', () => {
     saveConfig();
     document.getElementById('settings-page').classList.remove('active');
-  };
+  });
 
-  document.getElementById('btnStart').onclick = async () => {
+  // Lancement
+  document.getElementById('btnStart').addEventListener('click', async () => {
     document.getElementById('start-screen').style.display = 'none';
     const main = document.getElementById('main');
-    main.style.display = 'grid';
-    main.classList.add('grid');
-    resize();
-    window.addEventListener('resize', resize);
+    main.classList.add('active');
+    
+    resizeCanvases();
+    window.addEventListener('resize', resizeCanvases);
+    
+    log("=== SUPRA LAB v11 démarré ===");
     await initAudio();
-  };
+  });
 });
 </script>
 </body>
