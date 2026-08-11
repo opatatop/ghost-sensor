@@ -632,71 +632,50 @@
         };
         let config = { ...DEFAULT_CONFIG };
         let availableVoices = [];
-        let finalTranscript = ''; // Stockage global du texte reconnu
+        let finalTranscript = '';
 
         // ==================== BASE DE DONNÉES DE FRÉQUENCES COMPLÈTE ====================
         const FREQUENCY_DB = {
-            // ELF/ULF/VLF (Très basses fréquences - Paranormal)
             'ELF': { min: 0.003, max: 3, color: '#00aa00', label: 'ELF (3-30Hz)', critical: false, paranormal: true },
             'ULF': { min: 0.001, max: 3, color: '#008800', label: 'ULF (0.1-3Hz)', critical: false, paranormal: true },
             'VLF': { min: 3, max: 30, color: '#00aa55', label: 'VLF (3-30kHz)', critical: false, paranormal: true },
-
-            // EVP/Paranormal
             'EVP': { min: 0.01, max: 20, color: '#aa00aa', label: 'EVP (Voix électroniques)', critical: false, paranormal: true },
             'GHOST_BOX': { min: 0.1, max: 1, color: '#ff00ff', label: 'Boîte à fantômes', critical: false, paranormal: true },
-
-            // Aviation
             'AVIATION_VHF': { min: 108, max: 137, color: '#00aaff', label: 'Aviation VHF', critical: false, paranormal: false },
             'AVIATION_UHF': { min: 225, max: 400, color: '#00aaff', label: 'Aviation UHF', critical: false, paranormal: false },
             'AVIATION_EMERGENCY': { min: 121.4, max: 121.6, color: '#ff0000', label: 'Guard (121.5 MHz)', critical: true, paranormal: false },
             'AVIATION_EMERGENCY_243': { min: 242.9, max: 243.1, color: '#ff0000', label: 'Emergency 243 MHz', critical: true, paranormal: false },
             'ADS_B': { min: 1090, max: 1090.2, color: '#ffff00', label: 'ADS-B (Suivi avion)', critical: false, paranormal: false },
             'ACARS': { min: 131.5, max: 131.7, color: '#00ffff', label: 'ACARS (Messagerie avion)', critical: false, paranormal: false },
-
-            // Drones
             'DRONE_433': { min: 433, max: 434.8, color: '#ff5500', label: 'Drone 433MHz', critical: true, paranormal: false },
             'DRONE_915': { min: 915, max: 928, color: '#ff5500', label: 'Drone 915MHz', critical: true, paranormal: false },
             'DRONE_2_4': { min: 2400, max: 2483.5, color: '#ff5500', label: 'Drone 2.4GHz', critical: true, paranormal: false },
             'DRONE_5_8': { min: 5725, max: 5875, color: '#ff5500', label: 'Drone 5.8GHz', critical: true, paranormal: false },
-
-            // Communications militaires
             'MILITARY_VHF': { min: 30, max: 88, color: '#ff0000', label: 'Militaire VHF', critical: true, paranormal: false },
             'MILITARY_UHF': { min: 225, max: 400, color: '#ff0000', label: 'Militaire UHF', critical: true, paranormal: false },
             'SAR': { min: 121.5, max: 121.5, color: '#ff0000', label: 'SAR (Recherche)', critical: true, paranormal: false },
             'SATCOM': { min: 2483.5, max: 2500, color: '#ff00ff', label: 'Satellite (2.4GHz)', critical: false, paranormal: false },
-
-            // Radio
             'FM_RADIO': { min: 87.5, max: 108, color: '#ffaa00', label: 'FM Radio', critical: false, paranormal: false },
             'AM_RADIO': { min: 0.535, max: 1.705, color: '#ffaa00', label: 'AM Radio', critical: false, paranormal: false },
             'SW_RADIO': { min: 1.7, max: 30, color: '#ff8800', label: 'Ondes Courtes', critical: false, paranormal: true },
-
-            // WiFi/Bluetooth
             'WIFI_2_4': { min: 2412, max: 2484, color: '#00ffff', label: 'WiFi 2.4GHz', critical: false, paranormal: false },
             'WIFI_5': { min: 5180, max: 5825, color: '#00ffff', label: 'WiFi 5GHz', critical: false, paranormal: false },
             'BLUETOOTH': { min: 2402, max: 2480, color: '#00aaff', label: 'Bluetooth', critical: false, paranormal: false },
-
-            // Téléphonie
             'GSM_900': { min: 890, max: 960, color: '#ff00ff', label: 'GSM 900', critical: false, paranormal: false },
             'GSM_1800': { min: 1710, max: 1880, color: '#ff00ff', label: 'GSM 1800', critical: false, paranormal: false },
             'LTE_800': { min: 790, max: 862, color: '#ff00aa', label: '4G LTE 800', critical: false, paranormal: false },
             'LTE_1800': { min: 1710, max: 1785, color: '#ff00aa', label: '4G LTE 1800', critical: false, paranormal: false },
-
-            // Paranormal/Expérimental
             'SCHUMANN': { min: 7.83, max: 7.83, color: '#aa00aa', label: 'Résonance Schumann', critical: false, paranormal: true },
             'INFRASON': { min: 0.001, max: 20, color: '#880088', label: 'Infrasons', critical: false, paranormal: true },
             'ULTRASON': { min: 20000, max: 50000, color: '#880088', label: 'Ultrasons', critical: false, paranormal: true }
         };
 
-        // Mots-clés pour déclencher l'analyse IA (Paranormal + Militaire)
         let KEYWORDS = [
-            // Paranormal
             'esprit', 'fantôme', 'EVP', 'voix', 'entité', 'paranormal', 'surnaturel', 'hanté', 'appel',
             'bruit', 'clic', 'grésillement', 'souffle', 'chuchotement', 'anomalie', 'étrange', 'inexpliqué',
             'Schumann', 'infrasons', 'ultrasons', 'onde', 'vibration', 'présence', 'énergie',
-            // Militaire
             'drone', 'avion', 'hélicoptère', 'militaire', 'radar', 'SIGINT', 'black ops', 'mission',
             'urgence', 'SOS', 'alerte', 'danger', 'fréquence', 'bande', 'signal', 'crypté', 'interception',
-            // Général
             'supra', 'analyse', 'scan', 'détection', 'critique', 'secours', 'help', 'aide'
         ];
 
@@ -1073,11 +1052,11 @@
 
                 recognition = new SpeechRecognition();
                 recognition.continuous = true;
-                recognition.interimResults = false; // ⚠️ DÉSACTIVE LES RÉSULTATS INTERMÉDIAIRES POUR STABILITÉ
+                recognition.interimResults = false;
                 recognition.lang = config.voiceLanguage;
                 recognition.maxAlternatives = 1;
 
-                finalTranscript = ''; // Réinitialise
+                finalTranscript = '';
 
                 recognition.onresult = (event) => {
                     let transcript = '';
@@ -1118,7 +1097,6 @@
                     log(errorMsg, true);
                     updateStatus(` ${errorMsg}`);
 
-                    // Redémarrage automatique après 2 secondes
                     if (isVoiceEnabled) {
                         setTimeout(() => {
                             try { initSpeech(); } catch (e) {}
@@ -1144,7 +1122,6 @@
                     document.getElementById('micIndicator').textContent = '🎤';
                     document.getElementById('btnStartIA').textContent = 'ACTIVER L\'IA VOCALE';
 
-                    // Redémarrage automatique (sauf si erreur)
                     if (isVoiceEnabled && !recognition.isError) {
                         setTimeout(() => {
                             try { recognition.start(); } catch (e) {}
@@ -1182,7 +1159,6 @@
             const transcriptLower = transcript.toLowerCase().trim();
             log(`[IA] Transcript: "${transcriptLower}"`);
 
-            // Vérifie si le transcript contient un mot-clé OU est suffisamment long
             const hasKeyword = KEYWORDS.some(keyword =>
                 transcriptLower.includes(keyword)
             );
@@ -1201,7 +1177,7 @@
             }
         }
 
-        // ==================== INITIALISATION AUDIO (OPTIMISÉE POUR REALME NOTE 60) ====================
+        // ==================== INITIALISATION AUDIO ====================
         async function initAudio() {
             try {
                 if (audioStream && !audioStream.getAudioTracks().some(track => track.readyState === 'ended')) {
@@ -1224,10 +1200,9 @@
                     audioStream.getTracks().forEach(track => track.stop());
                 }
 
-                // ⚠️ CONFIGURATION OPTIMISÉE POUR REALME NOTE 60
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)({
                     latencyHint: 'interactive',
-                    sampleRate: 48000 // ⚠️ 48kHz POUR CAPTER TOUTES LES FRÉQUENCES
+                    sampleRate: 48000
                 });
                 await audioCtx.resume();
 
@@ -1247,17 +1222,16 @@
 
                 microphone = audioCtx.createMediaStreamSource(audioStream);
                 analyser = audioCtx.createAnalyser();
-                analyser.fftSize = 8192; // ⚠️ HAUTE RÉSOLUTION POUR DÉTECTION PRÉCISE
+                analyser.fftSize = 8192;
                 analyser.smoothingTimeConstant = 0.15;
 
                 gainNode = audioCtx.createGain();
-                gainNode.gain.value = config.micSensitivity / 30; // ⚠️ BOOST DE GAIN POUR REALME NOTE 60
+                gainNode.gain.value = config.micSensitivity / 30;
 
-                // ⚠️ CONNEXIONS POUR ANALYSE + ÉCOUTE
                 microphone.connect(analyser);
                 microphone.connect(gainNode);
                 gainNode.connect(audioCtx.destination);
-                gainNode.gain.value = 0; // Mode silencieux par défaut
+                gainNode.gain.value = 0;
 
                 mediaRecorder = new MediaRecorder(audioStream, { mimeType: 'audio/webm' });
                 mediaRecorder.ondataavailable = e => recordedChunks.push(e.data);
@@ -1329,7 +1303,6 @@
             analyser.getByteFrequencyData(frequencyArray);
             let maxIndex = 0;
             let maxValue = 0;
-            // ⚠️ COMMENCE À PARTIR DE 100Hz POUR ÉVITER LE BRUIT
             const startIndex = Math.floor(100 / (audioCtx.sampleRate / analyser.fftSize));
             for (let i = startIndex; i < frequencyArray.length; i++) {
                 if (frequencyArray[i] > maxValue) {
@@ -1429,7 +1402,7 @@
             });
         }
 
-        // ==================== ANALYSE IA (COMPLÈTE) ====================
+        // ==================== ANALYSE IA ====================
         function generateSIGINTReport(rms, dominantFreq, band, transcript = "", sensors = {}) {
             const now = new Date().toLocaleString('fr-FR');
             const bandLabel = band ? band.label : "Inconnue";
@@ -1539,6 +1512,7 @@ ${transcript && KEYWORDS.some(k => transcript.toLowerCase().includes(k)) ? "> �
             }
         }
 
+        // ==================== FONCTION GROQ CORRIGÉE ====================
         async function sendToGroqAPI(rms, dominantFreq, band, localReport, transcript) {
             try {
                 log("[IA] Envoi des données à Groq API...", true);
@@ -1550,33 +1524,37 @@ ${transcript && KEYWORDS.some(k => transcript.toLowerCase().includes(k)) ? "> �
                 const bandParanormal = band ? band.paranormal : false;
 
                 const payload = {
-                    model: "mixtral-8x7b-32768",
+                    model: "llama-3.3-70b-versatile",
                     messages: [
+                        {
+                            role: "system",
+                            content: "Tu es un analyste SIGINT militaire et paranormal ultra-concis et professionnel. Réponds uniquement en français, style rapport technique court et clair."
+                        },
                         {
                             role: "user",
                             content: `
-                                Analyse ce rapport technique en français (style SIGINT militaire/paranormal). Sois concis, professionnel et précis.
+Analyse ce rapport technique en français (style SIGINT militaire/paranormal). Sois concis, professionnel et précis.
 
-                                --- DONNÉES TECHNIQUES (Realme Note 60) ---
-                                - Fréquence dominante: ${freqMHz} MHz
-                                - Bande détectée: ${bandLabel}
-                                - Niveau RMS: ${rms.toFixed(2)} dB
-                                - Statut: ${bandCritical ? "CRITIQUE" : bandParanormal ? "PARANORMAL" : "Normal"}
-                                - Capteurs: X=${accelX}g, Y=${accelY}g, Z=${accelZ}g, Cap=${magnetHeading}°
-                                - Transcription vocale: "${transcript || "Aucune"}"
-                                - Matériel: Realme Note 60 (48kHz)
+--- DONNÉES TECHNIQUES (Realme Note 60) ---
+- Fréquence dominante: ${freqMHz} MHz
+- Bande détectée: ${bandLabel}
+- Niveau RMS: ${rms.toFixed(2)} dB
+- Statut: ${bandCritical ? "CRITIQUE" : bandParanormal ? "PARANORMAL" : "Normal"}
+- Capteurs: X=${accelX}g, Y=${accelY}g, Z=${accelZ}g, Cap=${magnetHeading}°
+- Transcription vocale: "${transcript || "Aucune"}"
+- Matériel: Realme Note 60 (48kHz)
 
-                                --- CONTEXTE ---
-                                ${band ? `La fréquence ${freqMHz} MHz correspond à la bande ${bandLabel} (${FREQUENCY_DB[band.name].min}-${FREQUENCY_DB[band.name].max} MHz).` + (band.paranormal ? " Cette bande est associée à des phénomènes paranormaux." : "") : "Fréquence non identifiée."}
-                                ${bandCritical ? "Cette bande est considérée comme critique (militaire/aviation)." : ""}
-                                ${bandParanormal ? "Cette bande est associée à des phénomènes paranormaux (EVP, infrasons, etc.)." : ""}
+--- CONTEXTE ---
+${band ? `La fréquence ${freqMHz} MHz correspond à la bande ${bandLabel}.` + (band.paranormal ? " Cette bande est associée à des phénomènes paranormaux." : "") : "Fréquence non identifiée."}
+${bandCritical ? "Cette bande est considérée comme critique (militaire/aviation)." : ""}
+${bandParanormal ? "Cette bande est associée à des phénomènes paranormaux (EVP, infrasons, etc.)." : ""}
 
-                                --- INSTRUCTIONS ---
-                                1. Classifie la menace (Faible/Moyenne/Élevée/Critique/Paranormale)
-                                2. Fournis une analyse technique détaillée en 3-4 phrases max
-                                3. Donne des recommandations spécifiques (enregistrement, investigation, etc.)
-                                4. Estime le niveau de confiance (0-100%)
-                                5. Si la détection est paranormale, propose des explications possibles
+--- INSTRUCTIONS ---
+1. Classifie la menace (Faible / Moyenne / Élevée / Critique / Paranormale)
+2. Fournis une analyse technique en 3-4 phrases maximum
+3. Donne des recommandations concrètes
+4. Estime le niveau de confiance (0-100%)
+5. Si détection paranormale, propose 1-2 explications possibles
                             `
                         }
                     ],
@@ -1585,13 +1563,13 @@ ${transcript && KEYWORDS.some(k => transcript.toLowerCase().includes(k)) ? "> �
                 };
 
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 15000);
+                const timeoutId = setTimeout(() => controller.abort(), 20000);
 
-                const response = await fetch('https://api.groq.com/v1/chat/completions', {
+                const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${config.groqApiKey}`
+                        'Authorization': `Bearer ${config.groqApiKey.trim()}`
                     },
                     body: JSON.stringify(payload),
                     signal: controller.signal
@@ -1600,35 +1578,58 @@ ${transcript && KEYWORDS.some(k => transcript.toLowerCase().includes(k)) ? "> �
                 clearTimeout(timeoutId);
 
                 if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({}));
-                    throw new Error(`Erreur Groq: ${response.status} ${errorData.message || ''}`);
+                    let errorMsg = `Erreur HTTP ${response.status}`;
+                    try {
+                        const errorData = await response.json();
+                        errorMsg += ` – ${errorData.error?.message || JSON.stringify(errorData)}`;
+                    } catch (e) {}
+                    throw new Error(errorMsg);
                 }
 
                 const data = await response.json();
                 groqRetryCount = 0;
 
-                const groqResponse = data.choices[0].message.content;
+                const groqResponse = data.choices?.[0]?.message?.content || "Aucune réponse reçue de Groq.";
+
                 const aiReportDiv = document.getElementById('ai-report');
                 if (aiReportDiv) {
-                    aiReportDiv.textContent = localReport + "\n\n// ============================================\n// RÉPONSE IA GROQ\n// ============================================\n\n" + groqResponse + "\n\n// ============================================\n";
+                    aiReportDiv.textContent = localReport + 
+                        "\n\n// ============================================\n" +
+                        "// RÉPONSE IA GROQ\n" +
+                        "// ============================================\n\n" + 
+                        groqResponse + 
+                        "\n\n// ============================================\n";
                 }
 
                 if (config.voiceFeedback && isVoiceEnabled) {
-                    const groqSummary = groqResponse.split('\n').slice(0, 2).join(' ');
-                    speakText(`Réponse Groq: ${groqSummary}`);
+                    const groqSummary = groqResponse.split('\n').slice(0, 2).join(' ').substring(0, 180);
+                    speakText(`Réponse Groq : ${groqSummary}`);
                 }
 
-                log("[IA] Analyse Groq terminée", true);
+                log("[IA] Analyse Groq terminée avec succès", true);
                 updateStatus("Analyse IA terminée");
 
             } catch (error) {
                 groqRetryCount++;
-                log(`[IA] Erreur Groq (${groqRetryCount}/${MAX_GROQ_RETRIES}): ${error.message}`, true);
+                let msg = error.name === 'AbortError' 
+                    ? "Timeout (réponse trop lente)" 
+                    : error.message;
+
+                if (msg.includes("401") || msg.includes("Invalid API Key")) {
+                    msg = "Clé API invalide ou expirée – vérifie dans les paramètres";
+                } else if (msg.includes("429")) {
+                    msg = "Rate limit atteint – attends quelques secondes";
+                } else if (msg.toLowerCase().includes("model")) {
+                    msg = "Modèle non disponible – essaie llama-3.1-8b-instant";
+                }
+
+                log(`[IA] Erreur Groq (${groqRetryCount}/${MAX_GROQ_RETRIES}): ${msg}`, true);
+
                 if (groqRetryCount <= MAX_GROQ_RETRIES) {
                     log("[IA] Nouvelle tentative dans 3 secondes...", true);
                     setTimeout(() => sendToGroqAPI(rms, dominantFreq, band, localReport, transcript), 3000);
                 } else {
-                    log("[IA] Échec après 3 tentatives. Vérifiez votre clé API ou votre connexion.", true);
+                    log("[IA] Échec après 3 tentatives. Vérifie ta clé API et ta connexion.", true);
                     updateStatus("Erreur API Groq");
                     groqRetryCount = 0;
                 }
@@ -1758,7 +1759,7 @@ ${transcript && KEYWORDS.some(k => transcript.toLowerCase().includes(k)) ? "> �
             if (rmsHistory.length < 40) return false;
             const mean = rmsHistory.reduce((a, b) => a + b, 0) / rmsHistory.length;
             const std = Math.sqrt(rmsHistory.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / rmsHistory.length);
-            return rms > mean + 2.5 * std; // ⚠️ SEUIL PLUS BAS POUR DÉTECTION SENSIBLE
+            return rms > mean + 2.5 * std;
         }
 
         // ==================== BOUCLE PRINCIPALE ====================
@@ -1868,7 +1869,6 @@ ${transcript && KEYWORDS.some(k => transcript.toLowerCase().includes(k)) ? "> �
                 });
             }
 
-            // Mettre à jour les valeurs en temps réel
             ['micSensitivity', 'voiceRate', 'voiceVolume', 'autoScanInterval', 'keywordSensitivity'].forEach(id => {
                 const slider = document.getElementById(id);
                 const valueEl = document.getElementById(`${id}Value`);
@@ -1882,14 +1882,12 @@ ${transcript && KEYWORDS.some(k => transcript.toLowerCase().includes(k)) ? "> �
 
         // ==================== GESTION DES BOUTONS PRINCIPAUX ====================
         function setupMainControls() {
-            // Vérifie que #main est visible
             const main = document.getElementById('main');
             if (!main || main.style.display === 'none') {
                 log("[ERREUR] #main n'est pas visible. Impossible de configurer les contrôles.", true);
                 return;
             }
 
-            // Vérifie que tous les boutons existent
             const requiredElements = [
                 'immediateAIBtn', 'sendToGroqBtn', 'readReportBtn', 'listenToggle', 'volumeSlider',
                 'volumeLabel', 'recordBtn', 'voiceToggle', 'btnStartIA'
@@ -1902,7 +1900,6 @@ ${transcript && KEYWORDS.some(k => transcript.toLowerCase().includes(k)) ? "> �
                 }
             }
 
-            // Boutons d'analyse IA
             document.getElementById('immediateAIBtn').addEventListener('click', () => {
                 if (!isRunning) {
                     log("[ERREUR] Le système audio n'est pas démarré.", true);
@@ -1932,7 +1929,6 @@ ${transcript && KEYWORDS.some(k => transcript.toLowerCase().includes(k)) ? "> �
                 }
             });
 
-            // Bouton IA vocale
             document.getElementById('btnStartIA').addEventListener('click', () => {
                 if (isVoiceEnabled) {
                     stopSpeechRecognition();
@@ -1941,7 +1937,6 @@ ${transcript && KEYWORDS.some(k => transcript.toLowerCase().includes(k)) ? "> �
                 }
             });
 
-            // Toggle écoute micro
             const toggle = document.getElementById('listenToggle');
             const slider = document.getElementById('volumeSlider');
             const label = document.getElementById('volumeLabel');
@@ -1965,7 +1960,6 @@ ${transcript && KEYWORDS.some(k => transcript.toLowerCase().includes(k)) ? "> �
                 });
             }
 
-            // Slider volume
             if (slider && label) {
                 slider.addEventListener('input', () => {
                     if (gainNode) gainNode.gain.value = slider.value / 100;
@@ -1975,7 +1969,6 @@ ${transcript && KEYWORDS.some(k => transcript.toLowerCase().includes(k)) ? "> �
                 });
             }
 
-            // Bouton enregistrement
             const recordBtn = document.getElementById('recordBtn');
             if (recordBtn) {
                 recordBtn.addEventListener('click', () => {
@@ -2000,7 +1993,6 @@ ${transcript && KEYWORDS.some(k => transcript.toLowerCase().includes(k)) ? "> �
                 });
             }
 
-            // Bouton voiceToggle
             const voiceToggle = document.getElementById('voiceToggle');
             if (voiceToggle) {
                 voiceToggle.addEventListener('click', () => {
@@ -2048,7 +2040,6 @@ ${transcript && KEYWORDS.some(k => transcript.toLowerCase().includes(k)) ? "> �
                 }
             }
 
-            // Bouton de démarrage principal
             document.getElementById('btnStart').addEventListener('click', async () => {
                 const startScreen = document.getElementById('start-screen');
                 const main = document.getElementById('main');
@@ -2080,7 +2071,6 @@ ${transcript && KEYWORDS.some(k => transcript.toLowerCase().includes(k)) ? "> �
                     loadVoices();
 
                     if (audioSuccess) {
-                        // ⚠️ Appelle setupMainControls UNIQUEMENT ici, après que #main soit visible
                         setupMainControls();
                     } else {
                         log("[ERREUR] Échec de l'initialisation audio. Les contrôles ne seront pas disponibles.", true);
