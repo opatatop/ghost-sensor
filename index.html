@@ -7,9 +7,6 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
   <style>
-    /* ═══════════════════════════════════════
-       1. RESET & VARIABLES
-    ═══════════════════════════════════════ */
     :root {
       --bg: #060a06;
       --bg-panel: #0a140a;
@@ -21,7 +18,6 @@
       --danger-glow: 0 0 12px rgba(255,0,68,0.5);
       --warning: #ffaa00;
       --border: #00ff41;
-      --radius: 2px;
       --font: 'VT323', monospace;
     }
 
@@ -31,21 +27,24 @@
       box-sizing: border-box;
     }
 
-    /* Permettre la sélection dans les champs de formulaire */
-    input, textarea, select {
-      -webkit-user-select: text;
-      user-select: text;
-    }
-
-    /* ═══════════════════════════════════════
-       2. BASE
-    ═══════════════════════════════════════ */
+    /* IMPORTANT : PAS de user-select:none sur *,
+       et PAS de touch-action:manipulation sur body.
+       On les met uniquement sur les éléments interactifs. */
     html, body {
       height: 100%;
       overflow: hidden;
-      touch-action: manipulation;
       -webkit-user-select: none;
       user-select: none;
+      /* touch-action retiré du body pour permettre
+          le long-press → coller sur Android */
+    }
+
+    /* Les inputs DOIVENT pouvoir être sélectionnés et
+       recevoir le touch normal pour le copier-coller Android */
+    input, textarea, select {
+      -webkit-user-select: text !important;
+      user-select: text !important;
+      touch-action: auto !important;
     }
 
     body {
@@ -73,9 +72,7 @@
       z-index: 9999;
     }
 
-    /* ═══════════════════════════════════════
-       3. BOUTONS
-    ═══════════════════════════════════════ */
+    /* touch-action: manipulation uniquement sur les boutons */
     button {
       font-family: var(--font);
       font-size: 17px;
@@ -89,6 +86,7 @@
       letter-spacing: 1px;
       -webkit-user-select: none;
       user-select: none;
+      touch-action: manipulation;
     }
     button:hover {
       background: rgba(0,255,65,0.08);
@@ -115,9 +113,7 @@
       background: rgba(255,0,68,0.08);
     }
 
-    /* ═══════════════════════════════════════
-       4. ECRAN DE DEMARRAGE
-    ═══════════════════════════════════════ */
+    /* ═══════════ ECRAN DE DEMARRAGE ═══════════ */
     #boot {
       position: fixed;
       inset: 0;
@@ -166,9 +162,7 @@
       50% { opacity: 0; }
     }
 
-    /* ═══════════════════════════════════════
-       5. APPLICATION PRINCIPALE
-    ═══════════════════════════════════════ */
+    /* ═══════════ APPLICATION PRINCIPALE ═══════════ */
     #app {
       display: none;
       position: fixed;
@@ -178,9 +172,7 @@
       flex-direction: column;
       background: var(--bg);
     }
-    #app.active {
-      display: flex;
-    }
+    #app.active { display: flex; }
 
     #app > header {
       background: var(--bg-panel);
@@ -197,8 +189,7 @@
     #app > header::after {
       content: 'SYS:OK  MEM:STABLE  NET:READY  CLK:48kHz  BUF:2048  FFT:ON  MIC:LIVE ';
       position: absolute;
-      top: 0;
-      left: 0;
+      top: 0; left: 0;
       font-size: 13px;
       color: var(--fg-dim);
       white-space: nowrap;
@@ -223,9 +214,7 @@
 
     #app > footer {
       position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
+      bottom: 0; left: 0; right: 0;
       background: var(--bg-panel);
       border-top: 3px solid var(--fg);
       padding: 6px 14px;
@@ -235,9 +224,7 @@
       z-index: 10;
     }
 
-    /* ═══════════════════════════════════════
-       6. PANEaux
-    ═══════════════════════════════════════ */
+    /* ═══════════ PANEaux ═══════════ */
     .panel {
       background: var(--bg-panel);
       border: 3px solid var(--fg);
@@ -249,8 +236,7 @@
     .panel::before, .panel::after {
       content: '';
       position: absolute;
-      width: 10px;
-      height: 10px;
+      width: 10px; height: 10px;
     }
     .panel::before {
       top: -1px; left: -1px;
@@ -264,8 +250,7 @@
     }
     .panel-label {
       position: absolute;
-      top: -11px;
-      left: 12px;
+      top: -11px; left: 12px;
       background: var(--bg-panel);
       padding: 0 8px;
       font-size: 14px;
@@ -282,9 +267,7 @@
       image-rendering: pixelated;
     }
 
-    /* ═══════════════════════════════════════
-       7. CONTROLES D'ENREGISTREMENT
-    ═══════════════════════════════════════ */
+    /* ═══════════ ENREGISTREMENT ═══════════ */
     .recorder-bar {
       grid-column: 1 / -1;
       display: flex;
@@ -297,8 +280,7 @@
       flex-wrap: wrap;
     }
     .rec-btn {
-      width: 72px;
-      height: 72px;
+      width: 72px; height: 72px;
       border-radius: 50%;
       font-size: 15px;
       padding: 0;
@@ -331,9 +313,7 @@
       animation: blink 1s step-end infinite;
     }
 
-    /* ═══════════════════════════════════════
-       8. RAPPORT IA & LOG
-    ═══════════════════════════════════════ */
+    /* ═══════════ RAPPORT & LOG ═══════════ */
     #ai-report {
       background: #000;
       border: 2px dashed var(--fg-dim);
@@ -346,8 +326,8 @@
       overflow-y: auto;
       min-height: 100px;
       color: var(--fg-dim);
-      -webkit-user-select: text;
-      user-select: text;
+      -webkit-user-select: text !important;
+      user-select: text !important;
     }
     #log-container {
       max-height: 160px;
@@ -357,8 +337,8 @@
       padding: 8px;
       background: #000;
       border: 2px dashed var(--warning);
-      -webkit-user-select: text;
-      user-select: text;
+      -webkit-user-select: text !important;
+      user-select: text !important;
     }
     .log-entry {
       padding: 2px 4px;
@@ -370,13 +350,9 @@
       background: rgba(255,0,68,0.08);
       border-left: 3px solid var(--danger);
     }
-    .log-entry.ok {
-      color: var(--fg-dim);
-    }
+    .log-entry.ok { color: var(--fg-dim); }
 
-    /* ═══════════════════════════════════════
-       9. LISTE DES CAPTURES
-    ═══════════════════════════════════════ */
+    /* ═══════════ CAPTURES ═══════════ */
     .capture-row {
       display: flex;
       align-items: center;
@@ -403,16 +379,13 @@
       font-size: 15px;
     }
 
-    /* ═══════════════════════════════════════
-       10. PUSH-TO-TALK
-    ═══════════════════════════════════════ */
+    /* ═══════════ PTT ═══════════ */
     #ptt {
       position: fixed;
       bottom: 60px;
       left: 50%;
       transform: translateX(-50%);
-      width: 120px;
-      height: 120px;
+      width: 120px; height: 120px;
       border-radius: 50%;
       font-size: 15px;
       text-align: center;
@@ -433,9 +406,7 @@
       animation: pulse-ring 1s ease-out infinite;
     }
 
-    /* ═══════════════════════════════════════
-       11. DIALOGUE PARAMETRES
-    ═══════════════════════════════════════ */
+    /* ═══════════ DIALOGUE PARAMETRES ═══════════ */
     dialog {
       font-family: var(--font);
       color: var(--fg);
@@ -448,9 +419,7 @@
       overflow-y: auto;
       box-shadow: var(--fg-glow-strong);
     }
-    dialog::backdrop {
-      background: rgba(0,0,0,0.85);
-    }
+    dialog::backdrop { background: rgba(0,0,0,0.85); }
     .dialog-header {
       display: flex;
       justify-content: space-between;
@@ -471,16 +440,13 @@
     }
     .dialog-header button:hover { color: var(--danger); }
     .dialog-body { padding: 16px 20px; }
-    .field {
-      margin-bottom: 16px;
-    }
-    .field label {
+    .field { margin-bottom: 16px; }
+    .field > label {
       display: block;
       margin-bottom: 6px;
       font-size: 15px;
       letter-spacing: 1px;
     }
-    .field input[type="password"],
     .field input[type="text"],
     .field select {
       width: 100%;
@@ -492,13 +458,37 @@
       font-size: 16px;
       outline: none;
       transition: border-color 0.2s, box-shadow 0.2s;
-      -webkit-user-select: text;
-      user-select: text;
+      -webkit-user-select: text !important;
+      user-select: text !important;
+      touch-action: auto !important;
     }
     .field input:focus,
     .field select:focus {
       border-color: var(--fg);
       box-shadow: var(--fg-glow);
+    }
+    /* Champ API clé avec bouton œil intégré */
+    .api-key-wrap {
+      position: relative;
+    }
+    .api-key-wrap input {
+      padding-right: 52px !important;
+    }
+    .api-key-wrap .toggle-vis {
+      position: absolute;
+      right: 4px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: 2px solid var(--fg-dim);
+      color: var(--fg);
+      font-size: 18px;
+      padding: 4px 10px;
+      box-shadow: none;
+      line-height: 1;
+    }
+    .api-key-wrap .toggle-vis:hover {
+      border-color: var(--fg);
     }
     .field .check-label {
       display: flex;
@@ -507,8 +497,7 @@
       cursor: pointer;
     }
     .field .check-label input {
-      width: 18px;
-      height: 18px;
+      width: 18px; height: 18px;
       accent-color: var(--fg);
     }
     .section-title {
@@ -526,17 +515,11 @@
       border-top: 2px solid var(--fg-dim);
     }
 
-    /* ═══════════════════════════════════════
-       12. SCROLLBAR
-    ═══════════════════════════════════════ */
     ::-webkit-scrollbar { width: 7px; }
     ::-webkit-scrollbar-track { background: var(--bg-panel); }
     ::-webkit-scrollbar-thumb { background: var(--fg-dim); border-radius: 4px; }
     ::-webkit-scrollbar-thumb:hover { background: var(--fg); }
 
-    /* ═══════════════════════════════════════
-       13. RESPONSIVE
-    ═══════════════════════════════════════ */
     @media (max-width: 768px) {
       #boot .title { font-size: 30px; }
       #app > main { grid-template-columns: 1fr; padding: 8px; gap: 10px; }
@@ -545,11 +528,10 @@
       .timer-display { font-size: 22px; min-width: 110px; }
       .panel { min-height: 130px; }
       canvas { height: 110px; }
+      /* Sur mobile, s'assurer que le dialog prend plus d'espace */
+      dialog { width: 95vw; max-height: 90vh; }
     }
 
-    /* ═══════════════════════════════════════
-       14. ACCESSIBILITE
-    ═══════════════════════════════════════ */
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after {
         animation-duration: 0.01ms !important;
@@ -577,7 +559,10 @@
       <div class="section-title">API Groq</div>
       <div class="field">
         <label for="inp-apikey">Cle API (obligatoire)</label>
-        <input type="password" id="inp-apikey" placeholder="gsk_..." autocomplete="off">
+        <div class="api-key-wrap">
+          <input type="text" id="inp-apikey" placeholder="Collez votre cle gsk_... ici" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+          <button type="button" class="toggle-vis" id="btn-toggle-key" aria-label="Afficher/masquer la cle">OEIL</button>
+        </div>
       </div>
       <div class="field">
         <label for="inp-model">Modele IA</label>
@@ -703,10 +688,7 @@
   (function () {
     'use strict';
 
-    /* ═══════════════════════════════════════
-       CONFIGURATION & ETAT
-    ═══════════════════════════════════════ */
-    const DEFAULTS = {
+    var DEFAULTS = {
       apiKey: '',
       model: 'llama-3.3-70b-versatile',
       lang: 'fr-FR',
@@ -715,10 +697,12 @@
       color: '#00ff41'
     };
 
-    let cfg = { ...DEFAULTS };
-    let captures = [];
+    var cfg = {};
+    for (var k in DEFAULTS) cfg[k] = DEFAULTS[k];
+    var captures = [];
+    var pttTranscript = '';
 
-    const state = {
+    var state = {
       audioReady: false,
       recording: false,
       listening: false,
@@ -737,20 +721,17 @@
       lastTranscript: ''
     };
 
-    /* ═══════════════════════════════════════
-       UTILITAIRES
-    ═══════════════════════════════════════ */
-    const $ = (s) => document.querySelector(s);
-    const $$ = (s) => document.querySelectorAll(s);
+    var $ = function (s) { return document.querySelector(s); };
+    var $$ = function (s) { return document.querySelectorAll(s); };
 
+    /* ═══════════ LOG ═══════════ */
     function log(msg, type) {
       type = type || 'ok';
       var el = $('#log-container');
       if (!el) return;
       var div = document.createElement('div');
       div.className = 'log-entry ' + type;
-      var ts = new Date().toLocaleTimeString('fr-FR');
-      div.textContent = '[' + ts + '] ' + msg;
+      div.textContent = '[' + new Date().toLocaleTimeString('fr-FR') + '] ' + msg;
       el.appendChild(div);
       el.scrollTop = el.scrollHeight;
       while (el.children.length > 80) el.removeChild(el.firstChild);
@@ -764,11 +745,11 @@
     function updateSysStatus() {
       var el = $('#sys-status');
       if (!el) return;
-      var mic = state.stream ? '<span style="color:var(--fg)">OK</span>' : '<span style="color:var(--danger)">OFF</span>';
-      var api = cfg.apiKey ? '<span style="color:var(--fg)">OK</span>' : '<span style="color:var(--warning)">MANQUANTE</span>';
-      var rec = state.recording ? '<span style="color:var(--danger)">REC</span>' : '<span style="color:var(--fg-dim)">IDLE</span>';
-      var lst = state.listening ? '<span style="color:var(--danger)">ON</span>' : '<span style="color:var(--fg-dim)">OFF</span>';
-      el.innerHTML = 'Micro: ' + mic + '<br>API: ' + api + '<br>Enregistreur: ' + rec + '<br>Reconnaissance: ' + lst;
+      var m = state.stream ? '<span style="color:var(--fg)">OK</span>' : '<span style="color:var(--danger)">OFF</span>';
+      var a = cfg.apiKey ? '<span style="color:var(--fg)">OK</span>' : '<span style="color:var(--warning)">MANQUANTE</span>';
+      var r = state.recording ? '<span style="color:var(--danger)">REC</span>' : '<span style="color:var(--fg-dim)">IDLE</span>';
+      var l = state.listening ? '<span style="color:var(--danger)">ON</span>' : '<span style="color:var(--fg-dim)">OFF</span>';
+      el.innerHTML = 'Micro: ' + m + '<br>API: ' + a + '<br>Enregistreur: ' + r + '<br>Reconnaissance: ' + l;
     }
 
     function formatTime(sec) {
@@ -778,9 +759,7 @@
       return h + ':' + m + ':' + s;
     }
 
-    /* ═══════════════════════════════════════
-       EFFET DE SAISIE AU DEMARRAGE
-    ═══════════════════════════════════════ */
+    /* ═══════════ BOOT ANIMATION ═══════════ */
     function typeText(el, text, speed) {
       speed = speed || 55;
       return new Promise(function (resolve) {
@@ -789,27 +768,19 @@
         var iv = setInterval(function () {
           el.textContent += text[i];
           i++;
-          if (i >= text.length) {
-            clearInterval(iv);
-            el.classList.remove('cursor-blink');
-            resolve();
-          }
+          if (i >= text.length) { clearInterval(iv); el.classList.remove('cursor-blink'); resolve(); }
         }, speed);
       });
     }
 
-    /* ═══════════════════════════════════════
-       AUDIO
-    ═══════════════════════════════════════ */
+    /* ═══════════ AUDIO ═══════════ */
     async function initAudio() {
       try {
         state.audioCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 48000 });
         await state.audioCtx.resume();
-
         state.stream = await navigator.mediaDevices.getUserMedia({
           audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
         });
-
         var src = state.audioCtx.createMediaStreamSource(state.stream);
 
         state.analyser = state.audioCtx.createAnalyser();
@@ -828,7 +799,7 @@
         resizeCanvases();
         renderLoop();
         updateSysStatus();
-        log('Audio initialise (48 kHz, FFT 2048)', 'ok');
+        log('Audio initialise (48kHz)', 'ok');
         return true;
       } catch (err) {
         log('Erreur micro : ' + err.message, 'error');
@@ -837,17 +808,13 @@
       }
     }
 
-    /* ═══════════════════════════════════════
-       VISUALISATION
-    ═══════════════════════════════════════ */
+    /* ═══════════ VISUALISATION ═══════════ */
     function renderLoop() {
       if (!state.audioReady) return;
       requestAnimationFrame(renderLoop);
-
       state.analyser.getByteFrequencyData(state.freqData);
       state.analyser.getByteTimeDomainData(state.timeData);
       state.volAnalyser.getByteFrequencyData(state.volData);
-
       drawSpectrogram();
       drawScope();
       drawVolume();
@@ -860,15 +827,13 @@
       var W = cv.width, H = cv.height;
       ctx.fillStyle = '#000';
       ctx.fillRect(0, 0, W, H);
-
       var len = state.freqData.length;
       var barW = Math.max(1, W / len);
       for (var i = 0; i < len; i++) {
         var v = state.freqData[i];
         var h = Math.max(0, Math.log10(v + 1) * 22);
         var hue = Math.max(0, 100 - v * 0.4);
-        var light = Math.max(8, v * 0.35);
-        ctx.fillStyle = 'hsl(' + hue + ', 100%, ' + light + '%)';
+        ctx.fillStyle = 'hsl(' + hue + ',100%,' + Math.max(8, v * 0.35) + '%)';
         ctx.fillRect(i * barW, H - h, barW + 0.5, h);
       }
     }
@@ -880,14 +845,9 @@
       var W = cv.width, H = cv.height;
       ctx.fillStyle = '#000';
       ctx.fillRect(0, 0, W, H);
-
       ctx.strokeStyle = 'rgba(0,255,65,0.12)';
       ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(0, H / 2);
-      ctx.lineTo(W, H / 2);
-      ctx.stroke();
-
+      ctx.beginPath(); ctx.moveTo(0, H / 2); ctx.lineTo(W, H / 2); ctx.stroke();
       var color = getComputedStyle(document.documentElement).getPropertyValue('--fg').trim();
       ctx.strokeStyle = color;
       ctx.lineWidth = 2;
@@ -897,8 +857,7 @@
       var slice = W / state.timeData.length;
       for (var i = 0; i < state.timeData.length; i++) {
         var y = (state.timeData[i] / 128 - 0.5) * H * 0.85 + H / 2;
-        if (i === 0) ctx.moveTo(0, y);
-        else ctx.lineTo(i * slice, y);
+        i === 0 ? ctx.moveTo(0, y) : ctx.lineTo(i * slice, y);
       }
       ctx.stroke();
       ctx.shadowBlur = 0;
@@ -911,24 +870,17 @@
       var W = cv.width, H = cv.height;
       ctx.fillStyle = '#000';
       ctx.fillRect(0, 0, W, H);
-
       var sum = 0;
       for (var i = 0; i < state.volData.length; i++) sum += state.volData[i];
-      var avg = sum / state.volData.length;
-      var pct = avg / 255;
-
+      var pct = sum / state.volData.length / 255;
       var barW = W * 0.5;
       var barH = pct * H * 0.9;
-      var x = (W - barW) / 2;
-      var y = H - barH;
-
       var hue = Math.max(0, 120 - pct * 180);
-      ctx.fillStyle = 'hsl(' + hue + ', 100%, 45%)';
-      ctx.shadowColor = 'hsl(' + hue + ', 100%, 50%)';
+      ctx.fillStyle = 'hsl(' + hue + ',100%,45%)';
+      ctx.shadowColor = 'hsl(' + hue + ',100%,50%)';
       ctx.shadowBlur = 8;
-      ctx.fillRect(x, y, barW, barH);
+      ctx.fillRect((W - barW) / 2, H - barH, barW, barH);
       ctx.shadowBlur = 0;
-
       var color = getComputedStyle(document.documentElement).getPropertyValue('--fg').trim();
       ctx.fillStyle = color;
       ctx.font = '22px VT323';
@@ -938,57 +890,34 @@
     }
 
     function resizeCanvases() {
-      var canvases = $$('#app canvas');
-      for (var i = 0; i < canvases.length; i++) {
-        var cv = canvases[i];
-        var rect = cv.parentElement.getBoundingClientRect();
-        cv.width = Math.max(100, rect.width - 28);
+      var cvs = $$('#app canvas');
+      for (var i = 0; i < cvs.length; i++) {
+        var cv = cvs[i];
+        var r = cv.parentElement.getBoundingClientRect();
+        cv.width = Math.max(100, r.width - 28);
         cv.height = 130;
       }
     }
 
-    /* ═══════════════════════════════════════
-       ENREGISTREUR
-    ═══════════════════════════════════════ */
+    /* ═══════════ ENREGISTREUR ═══════════ */
     function getSupportedMime() {
-      var types = [
-        'audio/webm;codecs=opus',
-        'audio/webm',
-        'audio/ogg;codecs=opus',
-        'audio/mpeg',
-        'audio/mp4'
-      ];
-      for (var i = 0; i < types.length; i++) {
-        if (MediaRecorder.isTypeSupported(types[i])) return types[i];
-      }
+      var types = ['audio/webm;codecs=opus','audio/webm','audio/ogg;codecs=opus','audio/mpeg','audio/mp4'];
+      for (var i = 0; i < types.length; i++) { if (MediaRecorder.isTypeSupported(types[i])) return types[i]; }
       return '';
     }
 
     function startRecording() {
       if (state.recording || !state.stream) return;
       var mime = getSupportedMime();
-      if (!mime) {
-        log('Aucun format audio supporte par ce navigateur', 'error');
-        return;
-      }
+      if (!mime) { log('Aucun format audio supporte', 'error'); return; }
       state.recording = true;
       state.chunks = [];
       state.recStart = Date.now();
-
-      try {
-        state.mediaRecorder = new MediaRecorder(state.stream, { mimeType: mime });
-      } catch (e) {
-        log('Erreur MediaRecorder : ' + e.message, 'error');
-        state.recording = false;
-        return;
-      }
-
-      state.mediaRecorder.ondataavailable = function (e) {
-        if (e.data.size > 0) state.chunks.push(e.data);
-      };
+      try { state.mediaRecorder = new MediaRecorder(state.stream, { mimeType: mime }); }
+      catch (e) { log('Erreur MediaRecorder : ' + e.message, 'error'); state.recording = false; return; }
+      state.mediaRecorder.ondataavailable = function (e) { if (e.data.size > 0) state.chunks.push(e.data); };
       state.mediaRecorder.onstop = onRecordingDone;
       state.mediaRecorder.start(200);
-
       $('#btn-rec').classList.add('recording');
       $('#btn-stop').disabled = false;
       $('#timer').classList.add('active');
@@ -1010,81 +939,62 @@
     }
 
     function onRecordingDone() {
+      var mt = state.mediaRecorder.mimeType || '';
       var ext = 'mp3';
-      var mtype = state.mediaRecorder.mimeType || '';
-      if (mtype.indexOf('webm') !== -1) ext = 'webm';
-      else if (mtype.indexOf('ogg') !== -1) ext = 'ogg';
-      else if (mtype.indexOf('mp4') !== -1) ext = 'm4a';
-
-      var blob = new Blob(state.chunks, { type: mtype });
+      if (mt.indexOf('webm') !== -1) ext = 'webm';
+      else if (mt.indexOf('ogg') !== -1) ext = 'ogg';
+      else if (mt.indexOf('mp4') !== -1) ext = 'm4a';
+      var blob = new Blob(state.chunks, { type: mt });
       var url = URL.createObjectURL(blob);
-      var duration = Math.floor((Date.now() - state.recStart) / 1000);
+      var dur = Math.floor((Date.now() - state.recStart) / 1000);
       var name = 'Capture_' + new Date().toLocaleString('fr-FR').replace(/[/: ]/g, '-');
-
-      captures.unshift({ name: name, url: url, blob: blob, ext: ext, duration: duration });
+      captures.unshift({ name: name, url: url, blob: blob, ext: ext, duration: dur });
       renderCaptures();
       setStatus('Pret');
-      log('Capture terminee : ' + duration + 's (' + ext + ')', 'ok');
+      log('Capture : ' + dur + 's (' + ext + ')', 'ok');
     }
 
     function startTimer() {
       var sec = 0;
       $('#timer').textContent = '00:00:00';
-      state.timerInterval = setInterval(function () {
-        sec++;
-        $('#timer').textContent = formatTime(sec);
-      }, 1000);
+      state.timerInterval = setInterval(function () { sec++; $('#timer').textContent = formatTime(sec); }, 1000);
     }
+    function stopTimer() { clearInterval(state.timerInterval); $('#timer').textContent = '00:00:00'; }
 
-    function stopTimer() {
-      clearInterval(state.timerInterval);
-      $('#timer').textContent = '00:00:00';
-    }
-
-    /* ═══════════════════════════════════════
-       CAPTURES
-    ═══════════════════════════════════════ */
+    /* ═══════════ CAPTURES ═══════════ */
     function renderCaptures() {
       var el = $('#captures-list');
-      if (!captures.length) {
-        el.innerHTML = '<div class="empty-state">Aucune capture pour cette session.</div>';
-        return;
-      }
+      if (!captures.length) { el.innerHTML = '<div class="empty-state">Aucune capture pour cette session.</div>'; return; }
       el.innerHTML = '';
       for (var i = 0; i < captures.length; i++) {
         (function (idx) {
           var c = captures[idx];
           var row = document.createElement('div');
           row.className = 'capture-row';
-
           var info = document.createElement('div');
           info.className = 'info';
-          var nameDiv = document.createElement('div');
-          nameDiv.className = 'name';
-          nameDiv.textContent = c.name;
-          var metaDiv = document.createElement('div');
-          metaDiv.className = 'meta';
-          metaDiv.textContent = c.duration + 's | ' + c.ext;
-          info.appendChild(nameDiv);
-          info.appendChild(metaDiv);
+          var nm = document.createElement('div');
+          nm.className = 'name';
+          nm.textContent = c.name;
+          var mt = document.createElement('div');
+          mt.className = 'meta';
+          mt.textContent = c.duration + 's | ' + c.ext;
+          info.appendChild(nm);
+          info.appendChild(mt);
           row.appendChild(info);
-
-          var btnPlay = document.createElement('button');
-          btnPlay.textContent = 'PLAY';
-          btnPlay.addEventListener('click', function () { playCapture(idx); });
-          row.appendChild(btnPlay);
-
-          var btnDl = document.createElement('button');
-          btnDl.textContent = 'SAVE';
-          btnDl.addEventListener('click', function () { downloadCapture(idx); });
-          row.appendChild(btnDl);
-
-          var btnDel = document.createElement('button');
-          btnDel.textContent = 'DEL';
-          btnDel.className = 'danger';
-          btnDel.addEventListener('click', function () { deleteCapture(idx); });
-          row.appendChild(btnDel);
-
+          var bp = document.createElement('button');
+          bp.textContent = 'PLAY';
+          bp.addEventListener('click', function () { playCapture(idx); });
+          row.appendChild(bp);
+          var bd = document.createElement('button');
+          bd.textContent = 'SAVE';
+          bd.addEventListener('click', function () { downloadCapture(idx); });
+          row.appendChild(bd);
+          var bx = document.createElement('button');
+          bx.textContent = 'DEL';
+          bx.className = 'danger';
+          bx.addEventListener('click', function () { deleteCapture(idx); });
+          row.appendChild(bx);
           el.appendChild(row);
         })(i);
       }
@@ -1093,12 +1003,10 @@
     function playCapture(idx) {
       var c = captures[idx];
       if (!c) return;
-      var player = $('#audio-player');
-      player.src = c.url;
-      player.play();
+      $('#audio-player').src = c.url;
+      $('#audio-player').play();
       log('Lecture : ' + c.name, 'ok');
     }
-
     function downloadCapture(idx) {
       var c = captures[idx];
       if (!c) return;
@@ -1108,26 +1016,19 @@
       a.click();
       log('Telechargement : ' + a.download, 'ok');
     }
-
     function deleteCapture(idx) {
-      var c = captures[idx];
-      if (!c) return;
-      URL.revokeObjectURL(c.url);
+      if (!captures[idx]) return;
+      URL.revokeObjectURL(captures[idx].url);
       captures.splice(idx, 1);
       renderCaptures();
       log('Capture supprimee', 'ok');
     }
 
-    /* ═══════════════════════════════════════
-       PUSH-TO-TALK
-    ═══════════════════════════════════════ */
-    var pttTranscript = '';
-
+    /* ═══════════ PTT ═══════════ */
     function pttStart(e) {
       e.preventDefault();
       if (!state.audioReady) { log('Systeme non initialise', 'error'); return; }
       if (state.listening || state.recording) return;
-
       state.listening = true;
       pttTranscript = '';
       state.lastTranscript = '';
@@ -1135,7 +1036,7 @@
       btn.classList.add('listening');
       btn.innerHTML = 'ECOUTE...<br><small>parlez</small>';
       setStatus('Ecoute en cours...');
-      log('Push-to-talk : ecoute demarree', 'ok');
+      log('PTT : ecoute demarree', 'ok');
       updateSysStatus();
       beginRecognition();
     }
@@ -1143,35 +1044,24 @@
     function pttEnd(e) {
       e.preventDefault();
       if (!state.listening) return;
-
       state.listening = false;
       var btn = $('#ptt');
       btn.classList.remove('listening');
       btn.innerHTML = 'MAINTENIR<br>POUR PARLER';
       setStatus('Analyse...');
       updateSysStatus();
-
       endRecognition();
       setTimeout(function () {
         if (pttTranscript.trim()) {
           log('Transcription : "' + pttTranscript + '"', 'ok');
           sendToGroq(pttTranscript);
-        } else {
-          log('Aucune parole detectee', 'error');
-          setStatus('Pret');
-        }
+        } else { log('Aucune parole detectee', 'error'); setStatus('Pret'); }
       }, 350);
     }
 
     function beginRecognition() {
       var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!SR) {
-        log('API Web Speech non supportee sur ce navigateur', 'error');
-        state.listening = false;
-        $('#ptt').classList.remove('listening');
-        return;
-      }
-
+      if (!SR) { log('Web Speech non supporte', 'error'); state.listening = false; $('#ptt').classList.remove('listening'); return; }
       try {
         if (state.recognition) state.recognition.abort();
         state.recognition = new SR();
@@ -1179,106 +1069,64 @@
         state.recognition.continuous = false;
         state.recognition.interimResults = false;
         state.recognition.maxAlternatives = 1;
-
         state.recognition.onresult = function (ev) {
           var txt = ev.results[0][0].transcript.trim();
-          if (txt && txt !== state.lastTranscript) {
-            state.lastTranscript = txt;
-            pttTranscript = txt;
-          }
+          if (txt && txt !== state.lastTranscript) { state.lastTranscript = txt; pttTranscript = txt; }
         };
-
         state.recognition.onerror = function (ev) {
-          if (ev.error !== 'no-speech' && ev.error !== 'aborted') {
-            log('Erreur reconnaissance : ' + ev.error, 'error');
-          }
+          if (ev.error !== 'no-speech' && ev.error !== 'aborted') log('Erreur reco : ' + ev.error, 'error');
         };
-
-        // Pas de onend qui relance = zero boucle en mode PTT
-
         state.recognition.start();
       } catch (err) {
-        log('Erreur reconnaissance : ' + err.message, 'error');
+        log('Erreur reco : ' + err.message, 'error');
         state.listening = false;
         $('#ptt').classList.remove('listening');
       }
     }
 
     function endRecognition() {
-      if (state.recognition) {
-        try { state.recognition.stop(); } catch (_) {}
-        state.recognition = null;
-      }
+      if (state.recognition) { try { state.recognition.stop(); } catch (_) {} state.recognition = null; }
     }
 
-    /* ═══════════════════════════════════════
-       GROQ
-    ═══════════════════════════════════════ */
+    /* ═══════════ GROQ ═══════════ */
     async function sendToGroq(text) {
       var report = $('#ai-report');
       if (!cfg.apiKey) {
-        report.textContent = 'Cle API Groq manquante.\nOuvrez les PARAMETRES pour la configurer.';
+        report.textContent = 'Cle API Groq manquante.\nOuvrez les PARAMETRES.';
         log('Cle API manquante', 'error');
         setStatus('Pret');
         return;
       }
-
       report.textContent = 'Analyse en cours...';
       setStatus('Analyse IA...');
-
-      var prompt = 'Analyse ce contenu vocal en francais :\n"' + text + '"\n' +
-        '- Corrige les erreurs de transcription si necessaire.\n' +
-        '- Donne une interpretation breve.\n' +
-        '- Maximum 5 phrases, sois direct.';
-
+      var prompt = 'Analyse ce contenu vocal en francais :\n"' + text + '"\n- Corrige les erreurs.\n- Interpretation breve.\n- Max 5 phrases.';
       try {
         var res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + cfg.apiKey
-          },
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + cfg.apiKey },
           body: JSON.stringify({
             model: cfg.model,
             messages: [
-              { role: 'system', content: 'Tu es un analyste audio precis et concis. Reponds en francais.' },
+              { role: 'system', content: 'Analyste audio precis et concis. Reponds en francais.' },
               { role: 'user', content: prompt }
             ],
-            temperature: 0.3,
-            max_tokens: 400
+            temperature: 0.3, max_tokens: 400
           })
         });
-
-        if (!res.ok) {
-          var errBody = await res.text();
-          throw new Error(res.status + ' — ' + errBody.substring(0, 120));
-        }
-
+        if (!res.ok) { var eb = await res.text(); throw new Error(res.status + ' — ' + eb.substring(0, 120)); }
         var data = await res.json();
-        var answer = (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content)
-          || 'Aucune reponse obtenue.';
-
-        report.textContent =
-          'TRANSCRIPTION :\n"' + text + '"\n\n' +
-          '────────────────────────────\n' +
-          'ANALYSE IA (' + cfg.model + ')\n' +
-          '────────────────────────────\n\n' +
-          answer + '\n\n' +
-          new Date().toLocaleTimeString('fr-FR');
-
+        var answer = (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || 'Aucune reponse.';
+        report.textContent = 'TRANSCRIPTION :\n"' + text + '"\n\n────────────────────────────\nANALYSE IA (' + cfg.model + ')\n────────────────────────────\n\n' + answer + '\n\n' + new Date().toLocaleTimeString('fr-FR');
         log('Analyse IA terminee', 'ok');
         setStatus('Pret');
         speak(answer.substring(0, 280));
       } catch (err) {
-        report.textContent = 'Erreur : ' + err.message + '\nVerifiez la cle API et la connexion.';
+        report.textContent = 'Erreur : ' + err.message;
         log('Erreur Groq : ' + err.message, 'error');
         setStatus('Erreur');
       }
     }
 
-    /* ═══════════════════════════════════════
-       SYNTHESE VOCALE
-    ═══════════════════════════════════════ */
     function speak(text) {
       if (!cfg.tts || !window.speechSynthesis || state.listening) return;
       window.speechSynthesis.cancel();
@@ -1288,13 +1136,11 @@
       window.speechSynthesis.speak(u);
     }
 
-    /* ═══════════════════════════════════════
-       PARAMETRES
-    ═══════════════════════════════════════ */
+    /* ═══════════ PARAMETRES ═══════════ */
     function loadSettings() {
       try {
         var raw = localStorage.getItem('supraLab14_cfg');
-        if (raw) cfg = Object.assign({}, DEFAULTS, JSON.parse(raw));
+        if (raw) { var parsed = JSON.parse(raw); for (var k in parsed) if (parsed.hasOwnProperty(k)) cfg[k] = parsed[k]; }
       } catch (_) {}
       applySettings();
     }
@@ -1302,25 +1148,20 @@
     function applySettings() {
       document.documentElement.style.setProperty('--fg', cfg.color);
       document.documentElement.style.setProperty('--border', cfg.color);
-
       var r = parseInt(cfg.color.slice(1, 3), 16);
       var g = parseInt(cfg.color.slice(3, 5), 16);
       var b = parseInt(cfg.color.slice(5, 7), 16);
-
       document.documentElement.style.setProperty('--fg-dim', cfg.color + '88');
       document.documentElement.style.setProperty('--fg-glow', '0 0 8px rgba(' + r + ',' + g + ',' + b + ',0.45)');
       document.documentElement.style.setProperty('--fg-glow-strong', '0 0 18px rgba(' + r + ',' + g + ',' + b + ',0.65)');
       document.documentElement.style.setProperty('--bg-panel', 'rgba(' + Math.floor(r * 0.04) + ',' + Math.floor(g * 0.08) + ',' + Math.floor(b * 0.04) + ',1)');
-
       $('#inp-apikey').value = cfg.apiKey || '';
       $('#inp-model').value = cfg.model;
       $('#inp-lang').value = cfg.lang;
       $('#inp-tts').checked = cfg.tts;
       $('#inp-autolisten').checked = cfg.autoListen;
       $('#inp-color').value = cfg.color;
-
-      var label = cfg.model.split('-').slice(0, 2).join(' ').toUpperCase();
-      $('#header-model-label').textContent = label;
+      $('#header-model-label').textContent = cfg.model.split('-').slice(0, 2).join(' ').toUpperCase();
       updateSysStatus();
     }
 
@@ -1338,29 +1179,39 @@
 
     function resetSettings() {
       if (!confirm('Reinitialiser tous les parametres ?')) return;
-      cfg = Object.assign({}, DEFAULTS);
+      for (var k in DEFAULTS) cfg[k] = DEFAULTS[k];
       localStorage.removeItem('supraLab14_cfg');
       applySettings();
       log('Parametres reinitialises', 'error');
     }
 
-    /* ═══════════════════════════════════════
-       HORLOGE
-    ═══════════════════════════════════════ */
-    function tickClock() {
-      var el = $('#footer-clock');
-      if (el) el.textContent = new Date().toLocaleTimeString('fr-FR');
+    /* ═══════════ BOUTON OEIL POUR LA CLE API ═══════════ */
+    function initKeyToggle() {
+      var inp = $('#inp-apikey');
+      var btn = $('#btn-toggle-key');
+      var visible = false;
+      btn.addEventListener('click', function () {
+        visible = !visible;
+        inp.type = visible ? 'text' : 'text'; // reste en text pour permettre le copier-coller
+        // On simule le password en changeant la couleur du texte
+        if (visible) {
+          inp.style.color = 'var(--fg)';
+          inp.style.webkitTextSecurity = 'none';
+          btn.textContent = 'CACHE';
+        } else {
+          inp.style.color = 'var(--fg)';
+          inp.style.webkitTextSecurity = 'disc';
+          btn.textContent = 'OEIL';
+        }
+      });
+      // Par défaut : masqué visuellement mais type=text pour le paste
+      inp.style.webkitTextSecurity = 'disc';
     }
-    setInterval(tickClock, 1000);
-    tickClock();
 
-    /* ═══════════════════════════════════════
-       ECOUTE AUTOMATIQUE
-    ═══════════════════════════════════════ */
+    /* ═══════════ ECOUTE AUTO ═══════════ */
     function beginRecognitionAuto() {
       var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
       if (!SR || !state.listening) return;
-
       try {
         if (state.recognition) state.recognition.abort();
         state.recognition = new SR();
@@ -1368,75 +1219,52 @@
         state.recognition.continuous = false;
         state.recognition.interimResults = false;
         state.recognition.maxAlternatives = 1;
-
         state.recognition.onresult = function (ev) {
           var txt = ev.results[0][0].transcript.trim();
-          if (txt && txt !== state.lastTranscript) {
-            state.lastTranscript = txt;
-            pttTranscript = txt;
-          }
+          if (txt && txt !== state.lastTranscript) { state.lastTranscript = txt; pttTranscript = txt; }
         };
-
         state.recognition.onerror = function (ev) {
-          if (ev.error !== 'no-speech' && ev.error !== 'aborted') {
-            log('Erreur reco auto : ' + ev.error, 'error');
-          }
+          if (ev.error !== 'no-speech' && ev.error !== 'aborted') log('Erreur reco auto : ' + ev.error, 'error');
         };
-
         state.recognition.onend = function () {
           if (state.listening) {
             if (pttTranscript.trim()) {
               var txt = pttTranscript;
               pttTranscript = '';
-              log('Auto-transcription : "' + txt + '"', 'ok');
+              log('Auto : "' + txt + '"', 'ok');
               sendToGroq(txt);
             }
-            setTimeout(function () {
-              if (state.listening) beginRecognitionAuto();
-            }, 600);
+            setTimeout(function () { if (state.listening) beginRecognitionAuto(); }, 600);
           }
         };
-
         state.recognition.start();
-      } catch (err) {
-        log('Erreur reco auto : ' + err.message, 'error');
-      }
+      } catch (err) { log('Erreur reco auto : ' + err.message, 'error'); }
     }
 
-    /* ═══════════════════════════════════════
-       EVENEMENTS
-    ═══════════════════════════════════════ */
+    /* ═══════════ HORLOGE ═══════════ */
+    function tickClock() { var el = $('#footer-clock'); if (el) el.textContent = new Date().toLocaleTimeString('fr-FR'); }
+    setInterval(tickClock, 1000);
+    tickClock();
+
+    /* ═══════════ EVENEMENTS ═══════════ */
     function bindEvents() {
       $('#btn-launch').addEventListener('click', launchApp);
-      $('#btn-open-settings').addEventListener('click', function () {
-        $('#settings-dialog').showModal();
-      });
-
-      $('#btn-close-settings').addEventListener('click', function () {
-        $('#settings-dialog').close();
-      });
-      $('#btn-save-settings').addEventListener('click', function () {
-        saveSettings();
-        $('#settings-dialog').close();
-      });
+      $('#btn-open-settings').addEventListener('click', function () { $('#settings-dialog').showModal(); });
+      $('#btn-close-settings').addEventListener('click', function () { $('#settings-dialog').close(); });
+      $('#btn-save-settings').addEventListener('click', function () { saveSettings(); $('#settings-dialog').close(); });
       $('#btn-reset-settings').addEventListener('click', resetSettings);
-      $('#settings-dialog').addEventListener('click', function (e) {
-        if (e.target === e.currentTarget) e.currentTarget.close();
-      });
+      $('#settings-dialog').addEventListener('click', function (e) { if (e.target === e.currentTarget) e.currentTarget.close(); });
 
       $('#btn-rec').addEventListener('click', function () {
         if (!state.audioReady) { log('Systeme non initialise', 'error'); return; }
-        if (state.recording) stopRecording();
-        else startRecording();
+        state.recording ? stopRecording() : startRecording();
       });
       $('#btn-stop').addEventListener('click', stopRecording);
       $('#btn-play-last').addEventListener('click', function () {
-        if (captures.length) playCapture(0);
-        else log('Aucune capture disponible', 'error');
+        if (captures.length) playCapture(0); else log('Aucune capture', 'error');
       });
       $('#btn-dl-last').addEventListener('click', function () {
-        if (captures.length) downloadCapture(0);
-        else log('Aucune capture disponible', 'error');
+        if (captures.length) downloadCapture(0); else log('Aucune capture', 'error');
       });
 
       var ptt = $('#ptt');
@@ -1447,29 +1275,18 @@
       ptt.addEventListener('touchend', pttEnd, { passive: false });
       ptt.addEventListener('touchcancel', pttEnd, { passive: false });
 
-      window.addEventListener('resize', function () {
-        if (state.audioReady) resizeCanvases();
-      });
+      window.addEventListener('resize', function () { if (state.audioReady) resizeCanvases(); });
     }
 
-    /* ═══════════════════════════════════════
-       LANCEMENT
-    ═══════════════════════════════════════ */
+    /* ═══════════ LANCEMENT ═══════════ */
     async function launchApp() {
       $('#boot').style.display = 'none';
       $('#app').classList.add('active');
       $('#ptt').classList.add('visible');
-
       log('=== SUPRA LAB v14.0 demarre ===', 'ok');
-
       var ok = await initAudio();
-      if (ok) {
-        setStatus('Pret');
-        log('Tous les systemes operationnels', 'ok');
-      } else {
-        setStatus('Erreur micro');
-      }
-
+      if (ok) { setStatus('Pret'); log('Systemes operationnels', 'ok'); }
+      else { setStatus('Erreur micro'); }
       if (ok && cfg.autoListen) {
         setTimeout(function () {
           state.listening = true;
@@ -1478,16 +1295,14 @@
           $('#ptt').classList.add('listening');
           $('#ptt').innerHTML = 'ECOUTE AUTO<br><small>parlez</small>';
           setStatus('Ecoute automatique...');
-          log('Ecoute automatique activee', 'ok');
+          log('Ecoute auto activee', 'ok');
           updateSysStatus();
           beginRecognitionAuto();
         }, 800);
       }
     }
 
-    /* ═══════════════════════════════════════
-       NETTOYAGE
-    ═══════════════════════════════════════ */
+    /* ═══════════ NETTOYAGE ═══════════ */
     window.addEventListener('beforeunload', function () {
       if (state.stream) state.stream.getTracks().forEach(function (t) { t.stop(); });
       if (state.recognition) { try { state.recognition.abort(); } catch (_) {} }
@@ -1496,13 +1311,11 @@
       for (var i = 0; i < captures.length; i++) URL.revokeObjectURL(captures[i].url);
     });
 
-    /* ═══════════════════════════════════════
-       INIT
-    ═══════════════════════════════════════ */
+    /* ═══════════ INIT ═══════════ */
     document.addEventListener('DOMContentLoaded', async function () {
       loadSettings();
+      initKeyToggle();
       bindEvents();
-
       await typeText($('#boot-title'), 'SUPRA LAB v14.0', 60);
       var sub = $('#boot-subtitle');
       sub.textContent = 'ARCHITECTURE REFAITE — SANS BOUCLE — GITHUB READY';
