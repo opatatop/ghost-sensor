@@ -3,77 +3,95 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>SUPRA LAB v14.0</title>
+  <title>SUPRA LAB v15.0</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
   <style>
+    /* ══════════════════════════════════════════════════
+       JEWEL — Design System Tokens
+    ══════════════════════════════════════════════════ */
     :root {
-      --bg: #060a06;
-      --bg-panel: #0a140a;
-      --fg: #00ff41;
-      --fg-dim: #00992a;
-      --fg-glow: 0 0 8px rgba(0,255,65,0.45);
-      --fg-glow-strong: 0 0 18px rgba(0,255,65,0.65);
-      --danger: #ff0044;
-      --danger-glow: 0 0 12px rgba(255,0,68,0.5);
-      --warning: #ffaa00;
-      --border: #00ff41;
-      --font: 'VT323', monospace;
+      --bg:            #050905;
+      --bg-deep:       #020402;
+      --bg-panel:      #081208;
+      --fg:            #00ff41;
+      --fg-dim:        #007a20;
+      --fg-muted:      #004d14;
+      --danger:        #ff0044;
+      --warning:       #ffaa00;
+      --radius:        2px;
+      --font:          'VT323', monospace;
+      --glow:          0 0 8px rgba(0,255,65,0.4);
+      --glow-strong:   0 0 20px rgba(0,255,65,0.6);
+      --glow-danger:   0 0 12px rgba(255,0,68,0.5);
     }
 
+    /* ══════════════════════════════════════════════════
+       RESET — Précis, rien de plus
+    ══════════════════════════════════════════════════ */
     *, *::before, *::after {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
     }
 
-    /* IMPORTANT : PAS de user-select:none sur *,
-       et PAS de touch-action:manipulation sur body.
-       On les met uniquement sur les éléments interactifs. */
-    html, body {
-      height: 100%;
-      overflow: hidden;
-      -webkit-user-select: none;
-      user-select: none;
-      /* touch-action retiré du body pour permettre
-          le long-press → coller sur Android */
-    }
-
-    /* Les inputs DOIVENT pouvoir être sélectionnés et
-       recevoir le touch normal pour le copier-coller Android */
+    /* Les inputs doivent rester natifs pour le copier-coller Android */
     input, textarea, select {
       -webkit-user-select: text !important;
       user-select: text !important;
       touch-action: auto !important;
     }
 
+    html, body {
+      height: 100%;
+      overflow: hidden;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    /* ══════════════════════════════════════════════════
+       BASE
+    ══════════════════════════════════════════════════ */
     body {
       font-family: var(--font);
       font-size: 17px;
       color: var(--fg);
       background-color: var(--bg);
+      /* Grille laboratoire subtile */
       background-image:
-        linear-gradient(rgba(0,255,65,0.035) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0,255,65,0.035) 1px, transparent 1px);
-      background-size: 36px 36px;
+        linear-gradient(rgba(0,255,65,0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,255,65,0.025) 1px, transparent 1px);
+      background-size: 40px 40px;
     }
 
-    #scanlines {
+    /* Scanlines CRT */
+    .scanlines {
       position: fixed;
       inset: 0;
       background: repeating-linear-gradient(
         0deg,
         transparent 0px,
         transparent 2px,
-        rgba(0,0,0,0.12) 2px,
-        rgba(0,0,0,0.12) 4px
+        rgba(0,0,0,0.1) 2px,
+        rgba(0,0,0,0.1) 4px
       );
       pointer-events: none;
       z-index: 9999;
     }
 
-    /* touch-action: manipulation uniquement sur les boutons */
-    button {
+    /* Vignettage cinématique */
+    .vignette {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.5) 100%);
+      pointer-events: none;
+      z-index: 9998;
+    }
+
+    /* ══════════════════════════════════════════════════
+       BOUTONS
+    ══════════════════════════════════════════════════ */
+    .btn {
       font-family: var(--font);
       font-size: 17px;
       color: var(--fg);
@@ -81,40 +99,65 @@
       border: 3px solid var(--fg);
       padding: 10px 22px;
       cursor: pointer;
-      transition: background 0.15s, box-shadow 0.15s, color 0.15s, transform 0.1s;
-      box-shadow: var(--fg-glow);
       letter-spacing: 1px;
       -webkit-user-select: none;
       user-select: none;
       touch-action: manipulation;
+      transition: background 0.15s, box-shadow 0.15s, color 0.15s, transform 0.1s;
+      box-shadow: var(--glow);
+      position: relative;
+      overflow: hidden;
     }
-    button:hover {
-      background: rgba(0,255,65,0.08);
-      box-shadow: var(--fg-glow-strong);
+    .btn::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, transparent 50%);
+      pointer-events: none;
     }
-    button:active {
+    .btn:hover {
+      background: rgba(0,255,65,0.07);
+      box-shadow: var(--glow-strong);
+    }
+    .btn:active {
       background: var(--fg);
       color: var(--bg);
       transform: scale(0.97);
     }
-    button:disabled {
-      opacity: 0.4;
+    .btn:disabled {
+      opacity: 0.35;
       cursor: not-allowed;
-      border-color: var(--fg-dim);
-      color: var(--fg-dim);
+      border-color: var(--fg-muted);
+      color: var(--fg-muted);
       box-shadow: none;
     }
-    button.danger {
+    .btn:disabled::after { display: none; }
+    .btn--danger {
       border-color: var(--danger);
       color: var(--danger);
-      box-shadow: var(--danger-glow);
+      box-shadow: var(--glow-danger);
     }
-    button.danger:hover {
-      background: rgba(255,0,68,0.08);
+    .btn--danger:hover { background: rgba(255,0,68,0.07); }
+    .btn--sm {
+      padding: 4px 10px;
+      font-size: 13px;
+      border-width: 2px;
     }
+    .btn--icon {
+      background: none;
+      border: none;
+      font-size: 26px;
+      padding: 0 6px;
+      box-shadow: none;
+      color: var(--fg);
+      line-height: 1;
+    }
+    .btn--icon:hover { color: var(--danger); box-shadow: none; }
 
-    /* ═══════════ ECRAN DE DEMARRAGE ═══════════ */
-    #boot {
+    /* ══════════════════════════════════════════════════
+       BOOT SCREEN
+    ══════════════════════════════════════════════════ */
+    .boot {
       position: fixed;
       inset: 0;
       display: flex;
@@ -122,48 +165,52 @@
       align-items: center;
       justify-content: center;
       text-align: center;
-      padding: 20px;
+      padding: 24px;
       z-index: 100;
       border: 6px solid var(--fg);
       background: var(--bg);
+      box-shadow: inset 0 0 80px rgba(0,255,65,0.03);
     }
-    #boot .title {
-      font-size: 42px;
-      letter-spacing: 4px;
-      text-shadow: var(--fg-glow-strong);
-      min-height: 52px;
+    .boot__title {
+      font-size: 44px;
+      letter-spacing: 5px;
+      text-shadow: var(--glow-strong);
+      min-height: 54px;
     }
-    #boot .subtitle {
-      font-size: 20px;
+    .boot__sub {
+      font-size: 18px;
       color: var(--warning);
-      margin-top: 8px;
-      min-height: 26px;
+      margin-top: 10px;
+      min-height: 24px;
       opacity: 0;
-      transition: opacity 0.4s;
+      transition: opacity 0.5s;
     }
-    #boot .subtitle.visible { opacity: 1; }
-    #boot .actions {
-      margin-top: 40px;
+    .boot__sub--show { opacity: 1; }
+    .boot__actions {
+      margin-top: 44px;
       display: flex;
       gap: 16px;
       flex-wrap: wrap;
       justify-content: center;
+      opacity: 0;
+      transition: opacity 0.6s;
     }
-    #boot .actions button:first-child {
-      font-size: 28px;
-      padding: 16px 52px;
+    .boot__actions--show { opacity: 1; }
+    .boot__actions .btn--launch {
+      font-size: 30px;
+      padding: 18px 56px;
       border-width: 5px;
     }
     .cursor-blink::after {
-      content: '_';
-      animation: blink 0.7s step-end infinite;
+      content: '\2588';
+      animation: blink-cursor 0.6s step-end infinite;
     }
-    @keyframes blink {
-      50% { opacity: 0; }
-    }
+    @keyframes blink-cursor { 50% { opacity: 0; } }
 
-    /* ═══════════ APPLICATION PRINCIPALE ═══════════ */
-    #app {
+    /* ══════════════════════════════════════════════════
+       APP SHELL
+    ══════════════════════════════════════════════════ */
+    .app {
       display: none;
       position: fixed;
       inset: 0;
@@ -172,71 +219,77 @@
       flex-direction: column;
       background: var(--bg);
     }
-    #app.active { display: flex; }
+    .app--active { display: flex; }
 
-    #app > header {
+    .app__header {
       background: var(--bg-panel);
       border-bottom: 4px solid var(--fg);
       padding: 12px 16px;
       text-align: center;
       font-size: 22px;
       letter-spacing: 3px;
-      text-shadow: var(--fg-glow);
+      text-shadow: var(--glow);
       flex-shrink: 0;
       position: relative;
       overflow: hidden;
     }
-    #app > header::after {
-      content: 'SYS:OK  MEM:STABLE  NET:READY  CLK:48kHz  BUF:2048  FFT:ON  MIC:LIVE ';
+    /* Bandeau défilant */
+    .app__header::after {
+      content: 'SYS:ONLINE  MEM:STABLE  NET:READY  CLK:48kHz  FFT:2048  MIC:LIVE  BUF:FILL ';
       position: absolute;
       top: 0; left: 0;
-      font-size: 13px;
-      color: var(--fg-dim);
+      font-size: 12px;
+      color: var(--fg-muted);
       white-space: nowrap;
-      animation: scroll-header 20s linear infinite;
-      padding-top: 2px;
+      animation: ticker 22s linear infinite;
+      padding-top: 3px;
+      letter-spacing: 2px;
     }
-    @keyframes scroll-header {
-      0% { transform: translateX(100%); }
+    @keyframes ticker {
+      0%   { transform: translateX(100vw); }
       100% { transform: translateX(-100%); }
     }
 
-    #app > main {
+    .app__main {
       flex: 1;
       overflow-y: auto;
-      padding: 12px;
+      padding: 14px;
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+      gap: 14px;
       align-content: start;
-      padding-bottom: 80px;
+      padding-bottom: 90px;
     }
 
-    #app > footer {
+    .app__footer {
       position: absolute;
       bottom: 0; left: 0; right: 0;
       background: var(--bg-panel);
       border-top: 3px solid var(--fg);
-      padding: 6px 14px;
+      padding: 7px 14px;
       font-size: 14px;
       display: flex;
       justify-content: space-between;
       z-index: 10;
+      letter-spacing: 0.5px;
     }
 
-    /* ═══════════ PANEaux ═══════════ */
+    /* ══════════════════════════════════════════════════
+       PANELS
+    ══════════════════════════════════════════════════ */
     .panel {
       background: var(--bg-panel);
       border: 3px solid var(--fg);
-      padding: 14px;
+      padding: 16px;
       position: relative;
-      min-height: 160px;
-      box-shadow: var(--fg-glow);
+      min-height: 165px;
+      box-shadow: var(--glow), inset 0 0 40px rgba(0,255,65,0.015);
     }
+    /* Coins techniques */
     .panel::before, .panel::after {
       content: '';
       position: absolute;
-      width: 10px; height: 10px;
+      width: 12px; height: 12px;
     }
     .panel::before {
       top: -1px; left: -1px;
@@ -248,41 +301,47 @@
       border-bottom: 2px solid var(--fg);
       border-right: 2px solid var(--fg);
     }
-    .panel-label {
+    .panel__label {
       position: absolute;
-      top: -11px; left: 12px;
+      top: -12px; left: 14px;
       background: var(--bg-panel);
-      padding: 0 8px;
+      padding: 0 10px;
       font-size: 14px;
-      letter-spacing: 1px;
-      text-shadow: var(--fg-glow);
+      letter-spacing: 2px;
+      text-shadow: var(--glow);
     }
-    .panel.full { grid-column: 1 / -1; }
+    .panel--full { grid-column: 1 / -1; }
 
-    canvas {
+    /* ══════════════════════════════════════════════════
+       CANVAS
+    ══════════════════════════════════════════════════ */
+    .canvas {
       display: block;
       width: 100%;
       height: 130px;
-      background: #000;
+      background: var(--bg-deep);
       image-rendering: pixelated;
+      border: 1px solid rgba(0,255,65,0.08);
     }
 
-    /* ═══════════ ENREGISTREMENT ═══════════ */
-    .recorder-bar {
+    /* ══════════════════════════════════════════════════
+       RECORDER BAR
+    ══════════════════════════════════════════════════ */
+    .recorder {
       grid-column: 1 / -1;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 12px;
-      padding: 12px;
+      gap: 14px;
+      padding: 14px;
       background: var(--bg-panel);
       border: 3px solid var(--fg);
       flex-wrap: wrap;
     }
-    .rec-btn {
-      width: 72px; height: 72px;
+    .recorder__btn {
+      width: 68px; height: 68px;
       border-radius: 50%;
-      font-size: 15px;
+      font-size: 14px;
       padding: 0;
       display: flex;
       align-items: center;
@@ -290,123 +349,160 @@
       line-height: 1.1;
       border-width: 4px;
     }
-    .rec-btn.recording {
+    .recorder__btn--rec.recording {
       background: var(--danger);
       border-color: var(--danger);
       color: #fff;
-      animation: pulse-ring 1.2s ease-out infinite;
+      animation: pulse-rec 1.2s ease-out infinite;
     }
-    @keyframes pulse-ring {
-      0% { box-shadow: 0 0 0 0 rgba(255,0,68,0.6); }
-      100% { box-shadow: 0 0 0 14px rgba(255,0,68,0); }
+    @keyframes pulse-rec {
+      0%   { box-shadow: 0 0 0 0 rgba(255,0,68,0.6); }
+      100% { box-shadow: 0 0 0 16px rgba(255,0,68,0); }
     }
-    .timer-display {
-      font-size: 28px;
-      letter-spacing: 3px;
-      min-width: 140px;
+    .recorder__timer {
+      font-size: 30px;
+      letter-spacing: 4px;
+      min-width: 150px;
       text-align: center;
-      text-shadow: var(--fg-glow);
+      text-shadow: var(--glow);
     }
-    .timer-display.active {
+    .recorder__timer--active {
       color: var(--danger);
-      text-shadow: var(--danger-glow);
-      animation: blink 1s step-end infinite;
+      text-shadow: var(--glow-danger);
+      animation: blink-cursor 1s step-end infinite;
     }
 
-    /* ═══════════ RAPPORT & LOG ═══════════ */
-    #ai-report {
-      background: #000;
+    /* ══════════════════════════════════════════════════
+       AI REPORT & LOG
+    ══════════════════════════════════════════════════ */
+    .ai-report {
+      background: var(--bg-deep);
       border: 2px dashed var(--fg-dim);
-      padding: 12px;
+      padding: 14px;
       font-size: 15px;
-      line-height: 1.5;
+      line-height: 1.55;
       white-space: pre-wrap;
       word-break: break-word;
-      max-height: 260px;
+      max-height: 280px;
       overflow-y: auto;
       min-height: 100px;
       color: var(--fg-dim);
       -webkit-user-select: text !important;
       user-select: text !important;
     }
-    #log-container {
-      max-height: 160px;
+    .log {
+      max-height: 170px;
       overflow-y: auto;
       font-size: 14px;
       line-height: 1.4;
-      padding: 8px;
-      background: #000;
+      padding: 10px;
+      background: var(--bg-deep);
       border: 2px dashed var(--warning);
       -webkit-user-select: text !important;
       user-select: text !important;
     }
-    .log-entry {
-      padding: 2px 4px;
-      margin: 2px 0;
+    .log__entry {
+      padding: 3px 5px;
+      margin: 3px 0;
       border-radius: 2px;
+      border-left: 3px solid transparent;
     }
-    .log-entry.error {
+    .log__entry--error {
       color: var(--danger);
-      background: rgba(255,0,68,0.08);
-      border-left: 3px solid var(--danger);
+      background: rgba(255,0,68,0.06);
+      border-left-color: var(--danger);
     }
-    .log-entry.ok { color: var(--fg-dim); }
+    .log__entry--ok {
+      color: var(--fg-dim);
+      border-left-color: var(--fg-muted);
+    }
+    .log__entry--info {
+      color: var(--warning);
+      border-left-color: var(--warning);
+    }
 
-    /* ═══════════ CAPTURES ═══════════ */
-    .capture-row {
+    /* ══════════════════════════════════════════════════
+       CAPTURES
+    ══════════════════════════════════════════════════ */
+    .capture {
       display: flex;
       align-items: center;
-      gap: 10px;
-      padding: 8px;
-      margin-bottom: 6px;
-      background: rgba(0,255,65,0.04);
-      border: 1px solid rgba(0,255,65,0.15);
-      transition: background 0.15s;
+      gap: 8px;
+      padding: 10px;
+      margin-bottom: 8px;
+      background: rgba(0,255,65,0.03);
+      border: 1px solid rgba(0,255,65,0.12);
+      transition: background 0.15s, border-color 0.15s;
     }
-    .capture-row:hover { background: rgba(0,255,65,0.08); }
-    .capture-row .info { flex: 1; }
-    .capture-row .name { font-size: 14px; }
-    .capture-row .meta { font-size: 12px; color: var(--fg-dim); }
-    .capture-row button {
-      padding: 4px 10px;
-      font-size: 13px;
-      border-width: 2px;
+    .capture:hover {
+      background: rgba(0,255,65,0.06);
+      border-color: rgba(0,255,65,0.25);
     }
-    .empty-state {
+    .capture__info { flex: 1; min-width: 0; }
+    .capture__name {
+      font-size: 14px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .capture__meta { font-size: 12px; color: var(--fg-muted); margin-top: 2px; }
+    .capture__actions { display: flex; gap: 6px; flex-shrink: 0; flex-wrap: wrap; }
+    .empty {
       text-align: center;
-      color: var(--fg-dim);
-      padding: 24px;
+      color: var(--fg-muted);
+      padding: 28px;
       font-size: 15px;
+      letter-spacing: 1px;
     }
 
-    /* ═══════════ PTT ═══════════ */
-    #ptt {
+    /* ══════════════════════════════════════════════════
+       PUSH-TO-TALK
+    ══════════════════════════════════════════════════ */
+    .ptt {
       position: fixed;
-      bottom: 60px;
+      bottom: 62px;
       left: 50%;
       transform: translateX(-50%);
-      width: 120px; height: 120px;
+      width: 124px; height: 124px;
       border-radius: 50%;
       font-size: 15px;
       text-align: center;
-      line-height: 1.2;
+      line-height: 1.25;
       z-index: 300;
       border-width: 5px;
-      box-shadow: var(--fg-glow-strong), inset 0 0 16px rgba(0,255,65,0.08);
+      box-shadow: var(--glow-strong), inset 0 0 20px rgba(0,255,65,0.06);
       transition: background 0.2s, border-color 0.2s, box-shadow 0.2s, transform 0.1s;
       display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
     }
-    #ptt.visible { display: flex; align-items: center; justify-content: center; }
-    #ptt:active { transform: translateX(-50%) scale(0.94); }
-    #ptt.listening {
+    .ptt--visible {
+      display: flex;
+    }
+    .ptt:active {
+      transform: translateX(-50%) scale(0.94);
+    }
+    .ptt--listening {
       background: var(--danger);
       border-color: var(--danger);
       color: #fff;
-      box-shadow: 0 0 0 0 rgba(255,0,68,0.6), inset 0 0 16px rgba(255,0,68,0.2);
-      animation: pulse-ring 1s ease-out infinite;
+      box-shadow: 0 0 0 0 rgba(255,0,68,0.6), inset 0 0 20px rgba(255,0,68,0.15);
+      animation: pulse-rec 1s ease-out infinite;
     }
+    .ptt__indicator {
+      display: none;
+      margin-top: 4px;
+      font-size: 10px;
+      letter-spacing: 1px;
+      color: #fff;
+      animation: blink-cursor 0.4s step-end infinite;
+    }
+    .ptt--speech .ptt__indicator { display: block; }
 
-    /* ═══════════ DIALOGUE PARAMETRES ═══════════ */
+    /* ══════════════════════════════════════════════════
+       DIALOG SETTINGS
+    ══════════════════════════════════════════════════ */
     dialog {
       font-family: var(--font);
       color: var(--fg);
@@ -414,44 +510,42 @@
       border: 5px solid var(--fg);
       padding: 0;
       max-width: 520px;
-      width: 90vw;
-      max-height: 85vh;
+      width: 92vw;
+      max-height: 88vh;
       overflow-y: auto;
-      box-shadow: var(--fg-glow-strong);
+      box-shadow: var(--glow-strong), 0 0 60px rgba(0,255,65,0.1);
     }
-    dialog::backdrop { background: rgba(0,0,0,0.85); }
-    .dialog-header {
+    dialog::backdrop { background: rgba(0,0,0,0.88); }
+    .dlg__head {
       display: flex;
       justify-content: space-between;
       align-items: center;
       padding: 16px 20px;
       border-bottom: 3px solid var(--fg);
       font-size: 22px;
-      letter-spacing: 2px;
-      text-shadow: var(--fg-glow);
+      letter-spacing: 3px;
+      text-shadow: var(--glow);
     }
-    .dialog-header button {
-      background: none;
-      border: none;
-      font-size: 26px;
-      padding: 0 4px;
-      box-shadow: none;
-      color: var(--fg);
+    .dlg__body { padding: 18px 22px; }
+    .dlg__foot {
+      display: flex;
+      justify-content: center;
+      gap: 14px;
+      padding: 18px 22px;
+      border-top: 2px solid var(--fg-muted);
     }
-    .dialog-header button:hover { color: var(--danger); }
-    .dialog-body { padding: 16px 20px; }
-    .field { margin-bottom: 16px; }
-    .field > label {
+    .field { margin-bottom: 18px; }
+    .field__label {
       display: block;
-      margin-bottom: 6px;
+      margin-bottom: 7px;
       font-size: 15px;
       letter-spacing: 1px;
     }
-    .field input[type="text"],
-    .field select {
+    .field__input,
+    .field__select {
       width: 100%;
-      padding: 10px;
-      background: #000;
+      padding: 11px;
+      background: var(--bg-deep);
       color: var(--fg);
       border: 2px solid var(--fg-dim);
       font-family: var(--font);
@@ -462,76 +556,79 @@
       user-select: text !important;
       touch-action: auto !important;
     }
-    .field input:focus,
-    .field select:focus {
+    .field__input:focus,
+    .field__select:focus {
       border-color: var(--fg);
-      box-shadow: var(--fg-glow);
+      box-shadow: var(--glow);
     }
-    /* Champ API clé avec bouton œil intégré */
-    .api-key-wrap {
-      position: relative;
+    .field__check {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
     }
-    .api-key-wrap input {
-      padding-right: 52px !important;
+    .field__check input {
+      width: 20px; height: 20px;
+      accent-color: var(--fg);
+      cursor: pointer;
     }
-    .api-key-wrap .toggle-vis {
+    .field__section {
+      font-size: 17px;
+      margin: 24px 0 14px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid var(--fg-muted);
+      letter-spacing: 2px;
+    }
+    .field__section:first-child { margin-top: 0; }
+
+    /* Wrap input + bouton œil */
+    .key-wrap { position: relative; }
+    .key-wrap .field__input { padding-right: 60px !important; }
+    .key-wrap__toggle {
       position: absolute;
-      right: 4px;
-      top: 50%;
+      right: 5px; top: 50%;
       transform: translateY(-50%);
       background: none;
       border: 2px solid var(--fg-dim);
       color: var(--fg);
-      font-size: 18px;
-      padding: 4px 10px;
+      font-size: 14px;
+      padding: 5px 8px;
       box-shadow: none;
       line-height: 1;
+      letter-spacing: 0;
     }
-    .api-key-wrap .toggle-vis:hover {
-      border-color: var(--fg);
-    }
-    .field .check-label {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      cursor: pointer;
-    }
-    .field .check-label input {
-      width: 18px; height: 18px;
-      accent-color: var(--fg);
-    }
-    .section-title {
-      font-size: 17px;
-      margin: 20px 0 12px;
-      padding-bottom: 6px;
-      border-bottom: 2px solid var(--fg-dim);
-      letter-spacing: 1px;
-    }
-    .dialog-footer {
-      display: flex;
-      justify-content: center;
-      gap: 14px;
-      padding: 16px 20px;
-      border-top: 2px solid var(--fg-dim);
-    }
+    .key-wrap__toggle:hover { border-color: var(--fg); box-shadow: none; }
 
-    ::-webkit-scrollbar { width: 7px; }
+    /* ══════════════════════════════════════════════════
+       SCROLLBAR
+    ══════════════════════════════════════════════════ */
+    ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: var(--bg-panel); }
-    ::-webkit-scrollbar-thumb { background: var(--fg-dim); border-radius: 4px; }
-    ::-webkit-scrollbar-thumb:hover { background: var(--fg); }
+    ::-webkit-scrollbar-thumb { background: var(--fg-muted); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--fg-dim); }
 
+    /* ══════════════════════════════════════════════════
+       RESPONSIVE
+    ══════════════════════════════════════════════════ */
     @media (max-width: 768px) {
-      #boot .title { font-size: 30px; }
-      #app > main { grid-template-columns: 1fr; padding: 8px; gap: 10px; }
-      #ptt { width: 100px; height: 100px; font-size: 13px; bottom: 50px; }
-      .rec-btn { width: 60px; height: 60px; font-size: 13px; }
-      .timer-display { font-size: 22px; min-width: 110px; }
-      .panel { min-height: 130px; }
-      canvas { height: 110px; }
-      /* Sur mobile, s'assurer que le dialog prend plus d'espace */
-      dialog { width: 95vw; max-height: 90vh; }
+      .boot__title { font-size: 32px; letter-spacing: 3px; }
+      .app__main {
+        grid-template-columns: 1fr;
+        padding: 10px;
+        gap: 10px;
+      }
+      .ptt { width: 104px; height: 104px; font-size: 13px; bottom: 52px; }
+      .recorder__btn { width: 58px; height: 58px; font-size: 12px; }
+      .recorder__timer { font-size: 24px; min-width: 120px; }
+      .panel { min-height: 140px; }
+      .canvas { height: 110px; }
+      dialog { width: 96vw; max-height: 92vh; }
+      .app__header { font-size: 18px; letter-spacing: 2px; }
     }
 
+    /* ══════════════════════════════════════════════════
+       ACCESSIBILITE
+    ══════════════════════════════════════════════════ */
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after {
         animation-duration: 0.01ms !important;
@@ -541,64 +638,71 @@
     }
     :focus-visible {
       outline: 2px solid var(--warning);
-      outline-offset: 2px;
+      outline-offset: 3px;
     }
   </style>
 </head>
 <body>
 
-  <div id="scanlines" aria-hidden="true"></div>
+  <!-- Effets d'ambiance -->
+  <div class="scanlines" aria-hidden="true"></div>
+  <div class="vignette" aria-hidden="true"></div>
 
-  <!-- ═══════════ DIALOGUE PARAMETRES ═══════════ -->
-  <dialog id="settings-dialog" aria-labelledby="settings-title">
-    <div class="dialog-header">
-      <span id="settings-title">PARAMETRES</span>
-      <button id="btn-close-settings" aria-label="Fermer">&times;</button>
+  <!-- ══════════════════════════════════════════════════
+       DIALOGUE PARAMETRES
+  ══════════════════════════════════════════════════ -->
+  <dialog id="dlg-settings" aria-labelledby="dlg-title">
+    <div class="dlg__head">
+      <span id="dlg-title">PARAMETRES</span>
+      <button class="btn btn--icon" id="btn-dlg-close" aria-label="Fermer">&times;</button>
     </div>
-    <div class="dialog-body">
-      <div class="section-title">API Groq</div>
+    <div class="dlg__body">
+
+      <div class="field__section">API Groq</div>
       <div class="field">
-        <label for="inp-apikey">Cle API (obligatoire)</label>
-        <div class="api-key-wrap">
-          <input type="text" id="inp-apikey" placeholder="Collez votre cle gsk_... ici" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
-          <button type="button" class="toggle-vis" id="btn-toggle-key" aria-label="Afficher/masquer la cle">OEIL</button>
+        <label class="field__label" for="inp-key">Cle API (obligatoire)</label>
+        <div class="key-wrap">
+          <input class="field__input" type="text" id="inp-key"
+                 placeholder="Collez votre cle gsk_... ici"
+                 autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+          <button type="button" class="key-wrap__toggle" id="btn-eye" aria-label="Afficher ou masquer">OEIL</button>
         </div>
       </div>
       <div class="field">
-        <label for="inp-model">Modele IA</label>
-        <select id="inp-model">
+        <label class="field__label" for="inp-model">Modele IA</label>
+        <select class="field__select" id="inp-model">
           <option value="llama-3.3-70b-versatile">Llama 3.3 70B (Recommande)</option>
           <option value="llama3-8b-8192">Llama 3 8B (Rapide)</option>
           <option value="mixtral-8x7b-32768">Mixtral 8x7B (Precis)</option>
         </select>
       </div>
 
-      <div class="section-title">Reconnaissance vocale</div>
+      <div class="field__section">Reconnaissance vocale</div>
       <div class="field">
-        <label for="inp-lang">Langue</label>
-        <select id="inp-lang">
+        <label class="field__label" for="inp-lang">Langue</label>
+        <select class="field__select" id="inp-lang">
           <option value="fr-FR">Francais</option>
           <option value="en-US">Anglais</option>
           <option value="es-ES">Espagnol</option>
         </select>
       </div>
       <div class="field">
-        <label class="check-label">
+        <label class="field__check">
           <input type="checkbox" id="inp-tts" checked>
           Lire les reponses a voix haute
         </label>
       </div>
       <div class="field">
-        <label class="check-label">
-          <input type="checkbox" id="inp-autolisten">
+        <label class="field__check">
+          <input type="checkbox" id="inp-auto">
           Ecoute automatique au demarrage
         </label>
       </div>
 
-      <div class="section-title">Apparence</div>
+      <div class="field__section">Apparence</div>
       <div class="field">
-        <label for="inp-color">Couleur principale</label>
-        <select id="inp-color">
+        <label class="field__label" for="inp-color">Couleur principale</label>
+        <select class="field__select" id="inp-color">
           <option value="#00ff41">Vert electrique</option>
           <option value="#00ccff">Cyan</option>
           <option value="#ff6600">Orange</option>
@@ -606,529 +710,864 @@
         </select>
       </div>
     </div>
-    <div class="dialog-footer">
-      <button id="btn-save-settings">SAUVEGARDER</button>
-      <button id="btn-reset-settings" class="danger">REINITIALISER</button>
+    <div class="dlg__foot">
+      <button class="btn" id="btn-save">SAUVEGARDER</button>
+      <button class="btn btn--danger" id="btn-reset">REINITIALISER</button>
     </div>
   </dialog>
 
-  <!-- ═══════════ ECRAN DE DEMARRAGE ═══════════ -->
-  <section id="boot" role="region" aria-label="Ecran de demarrage">
-    <div class="title cursor-blink" id="boot-title"></div>
-    <div class="subtitle" id="boot-subtitle"></div>
-    <div class="actions" id="boot-actions" style="opacity:0; transition:opacity 0.5s;">
-      <button id="btn-launch" autofocus>LANCER LE LAB</button>
-      <button id="btn-open-settings">PARAMETRES</button>
+  <!-- ══════════════════════════════════════════════════
+       ECRAN DE DEMARRAGE
+  ══════════════════════════════════════════════════ -->
+  <section class="boot" id="boot" role="region" aria-label="Demarrage">
+    <div class="boot__title cursor-blink" id="boot-title"></div>
+    <div class="boot__sub" id="boot-sub"></div>
+    <div class="boot__actions" id="boot-actions">
+      <button class="btn btn--launch" id="btn-go" autofocus>LANCER LE LAB</button>
+      <button class="btn" id="btn-cfg">PARAMETRES</button>
     </div>
   </section>
 
-  <!-- ═══════════ APPLICATION PRINCIPALE ═══════════ -->
-  <div id="app" role="application" aria-label="Supra Lab">
-    <header>
-      SUPRA LAB v14.0 &mdash; <span id="header-model-label">ACTIF</span>
+  <!-- ══════════════════════════════════════════════════
+       APPLICATION
+  ══════════════════════════════════════════════════ -->
+  <div class="app" id="app" role="application" aria-label="Supra Lab">
+
+    <header class="app__header">
+      SUPRA LAB v15.0 &mdash; <span id="hdr-model">ACTIF</span>
     </header>
 
-    <main>
-      <div class="recorder-bar">
-        <button class="rec-btn" id="btn-rec" aria-label="Enregistrer">REC</button>
-        <div class="timer-display" id="timer">00:00:00</div>
-        <button class="rec-btn" id="btn-stop" disabled aria-label="Arreter">STOP</button>
-        <button class="rec-btn" id="btn-play-last" aria-label="Lire derniere capture">PLAY</button>
-        <button class="rec-btn" id="btn-dl-last" aria-label="Telecharger derniere capture">SAVE</button>
+    <main class="app__main">
+
+      <!-- Barre d'enregistrement -->
+      <div class="recorder">
+        <button class="btn recorder__btn recorder__btn--rec" id="btn-rec" aria-label="Enregistrer">REC</button>
+        <div class="recorder__timer" id="timer">00:00:00</div>
+        <button class="btn recorder__btn" id="btn-stop" disabled aria-label="Arreter">STOP</button>
+        <button class="btn recorder__btn" id="btn-play" aria-label="Lire la derniere capture">PLAY</button>
+        <button class="btn recorder__btn" id="btn-dl" aria-label="Telecharger la derniere capture">SAVE</button>
       </div>
 
+      <!-- Visualisations -->
       <div class="panel">
-        <div class="panel-label">SPECTROGRAMME</div>
-        <canvas id="cv-spectro"></canvas>
+        <div class="panel__label">SPECTROGRAMME</div>
+        <canvas class="canvas" id="cv-freq"></canvas>
       </div>
       <div class="panel">
-        <div class="panel-label">OSCILLOSCOPE</div>
-        <canvas id="cv-scope"></canvas>
+        <div class="panel__label">OSCILLOSCOPE</div>
+        <canvas class="canvas" id="cv-wave"></canvas>
       </div>
       <div class="panel">
-        <div class="panel-label">VOLUME</div>
-        <canvas id="cv-volume"></canvas>
+        <div class="panel__label">VOLUME</div>
+        <canvas class="canvas" id="cv-vol"></canvas>
       </div>
 
-      <section class="panel full">
-        <div class="panel-label">ANALYSE IA</div>
-        <div id="ai-report">En attente de donnees vocales...</div>
+      <!-- Analyse IA -->
+      <section class="panel panel--full">
+        <div class="panel__label">ANALYSE IA</div>
+        <div class="ai-report" id="ai-report">En attente de donnees vocales...</div>
       </section>
 
-      <section class="panel full">
-        <div class="panel-label">JOURNAL</div>
-        <div id="log-container" role="log" aria-live="polite"></div>
+      <!-- Journal -->
+      <section class="panel panel--full">
+        <div class="panel__label">JOURNAL</div>
+        <div class="log" id="log" role="log" aria-live="polite"></div>
       </section>
 
-      <section class="panel full">
-        <div class="panel-label">CAPTURES (session)</div>
-        <div id="captures-list">
-          <div class="empty-state">Aucune capture pour cette session.</div>
+      <!-- Captures -->
+      <section class="panel panel--full">
+        <div class="panel__label">CAPTURES (session)</div>
+        <div id="captures">
+          <div class="empty">Aucune capture pour cette session.</div>
         </div>
       </section>
 
+      <!-- Statut système -->
       <div class="panel">
-        <div class="panel-label">SYSTEME</div>
-        <div id="sys-status" style="font-size:14px; line-height:1.6;">
+        <div class="panel__label">SYSTEME</div>
+        <div id="sys" style="font-size:14px;line-height:1.7;">
           Micro: --<br>API: --<br>Enregistreur: --<br>Reconnaissance: --
         </div>
       </div>
+
     </main>
 
-    <footer>
-      <span id="footer-status">En attente...</span>
-      <span>v14.0 | <span id="footer-clock">--:--:--</span></span>
+    <footer class="app__footer">
+      <span id="foot-status">En attente...</span>
+      <span>v15.0 | <span id="foot-clock">--:--:--</span></span>
     </footer>
   </div>
 
-  <button id="ptt" aria-label="Maintenir pour parler">MAINTENIR<br>POUR PARLER</button>
-  <audio id="audio-player" style="display:none;"></audio>
+  <!-- Push-To-Talk -->
+  <button class="ptt" id="ptt" aria-label="Maintenir pour parler">
+    MAINTENIR<br>POUR PARLER
+    <span class="ptt__indicator">PAROLE DETECTEE</span>
+  </button>
 
+  <!-- Lecteur audio caché -->
+  <audio id="player" style="display:none;"></audio>
+
+  <!-- ══════════════════════════════════════════════════
+       SCRIPT — Architecture propre, modulaire, sans faille
+  ══════════════════════════════════════════════════ -->
   <script>
   (function () {
     'use strict';
 
-    var DEFAULTS = {
-      apiKey: '',
-      model: 'llama-3.3-70b-versatile',
-      lang: 'fr-FR',
-      tts: true,
+    /* ──────────────────────────────────────────────
+       1. CONFIGURATION
+    ────────────────────────────────────────────── */
+    var DEFAULTS = Object.freeze({
+      apiKey:    '',
+      model:     'llama-3.3-70b-versatile',
+      lang:      'fr-FR',
+      tts:       true,
       autoListen: false,
-      color: '#00ff41'
-    };
+      color:     '#00ff41'
+    });
 
     var cfg = {};
-    for (var k in DEFAULTS) cfg[k] = DEFAULTS[k];
-    var captures = [];
-    var pttTranscript = '';
+    Object.keys(DEFAULTS).forEach(function (k) { cfg[k] = DEFAULTS[k]; });
 
-    var state = {
-      audioReady: false,
-      recording: false,
-      listening: false,
-      audioCtx: null,
-      analyser: null,
-      volAnalyser: null,
-      stream: null,
-      freqData: null,
-      timeData: null,
-      volData: null,
-      mediaRecorder: null,
-      chunks: [],
-      recStart: 0,
-      timerInterval: null,
-      recognition: null,
-      lastTranscript: ''
+    /* ──────────────────────────────────────────────
+       2. ETAT GLOBAL
+    ────────────────────────────────────────────── */
+    var S = {
+      ready:     false,   // Audio initialisé
+      recording: false,   // MediaRecorder actif
+      listening: false,   // PTT enfoncé
+      speech:    false,   // Parole détectée par le moteur
+
+      // Audio nodes
+      ctx:       null,
+      analyser:  null,
+      volNode:   null,
+      stream:    null,
+
+      // Data buffers
+      freq:      null,
+      wave:      null,
+      vol:       null,
+
+      // MediaRecorder
+      recorder:  null,
+      chunks:    [],
+      recStart:  0,
+      recTimer:  null,
+
+      // Speech Recognition
+      reco:      null,
+      lastText:  '',
+      pttText:   '',
+      pttTimer:  null   // Timer pour le délai après relâchement
     };
 
-    var $ = function (s) { return document.querySelector(s); };
-    var $$ = function (s) { return document.querySelectorAll(s); };
+    var captures = [];
 
-    /* ═══════════ LOG ═══════════ */
-    function log(msg, type) {
-      type = type || 'ok';
-      var el = $('#log-container');
-      if (!el) return;
-      var div = document.createElement('div');
-      div.className = 'log-entry ' + type;
-      div.textContent = '[' + new Date().toLocaleTimeString('fr-FR') + '] ' + msg;
-      el.appendChild(div);
-      el.scrollTop = el.scrollHeight;
-      while (el.children.length > 80) el.removeChild(el.firstChild);
+    /* ──────────────────────────────────────────────
+       3. UTILITAIRES
+    ────────────────────────────────────────────── */
+    var $ = function (sel) { return document.querySelector(sel); };
+
+    function now() { return new Date().toLocaleTimeString('fr-FR'); }
+
+    function pad2(n) { return n < 10 ? '0' + n : '' + n; }
+
+    function fmtTime(s) {
+      return pad2(Math.floor(s / 3600)) + ':' +
+             pad2(Math.floor((s % 3600) / 60)) + ':' +
+             pad2(s % 60);
     }
 
-    function setStatus(txt) {
-      var el = $('#footer-status');
+    /* ──────────────────────────────────────────────
+       4. JOURNAL
+    ────────────────────────────────────────────── */
+    function log(msg, type) {
+      var el = $('#log');
+      if (!el) return;
+      var d = document.createElement('div');
+      d.className = 'log__entry log__entry--' + (type || 'ok');
+      d.textContent = '[' + now() + '] ' + msg;
+      el.appendChild(d);
+      el.scrollTop = el.scrollHeight;
+      // Garder 100 entrées max
+      while (el.children.length > 100) el.removeChild(el.firstChild);
+    }
+
+    function status(txt) {
+      var el = $('#foot-status');
       if (el) el.textContent = txt;
     }
 
-    function updateSysStatus() {
-      var el = $('#sys-status');
+    function sysInfo() {
+      var el = $('#sys');
       if (!el) return;
-      var m = state.stream ? '<span style="color:var(--fg)">OK</span>' : '<span style="color:var(--danger)">OFF</span>';
-      var a = cfg.apiKey ? '<span style="color:var(--fg)">OK</span>' : '<span style="color:var(--warning)">MANQUANTE</span>';
-      var r = state.recording ? '<span style="color:var(--danger)">REC</span>' : '<span style="color:var(--fg-dim)">IDLE</span>';
-      var l = state.listening ? '<span style="color:var(--danger)">ON</span>' : '<span style="color:var(--fg-dim)">OFF</span>';
-      el.innerHTML = 'Micro: ' + m + '<br>API: ' + a + '<br>Enregistreur: ' + r + '<br>Reconnaissance: ' + l;
+      function tag(ok, warn, err) {
+        if (err) return '<span style="color:var(--danger)">' + err + '</span>';
+        if (warn) return '<span style="color:var(--warning)">' + warn + '</span>';
+        return '<span style="color:var(--fg)">' + (ok || 'OK') + '</span>';
+      }
+      el.innerHTML =
+        'Micro: '         + tag(S.stream ? 'OK' : null, null, S.stream ? null : 'OFF') + '<br>' +
+        'API: '           + tag(cfg.apiKey ? 'OK' : null, cfg.apiKey ? null : 'MANQUANTE', null) + '<br>' +
+        'Enregistreur: '  + tag(S.recording ? 'REC' : 'IDLE', null, null) + '<br>' +
+        'Reconnaissance: '+ tag(S.listening ? 'ON' : 'OFF', null, null);
     }
 
-    function formatTime(sec) {
-      var h = String(Math.floor(sec / 3600)).padStart(2, '0');
-      var m = String(Math.floor((sec % 3600) / 60)).padStart(2, '0');
-      var s = String(sec % 60).padStart(2, '0');
-      return h + ':' + m + ':' + s;
-    }
-
-    /* ═══════════ BOOT ANIMATION ═══════════ */
-    function typeText(el, text, speed) {
-      speed = speed || 55;
+    /* ──────────────────────────────────────────────
+       5. ANIMATION BOOT
+    ────────────────────────────────────────────── */
+    function typeIn(el, text, ms) {
+      ms = ms || 50;
       return new Promise(function (resolve) {
         var i = 0;
         el.textContent = '';
+        el.classList.add('cursor-blink');
         var iv = setInterval(function () {
           el.textContent += text[i];
           i++;
-          if (i >= text.length) { clearInterval(iv); el.classList.remove('cursor-blink'); resolve(); }
-        }, speed);
+          if (i >= text.length) {
+            clearInterval(iv);
+            el.classList.remove('cursor-blink');
+            resolve();
+          }
+        }, ms);
       });
     }
 
-    /* ═══════════ AUDIO ═══════════ */
+    /* ──────────────────────────────────────────────
+       6. AUDIO — Initialisation
+    ────────────────────────────────────────────── */
     async function initAudio() {
       try {
-        state.audioCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 48000 });
-        await state.audioCtx.resume();
-        state.stream = await navigator.mediaDevices.getUserMedia({
-          audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
+        S.ctx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 48000 });
+        await S.ctx.resume();
+
+        S.stream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true
+          }
         });
-        var src = state.audioCtx.createMediaStreamSource(state.stream);
 
-        state.analyser = state.audioCtx.createAnalyser();
-        state.analyser.fftSize = 2048;
-        state.analyser.smoothingTimeConstant = 0.82;
-        src.connect(state.analyser);
-        state.freqData = new Uint8Array(state.analyser.frequencyBinCount);
-        state.timeData = new Uint8Array(state.analyser.frequencyBinCount);
+        var src = S.ctx.createMediaStreamSource(S.stream);
 
-        state.volAnalyser = state.audioCtx.createAnalyser();
-        state.volAnalyser.fftSize = 256;
-        src.connect(state.volAnalyser);
-        state.volData = new Uint8Array(state.volAnalyser.frequencyBinCount);
+        // Analyseur fréquentiel + temporel
+        S.analyser = S.ctx.createAnalyser();
+        S.analyser.fftSize = 2048;
+        S.analyser.smoothingTimeConstant = 0.8;
+        src.connect(S.analyser);
+        S.freq = new Uint8Array(S.analyser.frequencyBinCount);
+        S.wave = new Uint8Array(S.analyser.frequencyBinCount);
 
-        state.audioReady = true;
-        resizeCanvases();
-        renderLoop();
-        updateSysStatus();
-        log('Audio initialise (48kHz)', 'ok');
+        // Analyseur de volume (FFT plus petite)
+        S.volNode = S.ctx.createAnalyser();
+        S.volNode.fftSize = 256;
+        src.connect(S.volNode);
+        S.vol = new Uint8Array(S.volNode.frequencyBinCount);
+
+        S.ready = true;
+        sizeCanvases();
+        drawLoop();
+        sysInfo();
+        log('Audio 48kHz initialise — FFT 2048', 'ok');
         return true;
       } catch (err) {
-        log('Erreur micro : ' + err.message, 'error');
-        updateSysStatus();
+        log('Micro indisponible : ' + err.message, 'error');
+        sysInfo();
         return false;
       }
     }
 
-    /* ═══════════ VISUALISATION ═══════════ */
-    function renderLoop() {
-      if (!state.audioReady) return;
-      requestAnimationFrame(renderLoop);
-      state.analyser.getByteFrequencyData(state.freqData);
-      state.analyser.getByteTimeDomainData(state.timeData);
-      state.volAnalyser.getByteFrequencyData(state.volData);
-      drawSpectrogram();
-      drawScope();
-      drawVolume();
+    /* ──────────────────────────────────────────────
+       7. VISUALISATION — Boucle de rendu
+    ────────────────────────────────────────────── */
+    function drawLoop() {
+      if (!S.ready) return;
+      requestAnimationFrame(drawLoop);
+
+      S.analyser.getByteFrequencyData(S.freq);
+      S.analyser.getByteTimeDomainData(S.wave);
+      S.volNode.getByteFrequencyData(S.vol);
+
+      renderSpectro();
+      renderScope();
+      renderVolume();
     }
 
-    function drawSpectrogram() {
-      var cv = $('#cv-spectro');
+    function renderSpectro() {
+      var cv = $('#cv-freq');
       if (!cv) return;
-      var ctx = cv.getContext('2d');
+      var c = cv.getContext('2d');
       var W = cv.width, H = cv.height;
-      ctx.fillStyle = '#000';
-      ctx.fillRect(0, 0, W, H);
-      var len = state.freqData.length;
-      var barW = Math.max(1, W / len);
+
+      // Fond avec léger dégradé
+      c.fillStyle = '#020402';
+      c.fillRect(0, 0, W, H);
+
+      // Lignes de grille horizontales
+      c.strokeStyle = 'rgba(0,255,65,0.04)';
+      c.lineWidth = 1;
+      for (var gy = 0; gy < H; gy += 26) {
+        c.beginPath(); c.moveTo(0, gy); c.lineTo(W, gy); c.stroke();
+      }
+
+      var len = S.freq.length;
+      var bw = Math.max(1, W / len);
       for (var i = 0; i < len; i++) {
-        var v = state.freqData[i];
-        var h = Math.max(0, Math.log10(v + 1) * 22);
-        var hue = Math.max(0, 100 - v * 0.4);
-        ctx.fillStyle = 'hsl(' + hue + ',100%,' + Math.max(8, v * 0.35) + '%)';
-        ctx.fillRect(i * barW, H - h, barW + 0.5, h);
+        var v = S.freq[i];
+        if (v < 2) continue; // Ignorer le bruit de fond
+        var h = Math.max(0, Math.log10(v + 1) * 24);
+        // Dégradé : vert clair → jaune → rouge selon intensité
+        var hue = Math.max(0, 110 - v * 0.45);
+        var lit = Math.max(10, v * 0.38);
+        c.fillStyle = 'hsl(' + hue + ',100%,' + lit + '%)';
+        c.fillRect(i * bw, H - h, bw + 0.5, h);
       }
     }
 
-    function drawScope() {
-      var cv = $('#cv-scope');
+    function renderScope() {
+      var cv = $('#cv-wave');
       if (!cv) return;
-      var ctx = cv.getContext('2d');
+      var c = cv.getContext('2d');
       var W = cv.width, H = cv.height;
-      ctx.fillStyle = '#000';
-      ctx.fillRect(0, 0, W, H);
-      ctx.strokeStyle = 'rgba(0,255,65,0.12)';
-      ctx.lineWidth = 1;
-      ctx.beginPath(); ctx.moveTo(0, H / 2); ctx.lineTo(W, H / 2); ctx.stroke();
-      var color = getComputedStyle(document.documentElement).getPropertyValue('--fg').trim();
-      ctx.strokeStyle = color;
-      ctx.lineWidth = 2;
-      ctx.shadowColor = color;
-      ctx.shadowBlur = 4;
-      ctx.beginPath();
-      var slice = W / state.timeData.length;
-      for (var i = 0; i < state.timeData.length; i++) {
-        var y = (state.timeData[i] / 128 - 0.5) * H * 0.85 + H / 2;
-        i === 0 ? ctx.moveTo(0, y) : ctx.lineTo(i * slice, y);
+
+      c.fillStyle = '#020402';
+      c.fillRect(0, 0, W, H);
+
+      // Grille de référence
+      c.strokeStyle = 'rgba(0,255,65,0.06)';
+      c.lineWidth = 1;
+      c.beginPath(); c.moveTo(0, H / 2); c.lineTo(W, H / 2); c.stroke();
+      c.beginPath(); c.moveTo(0, H * 0.25); c.lineTo(W, H * 0.25); c.stroke();
+      c.beginPath(); c.moveTo(0, H * 0.75); c.lineTo(W, H * 0.75); c.stroke();
+
+      // Forme d'onde avec glow
+      var col = css('--fg');
+      c.strokeStyle = col;
+      c.lineWidth = 2;
+      c.shadowColor = col;
+      c.shadowBlur = 6;
+      c.beginPath();
+      var step = W / S.wave.length;
+      for (var i = 0; i < S.wave.length; i++) {
+        var y = (S.wave[i] / 128 - 0.5) * H * 0.85 + H / 2;
+        i === 0 ? c.moveTo(0, y) : c.lineTo(i * step, y);
       }
-      ctx.stroke();
-      ctx.shadowBlur = 0;
+      c.stroke();
+      c.shadowBlur = 0;
     }
 
-    function drawVolume() {
-      var cv = $('#cv-volume');
+    function renderVolume() {
+      var cv = $('#cv-vol');
       if (!cv) return;
-      var ctx = cv.getContext('2d');
+      var c = cv.getContext('2d');
       var W = cv.width, H = cv.height;
-      ctx.fillStyle = '#000';
-      ctx.fillRect(0, 0, W, H);
+
+      c.fillStyle = '#020402';
+      c.fillRect(0, 0, W, H);
+
+      // Calcul du volume RMS
       var sum = 0;
-      for (var i = 0; i < state.volData.length; i++) sum += state.volData[i];
-      var pct = sum / state.volData.length / 255;
-      var barW = W * 0.5;
-      var barH = pct * H * 0.9;
-      var hue = Math.max(0, 120 - pct * 180);
-      ctx.fillStyle = 'hsl(' + hue + ',100%,45%)';
-      ctx.shadowColor = 'hsl(' + hue + ',100%,50%)';
-      ctx.shadowBlur = 8;
-      ctx.fillRect((W - barW) / 2, H - barH, barW, barH);
-      ctx.shadowBlur = 0;
-      var color = getComputedStyle(document.documentElement).getPropertyValue('--fg').trim();
-      ctx.fillStyle = color;
-      ctx.font = '22px VT323';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(Math.round(pct * 100) + '%', W / 2, H / 2);
+      for (var i = 0; i < S.vol.length; i++) sum += S.vol[i];
+      var pct = (sum / S.vol.length) / 255;
+
+      // Barre centrée avec dégradé
+      var bw = W * 0.45;
+      var bh = Math.max(2, pct * H * 0.88);
+      var bx = (W - bw) / 2;
+      var by = H - bh;
+
+      var hue = Math.max(0, 120 - pct * 200);
+      c.fillStyle = 'hsl(' + hue + ',100%,42%)';
+      c.shadowColor = 'hsl(' + hue + ',100%,55%)';
+      c.shadowBlur = 10;
+      c.fillRect(bx, by, bw, bh);
+      c.shadowBlur = 0;
+
+      // Reflet miroir en haut (atténué)
+      var grad = c.createLinearGradient(0, 0, 0, by);
+      grad.addColorStop(0, 'rgba(0,0,0,0)');
+      grad.addColorStop(1, 'hsl(' + hue + ',100%,42%)');
+      c.fillStyle = grad;
+      c.globalAlpha = 0.15;
+      c.fillRect(bx, 0, bw, by);
+      c.globalAlpha = 1.0;
+
+      // Pourcentage
+      var col = css('--fg');
+      c.fillStyle = col;
+      c.font = '24px VT323';
+      c.textAlign = 'center';
+      c.textBaseline = 'middle';
+      c.fillText(Math.round(pct * 100) + '%', W / 2, H / 2);
     }
 
-    function resizeCanvases() {
-      var cvs = $$('#app canvas');
-      for (var i = 0; i < cvs.length; i++) {
-        var cv = cvs[i];
+    function css(prop) {
+      return getComputedStyle(document.documentElement).getPropertyValue(prop).trim();
+    }
+
+    function sizeCanvases() {
+      var all = document.querySelectorAll('#app .canvas');
+      for (var i = 0; i < all.length; i++) {
+        var cv = all[i];
         var r = cv.parentElement.getBoundingClientRect();
-        cv.width = Math.max(100, r.width - 28);
+        cv.width  = Math.max(100, r.width - 34);
         cv.height = 130;
       }
     }
 
-    /* ═══════════ ENREGISTREUR ═══════════ */
-    function getSupportedMime() {
-      var types = ['audio/webm;codecs=opus','audio/webm','audio/ogg;codecs=opus','audio/mpeg','audio/mp4'];
-      for (var i = 0; i < types.length; i++) { if (MediaRecorder.isTypeSupported(types[i])) return types[i]; }
+    /* ──────────────────────────────────────────────
+       8. ENREGISTREUR
+    ────────────────────────────────────────────── */
+    function bestMime() {
+      var list = [
+        'audio/webm;codecs=opus',
+        'audio/webm',
+        'audio/ogg;codecs=opus',
+        'audio/mpeg',
+        'audio/mp4'
+      ];
+      for (var i = 0; i < list.length; i++) {
+        if (MediaRecorder.isTypeSupported(list[i])) return list[i];
+      }
       return '';
     }
 
-    function startRecording() {
-      if (state.recording || !state.stream) return;
-      var mime = getSupportedMime();
-      if (!mime) { log('Aucun format audio supporte', 'error'); return; }
-      state.recording = true;
-      state.chunks = [];
-      state.recStart = Date.now();
-      try { state.mediaRecorder = new MediaRecorder(state.stream, { mimeType: mime }); }
-      catch (e) { log('Erreur MediaRecorder : ' + e.message, 'error'); state.recording = false; return; }
-      state.mediaRecorder.ondataavailable = function (e) { if (e.data.size > 0) state.chunks.push(e.data); };
-      state.mediaRecorder.onstop = onRecordingDone;
-      state.mediaRecorder.start(200);
+    function recStart() {
+      if (S.recording || !S.stream) return;
+      var mime = bestMime();
+      if (!mime) {
+        log('Aucun format audio supporte par ce navigateur', 'error');
+        return;
+      }
+      S.recording = true;
+      S.chunks = [];
+      S.recStart = Date.now();
+
+      try {
+        S.recorder = new MediaRecorder(S.stream, { mimeType: mime });
+      } catch (e) {
+        log('MediaRecorder echec : ' + e.message, 'error');
+        S.recording = false;
+        return;
+      }
+
+      S.recorder.ondataavailable = function (e) {
+        if (e.data && e.data.size > 0) S.chunks.push(e.data);
+      };
+      S.recorder.onstop = onRecDone;
+      S.recorder.start(200);
+
+      // UI
       $('#btn-rec').classList.add('recording');
       $('#btn-stop').disabled = false;
-      $('#timer').classList.add('active');
-      setStatus('Enregistrement...');
-      log('Enregistrement demarre (' + mime + ')', 'ok');
-      updateSysStatus();
-      startTimer();
+      $('#timer').classList.add('recorder__timer--active');
+      status('Enregistrement...');
+      log('REC demarre (' + mime.split(';')[0] + ')', 'ok');
+      sysInfo();
+      startClock();
     }
 
-    function stopRecording() {
-      if (!state.recording) return;
-      state.recording = false;
-      state.mediaRecorder.stop();
+    function recStop() {
+      if (!S.recording) return;
+      S.recording = false;
+      S.recorder.stop();
       $('#btn-rec').classList.remove('recording');
       $('#btn-stop').disabled = true;
-      $('#timer').classList.remove('active');
-      stopTimer();
-      updateSysStatus();
+      $('#timer').classList.remove('recorder__timer--active');
+      stopClock();
+      sysInfo();
     }
 
-    function onRecordingDone() {
-      var mt = state.mediaRecorder.mimeType || '';
+    function onRecDone() {
+      var mime = S.recorder.mimeType || '';
       var ext = 'mp3';
-      if (mt.indexOf('webm') !== -1) ext = 'webm';
-      else if (mt.indexOf('ogg') !== -1) ext = 'ogg';
-      else if (mt.indexOf('mp4') !== -1) ext = 'm4a';
-      var blob = new Blob(state.chunks, { type: mt });
-      var url = URL.createObjectURL(blob);
-      var dur = Math.floor((Date.now() - state.recStart) / 1000);
+      if (mime.indexOf('webm') !== -1) ext = 'webm';
+      else if (mime.indexOf('ogg') !== -1) ext = 'ogg';
+      else if (mime.indexOf('mp4') !== -1) ext = 'm4a';
+
+      var blob = new Blob(S.chunks, { type: mime });
+      var url  = URL.createObjectURL(blob);
+      var dur  = Math.floor((Date.now() - S.recStart) / 1000);
       var name = 'Capture_' + new Date().toLocaleString('fr-FR').replace(/[/: ]/g, '-');
-      captures.unshift({ name: name, url: url, blob: blob, ext: ext, duration: dur });
-      renderCaptures();
-      setStatus('Pret');
-      log('Capture : ' + dur + 's (' + ext + ')', 'ok');
+
+      captures.unshift({ name: name, url: url, blob: blob, ext: ext, dur: dur });
+      buildCaptures();
+      status('Pret');
+      log('Capture : ' + dur + 's — ' + ext.toUpperCase(), 'ok');
     }
 
-    function startTimer() {
+    function startClock() {
       var sec = 0;
       $('#timer').textContent = '00:00:00';
-      state.timerInterval = setInterval(function () { sec++; $('#timer').textContent = formatTime(sec); }, 1000);
+      S.recTimer = setInterval(function () {
+        sec++;
+        $('#timer').textContent = fmtTime(sec);
+      }, 1000);
     }
-    function stopTimer() { clearInterval(state.timerInterval); $('#timer').textContent = '00:00:00'; }
+    function stopClock() {
+      clearInterval(S.recTimer);
+      $('#timer').textContent = '00:00:00';
+    }
 
-    /* ═══════════ CAPTURES ═══════════ */
-    function renderCaptures() {
-      var el = $('#captures-list');
-      if (!captures.length) { el.innerHTML = '<div class="empty-state">Aucune capture pour cette session.</div>'; return; }
-      el.innerHTML = '';
-      for (var i = 0; i < captures.length; i++) {
-        (function (idx) {
-          var c = captures[idx];
-          var row = document.createElement('div');
-          row.className = 'capture-row';
-          var info = document.createElement('div');
-          info.className = 'info';
-          var nm = document.createElement('div');
-          nm.className = 'name';
-          nm.textContent = c.name;
-          var mt = document.createElement('div');
-          mt.className = 'meta';
-          mt.textContent = c.duration + 's | ' + c.ext;
-          info.appendChild(nm);
-          info.appendChild(mt);
-          row.appendChild(info);
-          var bp = document.createElement('button');
-          bp.textContent = 'PLAY';
-          bp.addEventListener('click', function () { playCapture(idx); });
-          row.appendChild(bp);
-          var bd = document.createElement('button');
-          bd.textContent = 'SAVE';
-          bd.addEventListener('click', function () { downloadCapture(idx); });
-          row.appendChild(bd);
-          var bx = document.createElement('button');
-          bx.textContent = 'DEL';
-          bx.className = 'danger';
-          bx.addEventListener('click', function () { deleteCapture(idx); });
-          row.appendChild(bx);
-          el.appendChild(row);
-        })(i);
+    /* ──────────────────────────────────────────────
+       9. CAPTURES — Rendu & Actions
+    ────────────────────────────────────────────── */
+    function buildCaptures() {
+      var el = $('#captures');
+      if (!captures.length) {
+        el.innerHTML = '<div class="empty">Aucune capture pour cette session.</div>';
+        return;
       }
+      el.innerHTML = '';
+
+      captures.forEach(function (cap, idx) {
+        var row = document.createElement('div');
+        row.className = 'capture';
+
+        // Info
+        var info = document.createElement('div');
+        info.className = 'capture__info';
+        var nm = document.createElement('div');
+        nm.className = 'capture__name';
+        nm.textContent = cap.name;
+        var mt = document.createElement('div');
+        mt.className = 'capture__meta';
+        mt.textContent = cap.dur + 's | ' + cap.ext.toUpperCase();
+        info.appendChild(nm);
+        info.appendChild(mt);
+        row.appendChild(info);
+
+        // Boutons d'action
+        var acts = document.createElement('div');
+        acts.className = 'capture__actions';
+
+        var labels = [
+          { txt: 'PLAY', cls: '', fn: capPlay },
+          { txt: 'IA',   cls: '', fn: capAnalyze },
+          { txt: 'SAVE', cls: '', fn: capDownload },
+          { txt: 'DEL',  cls: 'btn--danger', fn: capDelete }
+        ];
+        labels.forEach(function (l) {
+          var b = document.createElement('button');
+          b.className = 'btn btn--sm ' + l.cls;
+          b.textContent = l.txt;
+          b.addEventListener('click', function () { l.fn(idx); });
+          acts.appendChild(b);
+        });
+
+        row.appendChild(acts);
+        el.appendChild(row);
+      });
     }
 
-    function playCapture(idx) {
-      var c = captures[idx];
+    function capPlay(i) {
+      var c = captures[i];
       if (!c) return;
-      $('#audio-player').src = c.url;
-      $('#audio-player').play();
+      var p = $('#player');
+      p.src = c.url;
+      p.play();
       log('Lecture : ' + c.name, 'ok');
     }
-    function downloadCapture(idx) {
-      var c = captures[idx];
+
+    function capAnalyze(i) {
+      var c = captures[i];
+      if (!c) return;
+      var prompt = 'Analyse cet audio : "' + c.name + '" (' + c.dur + 's, format ' + c.ext + '). ' +
+        'Decris ce que tu entends (parole, bruit, musique) et transcris si possible. Reponds en francais, 5 phrases max.';
+      log('Envoi a l\'IA : ' + c.name, 'info');
+      groq(prompt);
+    }
+
+    function capDownload(i) {
+      var c = captures[i];
       if (!c) return;
       var a = document.createElement('a');
       a.href = c.url;
       a.download = c.name + '.' + c.ext;
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
       log('Telechargement : ' + a.download, 'ok');
     }
-    function deleteCapture(idx) {
-      if (!captures[idx]) return;
-      URL.revokeObjectURL(captures[idx].url);
-      captures.splice(idx, 1);
-      renderCaptures();
+
+    function capDelete(i) {
+      var c = captures[i];
+      if (!c) return;
+      URL.revokeObjectURL(c.url);
+      captures.splice(i, 1);
+      buildCaptures();
       log('Capture supprimee', 'ok');
     }
 
-    /* ═══════════ PTT ═══════════ */
-    function pttStart(e) {
+    /* ──────────────────────────────────────────────
+       10. PUSH-TO-TALK — Android-Proof
+    ────────────────────────────────────────────── */
+    function pttDown(e) {
       e.preventDefault();
-      if (!state.audioReady) { log('Systeme non initialise', 'error'); return; }
-      if (state.listening || state.recording) return;
-      state.listening = true;
-      pttTranscript = '';
-      state.lastTranscript = '';
+      if (!S.ready) { log('Lancez le systeme d\'abord', 'error'); return; }
+      if (S.listening || S.recording) return;
+
+      // Nettoyer un éventuel timer de fin résiduel
+      if (S.pttTimer) { clearTimeout(S.pttTimer); S.pttTimer = null; }
+
+      S.listening = true;
+      S.speech    = false;
+      S.pttText   = '';
+      S.lastText  = '';
+
       var btn = $('#ptt');
-      btn.classList.add('listening');
-      btn.innerHTML = 'ECOUTE...<br><small>parlez</small>';
-      setStatus('Ecoute en cours...');
-      log('PTT : ecoute demarree', 'ok');
-      updateSysStatus();
-      beginRecognition();
+      btn.classList.add('ptt--listening');
+      btn.classList.remove('ptt--speech');
+      btn.innerHTML = 'ECOUTE...<br><small>parlez</small><span class="ptt__indicator">PAROLE DETECTEE</span>';
+
+      status('Ecoute...');
+      log('PTT appuye — demarrage reconnaissance', 'ok');
+      sysInfo();
+      recoStart();
     }
 
-    function pttEnd(e) {
+    function pttUp(e) {
       e.preventDefault();
-      if (!state.listening) return;
-      state.listening = false;
+      if (!S.listening) return;
+
+      S.listening = false;
       var btn = $('#ptt');
-      btn.classList.remove('listening');
-      btn.innerHTML = 'MAINTENIR<br>POUR PARLER';
-      setStatus('Analyse...');
-      updateSysStatus();
-      endRecognition();
-      setTimeout(function () {
-        if (pttTranscript.trim()) {
-          log('Transcription : "' + pttTranscript + '"', 'ok');
-          sendToGroq(pttTranscript);
-        } else { log('Aucune parole detectee', 'error'); setStatus('Pret'); }
-      }, 350);
+      btn.classList.remove('ptt--listening', 'ptt--speech');
+      btn.innerHTML = 'MAINTENIR<br>POUR PARLER<span class="ptt__indicator">PAROLE DETECTEE</span>';
+
+      status('Traitement...');
+      log('PTT relache — attente resultat (1.5s)', 'ok');
+      sysInfo();
+
+      // NE PAS couper immédiatement !
+      // Sur Android, le cloud met 1-3 secondes.
+      // On attend 1.5s avant stop(), puis 500ms de plus.
+      S.pttTimer = setTimeout(function () {
+        S.pttTimer = null;
+        recoStop();
+
+        setTimeout(function () {
+          if (S.pttText.trim()) {
+            log('Transcription : "' + S.pttText + '"', 'ok');
+            groq(S.pttText);
+          } else {
+            log('Aucune parole capturee', 'error');
+            status('Pret — Maintenez PTT pour parler');
+          }
+        }, 500);
+      }, 1500);
     }
 
-    function beginRecognition() {
-      var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!SR) { log('Web Speech non supporte', 'error'); state.listening = false; $('#ptt').classList.remove('listening'); return; }
-      try {
-        if (state.recognition) state.recognition.abort();
-        state.recognition = new SR();
-        state.recognition.lang = cfg.lang;
-        state.recognition.continuous = false;
-        state.recognition.interimResults = false;
-        state.recognition.maxAlternatives = 1;
-        state.recognition.onresult = function (ev) {
-          var txt = ev.results[0][0].transcript.trim();
-          if (txt && txt !== state.lastTranscript) { state.lastTranscript = txt; pttTranscript = txt; }
-        };
-        state.recognition.onerror = function (ev) {
-          if (ev.error !== 'no-speech' && ev.error !== 'aborted') log('Erreur reco : ' + ev.error, 'error');
-        };
-        state.recognition.start();
-      } catch (err) {
-        log('Erreur reco : ' + err.message, 'error');
-        state.listening = false;
-        $('#ptt').classList.remove('listening');
-      }
-    }
-
-    function endRecognition() {
-      if (state.recognition) { try { state.recognition.stop(); } catch (_) {} state.recognition = null; }
-    }
-
-    /* ═══════════ GROQ ═══════════ */
-    async function sendToGroq(text) {
-      var report = $('#ai-report');
-      if (!cfg.apiKey) {
-        report.textContent = 'Cle API Groq manquante.\nOuvrez les PARAMETRES.';
-        log('Cle API manquante', 'error');
-        setStatus('Pret');
+    /* ──────────────────────────────────────────────
+       11. RECONNAISSANCE VOCALE
+    ────────────────────────────────────────────── */
+    function recoStart() {
+      var API = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!API) {
+        log('Web Speech API absente de ce navigateur', 'error');
+        log('Utilisez Chrome ou un navigateur Chromium', 'error');
+        S.listening = false;
+        $('#ptt').classList.remove('ptt--listening');
         return;
       }
-      report.textContent = 'Analyse en cours...';
-      setStatus('Analyse IA...');
-      var prompt = 'Analyse ce contenu vocal en francais :\n"' + text + '"\n- Corrige les erreurs.\n- Interpretation breve.\n- Max 5 phrases.';
+
+      try {
+        // Arrêter l'instance précédente si elle existe
+        if (S.reco) { try { S.reco.abort(); } catch (_) {} }
+
+        S.reco = new API();
+        S.reco.lang = cfg.lang;
+
+        // CLEFS ANDROID : continuous + interim
+        // Sinon le résultat n'arrive jamais à temps
+        S.reco.continuous = true;
+        S.reco.interimResults = true;
+        S.reco.maxAlternatives = 1;
+
+        // Détection visuelle de parole
+        S.reco.onspeechstart = function () {
+          S.speech = true;
+          $('#ptt').classList.add('ptt--speech');
+        };
+        S.reco.onspeechend = function () {
+          S.speech = false;
+          $('#ptt').classList.remove('ptt--speech');
+        };
+
+        // Résultats : accumuler tout (intermédiaires + finaux)
+        S.reco.onresult = function (ev) {
+          var text = '';
+          for (var i = 0; i < ev.results.length; i++) {
+            text += ev.results[i][0].transcript;
+          }
+          text = text.trim();
+          if (text) {
+            S.pttText = text;
+            if (text !== S.lastText) {
+              S.lastText = text;
+              log('Reco : "' + text + '"', 'ok');
+            }
+          }
+        };
+
+        S.reco.onerror = function (ev) {
+          if (ev.error === 'no-speech' || ev.error === 'aborted') return;
+          log('Erreur reco : ' + ev.error, 'error');
+          if (ev.error === 'not-allowed') {
+            log('Permission micro refusee pour la reconnaissance', 'error');
+            S.listening = false;
+            $('#ptt').classList.remove('ptt--listening');
+            sysInfo();
+          }
+        };
+
+        // PAS de onend — zéro boucle
+
+        S.reco.start();
+        log('Reco start (continuous + interim)', 'ok');
+
+      } catch (err) {
+        log('Echec demarrage reco : ' + err.message, 'error');
+        S.listening = false;
+        $('#ptt').classList.remove('ptt--listening');
+        sysInfo();
+      }
+    }
+
+    function recoStop() {
+      if (S.reco) {
+        try { S.reco.stop(); } catch (_) {}
+        S.reco = null;
+      }
+    }
+
+    /* Mode écoute automatique (relance contrôlée) */
+    function recoAutoStart() {
+      var API = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!API || !S.listening) return;
+
+      try {
+        if (S.reco) S.reco.abort();
+        S.reco = new API();
+        S.reco.lang = cfg.lang;
+        S.reco.continuous = true;
+        S.reco.interimResults = true;
+        S.reco.maxAlternatives = 1;
+
+        S.reco.onresult = function (ev) {
+          var text = '';
+          for (var i = 0; i < ev.results.length; i++) text += ev.results[i][0].transcript;
+          text = text.trim();
+          if (text && text !== S.lastText) {
+            S.lastText = text;
+            S.pttText = text;
+          }
+        };
+
+        S.reco.onerror = function (ev) {
+          if (ev.error !== 'no-speech' && ev.error !== 'aborted')
+            log('Auto-reco err : ' + ev.error, 'error');
+        };
+
+        // En auto : on relance après un délai
+        S.reco.onend = function () {
+          if (!S.listening) return;
+          if (S.pttText.trim()) {
+            var txt = S.pttText;
+            S.pttText = '';
+            log('Auto : "' + txt + '"', 'ok');
+            groq(txt);
+          }
+          setTimeout(function () {
+            if (S.listening) recoAutoStart();
+          }, 800);
+        };
+
+        S.reco.start();
+      } catch (err) {
+        log('Auto-reco echec : ' + err.message, 'error');
+      }
+    }
+
+    /* ──────────────────────────────────────────────
+       12. GROQ — Analyse IA
+    ────────────────────────────────────────────── */
+    async function groq(text) {
+      var el = $('#ai-report');
+
+      if (!cfg.apiKey) {
+        el.textContent = 'Cle API Groq manquante.\nOuvrez PARAMETRES pour la configurer.';
+        log('Cle API manquante', 'error');
+        status('Pret');
+        return;
+      }
+
+      el.textContent = 'Analyse en cours...';
+      status('Analyse IA...');
+
+      var prompt =
+        'Analyse ce contenu vocal en francais :\n"' + text + '"\n' +
+        '- Corrige les erreurs de transcription si necessaire.\n' +
+        '- Donne une interpretation breve et precise.\n' +
+        '- Maximum 5 phrases, sois direct et concis.';
+
       try {
         var res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + cfg.apiKey },
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + cfg.apiKey
+          },
           body: JSON.stringify({
             model: cfg.model,
             messages: [
-              { role: 'system', content: 'Analyste audio precis et concis. Reponds en francais.' },
+              { role: 'system', content: 'Tu es un analyste audio et vocal de haut niveau. Reponds en francais, de facon precise et concise.' },
               { role: 'user', content: prompt }
             ],
-            temperature: 0.3, max_tokens: 400
+            temperature: 0.3,
+            max_tokens: 400
           })
         });
-        if (!res.ok) { var eb = await res.text(); throw new Error(res.status + ' — ' + eb.substring(0, 120)); }
+
+        if (!res.ok) {
+          var body = await res.text();
+          throw new Error(res.status + ' — ' + body.substring(0, 150));
+        }
+
         var data = await res.json();
-        var answer = (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || 'Aucune reponse.';
-        report.textContent = 'TRANSCRIPTION :\n"' + text + '"\n\n────────────────────────────\nANALYSE IA (' + cfg.model + ')\n────────────────────────────\n\n' + answer + '\n\n' + new Date().toLocaleTimeString('fr-FR');
+        var answer = (data.choices &&
+                      data.choices[0] &&
+                      data.choices[0].message &&
+                      data.choices[0].message.content)
+                     || 'Aucune reponse obtenue.';
+
+        el.textContent =
+          'TRANSCRIPTION :\n"' + text + '"\n\n' +
+          '\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n' +
+          'ANALYSE IA (' + cfg.model + ')\n' +
+          '\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n\n' +
+          answer + '\n\n' +
+          now();
+
         log('Analyse IA terminee', 'ok');
-        setStatus('Pret');
+        status('Pret — Maintenez PTT pour parler');
         speak(answer.substring(0, 280));
+
       } catch (err) {
-        report.textContent = 'Erreur : ' + err.message;
-        log('Erreur Groq : ' + err.message, 'error');
-        setStatus('Erreur');
+        el.textContent = 'Erreur : ' + err.message + '\n\nVerifiez la cle API et la connexion réseau.';
+        log('Groq erreur : ' + err.message, 'error');
+        status('Erreur IA');
       }
     }
 
+    /* ──────────────────────────────────────────────
+       13. SYNTHESE VOCALE
+    ────────────────────────────────────────────── */
     function speak(text) {
-      if (!cfg.tts || !window.speechSynthesis || state.listening) return;
+      if (!cfg.tts || !window.speechSynthesis || S.listening) return;
       window.speechSynthesis.cancel();
       var u = new SpeechSynthesisUtterance(text);
       u.lang = cfg.lang;
@@ -1136,192 +1575,223 @@
       window.speechSynthesis.speak(u);
     }
 
-    /* ═══════════ PARAMETRES ═══════════ */
-    function loadSettings() {
+    /* ──────────────────────────────────────────────
+       14. PARAMETRES — Load / Save / Apply
+    ────────────────────────────────────────────── */
+    function cfgLoad() {
       try {
-        var raw = localStorage.getItem('supraLab14_cfg');
-        if (raw) { var parsed = JSON.parse(raw); for (var k in parsed) if (parsed.hasOwnProperty(k)) cfg[k] = parsed[k]; }
+        var raw = localStorage.getItem('supraLab15');
+        if (raw) {
+          var parsed = JSON.parse(raw);
+          Object.keys(parsed).forEach(function (k) {
+            if (parsed.hasOwnProperty(k) && DEFAULTS.hasOwnProperty(k)) {
+              cfg[k] = parsed[k];
+            }
+          });
+        }
       } catch (_) {}
-      applySettings();
+      cfgApply();
     }
 
-    function applySettings() {
-      document.documentElement.style.setProperty('--fg', cfg.color);
-      document.documentElement.style.setProperty('--border', cfg.color);
-      var r = parseInt(cfg.color.slice(1, 3), 16);
-      var g = parseInt(cfg.color.slice(3, 5), 16);
-      var b = parseInt(cfg.color.slice(5, 7), 16);
-      document.documentElement.style.setProperty('--fg-dim', cfg.color + '88');
-      document.documentElement.style.setProperty('--fg-glow', '0 0 8px rgba(' + r + ',' + g + ',' + b + ',0.45)');
-      document.documentElement.style.setProperty('--fg-glow-strong', '0 0 18px rgba(' + r + ',' + g + ',' + b + ',0.65)');
-      document.documentElement.style.setProperty('--bg-panel', 'rgba(' + Math.floor(r * 0.04) + ',' + Math.floor(g * 0.08) + ',' + Math.floor(b * 0.04) + ',1)');
-      $('#inp-apikey').value = cfg.apiKey || '';
+    function cfgApply() {
+      // Appliquer la couleur
+      var c = cfg.color;
+      document.documentElement.style.setProperty('--fg', c);
+      var r = parseInt(c.slice(1, 3), 16);
+      var g = parseInt(c.slice(3, 5), 16);
+      var b = parseInt(c.slice(5, 7), 16);
+      document.documentElement.style.setProperty('--fg-dim',  c + '88');
+      document.documentElement.style.setProperty('--fg-muted', c + '44');
+      document.documentElement.style.setProperty('--glow',       '0 0 8px rgba(' + r + ',' + g + ',' + b + ',0.4)');
+      document.documentElement.style.setProperty('--glow-strong','0 0 20px rgba(' + r + ',' + g + ',' + b + ',0.6)');
+      document.documentElement.style.setProperty('--glow-danger','0 0 12px rgba(255,0,68,0.5)');
+      document.documentElement.style.setProperty('--bg-panel',   'rgba(' + Math.floor(r * 0.04) + ',' + Math.floor(g * 0.08) + ',' + Math.floor(b * 0.04) + ',1)');
+
+      // Remplir les champs
+      $('#inp-key').value   = cfg.apiKey || '';
       $('#inp-model').value = cfg.model;
-      $('#inp-lang').value = cfg.lang;
+      $('#inp-lang').value  = cfg.lang;
       $('#inp-tts').checked = cfg.tts;
-      $('#inp-autolisten').checked = cfg.autoListen;
+      $('#inp-auto').checked = cfg.autoListen;
       $('#inp-color').value = cfg.color;
-      $('#header-model-label').textContent = cfg.model.split('-').slice(0, 2).join(' ').toUpperCase();
-      updateSysStatus();
+
+      // Label du header
+      $('#hdr-model').textContent = cfg.model.split('-').slice(0, 2).join(' ').toUpperCase();
+
+      sysInfo();
     }
 
-    function saveSettings() {
-      cfg.apiKey = $('#inp-apikey').value.trim();
-      cfg.model = $('#inp-model').value;
-      cfg.lang = $('#inp-lang').value;
-      cfg.tts = $('#inp-tts').checked;
-      cfg.autoListen = $('#inp-autolisten').checked;
-      cfg.color = $('#inp-color').value;
-      localStorage.setItem('supraLab14_cfg', JSON.stringify(cfg));
-      applySettings();
-      log('Parametres sauvegardes', 'ok');
+    function cfgSave() {
+      cfg.apiKey     = $('#inp-key').value.trim();
+      cfg.model      = $('#inp-model').value;
+      cfg.lang       = $('#inp-lang').value;
+      cfg.tts        = $('#inp-tts').checked;
+      cfg.autoListen = $('#inp-auto').checked;
+      cfg.color      = $('#inp-color').value;
+      localStorage.setItem('supraLab15', JSON.stringify(cfg));
+      cfgApply();
+      log('Configuration sauvegardee', 'ok');
     }
 
-    function resetSettings() {
+    function cfgReset() {
       if (!confirm('Reinitialiser tous les parametres ?')) return;
-      for (var k in DEFAULTS) cfg[k] = DEFAULTS[k];
-      localStorage.removeItem('supraLab14_cfg');
-      applySettings();
+      Object.keys(DEFAULTS).forEach(function (k) { cfg[k] = DEFAULTS[k]; });
+      localStorage.removeItem('supraLab15');
+      cfgApply();
       log('Parametres reinitialises', 'error');
     }
 
-    /* ═══════════ BOUTON OEIL POUR LA CLE API ═══════════ */
-    function initKeyToggle() {
-      var inp = $('#inp-apikey');
-      var btn = $('#btn-toggle-key');
-      var visible = false;
-      btn.addEventListener('click', function () {
-        visible = !visible;
-        inp.type = visible ? 'text' : 'text'; // reste en text pour permettre le copier-coller
-        // On simule le password en changeant la couleur du texte
-        if (visible) {
-          inp.style.color = 'var(--fg)';
-          inp.style.webkitTextSecurity = 'none';
-          btn.textContent = 'CACHE';
-        } else {
-          inp.style.color = 'var(--fg)';
-          inp.style.webkitTextSecurity = 'disc';
-          btn.textContent = 'OEIL';
-        }
-      });
-      // Par défaut : masqué visuellement mais type=text pour le paste
+    /* Bouton œil pour la clé API */
+    function initEye() {
+      var inp = $('#inp-key');
+      var btn = $('#btn-eye');
+      var show = false;
       inp.style.webkitTextSecurity = 'disc';
+      btn.addEventListener('click', function () {
+        show = !show;
+        inp.style.webkitTextSecurity = show ? 'none' : 'disc';
+        btn.textContent = show ? 'CACHE' : 'OEIL';
+      });
     }
 
-    /* ═══════════ ECOUTE AUTO ═══════════ */
-    function beginRecognitionAuto() {
-      var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!SR || !state.listening) return;
-      try {
-        if (state.recognition) state.recognition.abort();
-        state.recognition = new SR();
-        state.recognition.lang = cfg.lang;
-        state.recognition.continuous = false;
-        state.recognition.interimResults = false;
-        state.recognition.maxAlternatives = 1;
-        state.recognition.onresult = function (ev) {
-          var txt = ev.results[0][0].transcript.trim();
-          if (txt && txt !== state.lastTranscript) { state.lastTranscript = txt; pttTranscript = txt; }
-        };
-        state.recognition.onerror = function (ev) {
-          if (ev.error !== 'no-speech' && ev.error !== 'aborted') log('Erreur reco auto : ' + ev.error, 'error');
-        };
-        state.recognition.onend = function () {
-          if (state.listening) {
-            if (pttTranscript.trim()) {
-              var txt = pttTranscript;
-              pttTranscript = '';
-              log('Auto : "' + txt + '"', 'ok');
-              sendToGroq(txt);
-            }
-            setTimeout(function () { if (state.listening) beginRecognitionAuto(); }, 600);
-          }
-        };
-        state.recognition.start();
-      } catch (err) { log('Erreur reco auto : ' + err.message, 'error'); }
+    /* ──────────────────────────────────────────────
+       15. HORLOGE
+    ────────────────────────────────────────────── */
+    function tick() {
+      var el = $('#foot-clock');
+      if (el) el.textContent = now();
     }
+    setInterval(tick, 1000);
+    tick();
 
-    /* ═══════════ HORLOGE ═══════════ */
-    function tickClock() { var el = $('#footer-clock'); if (el) el.textContent = new Date().toLocaleTimeString('fr-FR'); }
-    setInterval(tickClock, 1000);
-    tickClock();
-
-    /* ═══════════ EVENEMENTS ═══════════ */
-    function bindEvents() {
-      $('#btn-launch').addEventListener('click', launchApp);
-      $('#btn-open-settings').addEventListener('click', function () { $('#settings-dialog').showModal(); });
-      $('#btn-close-settings').addEventListener('click', function () { $('#settings-dialog').close(); });
-      $('#btn-save-settings').addEventListener('click', function () { saveSettings(); $('#settings-dialog').close(); });
-      $('#btn-reset-settings').addEventListener('click', resetSettings);
-      $('#settings-dialog').addEventListener('click', function (e) { if (e.target === e.currentTarget) e.currentTarget.close(); });
-
-      $('#btn-rec').addEventListener('click', function () {
-        if (!state.audioReady) { log('Systeme non initialise', 'error'); return; }
-        state.recording ? stopRecording() : startRecording();
-      });
-      $('#btn-stop').addEventListener('click', stopRecording);
-      $('#btn-play-last').addEventListener('click', function () {
-        if (captures.length) playCapture(0); else log('Aucune capture', 'error');
-      });
-      $('#btn-dl-last').addEventListener('click', function () {
-        if (captures.length) downloadCapture(0); else log('Aucune capture', 'error');
-      });
-
-      var ptt = $('#ptt');
-      ptt.addEventListener('mousedown', pttStart);
-      ptt.addEventListener('mouseup', pttEnd);
-      ptt.addEventListener('mouseleave', pttEnd);
-      ptt.addEventListener('touchstart', pttStart, { passive: false });
-      ptt.addEventListener('touchend', pttEnd, { passive: false });
-      ptt.addEventListener('touchcancel', pttEnd, { passive: false });
-
-      window.addEventListener('resize', function () { if (state.audioReady) resizeCanvases(); });
-    }
-
-    /* ═══════════ LANCEMENT ═══════════ */
-    async function launchApp() {
+    /* ──────────────────────────────────────────────
+       16. LANCEMENT
+    ────────────────────────────────────────────── */
+    async function launch() {
       $('#boot').style.display = 'none';
-      $('#app').classList.add('active');
-      $('#ptt').classList.add('visible');
-      log('=== SUPRA LAB v14.0 demarre ===', 'ok');
+      $('#app').classList.add('app--active');
+      $('#ptt').classList.add('ptt--visible');
+
+      log('=== SUPRA LAB v15.0 initialise ===', 'ok');
+
+      // Diagnostic Web Speech
+      var hasReco = !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+      log('Web Speech API : ' + (hasReco ? 'DISPONIBLE' : 'ABSENTE'), hasReco ? 'ok' : 'error');
+      if (!hasReco) {
+        log('La reconnaissance vocale ne fonctionnera pas', 'error');
+        log('Installez Chrome pour Android', 'error');
+      }
+
       var ok = await initAudio();
-      if (ok) { setStatus('Pret'); log('Systemes operationnels', 'ok'); }
-      else { setStatus('Erreur micro'); }
-      if (ok && cfg.autoListen) {
+      if (ok) {
+        status('Pret — Maintenez le bouton pour parler');
+        log('Tous les systemes operationnels', 'ok');
+      } else {
+        status('Erreur micro');
+      }
+
+      // Écoute automatique si configurée
+      if (ok && cfg.autoListen && hasReco) {
         setTimeout(function () {
-          state.listening = true;
-          pttTranscript = '';
-          state.lastTranscript = '';
-          $('#ptt').classList.add('listening');
-          $('#ptt').innerHTML = 'ECOUTE AUTO<br><small>parlez</small>';
-          setStatus('Ecoute automatique...');
-          log('Ecoute auto activee', 'ok');
-          updateSysStatus();
-          beginRecognitionAuto();
-        }, 800);
+          S.listening = true;
+          S.pttText  = '';
+          S.lastText = '';
+          var btn = $('#ptt');
+          btn.classList.add('ptt--listening');
+          btn.innerHTML = 'ECOUTE AUTO<br><small>parlez</small><span class="ptt__indicator">PAROLE DETECTEE</span>';
+          status('Ecoute automatique...');
+          log('Ecoute automatique activee', 'info');
+          sysInfo();
+          recoAutoStart();
+        }, 1000);
       }
     }
 
-    /* ═══════════ NETTOYAGE ═══════════ */
+    /* ──────────────────────────────────────────────
+       17. LIAISON DES EVENEMENTS
+    ────────────────────────────────────────────── */
+    function bind() {
+      // Boot
+      $('#btn-go').addEventListener('click', launch);
+      $('#btn-cfg').addEventListener('click', function () {
+        $('#dlg-settings').showModal();
+      });
+
+      // Dialog
+      $('#btn-dlg-close').addEventListener('click', function () {
+        $('#dlg-settings').close();
+      });
+      $('#btn-save').addEventListener('click', function () {
+        cfgSave();
+        $('#dlg-settings').close();
+      });
+      $('#btn-reset').addEventListener('click', cfgReset);
+      $('#dlg-settings').addEventListener('click', function (e) {
+        if (e.target === e.currentTarget) e.currentTarget.close();
+      });
+
+      // Enregistreur
+      $('#btn-rec').addEventListener('click', function () {
+        if (!S.ready) { log('Systeme non initialise', 'error'); return; }
+        S.recording ? recStop() : recStart();
+      });
+      $('#btn-stop').addEventListener('click', recStop);
+      $('#btn-play').addEventListener('click', function () {
+        if (captures.length) capPlay(0);
+        else log('Aucune capture a lire', 'error');
+      });
+      $('#btn-dl').addEventListener('click', function () {
+        if (captures.length) capDownload(0);
+        else log('Aucune capture a telecharger', 'error');
+      });
+
+      // Push-To-Talk : souris + tactile
+      var ptt = $('#ptt');
+      ptt.addEventListener('mousedown',  pttDown);
+      ptt.addEventListener('mouseup',    pttUp);
+      ptt.addEventListener('mouseleave', pttUp);
+      ptt.addEventListener('touchstart', pttDown, { passive: false });
+      ptt.addEventListener('touchend',   pttUp,   { passive: false });
+      ptt.addEventListener('touchcancel', pttUp,  { passive: false });
+
+      // Redimensionnement des canvas
+      window.addEventListener('resize', function () {
+        if (S.ready) sizeCanvases();
+      });
+    }
+
+    /* ──────────────────────────────────────────────
+       18. NETTOYAGE A LA FERMETURE
+    ────────────────────────────────────────────── */
     window.addEventListener('beforeunload', function () {
-      if (state.stream) state.stream.getTracks().forEach(function (t) { t.stop(); });
-      if (state.recognition) { try { state.recognition.abort(); } catch (_) {} }
-      if (window.speechSynthesis.speaking) window.speechSynthesis.cancel();
-      if (state.recording && state.mediaRecorder) state.mediaRecorder.stop();
-      for (var i = 0; i < captures.length; i++) URL.revokeObjectURL(captures[i].url);
+      if (S.pttTimer) clearTimeout(S.pttTimer);
+      if (S.stream) S.stream.getTracks().forEach(function (t) { t.stop(); });
+      if (S.reco) { try { S.reco.abort(); } catch (_) {} }
+      if (window.speechSynthesis && window.speechSynthesis.speaking) {
+        window.speechSynthesis.cancel();
+      }
+      if (S.recording && S.recorder) S.recorder.stop();
+      captures.forEach(function (c) { URL.revokeObjectURL(c.url); });
     });
 
-    /* ═══════════ INIT ═══════════ */
+    /* ──────────────────────────────────────────────
+       19. POINT D'ENTREE
+    ────────────────────────────────────────────── */
     document.addEventListener('DOMContentLoaded', async function () {
-      loadSettings();
-      initKeyToggle();
-      bindEvents();
-      await typeText($('#boot-title'), 'SUPRA LAB v14.0', 60);
-      var sub = $('#boot-subtitle');
-      sub.textContent = 'ARCHITECTURE REFAITE — SANS BOUCLE — GITHUB READY';
-      sub.classList.add('visible');
-      $('#boot-actions').style.opacity = '1';
-      $('#btn-launch').focus();
+      cfgLoad();
+      initEye();
+      bind();
+
+      // Animation de démarrage
+      await typeIn($('#boot-title'), 'SUPRA LAB v15.0', 45);
+
+      var sub = $('#boot-sub');
+      sub.textContent = 'ARCHITECTURE PURE — ANDROID-PROOF — ZERO BOUCLE';
+      sub.classList.add('boot__sub--show');
+
+      var acts = $('#boot-actions');
+      acts.classList.add('boot__actions--show');
+      $('#btn-go').focus();
     });
 
   })();
