@@ -3,1798 +3,381 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>SUPRA LAB v15.0</title>
+  <title>SUPRA LAB v16.0</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
   <style>
-    /* ══════════════════════════════════════════════════
-       JEWEL — Design System Tokens
-    ══════════════════════════════════════════════════ */
     :root {
-      --bg:            #050905;
-      --bg-deep:       #020402;
-      --bg-panel:      #081208;
-      --fg:            #00ff41;
-      --fg-dim:        #007a20;
-      --fg-muted:      #004d14;
-      --danger:        #ff0044;
-      --warning:       #ffaa00;
-      --radius:        2px;
-      --font:          'VT323', monospace;
-      --glow:          0 0 8px rgba(0,255,65,0.4);
-      --glow-strong:   0 0 20px rgba(0,255,65,0.6);
-      --glow-danger:   0 0 12px rgba(255,0,68,0.5);
+      --bg:#050905;--bg-deep:#020402;--bg-panel:#081208;
+      --fg:#00ff41;--fg-dim:#007a20;--fg-muted:#004d14;
+      --danger:#ff0044;--warning:#ffaa00;
+      --font:'VT323',monospace;
+      --glow:0 0 8px rgba(0,255,65,0.4);
+      --glow-s:0 0 20px rgba(0,255,65,0.6);
+      --glow-d:0 0 12px rgba(255,0,68,0.5);
     }
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    input,textarea,select{-webkit-user-select:text!important;user-select:text!important;touch-action:auto!important}
+    html,body{height:100%;overflow:hidden;-webkit-user-select:none;user-select:none}
+    body{font-family:var(--font);font-size:17px;color:var(--fg);background:var(--bg);
+      background-image:linear-gradient(rgba(0,255,65,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,255,65,0.025) 1px,transparent 1px);
+      background-size:40px 40px}
+    .fx-scan{position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent 0px,transparent 2px,rgba(0,0,0,0.1) 2px,rgba(0,0,0,0.1) 4px);pointer-events:none;z-index:9999}
+    .fx-vig{position:fixed;inset:0;background:radial-gradient(ellipse at center,transparent 50%,rgba(0,0,0,0.5) 100%);pointer-events:none;z-index:9998}
 
-    /* ══════════════════════════════════════════════════
-       RESET — Précis, rien de plus
-    ══════════════════════════════════════════════════ */
-    *, *::before, *::after {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    .btn{font-family:var(--font);font-size:17px;color:var(--fg);background:transparent;border:3px solid var(--fg);padding:10px 22px;cursor:pointer;letter-spacing:1px;-webkit-user-select:none;user-select:none;touch-action:manipulation;transition:background .15s,box-shadow .15s,color .15s,transform .1s;box-shadow:var(--glow);position:relative;overflow:hidden}
+    .btn::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,0.04) 0%,transparent 50%);pointer-events:none}
+    .btn:hover{background:rgba(0,255,65,.07);box-shadow:var(--glow-s)}
+    .btn:active{background:var(--fg);color:var(--bg);transform:scale(.97)}
+    .btn:disabled{opacity:.35;cursor:not-allowed;border-color:var(--fg-muted);color:var(--fg-muted);box-shadow:none}
+    .btn:disabled::after{display:none}
+    .btn--d{border-color:var(--danger);color:var(--danger);box-shadow:var(--glow-d)}
+    .btn--d:hover{background:rgba(255,0,68,.07)}
+    .btn--s{padding:4px 10px;font-size:13px;border-width:2px}
+    .btn--x{background:none;border:none;font-size:26px;padding:0 6px;box-shadow:none;color:var(--fg);line-height:1}
+    .btn--x:hover{color:var(--danger);box-shadow:none}
+    .btn--on{background:var(--fg);color:var(--bg);box-shadow:var(--glow-s)}
 
-    /* Les inputs doivent rester natifs pour le copier-coller Android */
-    input, textarea, select {
-      -webkit-user-select: text !important;
-      user-select: text !important;
-      touch-action: auto !important;
-    }
+    .boot{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;z-index:100;border:6px solid var(--fg);background:var(--bg);box-shadow:inset 0 0 80px rgba(0,255,65,.03)}
+    .boot__t{font-size:44px;letter-spacing:5px;text-shadow:var(--glow-s);min-height:54px}
+    .boot__s{font-size:18px;color:var(--warning);margin-top:10px;min-height:24px;opacity:0;transition:opacity .5s}
+    .boot__s--v{opacity:1}
+    .boot__a{margin-top:44px;display:flex;gap:16px;flex-wrap:wrap;justify-content:center;opacity:0;transition:opacity .6s}
+    .boot__a--v{opacity:1}
+    .boot__a .btn--go{font-size:30px;padding:18px 56px;border-width:5px}
+    .blink::after{content:'\2588';animation:bl .6s step-end infinite}
+    @keyframes bl{50%{opacity:0}}
 
-    html, body {
-      height: 100%;
-      overflow: hidden;
-      -webkit-user-select: none;
-      user-select: none;
-    }
+    .app{display:none;position:fixed;inset:0;border:6px solid var(--fg);z-index:100;flex-direction:column;background:var(--bg)}
+    .app--v{display:flex}
+    .app__hd{background:var(--bg-panel);border-bottom:4px solid var(--fg);padding:12px 16px;text-align:center;font-size:22px;letter-spacing:3px;text-shadow:var(--glow);flex-shrink:0;position:relative;overflow:hidden}
+    .app__hd::after{content:'SYS:ONLINE  MEM:STABLE  NET:READY  CLK:48kHz  FFT:2048  MIC:LIVE  BUF:FILL ';position:absolute;top:0;left:0;font-size:12px;color:var(--fg-muted);white-space:nowrap;animation:tick 22s linear infinite;padding-top:3px;letter-spacing:2px}
+    @keyframes tick{0%{transform:translateX(100vw)}100%{transform:translateX(-100%)}}
+    .app__mn{flex:1;overflow-y:auto;padding:14px;display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:14px;align-content:start;padding-bottom:90px}
+    .app__ft{position:absolute;bottom:0;left:0;right:0;background:var(--bg-panel);border-top:3px solid var(--fg);padding:7px 14px;font-size:14px;display:flex;justify-content:space-between;z-index:10}
 
-    /* ══════════════════════════════════════════════════
-       BASE
-    ══════════════════════════════════════════════════ */
-    body {
-      font-family: var(--font);
-      font-size: 17px;
-      color: var(--fg);
-      background-color: var(--bg);
-      /* Grille laboratoire subtile */
-      background-image:
-        linear-gradient(rgba(0,255,65,0.025) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0,255,65,0.025) 1px, transparent 1px);
-      background-size: 40px 40px;
-    }
+    .p{background:var(--bg-panel);border:3px solid var(--fg);padding:16px;position:relative;min-height:140px;box-shadow:var(--glow),inset 0 0 40px rgba(0,255,65,.015)}
+    .p::before,.p::after{content:'';position:absolute;width:12px;height:12px}
+    .p::before{top:-1px;left:-1px;border-top:2px solid var(--fg);border-left:2px solid var(--fg)}
+    .p::after{bottom:-1px;right:-1px;border-bottom:2px solid var(--fg);border-right:2px solid var(--fg)}
+    .p__l{position:absolute;top:-12px;left:14px;background:var(--bg-panel);padding:0 10px;font-size:14px;letter-spacing:2px;text-shadow:var(--glow)}
+    .p--f{grid-column:1/-1}
+    canvas.cv{display:block;width:100%;height:120px;background:var(--bg-deep);image-rendering:pixelated;border:1px solid rgba(0,255,65,.08)}
 
-    /* Scanlines CRT */
-    .scanlines {
-      position: fixed;
-      inset: 0;
-      background: repeating-linear-gradient(
-        0deg,
-        transparent 0px,
-        transparent 2px,
-        rgba(0,0,0,0.1) 2px,
-        rgba(0,0,0,0.1) 4px
-      );
-      pointer-events: none;
-      z-index: 9999;
-    }
+    .rec{grid-column:1/-1;display:flex;align-items:center;justify-content:center;gap:10px;padding:12px;background:var(--bg-panel);border:3px solid var(--fg);flex-wrap:wrap}
+    .rec__b{width:62px;height:62px;border-radius:50%;font-size:13px;padding:0;display:flex;align-items:center;justify-content:center;line-height:1.1;border-width:4px}
+    .rec__b--r.recording{background:var(--danger);border-color:var(--danger);color:#fff;animation:pr 1.2s ease-out infinite}
+    @keyframes pr{0%{box-shadow:0 0 0 0 rgba(255,0,68,.6)}100%{box-shadow:0 0 0 16px rgba(255,0,68,0)}}
+    .rec__t{font-size:28px;letter-spacing:4px;min-width:130px;text-align:center;text-shadow:var(--glow)}
+    .rec__t--a{color:var(--danger);text-shadow:var(--glow-d);animation:bl 1s step-end infinite}
+    .rec__sep{width:2px;height:40px;background:var(--fg-muted);flex-shrink:0}
 
-    /* Vignettage cinématique */
-    .vignette {
-      position: fixed;
-      inset: 0;
-      background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.5) 100%);
-      pointer-events: none;
-      z-index: 9998;
-    }
+    .live{grid-column:1/-1;background:var(--bg-deep);border:3px solid var(--fg);padding:0;position:relative;min-height:100px;box-shadow:var(--glow-s);overflow:hidden}
+    .live__label{position:absolute;top:-12px;left:14px;background:var(--bg-deep);padding:0 10px;font-size:14px;letter-spacing:2px;text-shadow:var(--glow);z-index:2}
+    .live__status{position:absolute;top:10px;right:14px;font-size:12px;letter-spacing:1px;padding:2px 8px;border:1px solid;z-index:2}
+    .live__status--off{color:var(--fg-muted);border-color:var(--fg-muted)}
+    .live__status--on{color:var(--danger);border-color:var(--danger);animation:bl .5s step-end infinite}
+    .live__text{padding:28px 16px 16px;font-size:26px;line-height:1.4;min-height:80px;word-break:break-word;letter-spacing:1px}
+    .live__text--idle{color:var(--fg-muted);font-size:16px}
+    .live__text--active{color:var(--fg);text-shadow:var(--glow)}
+    .live__text--done{color:var(--fg-dim)}
+    .live__cursor{display:inline-block;width:12px;height:26px;background:var(--fg);animation:bl .5s step-end infinite;vertical-align:text-bottom;margin-left:2px}
 
-    /* ══════════════════════════════════════════════════
-       BOUTONS
-    ══════════════════════════════════════════════════ */
-    .btn {
-      font-family: var(--font);
-      font-size: 17px;
-      color: var(--fg);
-      background: transparent;
-      border: 3px solid var(--fg);
-      padding: 10px 22px;
-      cursor: pointer;
-      letter-spacing: 1px;
-      -webkit-user-select: none;
-      user-select: none;
-      touch-action: manipulation;
-      transition: background 0.15s, box-shadow 0.15s, color 0.15s, transform 0.1s;
-      box-shadow: var(--glow);
-      position: relative;
-      overflow: hidden;
-    }
-    .btn::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, transparent 50%);
-      pointer-events: none;
-    }
-    .btn:hover {
-      background: rgba(0,255,65,0.07);
-      box-shadow: var(--glow-strong);
-    }
-    .btn:active {
-      background: var(--fg);
-      color: var(--bg);
-      transform: scale(0.97);
-    }
-    .btn:disabled {
-      opacity: 0.35;
-      cursor: not-allowed;
-      border-color: var(--fg-muted);
-      color: var(--fg-muted);
-      box-shadow: none;
-    }
-    .btn:disabled::after { display: none; }
-    .btn--danger {
-      border-color: var(--danger);
-      color: var(--danger);
-      box-shadow: var(--glow-danger);
-    }
-    .btn--danger:hover { background: rgba(255,0,68,0.07); }
-    .btn--sm {
-      padding: 4px 10px;
-      font-size: 13px;
-      border-width: 2px;
-    }
-    .btn--icon {
-      background: none;
-      border: none;
-      font-size: 26px;
-      padding: 0 6px;
-      box-shadow: none;
-      color: var(--fg);
-      line-height: 1;
-    }
-    .btn--icon:hover { color: var(--danger); box-shadow: none; }
+    .tinput{grid-column:1/-1;display:flex;gap:0;background:var(--bg-deep);border:2px solid var(--fg-dim);overflow:hidden}
+    .tinput__prefix{display:flex;align-items:center;padding:0 12px;color:var(--fg-dim);font-size:20px;flex-shrink:0;border-right:2px solid var(--fg-dim);background:rgba(0,255,65,.02)}
+    .tinput__field{flex:1;padding:12px;background:transparent;color:var(--fg);border:none;font-family:var(--font);font-size:17px;outline:none;-webkit-user-select:text!important;user-select:text!important;touch-action:auto!important}
+    .tinput__field::placeholder{color:var(--fg-muted)}
+    .tinput__btn{flex-shrink:0;border:none;border-left:2px solid var(--fg-dim);padding:12px 20px;font-size:16px;letter-spacing:2px;cursor:pointer;background:rgba(0,255,65,.05);color:var(--fg);font-family:var(--font);transition:background .15s}
+    .tinput__btn:hover{background:rgba(0,255,65,.15)}
 
-    /* ══════════════════════════════════════════════════
-       BOOT SCREEN
-    ══════════════════════════════════════════════════ */
-    .boot {
-      position: fixed;
-      inset: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      padding: 24px;
-      z-index: 100;
-      border: 6px solid var(--fg);
-      background: var(--bg);
-      box-shadow: inset 0 0 80px rgba(0,255,65,0.03);
-    }
-    .boot__title {
-      font-size: 44px;
-      letter-spacing: 5px;
-      text-shadow: var(--glow-strong);
-      min-height: 54px;
-    }
-    .boot__sub {
-      font-size: 18px;
-      color: var(--warning);
-      margin-top: 10px;
-      min-height: 24px;
-      opacity: 0;
-      transition: opacity 0.5s;
-    }
-    .boot__sub--show { opacity: 1; }
-    .boot__actions {
-      margin-top: 44px;
-      display: flex;
-      gap: 16px;
-      flex-wrap: wrap;
-      justify-content: center;
-      opacity: 0;
-      transition: opacity 0.6s;
-    }
-    .boot__actions--show { opacity: 1; }
-    .boot__actions .btn--launch {
-      font-size: 30px;
-      padding: 18px 56px;
-      border-width: 5px;
-    }
-    .cursor-blink::after {
-      content: '\2588';
-      animation: blink-cursor 0.6s step-end infinite;
-    }
-    @keyframes blink-cursor { 50% { opacity: 0; } }
+    .ai{background:var(--bg-deep);border:2px dashed var(--fg-dim);padding:14px;font-size:15px;line-height:1.55;white-space:pre-wrap;word-break:break-word;max-height:260px;overflow-y:auto;min-height:80px;color:var(--fg-dim);-webkit-user-select:text!important;user-select:text!important}
+    .log{max-height:150px;overflow-y:auto;font-size:13px;line-height:1.4;padding:10px;background:var(--bg-deep);border:2px dashed var(--warning);-webkit-user-select:text!important;user-select:text!important}
+    .log__e{padding:2px 4px;margin:2px 0;border-radius:2px;border-left:3px solid transparent}
+    .log__e--err{color:var(--danger);background:rgba(255,0,68,.06);border-left-color:var(--danger)}
+    .log__e--ok{color:var(--fg-dim);border-left-color:var(--fg-muted)}
+    .log__e--info{color:var(--warning);border-left-color:var(--warning)}
 
-    /* ══════════════════════════════════════════════════
-       APP SHELL
-    ══════════════════════════════════════════════════ */
-    .app {
-      display: none;
-      position: fixed;
-      inset: 0;
-      border: 6px solid var(--fg);
-      z-index: 100;
-      flex-direction: column;
-      background: var(--bg);
-    }
-    .app--active { display: flex; }
+    .cap{display:flex;align-items:center;gap:8px;padding:8px;margin-bottom:6px;background:rgba(0,255,65,.03);border:1px solid rgba(0,255,65,.12);transition:background .15s}
+    .cap:hover{background:rgba(0,255,65,.06)}
+    .cap__i{flex:1;min-width:0}
+    .cap__n{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .cap__m{font-size:11px;color:var(--fg-muted);margin-top:2px}
+    .cap__a{display:flex;gap:5px;flex-shrink:0;flex-wrap:wrap}
+    .empty{text-align:center;color:var(--fg-muted);padding:24px;font-size:15px;letter-spacing:1px}
 
-    .app__header {
-      background: var(--bg-panel);
-      border-bottom: 4px solid var(--fg);
-      padding: 12px 16px;
-      text-align: center;
-      font-size: 22px;
-      letter-spacing: 3px;
-      text-shadow: var(--glow);
-      flex-shrink: 0;
-      position: relative;
-      overflow: hidden;
-    }
-    /* Bandeau défilant */
-    .app__header::after {
-      content: 'SYS:ONLINE  MEM:STABLE  NET:READY  CLK:48kHz  FFT:2048  MIC:LIVE  BUF:FILL ';
-      position: absolute;
-      top: 0; left: 0;
-      font-size: 12px;
-      color: var(--fg-muted);
-      white-space: nowrap;
-      animation: ticker 22s linear infinite;
-      padding-top: 3px;
-      letter-spacing: 2px;
-    }
-    @keyframes ticker {
-      0%   { transform: translateX(100vw); }
-      100% { transform: translateX(-100%); }
-    }
+    .ptt{position:fixed;bottom:62px;left:50%;transform:translateX(-50%);width:120px;height:120px;border-radius:50%;font-size:14px;text-align:center;line-height:1.25;z-index:300;border-width:5px;box-shadow:var(--glow-s),inset 0 0 20px rgba(0,255,65,.06);transition:background .2s,border-color .2s,box-shadow .2s,transform .1s;display:none;flex-direction:column;align-items:center;justify-content:center}
+    .ptt--v{display:flex}
+    .ptt:active{transform:translateX(-50%) scale(.94)}
+    .ptt--on{background:var(--danger);border-color:var(--danger);color:#fff;box-shadow:0 0 0 0 rgba(255,0,68,.6),inset 0 0 20px rgba(255,0,68,.15);animation:pr 1s ease-out infinite}
+    .ptt__ind{display:none;margin-top:4px;font-size:10px;letter-spacing:1px;color:#fff;animation:bl .4s step-end infinite}
+    .ptt--sp .ptt__ind{display:block}
 
-    .app__main {
-      flex: 1;
-      overflow-y: auto;
-      padding: 14px;
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
-      gap: 14px;
-      align-content: start;
-      padding-bottom: 90px;
-    }
+    dialog{font-family:var(--font);color:var(--fg);background:var(--bg);border:5px solid var(--fg);padding:0;max-width:520px;width:92vw;max-height:88vh;overflow-y:auto;box-shadow:var(--glow-s),0 0 60px rgba(0,255,65,.1)}
+    dialog::backdrop{background:rgba(0,0,0,.88)}
+    .dh{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:3px solid var(--fg);font-size:22px;letter-spacing:3px;text-shadow:var(--glow)}
+    .db{padding:18px 22px}
+    .df{display:flex;justify-content:center;gap:14px;padding:18px 22px;border-top:2px solid var(--fg-muted)}
+    .fl{margin-bottom:18px}
+    .fl__l{display:block;margin-bottom:7px;font-size:15px;letter-spacing:1px}
+    .fl__i,.fl__s{width:100%;padding:11px;background:var(--bg-deep);color:var(--fg);border:2px solid var(--fg-dim);font-family:var(--font);font-size:16px;outline:none;transition:border-color .2s,box-shadow .2s;-webkit-user-select:text!important;user-select:text!important;touch-action:auto!important}
+    .fl__i:focus,.fl__s:focus{border-color:var(--fg);box-shadow:var(--glow)}
+    .fl__c{display:flex;align-items:center;gap:10px;cursor:pointer}
+    .fl__c input{width:20px;height:20px;accent-color:var(--fg);cursor:pointer}
+    .fl__sec{font-size:17px;margin:24px 0 14px;padding-bottom:8px;border-bottom:2px solid var(--fg-muted);letter-spacing:2px}
+    .fl__sec:first-child{margin-top:0}
+    .kw{position:relative}
+    .kw .fl__i{padding-right:60px!important}
+    .kw__t{position:absolute;right:5px;top:50%;transform:translateY(-50%);background:none;border:2px solid var(--fg-dim);color:var(--fg);font-size:14px;padding:5px 8px;box-shadow:none;line-height:1;letter-spacing:0}
+    .kw__t:hover{border-color:var(--fg);box-shadow:none}
 
-    .app__footer {
-      position: absolute;
-      bottom: 0; left: 0; right: 0;
-      background: var(--bg-panel);
-      border-top: 3px solid var(--fg);
-      padding: 7px 14px;
-      font-size: 14px;
-      display: flex;
-      justify-content: space-between;
-      z-index: 10;
-      letter-spacing: 0.5px;
-    }
+    ::-webkit-scrollbar{width:6px}
+    ::-webkit-scrollbar-track{background:var(--bg-panel)}
+    ::-webkit-scrollbar-thumb{background:var(--fg-muted);border-radius:3px}
+    ::-webkit-scrollbar-thumb:hover{background:var(--fg-dim)}
 
-    /* ══════════════════════════════════════════════════
-       PANELS
-    ══════════════════════════════════════════════════ */
-    .panel {
-      background: var(--bg-panel);
-      border: 3px solid var(--fg);
-      padding: 16px;
-      position: relative;
-      min-height: 165px;
-      box-shadow: var(--glow), inset 0 0 40px rgba(0,255,65,0.015);
+    @media(max-width:768px){
+      .boot__t{font-size:30px;letter-spacing:3px}
+      .app__mn{grid-template-columns:1fr;padding:10px;gap:10px}
+      .ptt{width:100px;height:100px;font-size:12px;bottom:52px}
+      .rec__b{width:52px;height:52px;font-size:11px}
+      .rec__t{font-size:22px;min-width:100px}
+      .p{min-height:120px}
+      canvas.cv{height:100px}
+      dialog{width:96vw;max-height:92vh}
+      .app__hd{font-size:17px;letter-spacing:2px}
+      .live__text{font-size:20px;padding:24px 12px 12px}
+      .tinput__field{font-size:15px;padding:10px}
     }
-    /* Coins techniques */
-    .panel::before, .panel::after {
-      content: '';
-      position: absolute;
-      width: 12px; height: 12px;
-    }
-    .panel::before {
-      top: -1px; left: -1px;
-      border-top: 2px solid var(--fg);
-      border-left: 2px solid var(--fg);
-    }
-    .panel::after {
-      bottom: -1px; right: -1px;
-      border-bottom: 2px solid var(--fg);
-      border-right: 2px solid var(--fg);
-    }
-    .panel__label {
-      position: absolute;
-      top: -12px; left: 14px;
-      background: var(--bg-panel);
-      padding: 0 10px;
-      font-size: 14px;
-      letter-spacing: 2px;
-      text-shadow: var(--glow);
-    }
-    .panel--full { grid-column: 1 / -1; }
-
-    /* ══════════════════════════════════════════════════
-       CANVAS
-    ══════════════════════════════════════════════════ */
-    .canvas {
-      display: block;
-      width: 100%;
-      height: 130px;
-      background: var(--bg-deep);
-      image-rendering: pixelated;
-      border: 1px solid rgba(0,255,65,0.08);
-    }
-
-    /* ══════════════════════════════════════════════════
-       RECORDER BAR
-    ══════════════════════════════════════════════════ */
-    .recorder {
-      grid-column: 1 / -1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 14px;
-      padding: 14px;
-      background: var(--bg-panel);
-      border: 3px solid var(--fg);
-      flex-wrap: wrap;
-    }
-    .recorder__btn {
-      width: 68px; height: 68px;
-      border-radius: 50%;
-      font-size: 14px;
-      padding: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      line-height: 1.1;
-      border-width: 4px;
-    }
-    .recorder__btn--rec.recording {
-      background: var(--danger);
-      border-color: var(--danger);
-      color: #fff;
-      animation: pulse-rec 1.2s ease-out infinite;
-    }
-    @keyframes pulse-rec {
-      0%   { box-shadow: 0 0 0 0 rgba(255,0,68,0.6); }
-      100% { box-shadow: 0 0 0 16px rgba(255,0,68,0); }
-    }
-    .recorder__timer {
-      font-size: 30px;
-      letter-spacing: 4px;
-      min-width: 150px;
-      text-align: center;
-      text-shadow: var(--glow);
-    }
-    .recorder__timer--active {
-      color: var(--danger);
-      text-shadow: var(--glow-danger);
-      animation: blink-cursor 1s step-end infinite;
-    }
-
-    /* ══════════════════════════════════════════════════
-       AI REPORT & LOG
-    ══════════════════════════════════════════════════ */
-    .ai-report {
-      background: var(--bg-deep);
-      border: 2px dashed var(--fg-dim);
-      padding: 14px;
-      font-size: 15px;
-      line-height: 1.55;
-      white-space: pre-wrap;
-      word-break: break-word;
-      max-height: 280px;
-      overflow-y: auto;
-      min-height: 100px;
-      color: var(--fg-dim);
-      -webkit-user-select: text !important;
-      user-select: text !important;
-    }
-    .log {
-      max-height: 170px;
-      overflow-y: auto;
-      font-size: 14px;
-      line-height: 1.4;
-      padding: 10px;
-      background: var(--bg-deep);
-      border: 2px dashed var(--warning);
-      -webkit-user-select: text !important;
-      user-select: text !important;
-    }
-    .log__entry {
-      padding: 3px 5px;
-      margin: 3px 0;
-      border-radius: 2px;
-      border-left: 3px solid transparent;
-    }
-    .log__entry--error {
-      color: var(--danger);
-      background: rgba(255,0,68,0.06);
-      border-left-color: var(--danger);
-    }
-    .log__entry--ok {
-      color: var(--fg-dim);
-      border-left-color: var(--fg-muted);
-    }
-    .log__entry--info {
-      color: var(--warning);
-      border-left-color: var(--warning);
-    }
-
-    /* ══════════════════════════════════════════════════
-       CAPTURES
-    ══════════════════════════════════════════════════ */
-    .capture {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 10px;
-      margin-bottom: 8px;
-      background: rgba(0,255,65,0.03);
-      border: 1px solid rgba(0,255,65,0.12);
-      transition: background 0.15s, border-color 0.15s;
-    }
-    .capture:hover {
-      background: rgba(0,255,65,0.06);
-      border-color: rgba(0,255,65,0.25);
-    }
-    .capture__info { flex: 1; min-width: 0; }
-    .capture__name {
-      font-size: 14px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .capture__meta { font-size: 12px; color: var(--fg-muted); margin-top: 2px; }
-    .capture__actions { display: flex; gap: 6px; flex-shrink: 0; flex-wrap: wrap; }
-    .empty {
-      text-align: center;
-      color: var(--fg-muted);
-      padding: 28px;
-      font-size: 15px;
-      letter-spacing: 1px;
-    }
-
-    /* ══════════════════════════════════════════════════
-       PUSH-TO-TALK
-    ══════════════════════════════════════════════════ */
-    .ptt {
-      position: fixed;
-      bottom: 62px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 124px; height: 124px;
-      border-radius: 50%;
-      font-size: 15px;
-      text-align: center;
-      line-height: 1.25;
-      z-index: 300;
-      border-width: 5px;
-      box-shadow: var(--glow-strong), inset 0 0 20px rgba(0,255,65,0.06);
-      transition: background 0.2s, border-color 0.2s, box-shadow 0.2s, transform 0.1s;
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-    }
-    .ptt--visible {
-      display: flex;
-    }
-    .ptt:active {
-      transform: translateX(-50%) scale(0.94);
-    }
-    .ptt--listening {
-      background: var(--danger);
-      border-color: var(--danger);
-      color: #fff;
-      box-shadow: 0 0 0 0 rgba(255,0,68,0.6), inset 0 0 20px rgba(255,0,68,0.15);
-      animation: pulse-rec 1s ease-out infinite;
-    }
-    .ptt__indicator {
-      display: none;
-      margin-top: 4px;
-      font-size: 10px;
-      letter-spacing: 1px;
-      color: #fff;
-      animation: blink-cursor 0.4s step-end infinite;
-    }
-    .ptt--speech .ptt__indicator { display: block; }
-
-    /* ══════════════════════════════════════════════════
-       DIALOG SETTINGS
-    ══════════════════════════════════════════════════ */
-    dialog {
-      font-family: var(--font);
-      color: var(--fg);
-      background: var(--bg);
-      border: 5px solid var(--fg);
-      padding: 0;
-      max-width: 520px;
-      width: 92vw;
-      max-height: 88vh;
-      overflow-y: auto;
-      box-shadow: var(--glow-strong), 0 0 60px rgba(0,255,65,0.1);
-    }
-    dialog::backdrop { background: rgba(0,0,0,0.88); }
-    .dlg__head {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 16px 20px;
-      border-bottom: 3px solid var(--fg);
-      font-size: 22px;
-      letter-spacing: 3px;
-      text-shadow: var(--glow);
-    }
-    .dlg__body { padding: 18px 22px; }
-    .dlg__foot {
-      display: flex;
-      justify-content: center;
-      gap: 14px;
-      padding: 18px 22px;
-      border-top: 2px solid var(--fg-muted);
-    }
-    .field { margin-bottom: 18px; }
-    .field__label {
-      display: block;
-      margin-bottom: 7px;
-      font-size: 15px;
-      letter-spacing: 1px;
-    }
-    .field__input,
-    .field__select {
-      width: 100%;
-      padding: 11px;
-      background: var(--bg-deep);
-      color: var(--fg);
-      border: 2px solid var(--fg-dim);
-      font-family: var(--font);
-      font-size: 16px;
-      outline: none;
-      transition: border-color 0.2s, box-shadow 0.2s;
-      -webkit-user-select: text !important;
-      user-select: text !important;
-      touch-action: auto !important;
-    }
-    .field__input:focus,
-    .field__select:focus {
-      border-color: var(--fg);
-      box-shadow: var(--glow);
-    }
-    .field__check {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      cursor: pointer;
-    }
-    .field__check input {
-      width: 20px; height: 20px;
-      accent-color: var(--fg);
-      cursor: pointer;
-    }
-    .field__section {
-      font-size: 17px;
-      margin: 24px 0 14px;
-      padding-bottom: 8px;
-      border-bottom: 2px solid var(--fg-muted);
-      letter-spacing: 2px;
-    }
-    .field__section:first-child { margin-top: 0; }
-
-    /* Wrap input + bouton œil */
-    .key-wrap { position: relative; }
-    .key-wrap .field__input { padding-right: 60px !important; }
-    .key-wrap__toggle {
-      position: absolute;
-      right: 5px; top: 50%;
-      transform: translateY(-50%);
-      background: none;
-      border: 2px solid var(--fg-dim);
-      color: var(--fg);
-      font-size: 14px;
-      padding: 5px 8px;
-      box-shadow: none;
-      line-height: 1;
-      letter-spacing: 0;
-    }
-    .key-wrap__toggle:hover { border-color: var(--fg); box-shadow: none; }
-
-    /* ══════════════════════════════════════════════════
-       SCROLLBAR
-    ══════════════════════════════════════════════════ */
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: var(--bg-panel); }
-    ::-webkit-scrollbar-thumb { background: var(--fg-muted); border-radius: 3px; }
-    ::-webkit-scrollbar-thumb:hover { background: var(--fg-dim); }
-
-    /* ══════════════════════════════════════════════════
-       RESPONSIVE
-    ══════════════════════════════════════════════════ */
-    @media (max-width: 768px) {
-      .boot__title { font-size: 32px; letter-spacing: 3px; }
-      .app__main {
-        grid-template-columns: 1fr;
-        padding: 10px;
-        gap: 10px;
-      }
-      .ptt { width: 104px; height: 104px; font-size: 13px; bottom: 52px; }
-      .recorder__btn { width: 58px; height: 58px; font-size: 12px; }
-      .recorder__timer { font-size: 24px; min-width: 120px; }
-      .panel { min-height: 140px; }
-      .canvas { height: 110px; }
-      dialog { width: 96vw; max-height: 92vh; }
-      .app__header { font-size: 18px; letter-spacing: 2px; }
-    }
-
-    /* ══════════════════════════════════════════════════
-       ACCESSIBILITE
-    ══════════════════════════════════════════════════ */
-    @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
-      }
-    }
-    :focus-visible {
-      outline: 2px solid var(--warning);
-      outline-offset: 3px;
-    }
+    @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+    :focus-visible{outline:2px solid var(--warning);outline-offset:3px}
   </style>
 </head>
 <body>
 
-  <!-- Effets d'ambiance -->
-  <div class="scanlines" aria-hidden="true"></div>
-  <div class="vignette" aria-hidden="true"></div>
+<div class="fx-scan" aria-hidden="true"></div>
+<div class="fx-vig" aria-hidden="true"></div>
 
-  <!-- ══════════════════════════════════════════════════
-       DIALOGUE PARAMETRES
-  ══════════════════════════════════════════════════ -->
-  <dialog id="dlg-settings" aria-labelledby="dlg-title">
-    <div class="dlg__head">
-      <span id="dlg-title">PARAMETRES</span>
-      <button class="btn btn--icon" id="btn-dlg-close" aria-label="Fermer">&times;</button>
-    </div>
-    <div class="dlg__body">
-
-      <div class="field__section">API Groq</div>
-      <div class="field">
-        <label class="field__label" for="inp-key">Cle API (obligatoire)</label>
-        <div class="key-wrap">
-          <input class="field__input" type="text" id="inp-key"
-                 placeholder="Collez votre cle gsk_... ici"
-                 autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
-          <button type="button" class="key-wrap__toggle" id="btn-eye" aria-label="Afficher ou masquer">OEIL</button>
-        </div>
-      </div>
-      <div class="field">
-        <label class="field__label" for="inp-model">Modele IA</label>
-        <select class="field__select" id="inp-model">
-          <option value="llama-3.3-70b-versatile">Llama 3.3 70B (Recommande)</option>
-          <option value="llama3-8b-8192">Llama 3 8B (Rapide)</option>
-          <option value="mixtral-8x7b-32768">Mixtral 8x7B (Precis)</option>
-        </select>
-      </div>
-
-      <div class="field__section">Reconnaissance vocale</div>
-      <div class="field">
-        <label class="field__label" for="inp-lang">Langue</label>
-        <select class="field__select" id="inp-lang">
-          <option value="fr-FR">Francais</option>
-          <option value="en-US">Anglais</option>
-          <option value="es-ES">Espagnol</option>
-        </select>
-      </div>
-      <div class="field">
-        <label class="field__check">
-          <input type="checkbox" id="inp-tts" checked>
-          Lire les reponses a voix haute
-        </label>
-      </div>
-      <div class="field">
-        <label class="field__check">
-          <input type="checkbox" id="inp-auto">
-          Ecoute automatique au demarrage
-        </label>
-      </div>
-
-      <div class="field__section">Apparence</div>
-      <div class="field">
-        <label class="field__label" for="inp-color">Couleur principale</label>
-        <select class="field__select" id="inp-color">
-          <option value="#00ff41">Vert electrique</option>
-          <option value="#00ccff">Cyan</option>
-          <option value="#ff6600">Orange</option>
-          <option value="#ff00aa">Rose</option>
-        </select>
-      </div>
-    </div>
-    <div class="dlg__foot">
-      <button class="btn" id="btn-save">SAUVEGARDER</button>
-      <button class="btn btn--danger" id="btn-reset">REINITIALISER</button>
-    </div>
-  </dialog>
-
-  <!-- ══════════════════════════════════════════════════
-       ECRAN DE DEMARRAGE
-  ══════════════════════════════════════════════════ -->
-  <section class="boot" id="boot" role="region" aria-label="Demarrage">
-    <div class="boot__title cursor-blink" id="boot-title"></div>
-    <div class="boot__sub" id="boot-sub"></div>
-    <div class="boot__actions" id="boot-actions">
-      <button class="btn btn--launch" id="btn-go" autofocus>LANCER LE LAB</button>
-      <button class="btn" id="btn-cfg">PARAMETRES</button>
-    </div>
-  </section>
-
-  <!-- ══════════════════════════════════════════════════
-       APPLICATION
-  ══════════════════════════════════════════════════ -->
-  <div class="app" id="app" role="application" aria-label="Supra Lab">
-
-    <header class="app__header">
-      SUPRA LAB v15.0 &mdash; <span id="hdr-model">ACTIF</span>
-    </header>
-
-    <main class="app__main">
-
-      <!-- Barre d'enregistrement -->
-      <div class="recorder">
-        <button class="btn recorder__btn recorder__btn--rec" id="btn-rec" aria-label="Enregistrer">REC</button>
-        <div class="recorder__timer" id="timer">00:00:00</div>
-        <button class="btn recorder__btn" id="btn-stop" disabled aria-label="Arreter">STOP</button>
-        <button class="btn recorder__btn" id="btn-play" aria-label="Lire la derniere capture">PLAY</button>
-        <button class="btn recorder__btn" id="btn-dl" aria-label="Telecharger la derniere capture">SAVE</button>
-      </div>
-
-      <!-- Visualisations -->
-      <div class="panel">
-        <div class="panel__label">SPECTROGRAMME</div>
-        <canvas class="canvas" id="cv-freq"></canvas>
-      </div>
-      <div class="panel">
-        <div class="panel__label">OSCILLOSCOPE</div>
-        <canvas class="canvas" id="cv-wave"></canvas>
-      </div>
-      <div class="panel">
-        <div class="panel__label">VOLUME</div>
-        <canvas class="canvas" id="cv-vol"></canvas>
-      </div>
-
-      <!-- Analyse IA -->
-      <section class="panel panel--full">
-        <div class="panel__label">ANALYSE IA</div>
-        <div class="ai-report" id="ai-report">En attente de donnees vocales...</div>
-      </section>
-
-      <!-- Journal -->
-      <section class="panel panel--full">
-        <div class="panel__label">JOURNAL</div>
-        <div class="log" id="log" role="log" aria-live="polite"></div>
-      </section>
-
-      <!-- Captures -->
-      <section class="panel panel--full">
-        <div class="panel__label">CAPTURES (session)</div>
-        <div id="captures">
-          <div class="empty">Aucune capture pour cette session.</div>
-        </div>
-      </section>
-
-      <!-- Statut système -->
-      <div class="panel">
-        <div class="panel__label">SYSTEME</div>
-        <div id="sys" style="font-size:14px;line-height:1.7;">
-          Micro: --<br>API: --<br>Enregistreur: --<br>Reconnaissance: --
-        </div>
-      </div>
-
-    </main>
-
-    <footer class="app__footer">
-      <span id="foot-status">En attente...</span>
-      <span>v15.0 | <span id="foot-clock">--:--:--</span></span>
-    </footer>
+<dialog id="dlg" aria-labelledby="dlg-t">
+  <div class="dh"><span id="dlg-t">PARAMETRES</span><button class="btn btn--x" id="dlg-x" aria-label="Fermer">&times;</button></div>
+  <div class="db">
+    <div class="fl__sec">API Groq</div>
+    <div class="fl"><label class="fl__l" for="i-key">Cle API</label><div class="kw"><input class="fl__i" type="text" id="i-key" placeholder="Collez gsk_..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"><button type="button" class="kw__t" id="i-eye">OEIL</button></div></div>
+    <div class="fl"><label class="fl__l" for="i-model">Modele</label><select class="fl__s" id="i-model"><option value="llama-3.3-70b-versatile">Llama 3.3 70B</option><option value="llama3-8b-8192">Llama 3 8B</option><option value="mixtral-8x7b-32768">Mixtral 8x7B</option></select></div>
+    <div class="fl__sec">Vocal</div>
+    <div class="fl"><label class="fl__l" for="i-lang">Langue</label><select class="fl__s" id="i-lang"><option value="fr-FR">Francais</option><option value="en-US">Anglais</option><option value="es-ES">Espagnol</option></select></div>
+    <div class="fl"><label class="fl__c"><input type="checkbox" id="i-tts" checked> Synthese vocale</label></div>
+    <div class="fl__sec">Apparence</div>
+    <div class="fl"><label class="fl__l" for="i-col">Couleur</label><select class="fl__s" id="i-col"><option value="#00ff41">Vert</option><option value="#00ccff">Cyan</option><option value="#ff6600">Orange</option><option value="#ff00aa">Rose</option></select></div>
   </div>
-
-  <!-- Push-To-Talk -->
-  <button class="ptt" id="ptt" aria-label="Maintenir pour parler">
-    MAINTENIR<br>POUR PARLER
-    <span class="ptt__indicator">PAROLE DETECTEE</span>
-  </button>
-
-  <!-- Lecteur audio caché -->
-  <audio id="player" style="display:none;"></audio>
-
-  <!-- ══════════════════════════════════════════════════
-       SCRIPT — Architecture propre, modulaire, sans faille
-  ══════════════════════════════════════════════════ -->
-  <script>
-  (function () {
-    'use strict';
-
-    /* ──────────────────────────────────────────────
-       1. CONFIGURATION
-    ────────────────────────────────────────────── */
-    var DEFAULTS = Object.freeze({
-      apiKey:    '',
-      model:     'llama-3.3-70b-versatile',
-      lang:      'fr-FR',
-      tts:       true,
-      autoListen: false,
-      color:     '#00ff41'
-    });
-
-    var cfg = {};
-    Object.keys(DEFAULTS).forEach(function (k) { cfg[k] = DEFAULTS[k]; });
-
-    /* ──────────────────────────────────────────────
-       2. ETAT GLOBAL
-    ────────────────────────────────────────────── */
-    var S = {
-      ready:     false,   // Audio initialisé
-      recording: false,   // MediaRecorder actif
-      listening: false,   // PTT enfoncé
-      speech:    false,   // Parole détectée par le moteur
-
-      // Audio nodes
-      ctx:       null,
-      analyser:  null,
-      volNode:   null,
-      stream:    null,
-
-      // Data buffers
-      freq:      null,
-      wave:      null,
-      vol:       null,
-
-      // MediaRecorder
-      recorder:  null,
-      chunks:    [],
-      recStart:  0,
-      recTimer:  null,
-
-      // Speech Recognition
-      reco:      null,
-      lastText:  '',
-      pttText:   '',
-      pttTimer:  null   // Timer pour le délai après relâchement
-    };
-
-    var captures = [];
-
-    /* ──────────────────────────────────────────────
-       3. UTILITAIRES
-    ────────────────────────────────────────────── */
-    var $ = function (sel) { return document.querySelector(sel); };
-
-    function now() { return new Date().toLocaleTimeString('fr-FR'); }
-
-    function pad2(n) { return n < 10 ? '0' + n : '' + n; }
-
-    function fmtTime(s) {
-      return pad2(Math.floor(s / 3600)) + ':' +
-             pad2(Math.floor((s % 3600) / 60)) + ':' +
-             pad2(s % 60);
-    }
-
-    /* ──────────────────────────────────────────────
-       4. JOURNAL
-    ────────────────────────────────────────────── */
-    function log(msg, type) {
-      var el = $('#log');
-      if (!el) return;
-      var d = document.createElement('div');
-      d.className = 'log__entry log__entry--' + (type || 'ok');
-      d.textContent = '[' + now() + '] ' + msg;
-      el.appendChild(d);
-      el.scrollTop = el.scrollHeight;
-      // Garder 100 entrées max
-      while (el.children.length > 100) el.removeChild(el.firstChild);
-    }
-
-    function status(txt) {
-      var el = $('#foot-status');
-      if (el) el.textContent = txt;
-    }
-
-    function sysInfo() {
-      var el = $('#sys');
-      if (!el) return;
-      function tag(ok, warn, err) {
-        if (err) return '<span style="color:var(--danger)">' + err + '</span>';
-        if (warn) return '<span style="color:var(--warning)">' + warn + '</span>';
-        return '<span style="color:var(--fg)">' + (ok || 'OK') + '</span>';
-      }
-      el.innerHTML =
-        'Micro: '         + tag(S.stream ? 'OK' : null, null, S.stream ? null : 'OFF') + '<br>' +
-        'API: '           + tag(cfg.apiKey ? 'OK' : null, cfg.apiKey ? null : 'MANQUANTE', null) + '<br>' +
-        'Enregistreur: '  + tag(S.recording ? 'REC' : 'IDLE', null, null) + '<br>' +
-        'Reconnaissance: '+ tag(S.listening ? 'ON' : 'OFF', null, null);
-    }
-
-    /* ──────────────────────────────────────────────
-       5. ANIMATION BOOT
-    ────────────────────────────────────────────── */
-    function typeIn(el, text, ms) {
-      ms = ms || 50;
-      return new Promise(function (resolve) {
-        var i = 0;
-        el.textContent = '';
-        el.classList.add('cursor-blink');
-        var iv = setInterval(function () {
-          el.textContent += text[i];
-          i++;
-          if (i >= text.length) {
-            clearInterval(iv);
-            el.classList.remove('cursor-blink');
-            resolve();
-          }
-        }, ms);
-      });
-    }
-
-    /* ──────────────────────────────────────────────
-       6. AUDIO — Initialisation
-    ────────────────────────────────────────────── */
-    async function initAudio() {
-      try {
-        S.ctx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 48000 });
-        await S.ctx.resume();
-
-        S.stream = await navigator.mediaDevices.getUserMedia({
-          audio: {
-            echoCancellation: true,
-            noiseSuppression: true,
-            autoGainControl: true
-          }
-        });
-
-        var src = S.ctx.createMediaStreamSource(S.stream);
-
-        // Analyseur fréquentiel + temporel
-        S.analyser = S.ctx.createAnalyser();
-        S.analyser.fftSize = 2048;
-        S.analyser.smoothingTimeConstant = 0.8;
-        src.connect(S.analyser);
-        S.freq = new Uint8Array(S.analyser.frequencyBinCount);
-        S.wave = new Uint8Array(S.analyser.frequencyBinCount);
-
-        // Analyseur de volume (FFT plus petite)
-        S.volNode = S.ctx.createAnalyser();
-        S.volNode.fftSize = 256;
-        src.connect(S.volNode);
-        S.vol = new Uint8Array(S.volNode.frequencyBinCount);
-
-        S.ready = true;
-        sizeCanvases();
-        drawLoop();
-        sysInfo();
-        log('Audio 48kHz initialise — FFT 2048', 'ok');
-        return true;
-      } catch (err) {
-        log('Micro indisponible : ' + err.message, 'error');
-        sysInfo();
-        return false;
-      }
-    }
-
-    /* ──────────────────────────────────────────────
-       7. VISUALISATION — Boucle de rendu
-    ────────────────────────────────────────────── */
-    function drawLoop() {
-      if (!S.ready) return;
-      requestAnimationFrame(drawLoop);
-
-      S.analyser.getByteFrequencyData(S.freq);
-      S.analyser.getByteTimeDomainData(S.wave);
-      S.volNode.getByteFrequencyData(S.vol);
-
-      renderSpectro();
-      renderScope();
-      renderVolume();
-    }
-
-    function renderSpectro() {
-      var cv = $('#cv-freq');
-      if (!cv) return;
-      var c = cv.getContext('2d');
-      var W = cv.width, H = cv.height;
-
-      // Fond avec léger dégradé
-      c.fillStyle = '#020402';
-      c.fillRect(0, 0, W, H);
-
-      // Lignes de grille horizontales
-      c.strokeStyle = 'rgba(0,255,65,0.04)';
-      c.lineWidth = 1;
-      for (var gy = 0; gy < H; gy += 26) {
-        c.beginPath(); c.moveTo(0, gy); c.lineTo(W, gy); c.stroke();
-      }
-
-      var len = S.freq.length;
-      var bw = Math.max(1, W / len);
-      for (var i = 0; i < len; i++) {
-        var v = S.freq[i];
-        if (v < 2) continue; // Ignorer le bruit de fond
-        var h = Math.max(0, Math.log10(v + 1) * 24);
-        // Dégradé : vert clair → jaune → rouge selon intensité
-        var hue = Math.max(0, 110 - v * 0.45);
-        var lit = Math.max(10, v * 0.38);
-        c.fillStyle = 'hsl(' + hue + ',100%,' + lit + '%)';
-        c.fillRect(i * bw, H - h, bw + 0.5, h);
-      }
-    }
-
-    function renderScope() {
-      var cv = $('#cv-wave');
-      if (!cv) return;
-      var c = cv.getContext('2d');
-      var W = cv.width, H = cv.height;
-
-      c.fillStyle = '#020402';
-      c.fillRect(0, 0, W, H);
-
-      // Grille de référence
-      c.strokeStyle = 'rgba(0,255,65,0.06)';
-      c.lineWidth = 1;
-      c.beginPath(); c.moveTo(0, H / 2); c.lineTo(W, H / 2); c.stroke();
-      c.beginPath(); c.moveTo(0, H * 0.25); c.lineTo(W, H * 0.25); c.stroke();
-      c.beginPath(); c.moveTo(0, H * 0.75); c.lineTo(W, H * 0.75); c.stroke();
-
-      // Forme d'onde avec glow
-      var col = css('--fg');
-      c.strokeStyle = col;
-      c.lineWidth = 2;
-      c.shadowColor = col;
-      c.shadowBlur = 6;
-      c.beginPath();
-      var step = W / S.wave.length;
-      for (var i = 0; i < S.wave.length; i++) {
-        var y = (S.wave[i] / 128 - 0.5) * H * 0.85 + H / 2;
-        i === 0 ? c.moveTo(0, y) : c.lineTo(i * step, y);
-      }
-      c.stroke();
-      c.shadowBlur = 0;
-    }
-
-    function renderVolume() {
-      var cv = $('#cv-vol');
-      if (!cv) return;
-      var c = cv.getContext('2d');
-      var W = cv.width, H = cv.height;
-
-      c.fillStyle = '#020402';
-      c.fillRect(0, 0, W, H);
-
-      // Calcul du volume RMS
-      var sum = 0;
-      for (var i = 0; i < S.vol.length; i++) sum += S.vol[i];
-      var pct = (sum / S.vol.length) / 255;
-
-      // Barre centrée avec dégradé
-      var bw = W * 0.45;
-      var bh = Math.max(2, pct * H * 0.88);
-      var bx = (W - bw) / 2;
-      var by = H - bh;
-
-      var hue = Math.max(0, 120 - pct * 200);
-      c.fillStyle = 'hsl(' + hue + ',100%,42%)';
-      c.shadowColor = 'hsl(' + hue + ',100%,55%)';
-      c.shadowBlur = 10;
-      c.fillRect(bx, by, bw, bh);
-      c.shadowBlur = 0;
-
-      // Reflet miroir en haut (atténué)
-      var grad = c.createLinearGradient(0, 0, 0, by);
-      grad.addColorStop(0, 'rgba(0,0,0,0)');
-      grad.addColorStop(1, 'hsl(' + hue + ',100%,42%)');
-      c.fillStyle = grad;
-      c.globalAlpha = 0.15;
-      c.fillRect(bx, 0, bw, by);
-      c.globalAlpha = 1.0;
-
-      // Pourcentage
-      var col = css('--fg');
-      c.fillStyle = col;
-      c.font = '24px VT323';
-      c.textAlign = 'center';
-      c.textBaseline = 'middle';
-      c.fillText(Math.round(pct * 100) + '%', W / 2, H / 2);
-    }
-
-    function css(prop) {
-      return getComputedStyle(document.documentElement).getPropertyValue(prop).trim();
-    }
-
-    function sizeCanvases() {
-      var all = document.querySelectorAll('#app .canvas');
-      for (var i = 0; i < all.length; i++) {
-        var cv = all[i];
-        var r = cv.parentElement.getBoundingClientRect();
-        cv.width  = Math.max(100, r.width - 34);
-        cv.height = 130;
-      }
-    }
-
-    /* ──────────────────────────────────────────────
-       8. ENREGISTREUR
-    ────────────────────────────────────────────── */
-    function bestMime() {
-      var list = [
-        'audio/webm;codecs=opus',
-        'audio/webm',
-        'audio/ogg;codecs=opus',
-        'audio/mpeg',
-        'audio/mp4'
-      ];
-      for (var i = 0; i < list.length; i++) {
-        if (MediaRecorder.isTypeSupported(list[i])) return list[i];
-      }
-      return '';
-    }
-
-    function recStart() {
-      if (S.recording || !S.stream) return;
-      var mime = bestMime();
-      if (!mime) {
-        log('Aucun format audio supporte par ce navigateur', 'error');
-        return;
-      }
-      S.recording = true;
-      S.chunks = [];
-      S.recStart = Date.now();
-
-      try {
-        S.recorder = new MediaRecorder(S.stream, { mimeType: mime });
-      } catch (e) {
-        log('MediaRecorder echec : ' + e.message, 'error');
-        S.recording = false;
-        return;
-      }
-
-      S.recorder.ondataavailable = function (e) {
-        if (e.data && e.data.size > 0) S.chunks.push(e.data);
-      };
-      S.recorder.onstop = onRecDone;
-      S.recorder.start(200);
-
-      // UI
-      $('#btn-rec').classList.add('recording');
-      $('#btn-stop').disabled = false;
-      $('#timer').classList.add('recorder__timer--active');
-      status('Enregistrement...');
-      log('REC demarre (' + mime.split(';')[0] + ')', 'ok');
-      sysInfo();
-      startClock();
-    }
-
-    function recStop() {
-      if (!S.recording) return;
-      S.recording = false;
-      S.recorder.stop();
-      $('#btn-rec').classList.remove('recording');
-      $('#btn-stop').disabled = true;
-      $('#timer').classList.remove('recorder__timer--active');
-      stopClock();
-      sysInfo();
-    }
-
-    function onRecDone() {
-      var mime = S.recorder.mimeType || '';
-      var ext = 'mp3';
-      if (mime.indexOf('webm') !== -1) ext = 'webm';
-      else if (mime.indexOf('ogg') !== -1) ext = 'ogg';
-      else if (mime.indexOf('mp4') !== -1) ext = 'm4a';
-
-      var blob = new Blob(S.chunks, { type: mime });
-      var url  = URL.createObjectURL(blob);
-      var dur  = Math.floor((Date.now() - S.recStart) / 1000);
-      var name = 'Capture_' + new Date().toLocaleString('fr-FR').replace(/[/: ]/g, '-');
-
-      captures.unshift({ name: name, url: url, blob: blob, ext: ext, dur: dur });
-      buildCaptures();
-      status('Pret');
-      log('Capture : ' + dur + 's — ' + ext.toUpperCase(), 'ok');
-    }
-
-    function startClock() {
-      var sec = 0;
-      $('#timer').textContent = '00:00:00';
-      S.recTimer = setInterval(function () {
-        sec++;
-        $('#timer').textContent = fmtTime(sec);
-      }, 1000);
-    }
-    function stopClock() {
-      clearInterval(S.recTimer);
-      $('#timer').textContent = '00:00:00';
-    }
-
-    /* ──────────────────────────────────────────────
-       9. CAPTURES — Rendu & Actions
-    ────────────────────────────────────────────── */
-    function buildCaptures() {
-      var el = $('#captures');
-      if (!captures.length) {
-        el.innerHTML = '<div class="empty">Aucune capture pour cette session.</div>';
-        return;
-      }
-      el.innerHTML = '';
-
-      captures.forEach(function (cap, idx) {
-        var row = document.createElement('div');
-        row.className = 'capture';
-
-        // Info
-        var info = document.createElement('div');
-        info.className = 'capture__info';
-        var nm = document.createElement('div');
-        nm.className = 'capture__name';
-        nm.textContent = cap.name;
-        var mt = document.createElement('div');
-        mt.className = 'capture__meta';
-        mt.textContent = cap.dur + 's | ' + cap.ext.toUpperCase();
-        info.appendChild(nm);
-        info.appendChild(mt);
-        row.appendChild(info);
-
-        // Boutons d'action
-        var acts = document.createElement('div');
-        acts.className = 'capture__actions';
-
-        var labels = [
-          { txt: 'PLAY', cls: '', fn: capPlay },
-          { txt: 'IA',   cls: '', fn: capAnalyze },
-          { txt: 'SAVE', cls: '', fn: capDownload },
-          { txt: 'DEL',  cls: 'btn--danger', fn: capDelete }
-        ];
-        labels.forEach(function (l) {
-          var b = document.createElement('button');
-          b.className = 'btn btn--sm ' + l.cls;
-          b.textContent = l.txt;
-          b.addEventListener('click', function () { l.fn(idx); });
-          acts.appendChild(b);
-        });
-
-        row.appendChild(acts);
-        el.appendChild(row);
-      });
-    }
-
-    function capPlay(i) {
-      var c = captures[i];
-      if (!c) return;
-      var p = $('#player');
-      p.src = c.url;
-      p.play();
-      log('Lecture : ' + c.name, 'ok');
-    }
-
-    function capAnalyze(i) {
-      var c = captures[i];
-      if (!c) return;
-      var prompt = 'Analyse cet audio : "' + c.name + '" (' + c.dur + 's, format ' + c.ext + '). ' +
-        'Decris ce que tu entends (parole, bruit, musique) et transcris si possible. Reponds en francais, 5 phrases max.';
-      log('Envoi a l\'IA : ' + c.name, 'info');
-      groq(prompt);
-    }
-
-    function capDownload(i) {
-      var c = captures[i];
-      if (!c) return;
-      var a = document.createElement('a');
-      a.href = c.url;
-      a.download = c.name + '.' + c.ext;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      log('Telechargement : ' + a.download, 'ok');
-    }
-
-    function capDelete(i) {
-      var c = captures[i];
-      if (!c) return;
-      URL.revokeObjectURL(c.url);
-      captures.splice(i, 1);
-      buildCaptures();
-      log('Capture supprimee', 'ok');
-    }
-
-    /* ──────────────────────────────────────────────
-       10. PUSH-TO-TALK — Android-Proof
-    ────────────────────────────────────────────── */
-    function pttDown(e) {
-      e.preventDefault();
-      if (!S.ready) { log('Lancez le systeme d\'abord', 'error'); return; }
-      if (S.listening || S.recording) return;
-
-      // Nettoyer un éventuel timer de fin résiduel
-      if (S.pttTimer) { clearTimeout(S.pttTimer); S.pttTimer = null; }
-
-      S.listening = true;
-      S.speech    = false;
-      S.pttText   = '';
-      S.lastText  = '';
-
-      var btn = $('#ptt');
-      btn.classList.add('ptt--listening');
-      btn.classList.remove('ptt--speech');
-      btn.innerHTML = 'ECOUTE...<br><small>parlez</small><span class="ptt__indicator">PAROLE DETECTEE</span>';
-
-      status('Ecoute...');
-      log('PTT appuye — demarrage reconnaissance', 'ok');
-      sysInfo();
-      recoStart();
-    }
-
-    function pttUp(e) {
-      e.preventDefault();
-      if (!S.listening) return;
-
-      S.listening = false;
-      var btn = $('#ptt');
-      btn.classList.remove('ptt--listening', 'ptt--speech');
-      btn.innerHTML = 'MAINTENIR<br>POUR PARLER<span class="ptt__indicator">PAROLE DETECTEE</span>';
-
-      status('Traitement...');
-      log('PTT relache — attente resultat (1.5s)', 'ok');
-      sysInfo();
-
-      // NE PAS couper immédiatement !
-      // Sur Android, le cloud met 1-3 secondes.
-      // On attend 1.5s avant stop(), puis 500ms de plus.
-      S.pttTimer = setTimeout(function () {
-        S.pttTimer = null;
-        recoStop();
-
-        setTimeout(function () {
-          if (S.pttText.trim()) {
-            log('Transcription : "' + S.pttText + '"', 'ok');
-            groq(S.pttText);
-          } else {
-            log('Aucune parole capturee', 'error');
-            status('Pret — Maintenez PTT pour parler');
-          }
-        }, 500);
-      }, 1500);
-    }
-
-    /* ──────────────────────────────────────────────
-       11. RECONNAISSANCE VOCALE
-    ────────────────────────────────────────────── */
-    function recoStart() {
-      var API = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!API) {
-        log('Web Speech API absente de ce navigateur', 'error');
-        log('Utilisez Chrome ou un navigateur Chromium', 'error');
-        S.listening = false;
-        $('#ptt').classList.remove('ptt--listening');
-        return;
-      }
-
-      try {
-        // Arrêter l'instance précédente si elle existe
-        if (S.reco) { try { S.reco.abort(); } catch (_) {} }
-
-        S.reco = new API();
-        S.reco.lang = cfg.lang;
-
-        // CLEFS ANDROID : continuous + interim
-        // Sinon le résultat n'arrive jamais à temps
-        S.reco.continuous = true;
-        S.reco.interimResults = true;
-        S.reco.maxAlternatives = 1;
-
-        // Détection visuelle de parole
-        S.reco.onspeechstart = function () {
-          S.speech = true;
-          $('#ptt').classList.add('ptt--speech');
-        };
-        S.reco.onspeechend = function () {
-          S.speech = false;
-          $('#ptt').classList.remove('ptt--speech');
-        };
-
-        // Résultats : accumuler tout (intermédiaires + finaux)
-        S.reco.onresult = function (ev) {
-          var text = '';
-          for (var i = 0; i < ev.results.length; i++) {
-            text += ev.results[i][0].transcript;
-          }
-          text = text.trim();
-          if (text) {
-            S.pttText = text;
-            if (text !== S.lastText) {
-              S.lastText = text;
-              log('Reco : "' + text + '"', 'ok');
-            }
-          }
-        };
-
-        S.reco.onerror = function (ev) {
-          if (ev.error === 'no-speech' || ev.error === 'aborted') return;
-          log('Erreur reco : ' + ev.error, 'error');
-          if (ev.error === 'not-allowed') {
-            log('Permission micro refusee pour la reconnaissance', 'error');
-            S.listening = false;
-            $('#ptt').classList.remove('ptt--listening');
-            sysInfo();
-          }
-        };
-
-        // PAS de onend — zéro boucle
-
-        S.reco.start();
-        log('Reco start (continuous + interim)', 'ok');
-
-      } catch (err) {
-        log('Echec demarrage reco : ' + err.message, 'error');
-        S.listening = false;
-        $('#ptt').classList.remove('ptt--listening');
-        sysInfo();
-      }
-    }
-
-    function recoStop() {
-      if (S.reco) {
-        try { S.reco.stop(); } catch (_) {}
-        S.reco = null;
-      }
-    }
-
-    /* Mode écoute automatique (relance contrôlée) */
-    function recoAutoStart() {
-      var API = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!API || !S.listening) return;
-
-      try {
-        if (S.reco) S.reco.abort();
-        S.reco = new API();
-        S.reco.lang = cfg.lang;
-        S.reco.continuous = true;
-        S.reco.interimResults = true;
-        S.reco.maxAlternatives = 1;
-
-        S.reco.onresult = function (ev) {
-          var text = '';
-          for (var i = 0; i < ev.results.length; i++) text += ev.results[i][0].transcript;
-          text = text.trim();
-          if (text && text !== S.lastText) {
-            S.lastText = text;
-            S.pttText = text;
-          }
-        };
-
-        S.reco.onerror = function (ev) {
-          if (ev.error !== 'no-speech' && ev.error !== 'aborted')
-            log('Auto-reco err : ' + ev.error, 'error');
-        };
-
-        // En auto : on relance après un délai
-        S.reco.onend = function () {
-          if (!S.listening) return;
-          if (S.pttText.trim()) {
-            var txt = S.pttText;
-            S.pttText = '';
-            log('Auto : "' + txt + '"', 'ok');
-            groq(txt);
-          }
-          setTimeout(function () {
-            if (S.listening) recoAutoStart();
-          }, 800);
-        };
-
-        S.reco.start();
-      } catch (err) {
-        log('Auto-reco echec : ' + err.message, 'error');
-      }
-    }
-
-    /* ──────────────────────────────────────────────
-       12. GROQ — Analyse IA
-    ────────────────────────────────────────────── */
-    async function groq(text) {
-      var el = $('#ai-report');
-
-      if (!cfg.apiKey) {
-        el.textContent = 'Cle API Groq manquante.\nOuvrez PARAMETRES pour la configurer.';
-        log('Cle API manquante', 'error');
-        status('Pret');
-        return;
-      }
-
-      el.textContent = 'Analyse en cours...';
-      status('Analyse IA...');
-
-      var prompt =
-        'Analyse ce contenu vocal en francais :\n"' + text + '"\n' +
-        '- Corrige les erreurs de transcription si necessaire.\n' +
-        '- Donne une interpretation breve et precise.\n' +
-        '- Maximum 5 phrases, sois direct et concis.';
-
-      try {
-        var res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + cfg.apiKey
-          },
-          body: JSON.stringify({
-            model: cfg.model,
-            messages: [
-              { role: 'system', content: 'Tu es un analyste audio et vocal de haut niveau. Reponds en francais, de facon precise et concise.' },
-              { role: 'user', content: prompt }
-            ],
-            temperature: 0.3,
-            max_tokens: 400
-          })
-        });
-
-        if (!res.ok) {
-          var body = await res.text();
-          throw new Error(res.status + ' — ' + body.substring(0, 150));
-        }
-
-        var data = await res.json();
-        var answer = (data.choices &&
-                      data.choices[0] &&
-                      data.choices[0].message &&
-                      data.choices[0].message.content)
-                     || 'Aucune reponse obtenue.';
-
-        el.textContent =
-          'TRANSCRIPTION :\n"' + text + '"\n\n' +
-          '\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n' +
-          'ANALYSE IA (' + cfg.model + ')\n' +
-          '\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n\n' +
-          answer + '\n\n' +
-          now();
-
-        log('Analyse IA terminee', 'ok');
-        status('Pret — Maintenez PTT pour parler');
-        speak(answer.substring(0, 280));
-
-      } catch (err) {
-        el.textContent = 'Erreur : ' + err.message + '\n\nVerifiez la cle API et la connexion réseau.';
-        log('Groq erreur : ' + err.message, 'error');
-        status('Erreur IA');
-      }
-    }
-
-    /* ──────────────────────────────────────────────
-       13. SYNTHESE VOCALE
-    ────────────────────────────────────────────── */
-    function speak(text) {
-      if (!cfg.tts || !window.speechSynthesis || S.listening) return;
-      window.speechSynthesis.cancel();
-      var u = new SpeechSynthesisUtterance(text);
-      u.lang = cfg.lang;
-      u.rate = 0.95;
-      window.speechSynthesis.speak(u);
-    }
-
-    /* ──────────────────────────────────────────────
-       14. PARAMETRES — Load / Save / Apply
-    ────────────────────────────────────────────── */
-    function cfgLoad() {
-      try {
-        var raw = localStorage.getItem('supraLab15');
-        if (raw) {
-          var parsed = JSON.parse(raw);
-          Object.keys(parsed).forEach(function (k) {
-            if (parsed.hasOwnProperty(k) && DEFAULTS.hasOwnProperty(k)) {
-              cfg[k] = parsed[k];
-            }
-          });
-        }
-      } catch (_) {}
-      cfgApply();
-    }
-
-    function cfgApply() {
-      // Appliquer la couleur
-      var c = cfg.color;
-      document.documentElement.style.setProperty('--fg', c);
-      var r = parseInt(c.slice(1, 3), 16);
-      var g = parseInt(c.slice(3, 5), 16);
-      var b = parseInt(c.slice(5, 7), 16);
-      document.documentElement.style.setProperty('--fg-dim',  c + '88');
-      document.documentElement.style.setProperty('--fg-muted', c + '44');
-      document.documentElement.style.setProperty('--glow',       '0 0 8px rgba(' + r + ',' + g + ',' + b + ',0.4)');
-      document.documentElement.style.setProperty('--glow-strong','0 0 20px rgba(' + r + ',' + g + ',' + b + ',0.6)');
-      document.documentElement.style.setProperty('--glow-danger','0 0 12px rgba(255,0,68,0.5)');
-      document.documentElement.style.setProperty('--bg-panel',   'rgba(' + Math.floor(r * 0.04) + ',' + Math.floor(g * 0.08) + ',' + Math.floor(b * 0.04) + ',1)');
-
-      // Remplir les champs
-      $('#inp-key').value   = cfg.apiKey || '';
-      $('#inp-model').value = cfg.model;
-      $('#inp-lang').value  = cfg.lang;
-      $('#inp-tts').checked = cfg.tts;
-      $('#inp-auto').checked = cfg.autoListen;
-      $('#inp-color').value = cfg.color;
-
-      // Label du header
-      $('#hdr-model').textContent = cfg.model.split('-').slice(0, 2).join(' ').toUpperCase();
-
-      sysInfo();
-    }
-
-    function cfgSave() {
-      cfg.apiKey     = $('#inp-key').value.trim();
-      cfg.model      = $('#inp-model').value;
-      cfg.lang       = $('#inp-lang').value;
-      cfg.tts        = $('#inp-tts').checked;
-      cfg.autoListen = $('#inp-auto').checked;
-      cfg.color      = $('#inp-color').value;
-      localStorage.setItem('supraLab15', JSON.stringify(cfg));
-      cfgApply();
-      log('Configuration sauvegardee', 'ok');
-    }
-
-    function cfgReset() {
-      if (!confirm('Reinitialiser tous les parametres ?')) return;
-      Object.keys(DEFAULTS).forEach(function (k) { cfg[k] = DEFAULTS[k]; });
-      localStorage.removeItem('supraLab15');
-      cfgApply();
-      log('Parametres reinitialises', 'error');
-    }
-
-    /* Bouton œil pour la clé API */
-    function initEye() {
-      var inp = $('#inp-key');
-      var btn = $('#btn-eye');
-      var show = false;
-      inp.style.webkitTextSecurity = 'disc';
-      btn.addEventListener('click', function () {
-        show = !show;
-        inp.style.webkitTextSecurity = show ? 'none' : 'disc';
-        btn.textContent = show ? 'CACHE' : 'OEIL';
-      });
-    }
-
-    /* ──────────────────────────────────────────────
-       15. HORLOGE
-    ────────────────────────────────────────────── */
-    function tick() {
-      var el = $('#foot-clock');
-      if (el) el.textContent = now();
-    }
-    setInterval(tick, 1000);
-    tick();
-
-    /* ──────────────────────────────────────────────
-       16. LANCEMENT
-    ────────────────────────────────────────────── */
-    async function launch() {
-      $('#boot').style.display = 'none';
-      $('#app').classList.add('app--active');
-      $('#ptt').classList.add('ptt--visible');
-
-      log('=== SUPRA LAB v15.0 initialise ===', 'ok');
-
-      // Diagnostic Web Speech
-      var hasReco = !!(window.SpeechRecognition || window.webkitSpeechRecognition);
-      log('Web Speech API : ' + (hasReco ? 'DISPONIBLE' : 'ABSENTE'), hasReco ? 'ok' : 'error');
-      if (!hasReco) {
-        log('La reconnaissance vocale ne fonctionnera pas', 'error');
-        log('Installez Chrome pour Android', 'error');
-      }
-
-      var ok = await initAudio();
-      if (ok) {
-        status('Pret — Maintenez le bouton pour parler');
-        log('Tous les systemes operationnels', 'ok');
-      } else {
-        status('Erreur micro');
-      }
-
-      // Écoute automatique si configurée
-      if (ok && cfg.autoListen && hasReco) {
-        setTimeout(function () {
-          S.listening = true;
-          S.pttText  = '';
-          S.lastText = '';
-          var btn = $('#ptt');
-          btn.classList.add('ptt--listening');
-          btn.innerHTML = 'ECOUTE AUTO<br><small>parlez</small><span class="ptt__indicator">PAROLE DETECTEE</span>';
-          status('Ecoute automatique...');
-          log('Ecoute automatique activee', 'info');
-          sysInfo();
-          recoAutoStart();
-        }, 1000);
-      }
-    }
-
-    /* ──────────────────────────────────────────────
-       17. LIAISON DES EVENEMENTS
-    ────────────────────────────────────────────── */
-    function bind() {
-      // Boot
-      $('#btn-go').addEventListener('click', launch);
-      $('#btn-cfg').addEventListener('click', function () {
-        $('#dlg-settings').showModal();
-      });
-
-      // Dialog
-      $('#btn-dlg-close').addEventListener('click', function () {
-        $('#dlg-settings').close();
-      });
-      $('#btn-save').addEventListener('click', function () {
-        cfgSave();
-        $('#dlg-settings').close();
-      });
-      $('#btn-reset').addEventListener('click', cfgReset);
-      $('#dlg-settings').addEventListener('click', function (e) {
-        if (e.target === e.currentTarget) e.currentTarget.close();
-      });
-
-      // Enregistreur
-      $('#btn-rec').addEventListener('click', function () {
-        if (!S.ready) { log('Systeme non initialise', 'error'); return; }
-        S.recording ? recStop() : recStart();
-      });
-      $('#btn-stop').addEventListener('click', recStop);
-      $('#btn-play').addEventListener('click', function () {
-        if (captures.length) capPlay(0);
-        else log('Aucune capture a lire', 'error');
-      });
-      $('#btn-dl').addEventListener('click', function () {
-        if (captures.length) capDownload(0);
-        else log('Aucune capture a telecharger', 'error');
-      });
-
-      // Push-To-Talk : souris + tactile
-      var ptt = $('#ptt');
-      ptt.addEventListener('mousedown',  pttDown);
-      ptt.addEventListener('mouseup',    pttUp);
-      ptt.addEventListener('mouseleave', pttUp);
-      ptt.addEventListener('touchstart', pttDown, { passive: false });
-      ptt.addEventListener('touchend',   pttUp,   { passive: false });
-      ptt.addEventListener('touchcancel', pttUp,  { passive: false });
-
-      // Redimensionnement des canvas
-      window.addEventListener('resize', function () {
-        if (S.ready) sizeCanvases();
-      });
-    }
-
-    /* ──────────────────────────────────────────────
-       18. NETTOYAGE A LA FERMETURE
-    ────────────────────────────────────────────── */
-    window.addEventListener('beforeunload', function () {
-      if (S.pttTimer) clearTimeout(S.pttTimer);
-      if (S.stream) S.stream.getTracks().forEach(function (t) { t.stop(); });
-      if (S.reco) { try { S.reco.abort(); } catch (_) {} }
-      if (window.speechSynthesis && window.speechSynthesis.speaking) {
-        window.speechSynthesis.cancel();
-      }
-      if (S.recording && S.recorder) S.recorder.stop();
-      captures.forEach(function (c) { URL.revokeObjectURL(c.url); });
-    });
-
-    /* ──────────────────────────────────────────────
-       19. POINT D'ENTREE
-    ────────────────────────────────────────────── */
-    document.addEventListener('DOMContentLoaded', async function () {
-      cfgLoad();
-      initEye();
-      bind();
-
-      // Animation de démarrage
-      await typeIn($('#boot-title'), 'SUPRA LAB v15.0', 45);
-
-      var sub = $('#boot-sub');
-      sub.textContent = 'ARCHITECTURE PURE — ANDROID-PROOF — ZERO BOUCLE';
-      sub.classList.add('boot__sub--show');
-
-      var acts = $('#boot-actions');
-      acts.classList.add('boot__actions--show');
-      $('#btn-go').focus();
-    });
-
-  })();
-  </script>
+  <div class="df"><button class="btn" id="dlg-save">SAUVEGARDER</button><button class="btn btn--d" id="dlg-rst">RESET</button></div>
+</dialog>
+
+<section class="boot" id="boot" role="region" aria-label="Demarrage">
+  <div class="boot__t blink" id="bt"></div>
+  <div class="boot__s" id="bs"></div>
+  <div class="boot__a" id="ba"><button class="btn btn--go" id="b-go" autofocus>LANCER</button><button class="btn" id="b-cfg">PARAMETRES</button></div>
+</section>
+
+<div class="app" id="app" role="application" aria-label="Supra Lab">
+  <header class="app__hd">SUPRA LAB v16.0 &mdash; <span id="hd-m">ACTIF</span></header>
+  <main class="app__mn">
+    <div class="rec">
+      <button class="btn rec__b rec__b--r" id="b-rec" aria-label="Enregistrer">REC</button>
+      <div class="rec__t" id="timer">00:00:00</div>
+      <button class="btn rec__b" id="b-stop" disabled aria-label="Stop">STOP</button>
+      <button class="btn rec__b" id="b-play" aria-label="Lire">PLAY</button>
+      <button class="btn rec__b" id="b-dl" aria-label="Sauver">SAVE</button>
+      <div class="rec__sep"></div>
+      <button class="btn rec__b" id="b-auto" aria-label="Ecoute auto" style="font-size:11px;letter-spacing:0">AUTO</button>
+    </div>
+    <div class="p"><div class="p__l">SPECTROGRAMME</div><canvas class="cv" id="cv-f"></canvas></div>
+    <div class="p"><div class="p__l">OSCILLOSCOPE</div><canvas class="cv" id="cv-w"></canvas></div>
+    <div class="p"><div class="p__l">VOLUME</div><canvas class="cv" id="cv-v"></canvas></div>
+    <div class="live" id="live-box"><div class="live__label">TRANSCRIPTION LIVE</div><div class="live__status live__status--off" id="live-st">INACTIF</div><div class="live__text live__text--idle" id="live-tx">En attente de parole...</div></div>
+    <div class="tinput"><div class="tinput__prefix">&gt;</div><input class="tinput__field" id="txt-in" placeholder="Tapez du texte et envoyez a l'IA..." autocomplete="off"><button class="tinput__btn" id="txt-send">ENVOYER</button></div>
+    <section class="p p--f"><div class="p__l">ANALYSE IA</div><div class="ai" id="ai">En attente de donnees...</div></section>
+    <section class="p p--f"><div class="p__l">JOURNAL</div><div class="log" id="log" role="log" aria-live="polite"></div></section>
+    <section class="p p--f"><div class="p__l">CAPTURES</div><div id="caps"><div class="empty">Aucune capture.</div></div></section>
+    <div class="p"><div class="p__l">SYSTEME</div><div id="sys" style="font-size:13px;line-height:1.7">Micro: --<br>API: --<br>Reco: --</div></div>
+  </main>
+  <footer class="app__ft"><span id="ft-s">En attente...</span><span>v16.0 | <span id="ft-c">--:--:--</span></span></footer>
+</div>
+
+<button class="ptt" id="ptt" aria-label="Maintenir pour parler">MAINTENIR<br>POUR PARLER<span class="ptt__ind">PAROLE DETECTEE</span></button>
+<audio id="ply" style="display:none"></audio>
+
+<script>
+(function(){
+'use strict';
+
+var DEF=Object.freeze({apiKey:'',model:'llama-3.3-70b-versatile',lang:'fr-FR',tts:true,color:'#00ff41'});
+var cfg={};Object.keys(DEF).forEach(function(k){cfg[k]=DEF[k]});
+
+var S={
+  ready:false,recording:false,autoMode:false,recoActive:false,speech:false,
+  ctx:null,an:null,vn:null,stream:null,
+  freq:null,wave:null,vol:null,
+  rec:null,chunks:[],recT0:0,recIv:null,
+  reco:null,txt:'',lastTxt:'',pttIv:null
+};
+var caps=[];
+
+var $=function(s){return document.querySelector(s)};
+function now(){return new Date().toLocaleTimeString('fr-FR')}
+function p2(n){return n<10?'0'+n:''+n}
+function fmt(s){return p2(Math.floor(s/3600))+':'+p2(Math.floor((s%3600)/60))+':'+p2(s%60)}
+function css(p){return getComputedStyle(document.documentElement).getPropertyValue(p).trim()}
+
+function log(m,t){
+  var el=$('#log');if(!el)return;var d=document.createElement('div');
+  d.className='log__e log__e--'+(t||'ok');d.textContent='['+now()+'] '+m;
+  el.appendChild(d);el.scrollTop=el.scrollHeight;
+  while(el.children.length>120)el.removeChild(el.firstChild);
+}
+function stat(t){var e=$('#ft-s');if(e)e.textContent=t}
+function sysUp(){
+  var e=$('#sys');if(!e)return;
+  function g(v,c){return'<span style="color:var(--'+c+')">'+v+'</span>'}
+  e.innerHTML='Micro: '+(S.stream?g('OK','fg'):g('OFF','danger'))+'<br>API: '+(cfg.apiKey?g('OK','fg'):g('MANQUANTE','warning'))+'<br>Reco: '+(S.recoActive?g('ON','danger'):g('OFF','fg-muted'))+'<br>Mode: '+(S.autoMode?g('AUTO','warning'):g('PTT','fg'));
+}
+
+var liveTx,liveSt;
+function liveSet(text,state){
+  if(!liveTx)liveTx=$('#live-tx');if(!liveSt)liveSt=$('#live-st');
+  liveTx.className='live__text';liveSt.className='live__status';
+  if(state==='idle'){liveTx.classList.add('live__text--idle');liveTx.innerHTML=text;liveSt.textContent='INACTIF';liveSt.classList.add('live__status--off')}
+  else if(state==='listen'){liveTx.classList.add('live__text--active');liveTx.innerHTML=text+'<span class="live__cursor"></span>';liveSt.textContent='ECOUTE';liveSt.classList.add('live__status--on')}
+  else if(state==='speech'){liveTx.classList.add('live__text--active');liveTx.innerHTML=text+'<span class="live__cursor"></span>';liveSt.textContent='PAROLE';liveSt.classList.add('live__status--on')}
+  else if(state==='done'){liveTx.classList.add('live__text--done');liveTx.textContent=text;liveSt.textContent='TRAITÉ';liveSt.classList.add('live__status--off')}
+  else if(state==='think'){liveTx.classList.add('live__text--idle');liveTx.textContent=text;liveSt.textContent='IA...';liveSt.classList.add('live__status--on')}
+}
+
+function typeIn(el,txt,ms){
+  ms=ms||45;return new Promise(function(r){var i=0;el.textContent='';el.classList.add('blink');
+  var iv=setInterval(function(){el.textContent+=txt[i];i++;if(i>=txt.length){clearInterval(iv);el.classList.remove('blink');r()}},ms)});
+}
+
+async function initAudio(){
+  try{
+    S.ctx=new(window.AudioContext||window.webkitAudioContext)({sampleRate:48000});await S.ctx.resume();
+    S.stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}});
+    var src=S.ctx.createMediaStreamSource(S.stream);
+    S.an=S.ctx.createAnalyser();S.an.fftSize=2048;S.an.smoothingTimeConstant=0.8;src.connect(S.an);
+    S.freq=new Uint8Array(S.an.frequencyBinCount);S.wave=new Uint8Array(S.an.frequencyBinCount);
+    S.vn=S.ctx.createAnalyser();S.vn.fftSize=256;src.connect(S.vn);S.vol=new Uint8Array(S.vn.frequencyBinCount);
+    S.ready=true;sizeCV();drawLoop();sysUp();log('Audio 48kHz OK','ok');return true;
+  }catch(e){log('Micro: '+e.message,'err');sysUp();return false}
+}
+
+function drawLoop(){if(!S.ready)return;requestAnimationFrame(drawLoop);S.an.getByteFrequencyData(S.freq);S.an.getByteTimeDomainData(S.wave);S.vn.getByteFrequencyData(S.vol);dF();dW();dV()}
+function dF(){var c=$('#cv-f');if(!c)return;var x=c.getContext('2d'),W=c.width,H=c.height;x.fillStyle='#020402';x.fillRect(0,0,W,H);x.strokeStyle='rgba(0,255,65,0.04)';x.lineWidth=1;for(var gy=0;gy<H;gy+=26){x.beginPath();x.moveTo(0,gy);x.lineTo(W,gy);x.stroke()}var n=S.freq.length,bw=Math.max(1,W/n);for(var i=0;i<n;i++){var v=S.freq[i];if(v<2)continue;var h=Math.max(0,Math.log10(v+1)*24);x.fillStyle='hsl('+Math.max(0,110-v*.45)+',100%,'+Math.max(10,v*.38)+'%)';x.fillRect(i*bw,H-h,bw+.5,h)}}
+function dW(){var c=$('#cv-w');if(!c)return;var x=c.getContext('2d'),W=c.width,H=c.height;x.fillStyle='#020402';x.fillRect(0,0,W,H);x.strokeStyle='rgba(0,255,65,0.06)';x.lineWidth=1;x.beginPath();x.moveTo(0,H/2);x.lineTo(W,H/2);x.stroke();var col=css('--fg');x.strokeStyle=col;x.lineWidth=2;x.shadowColor=col;x.shadowBlur=6;x.beginPath();var st=W/S.wave.length;for(var i=0;i<S.wave.length;i++){var y=(S.wave[i]/128-.5)*H*.85+H/2;i===0?x.moveTo(0,y):x.lineTo(i*st,y)}x.stroke();x.shadowBlur=0}
+function dV(){var c=$('#cv-v');if(!c)return;var x=c.getContext('2d'),W=c.width,H=c.height;x.fillStyle='#020402';x.fillRect(0,0,W,H);var sum=0;for(var i=0;i<S.vol.length;i++)sum+=S.vol[i];var pct=sum/S.vol.length/255;var bw=W*.45,bh=Math.max(2,pct*H*.88),bx=(W-bw)/2,by=H-bh,hue=Math.max(0,120-pct*200);x.fillStyle='hsl('+hue+',100%,42%)';x.shadowColor='hsl('+hue+',100%,55%)';x.shadowBlur=10;x.fillRect(bx,by,bw,bh);x.shadowBlur=0;var col=css('--fg');x.fillStyle=col;x.font='24px VT323';x.textAlign='center';x.textBaseline='middle';x.fillText(Math.round(pct*100)+'%',W/2,H/2)}
+function sizeCV(){var all=document.querySelectorAll('#app .cv');for(var i=0;i<all.length;i++){var c=all[i],r=c.parentElement.getBoundingClientRect();c.width=Math.max(80,r.width-34);c.height=120}}
+
+function bestMime(){var t=['audio/webm;codecs=opus','audio/webm','audio/ogg;codecs=opus','audio/mpeg','audio/mp4'];for(var i=0;i<t.length;i++)if(MediaRecorder.isTypeSupported(t[i]))return t[i];return''}
+function recOn(){if(S.recording||!S.stream)return;var m=bestMime();if(!m){log('Aucun format audio','err');return}S.recording=true;S.chunks=[];S.recT0=Date.now();try{S.rec=new MediaRecorder(S.stream,{mimeType:m})}catch(e){log('MediaRecorder: '+e.message,'err');S.recording=false;return}S.rec.ondataavailable=function(e){if(e.data&&e.data.size>0)S.chunks.push(e.data)};S.rec.onstop=recDone;S.rec.start(200);$('#b-rec').classList.add('recording');$('#b-stop').disabled=false;$('#timer').classList.add('rec__t--a');stat('Enregistrement...');log('REC: '+m.split(';')[0],'ok');sysUp();startClk()}
+function recOff(){if(!S.recording)return;S.recording=false;S.rec.stop();$('#b-rec').classList.remove('recording');$('#b-stop').disabled=true;$('#timer').classList.remove('rec__t--a');stopClk();sysUp()}
+function recDone(){var m=S.rec.mimeType||'',ext='mp3';if(m.indexOf('webm')!==-1)ext='webm';else if(m.indexOf('ogg')!==-1)ext='ogg';else if(m.indexOf('mp4')!==-1)ext='m4a';var blob=new Blob(S.chunks,{type:m}),url=URL.createObjectURL(blob),dur=Math.floor((Date.now()-S.recT0)/1000),name='Cap_'+new Date().toLocaleString('fr-FR').replace(/[/: ]/g,'-');caps.unshift({name:name,url:url,blob:blob,ext:ext,dur:dur});buildCaps();stat('Pret');log('Capture: '+dur+'s '+ext.toUpperCase(),'ok')}
+function startClk(){var s=0;$('#timer').textContent='00:00:00';S.recIv=setInterval(function(){s++;$('#timer').textContent=fmt(s)},1000)}
+function stopClk(){clearInterval(S.recIv);$('#timer').textContent='00:00:00'}
+
+function buildCaps(){var el=$('#caps');if(!caps.length){el.innerHTML='<div class="empty">Aucune capture.</div>';return}el.innerHTML='';caps.forEach(function(c,i){var row=document.createElement('div');row.className='cap';var info=document.createElement('div');info.className='cap__i';var nm=document.createElement('div');nm.className='cap__n';nm.textContent=c.name;var mt=document.createElement('div');mt.className='cap__m';mt.textContent=c.dur+'s | '+c.ext.toUpperCase();info.appendChild(nm);info.appendChild(mt);row.appendChild(info);var acts=document.createElement('div');acts.className='cap__a';[{t:'PLAY',f:capPlay},{t:'IA',f:capAI},{t:'SAVE',f:capDL},{t:'DEL',c:'btn--d',f:capDel}].forEach(function(l){var b=document.createElement('button');b.className='btn btn--s '+(l.c||'');b.textContent=l.t;b.addEventListener('click',function(){l.f(i)});acts.appendChild(b)});row.appendChild(acts);el.appendChild(row)})}
+function capPlay(i){var c=caps[i];if(!c)return;$('#ply').src=c.url;$('#ply').play();log('Lecture: '+c.name,'ok')}
+function capAI(i){var c=caps[i];if(!c)return;log('Envoi IA: '+c.name,'info');groq('Analyse audio: "'+c.name+'" ('+c.dur+'s, '+c.ext+'). Decris ce que tu entends, transcris si parole. 5 phrases max, francais.')}
+function capDL(i){var c=caps[i];if(!c)return;var a=document.createElement('a');a.href=c.url;a.download=c.name+'.'+c.ext;document.body.appendChild(a);a.click();document.body.removeChild(a);log('DL: '+a.download,'ok')}
+function capDel(i){if(!caps[i])return;URL.revokeObjectURL(caps[i].url);caps.splice(i,1);buildCaps();log('Supprime','ok')}
+
+/* ═══════ RECONNAISSANCE ═══════ */
+function recoStart(){
+  var API=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!API){log('Web Speech API ABSENTE','err');log('Utilisez le champ texte','info');S.recoActive=false;return false}
+  try{
+    if(S.reco)try{S.reco.abort()}catch(_){}
+    S.reco=new API();S.reco.lang=cfg.lang;
+    S.reco.continuous=true;S.reco.interimResults=true;S.reco.maxAlternatives=1;
+
+    S.reco.onstart=function(){S.recoActive=true;log('Reco: demarree','ok');liveSet('','listen');sysUp()};
+    S.reco.onaudiostart=function(){log('Reco: audio ouvert','ok')};
+    S.reco.onspeechstart=function(){S.speech=true;$('#ptt').classList.add('ptt--sp');liveSet(S.txt||'...','speech');log('Reco: PAROLE','info')};
+    S.reco.onspeechend=function(){S.speech=false;$('#ptt').classList.remove('ptt--sp');if(S.recoActive&&S.txt)liveSet(S.txt,'listen')};
+    S.reco.onresult=function(ev){var t='';for(var i=0;i<ev.results.length;i++)t+=ev.results[i][0].transcript;t=t.trim();if(t){S.txt=t;if(S.speech)liveSet(t,'speech');else liveSet(t,'listen');if(t!==S.lastTxt){S.lastTxt=t;log('Reco: "'+t+'"','ok')}}};
+    S.reco.onerror=function(ev){if(ev.error==='no-speech'||ev.error==='aborted')return;log('Reco err: '+ev.error,'err');if(ev.error==='not-allowed'){log('Permission micro reco refusee','err');recoKill()}};
+    S.reco.onend=function(){log('Reco: terminee','ok');S.recoActive=false;$('#ptt').classList.remove('ptt--sp','ptt--on');liveSet(S.txt||'','done');sysUp();if(S.autoMode)setTimeout(function(){if(S.autoMode)recoStart()},800)};
+
+    S.reco.start();log('Reco: start() appele','ok');return true;
+  }catch(e){log('Reco echec: '+e.message,'err');S.recoActive=false;return false}
+}
+function recoKill(){S.recoActive=false;if(S.reco){try{S.reco.abort()}catch(_){}S.reco=null}$('#ptt').classList.remove('ptt--sp','ptt--on');sysUp()}
+
+/* ═══════ PTT ═══════ */
+function pttDown(e){e.preventDefault();if(!S.ready){log('Non pret','err');return}if(S.autoMode){log('Desactivez AUTO','err');return}if(S.recoActive)return;if(S.pttIv){clearTimeout(S.pttIv);S.pttIv=null}S.txt='';S.lastTxt='';var btn=$('#ptt');btn.classList.add('ptt--on');btn.classList.remove('ptt--sp');btn.innerHTML='ECOUTE...<br><small>parlez</small><span class="ptt__ind">PAROLE DETECTEE</span>';stat('Ecoute...');log('PTT: appui','ok');var ok=recoStart();if(!ok){btn.classList.remove('ptt--on');stat('Erreur reco')}}
+function pttUp(e){e.preventDefault();if(!S.recoActive||S.autoMode)return;var btn=$('#ptt');btn.classList.remove('ptt--on','ptt--sp');btn.innerHTML='MAINTENIR<br>POUR PARLER<span class="ptt__ind">PAROLE DETECTEE</span>';stat('Traitement...');log('PTT: relache, attente 1.5s','ok');S.pttIv=setTimeout(function(){S.pttIv=null;var f=S.txt;recoKill();setTimeout(function(){if(f.trim()){liveSet(f,'done');log('Final: "'+f+'"','ok');groq(f)}else{liveSet('Aucune parole','idle');log('Aucune parole','err');stat('Pret')}},500)},1500)}
+
+/* ═══════ AUTO ═══════ */
+function toggleAuto(){S.autoMode=!S.autoMode;var btn=$('#b-auto');if(S.autoMode){btn.classList.add('btn--on');S.txt='';S.lastTxt='';log('MODE AUTO ON','info');stat('Ecoute auto...');recoStart()}else{btn.classList.remove('btn--on');recoKill();liveSet('En attente de parole...','idle');log('MODE AUTO OFF','ok');stat('Pret')}sysUp()}
+
+/* ═══════ GROQ ═══════ */
+async function groq(text){
+  var el=$('#ai');if(!cfg.apiKey){el.textContent='Cle API manquante.\nPARAMETRES > collez gsk_...';log('Cle API manquante','err');stat('Pret');return}
+  liveSet('Analyse en cours...','think');el.textContent='Analyse en cours...';stat('IA...');
+  var prompt='Analyse ce contenu vocal en francais:\n"'+text+'"\n-Corrige les erreurs.\n-Interpretation breve.\n-Max 5 phrases.';
+  try{
+    var res=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+cfg.apiKey},body:JSON.stringify({model:cfg.model,messages:[{role:'system',content:'Analyste audio expert. Francais, precis, concis.'},{role:'user',content:prompt}],temperature:0.3,max_tokens:400})});
+    if(!res.ok){var b=await res.text();throw new Error(res.status+' — '+b.substring(0,150))}
+    var data=await res.json();var ans=(data.choices&&data.choices[0]&&data.choices[0].message&&data.choices[0].message.content)||'Aucune reponse.';
+    el.textContent='TRANSCRIPTION:\n"'+text+'"\n\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nANALYSE IA ('+cfg.model+')\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n\n'+ans+'\n\n'+now();
+    liveSet(text,'done');log('IA: OK','ok');stat('Pret');speak(ans.substring(0,280));
+  }catch(e){el.textContent='Erreur: '+e.message+'\nVerifiez cle API + connexion.';log('Groq: '+e.message,'err');stat('Erreur');liveSet('Erreur IA','idle')}
+}
+
+function speak(t){if(!cfg.tts||!window.speechSynthesis||S.recoActive)return;window.speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(t);u.lang=cfg.lang;u.rate=0.95;window.speechSynthesis.speak(u)}
+function sendText(){var inp=$('#txt-in'),t=inp.value.trim();if(!t){log('Vide','err');return}log('Texte: "'+t+'"','info');liveSet(t,'done');inp.value='';groq(t)}
+
+/* ═══════ CONFIG ═══════ */
+function cfgLoad(){try{var r=localStorage.getItem('sl16');if(r){var p=JSON.parse(r);Object.keys(p).forEach(function(k){if(p.hasOwnProperty(k)&&DEF.hasOwnProperty(k))cfg[k]=p[k]})}}catch(_){}cfgApply()}
+function cfgApply(){var c=cfg.color;document.documentElement.style.setProperty('--fg',c);var r=parseInt(c.slice(1,3),16),g=parseInt(c.slice(3,5),16),b=parseInt(c.slice(5,7),16);document.documentElement.style.setProperty('--fg-dim',c+'88');document.documentElement.style.setProperty('--fg-muted',c+'44');document.documentElement.style.setProperty('--glow','0 0 8px rgba('+r+','+g+','+b+',0.4)');document.documentElement.style.setProperty('--glow-s','0 0 20px rgba('+r+','+g+','+b+',0.6)');document.documentElement.style.setProperty('--glow-d','0 0 12px rgba(255,0,68,0.5)');document.documentElement.style.setProperty('--bg-panel','rgba('+Math.floor(r*.04)+','+Math.floor(g*.08)+','+Math.floor(b*.04)+',1)');$('#i-key').value=cfg.apiKey||'';$('#i-model').value=cfg.model;$('#i-lang').value=cfg.lang;$('#i-tts').checked=cfg.tts;$('#i-col').value=cfg.color;$('#hd-m').textContent=cfg.model.split('-').slice(0,2).join(' ').toUpperCase();sysUp()}
+function cfgSave(){cfg.apiKey=$('#i-key').value.trim();cfg.model=$('#i-model').value;cfg.lang=$('#i-lang').value;cfg.tts=$('#i-tts').checked;cfg.color=$('#i-col').value;localStorage.setItem('sl16',JSON.stringify(cfg));cfgApply();log('Config sauvee','ok')}
+function cfgRst(){if(!confirm('Reinitialiser?'))return;Object.keys(DEF).forEach(function(k){cfg[k]=DEF[k]});localStorage.removeItem('sl16');cfgApply();log('Reset','err')}
+function initEye(){var inp=$('#i-key'),btn=$('#i-eye'),show=false;inp.style.webkitTextSecurity='disc';btn.addEventListener('click',function(){show=!show;inp.style.webkitTextSecurity=show?'none':'disc';btn.textContent=show?'CACHE':'OEIL'})}
+
+function tick(){var e=$('#ft-c');if(e)e.textContent=now()}setInterval(tick,1000);tick();
+
+async function launch(){
+  $('#boot').style.display='none';$('#app').classList.add('app--v');$('#ptt').classList.add('ptt--v');
+  log('=== SUPRA LAB v16.0 ===','ok');
+  var hasReco=!!(window.SpeechRecognition||window.webkitSpeechRecognition);
+  log('Web Speech: '+(hasReco?'OK':'ABSENTE'),hasReco?'ok':'err');
+  if(!hasReco)log('Utilisez le champ texte pour communiquer','info');
+  var ok=await initAudio();
+  if(ok){stat('Pret');log('Pret. PTT=maintenir, AUTO=continu, ou tapez texte.','ok')}else{stat('Erreur micro')}
+}
+
+function bind(){
+  $('#b-go').addEventListener('click',launch);
+  $('#b-cfg').addEventListener('click',function(){$('#dlg').showModal()});
+  $('#dlg-x').addEventListener('click',function(){$('#dlg').close()});
+  $('#dlg-save').addEventListener('click',function(){cfgSave();$('#dlg').close()});
+  $('#dlg-rst').addEventListener('click',cfgRst);
+  $('#dlg').addEventListener('click',function(e){if(e.target===e.currentTarget)e.currentTarget.close()});
+  $('#b-rec').addEventListener('click',function(){if(!S.ready){log('Non pret','err');return}S.recording?recOff():recOn()});
+  $('#b-stop').addEventListener('click',recOff);
+  $('#b-play').addEventListener('click',function(){if(caps.length)capPlay(0);else log('Rien a lire','err')});
+  $('#b-dl').addEventListener('click',function(){if(caps.length)capDL(0);else log('Rien a sauver','err')});
+  $('#b-auto').addEventListener('click',toggleAuto);
+  $('#txt-send').addEventListener('click',sendText);
+  $('#txt-in').addEventListener('keydown',function(e){if(e.key==='Enter')sendText()});
+  var ptt=$('#ptt');
+  ptt.addEventListener('pointerdown',pttDown);ptt.addEventListener('pointerup',pttUp);ptt.addEventListener('pointerleave',pttUp);ptt.addEventListener('pointercancel',pttUp);
+  ptt.addEventListener('mousedown',pttDown);ptt.addEventListener('mouseup',pttUp);ptt.addEventListener('mouseleave',pttUp);
+  window.addEventListener('resize',function(){if(S.ready)sizeCV()});
+}
+
+window.addEventListener('beforeunload',function(){if(S.pttIv)clearTimeout(S.pttIv);if(S.stream)S.stream.getTracks().forEach(function(t){t.stop()});if(S.reco)try{S.reco.abort()}catch(_){}if(window.speechSynthesis&&window.speechSynthesis.speaking)window.speechSynthesis.cancel();if(S.recording&&S.rec)S.rec.stop();caps.forEach(function(c){URL.revokeObjectURL(c.url)})});
+
+document.addEventListener('DOMContentLoaded',async function(){cfgLoad();initEye();bind();await typeIn($('#bt'),'SUPRA LAB v16.0',40);var s=$('#bs');s.textContent='TRANSCRIPTION LIVE + AUTO + TEXTE';s.classList.add('boot__s--v');$('#ba').classList.add('boot__a--v');$('#b-go').focus()});
+
+})();
+</script>
 </body>
 </html>
