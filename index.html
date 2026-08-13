@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>SUPRA LAB v18.1 — WHISPER FIX</title>
+  <title>SUPRA LAB v18.2 — WHISPER + VOIX</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
   <style>
@@ -24,19 +24,18 @@
     .fx-scan{position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent 0px,transparent 2px,rgba(0,0,0,0.1) 2px,rgba(0,0,0,0.1) 4px);pointer-events:none;z-index:9999}
     .fx-vig{position:fixed;inset:0;background:radial-gradient(ellipse at center,transparent 50%,rgba(0,0,0,0.5) 100%);pointer-events:none;z-index:9998}
 
-    .btn{font-family:var(--font);font-size:17px;color:var(--fg);background:transparent;border:3px solid var(--fg);padding:10px 22px;cursor:pointer;letter-spacing:1px;-webkit-user-select:none;user-select:none;touch-action:manipulation;transition:background .15s,box-shadow .15s,color .15s,transform .1s;box-shadow:var(--glow);position:relative;overflow:hidden}
+    .btn{font-family:var(--font);font-size:17px;color:var(--fg);background:transparent;border:3px solid var(--fg);padding:10px 22px;cursor:pointer;letter-spacing:1px;touch-action:manipulation;transition:all .15s;box-shadow:var(--glow);position:relative;overflow:hidden}
     .btn::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,0.04) 0%,transparent 50%);pointer-events:none}
-    .btn:hover{background:rgba(0,255,65,.07);box-shadow:var(--glow-s)}
+    .btn:hover{background:rgba(0,255,65,.08);box-shadow:var(--glow-s)}
     .btn:active{background:var(--fg);color:var(--bg);transform:scale(.97)}
     .btn:disabled{opacity:.35;cursor:not-allowed;border-color:var(--fg-muted);color:var(--fg-muted);box-shadow:none}
-    .btn:disabled::after{display:none}
     .btn--danger{border-color:var(--danger);color:var(--danger);box-shadow:var(--glow-d)}
-    .btn--danger:hover{background:rgba(255,0,68,.07)}
+    .btn--danger:hover{background:rgba(255,0,68,.08)}
     .btn--info{border-color:var(--info);color:var(--info);box-shadow:var(--glow-i)}
-    .btn--info:hover{background:rgba(0,204,255,.07)}
+    .btn--info:hover{background:rgba(0,204,255,.08)}
     .btn--small{padding:4px 10px;font-size:13px;border-width:2px}
-    .btn--close{background:none;border:none;font-size:26px;padding:0 6px;box-shadow:none;color:var(--fg);line-height:1}
-    .btn--close:hover{color:var(--danger);box-shadow:none}
+    .btn--close{background:none;border:none;font-size:26px;padding:0 6px;box-shadow:none;color:var(--fg)}
+    .btn--close:hover{color:var(--danger)}
     .btn--active{background:var(--fg)!important;color:var(--bg)!important;box-shadow:var(--glow-s)!important}
 
     .boot{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;z-index:100;border:6px solid var(--fg);background:var(--bg)}
@@ -52,9 +51,9 @@
     .app{display:none;position:fixed;inset:0;border:6px solid var(--fg);z-index:100;flex-direction:column;background:var(--bg)}
     .app--v{display:flex}
     .app__hd{background:var(--bg-panel);border-bottom:4px solid var(--fg);padding:12px 16px;text-align:center;font-size:20px;letter-spacing:3px;text-shadow:var(--glow);flex-shrink:0;position:relative;overflow:hidden}
-    .app__hd::after{content:'WHISPER STT  GROQ LLM  REALME-SAFE  NO-LOOP  48kHz ';position:absolute;top:0;left:0;font-size:11px;color:var(--fg-muted);white-space:nowrap;animation:tick 24s linear infinite;padding-top:3px;letter-spacing:2px}
+    .app__hd::after{content:'WHISPER STT + TTS ORAL  GROQ  REALME-SAFE  AUTO-BRUIT  48kHz ';position:absolute;top:0;left:0;font-size:11px;color:var(--fg-muted);white-space:nowrap;animation:tick 22s linear infinite;padding-top:3px;letter-spacing:2px}
     @keyframes tick{0%{transform:translateX(100vw)}100%{transform:translateX(-100%)}}
-    .app__mn{flex:1;overflow-y:auto;padding:12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;align-content:start;padding-bottom:80px}
+    .app__mn{flex:1;overflow-y:auto;padding:12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;align-content:start;padding-bottom:90px}
     .app__ft{position:absolute;bottom:0;left:0;right:0;background:var(--bg-panel);border-top:3px solid var(--fg);padding:6px 14px;font-size:13px;display:flex;justify-content:space-between;z-index:10}
 
     .pnl{background:var(--bg-panel);border:3px solid var(--fg);padding:14px;position:relative;min-height:130px;box-shadow:var(--glow),inset 0 0 40px rgba(0,255,65,.015)}
@@ -89,112 +88,102 @@
 
     .tinp{grid-column:1/-1;display:flex;gap:0;background:var(--bg-deep);border:2px solid var(--fg-dim);overflow:hidden}
     .tinp__pre{display:flex;align-items:center;padding:0 12px;color:var(--fg-dim);font-size:20px;flex-shrink:0;border-right:2px solid var(--fg-dim);background:rgba(0,255,65,.02)}
-    .tinp__f{flex:1;padding:12px;background:transparent;color:var(--fg);border:none;font-family:var(--font);font-size:16px;outline:none;-webkit-user-select:text!important;user-select:text!important;touch-action:auto!important}
+    .tinp__f{flex:1;padding:12px;background:transparent;color:var(--fg);border:none;font-family:var(--font);font-size:16px;outline:none}
     .tinp__f::placeholder{color:var(--fg-muted)}
-    .tinp__b{flex-shrink:0;border:none;border-left:2px solid var(--fg-dim);padding:12px 18px;font-size:15px;letter-spacing:2px;cursor:pointer;background:rgba(0,255,65,.05);color:var(--fg);font-family:var(--font);transition:background .15s}
+    .tinp__b{flex-shrink:0;border:none;border-left:2px solid var(--fg-dim);padding:12px 18px;font-size:15px;letter-spacing:2px;cursor:pointer;background:rgba(0,255,65,.05);color:var(--fg);font-family:var(--font)}
     .tinp__b:hover{background:rgba(0,255,65,.15)}
 
-    .ai{background:var(--bg-deep);border:2px dashed var(--fg-dim);padding:14px;font-size:15px;line-height:1.55;white-space:pre-wrap;word-break:break-word;max-height:260px;overflow-y:auto;min-height:80px;color:var(--fg-dim);-webkit-user-select:text!important;user-select:text!important}
-    .log{max-height:150px;overflow-y:auto;font-size:12px;line-height:1.4;padding:8px;background:var(--bg-deep);border:2px dashed var(--warning);-webkit-user-select:text!important;user-select:text!important}
+    .ai{background:var(--bg-deep);border:2px dashed var(--fg-dim);padding:14px;font-size:15px;line-height:1.55;white-space:pre-wrap;word-break:break-word;max-height:280px;overflow-y:auto;min-height:80px;color:var(--fg-dim)}
+    .log{max-height:160px;overflow-y:auto;font-size:12px;line-height:1.4;padding:8px;background:var(--bg-deep);border:2px dashed var(--warning)}
     .log__e{padding:2px 4px;margin:1px 0;border-left:3px solid transparent}
     .log__e--err{color:var(--danger);background:rgba(255,0,68,.06);border-left-color:var(--danger)}
     .log__e--ok{color:var(--fg-dim);border-left-color:var(--fg-muted)}
     .log__e--info{color:var(--warning);border-left-color:var(--warning)}
     .log__e--dbg{color:var(--info);background:rgba(0,204,255,.03);border-left-color:var(--info);font-size:11px}
 
-    .cap{display:flex;align-items:center;gap:8px;padding:8px;margin-bottom:6px;background:rgba(0,255,65,.03);border:1px solid rgba(0,255,65,.12);transition:background .15s}
-    .cap:hover{background:rgba(0,255,65,.06)}
+    .cap{display:flex;align-items:center;gap:8px;padding:8px;margin-bottom:6px;background:rgba(0,255,65,.03);border:1px solid rgba(0,255,65,.12)}
     .cap__i{flex:1;min-width:0}
     .cap__n{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .cap__m{font-size:11px;color:var(--fg-muted);margin-top:2px}
     .cap__a{display:flex;gap:5px;flex-shrink:0;flex-wrap:wrap}
-    .empty{text-align:center;color:var(--fg-muted);padding:24px;font-size:15px;letter-spacing:1px}
+    .empty{text-align:center;color:var(--fg-muted);padding:24px;font-size:15px}
 
-    .ptt{position:fixed;bottom:58px;left:50%;transform:translateX(-50%);width:116px;height:116px;border-radius:50%;font-size:13px;text-align:center;line-height:1.25;z-index:300;border-width:5px;box-shadow:var(--glow-s),inset 0 0 20px rgba(0,255,65,.06);transition:background .2s,border-color .2s,box-shadow .2s,transform .1s;display:none;flex-direction:column;align-items:center;justify-content:center}
+    .ptt{position:fixed;bottom:58px;left:50%;transform:translateX(-50%);width:116px;height:116px;border-radius:50%;font-size:13px;text-align:center;line-height:1.25;z-index:300;border-width:5px;box-shadow:var(--glow-s);display:none;flex-direction:column;align-items:center;justify-content:center}
     .ptt--v{display:flex}
     .ptt:active{transform:translateX(-50%) scale(.94)}
-    .ptt--rec{background:var(--danger);border-color:var(--danger);color:#fff;box-shadow:0 0 0 0 rgba(255,0,68,.6),inset 0 0 20px rgba(255,0,68,.15);animation:pr 1s ease-out infinite}
+    .ptt--rec{background:var(--danger);border-color:var(--danger);color:#fff;animation:pr 1s ease-out infinite}
 
-    dialog{font-family:var(--font);color:var(--fg);background:var(--bg);border:5px solid var(--fg);padding:0;max-width:520px;width:92vw;max-height:88vh;overflow-y:auto;box-shadow:var(--glow-s),0 0 60px rgba(0,255,65,.1)}
+    dialog{font-family:var(--font);color:var(--fg);background:var(--bg);border:5px solid var(--fg);padding:0;max-width:520px;width:92vw;max-height:88vh;overflow-y:auto;box-shadow:var(--glow-s)}
     dialog::backdrop{background:rgba(0,0,0,.88)}
-    .dh{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:3px solid var(--fg);font-size:22px;letter-spacing:3px;text-shadow:var(--glow)}
+    .dh{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:3px solid var(--fg);font-size:22px;letter-spacing:3px}
     .db{padding:18px 22px}
     .df{display:flex;justify-content:center;gap:14px;padding:18px 22px;border-top:2px solid var(--fg-muted);flex-wrap:wrap}
     .fl{margin-bottom:18px}
     .fl__l{display:block;margin-bottom:7px;font-size:15px;letter-spacing:1px}
-    .fl__i,.fl__s{width:100%;padding:11px;background:var(--bg-deep);color:var(--fg);border:2px solid var(--fg-dim);font-family:var(--font);font-size:16px;outline:none;transition:border-color .2s,box-shadow .2s;-webkit-user-select:text!important;user-select:text!important;touch-action:auto!important}
+    .fl__i,.fl__s{width:100%;padding:11px;background:var(--bg-deep);color:var(--fg);border:2px solid var(--fg-dim);font-family:var(--font);font-size:16px;outline:none}
     .fl__i:focus,.fl__s:focus{border-color:var(--fg);box-shadow:var(--glow)}
     .fl__c{display:flex;align-items:center;gap:10px;cursor:pointer}
-    .fl__c input{width:20px;height:20px;accent-color:var(--fg);cursor:pointer}
+    .fl__c input{width:20px;height:20px;accent-color:var(--fg)}
     .fl__sec{font-size:17px;margin:24px 0 14px;padding-bottom:8px;border-bottom:2px solid var(--fg-muted);letter-spacing:2px}
     .fl__sec:first-child{margin-top:0}
     .kw{position:relative}
     .kw .fl__i{padding-right:60px!important}
-    .kw__t{position:absolute;right:5px;top:50%;transform:translateY(-50%);background:none;border:2px solid var(--fg-dim);color:var(--fg);font-size:14px;padding:5px 8px;box-shadow:none;line-height:1;letter-spacing:0}
-    .kw__t:hover{border-color:var(--fg);box-shadow:none}
+    .kw__t{position:absolute;right:5px;top:50%;transform:translateY(-50%);background:none;border:2px solid var(--fg-dim);color:var(--fg);font-size:14px;padding:5px 8px}
     .fl__note{font-size:13px;color:var(--info);margin-top:6px;line-height:1.4}
 
     ::-webkit-scrollbar{width:6px}
     ::-webkit-scrollbar-track{background:var(--bg-panel)}
-    ::-webkit-scrollbar-thumb{background:var(--fg-muted);border-radius:3px}
+    ::-webkit-scrollbar-thumb{background:var(--fg-muted)}
 
     @media(max-width:768px){
-      .boot__title{font-size:28px;letter-spacing:3px}
+      .boot__title{font-size:28px}
       .app__mn{grid-template-columns:1fr;padding:8px;gap:10px}
       .ptt{width:100px;height:100px;font-size:11px;bottom:48px}
       .recbar__b{width:48px;height:48px;font-size:10px}
-      .recbar__t{font-size:20px;min-width:90px}
-      .pnl{min-height:110px}
+      .recbar__t{font-size:20px}
       canvas.cv{height:90px}
-      dialog{width:96vw;max-height:92vh}
-      .app__hd{font-size:16px;letter-spacing:2px}
-      .live__tx{font-size:18px;padding:22px 12px 12px}
-      .tinp__f{font-size:15px;padding:10px}
+      .live__tx{font-size:18px}
     }
-    @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
-    :focus-visible{outline:2px solid var(--warning);outline-offset:3px}
   </style>
 </head>
 <body>
+<div class="fx-scan"></div>
+<div class="fx-vig"></div>
 
-<div class="fx-scan" aria-hidden="true"></div>
-<div class="fx-vig" aria-hidden="true"></div>
-
-<dialog id="dlg" aria-labelledby="dlg-t">
-  <div class="dh"><span id="dlg-t">PARAMETRES</span><button class="btn btn--close" id="dlg-x" aria-label="Fermer">&times;</button></div>
+<dialog id="dlg">
+  <div class="dh"><span>PARAMETRES</span><button class="btn btn--close" id="dlg-x">&times;</button></div>
   <div class="db">
-    <div class="fl__sec">API Groq (obligatoire)</div>
+    <div class="fl__sec">API Groq</div>
     <div class="fl">
-      <label class="fl__l" for="i-key">Cle API Groq</label>
+      <label class="fl__l" for="i-key">Clé API (gsk_...)</label>
       <div class="kw">
-        <input class="fl__i" type="text" id="i-key" placeholder="gsk_..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+        <input class="fl__i" type="text" id="i-key" placeholder="gsk_..." autocomplete="off" spellcheck="false">
         <button type="button" class="kw__t" id="i-eye">OEIL</button>
       </div>
-      <div class="fl__note">Doit commencer par <b>gsk_</b>. Colle puis clique SAUVEGARDER puis TESTER.</div>
+      <div class="fl__note">Colle → SAUVEGARDER → TESTER</div>
     </div>
     <div class="fl">
-      <button class="btn btn--info" id="btn-test-key" style="width:100%">TESTER LA CLE API</button>
+      <button class="btn btn--info" id="btn-test-key" style="width:100%">TESTER LA CLÉ</button>
     </div>
     <div class="fl">
-      <label class="fl__l" for="i-model">Modele IA (analyse)</label>
+      <label class="fl__l" for="i-model">Modèle IA</label>
       <select class="fl__s" id="i-model">
         <option value="llama-3.3-70b-versatile">Llama 3.3 70B</option>
         <option value="llama-3.1-8b-instant">Llama 3.1 8B Instant</option>
         <option value="mixtral-8x7b-32768">Mixtral 8x7B</option>
       </select>
     </div>
-    <div class="fl__sec">Transcription</div>
+    <div class="fl__sec">Audio & Voix</div>
     <div class="fl">
       <label class="fl__l" for="i-lang">Langue</label>
       <select class="fl__s" id="i-lang">
-        <option value="fr">Francais</option>
+        <option value="fr">Français</option>
         <option value="en">Anglais</option>
         <option value="es">Espagnol</option>
       </select>
-      <div class="fl__note">Transcription par Groq Whisper (whisper-large-v3-turbo).</div>
     </div>
     <div class="fl">
-      <label class="fl__c"><input type="checkbox" id="i-tts" checked> Synthese vocale des reponses</label>
+      <label class="fl__c"><input type="checkbox" id="i-tts" checked> Synthèse vocale (réponses orales)</label>
     </div>
     <div class="fl__sec">Apparence</div>
     <div class="fl">
@@ -213,17 +202,17 @@
   </div>
 </dialog>
 
-<section class="boot" id="boot" role="region">
+<section class="boot" id="boot">
   <div class="boot__title blink" id="bt"></div>
   <div class="boot__sub" id="bs"></div>
   <div class="boot__acts" id="ba">
-    <button class="btn boot__go" id="b-go" autofocus>LANCER LE LAB</button>
+    <button class="btn boot__go" id="b-go">LANCER LE LAB</button>
     <button class="btn" id="b-cfg">PARAMETRES</button>
   </div>
 </section>
 
-<div class="app" id="app" role="application">
-  <header class="app__hd">SUPRA LAB v18.1 — <span id="hd-m">WHISPER</span></header>
+<div class="app" id="app">
+  <header class="app__hd">SUPRA LAB v18.2 — <span id="hd-m">WHISPER + VOIX</span></header>
   <main class="app__mn">
     <div class="recbar">
       <button class="btn recbar__b recbar__b--rec" id="b-rec">REC</button>
@@ -232,37 +221,37 @@
       <button class="btn recbar__b" id="b-play">PLAY</button>
       <button class="btn recbar__b" id="b-dl">SAVE</button>
       <div class="recbar__sep"></div>
-      <button class="btn recbar__b btn--info" id="b-auto" style="font-size:10px;letter-spacing:0">AUTO</button>
+      <button class="btn recbar__b btn--info" id="b-auto" style="font-size:10px">AUTO</button>
     </div>
     <div class="pnl"><div class="pnl__l">SPECTROGRAMME</div><canvas class="cv" id="cv-f"></canvas></div>
     <div class="pnl"><div class="pnl__l">OSCILLOSCOPE</div><canvas class="cv" id="cv-w"></canvas></div>
     <div class="pnl"><div class="pnl__l">VOLUME</div><canvas class="cv" id="cv-v"></canvas></div>
-    <div class="live" id="live-box">
+    <div class="live">
       <div class="live__l">TRANSCRIPTION WHISPER</div>
       <div class="live__badge live__badge--off" id="live-badge">PRET</div>
-      <div class="live__tx live__tx--idle" id="live-tx">Maintenez PTT pour parler, ou appuyez AUTO.</div>
+      <div class="live__tx live__tx--idle" id="live-tx">Maintenez PTT ou activez AUTO</div>
     </div>
     <div class="tinp">
       <div class="tinp__pre">></div>
-      <input class="tinp__f" id="txt-in" placeholder="Tapez du texte et envoyez a l'IA..." autocomplete="off">
+      <input class="tinp__f" id="txt-in" placeholder="Écrire et envoyer à l'IA..." autocomplete="off">
       <button class="tinp__b" id="txt-send">ENVOYER</button>
     </div>
-    <section class="pnl pnl--f"><div class="pnl__l">ANALYSE IA</div><div class="ai" id="ai-rpt">En attente de donnees...</div></section>
-    <section class="pnl pnl--f"><div class="pnl__l">JOURNAL</div><div class="log" id="log" role="log" aria-live="polite"></div></section>
-    <section class="pnl pnl--f"><div class="pnl__l">CAPTURES</div><div id="caps-list"><div class="empty">Aucune capture.</div></div></section>
-    <div class="pnl"><div class="pnl__l">SYSTEME</div><div id="sys" style="font-size:13px;line-height:1.7">Micro: --<br>API: --<br>Whisper: --<br>Mode: --</div></div>
+    <section class="pnl pnl--f"><div class="pnl__l">ANALYSE IA + VOIX</div><div class="ai" id="ai-rpt">En attente...</div></section>
+    <section class="pnl pnl--f"><div class="pnl__l">JOURNAL</div><div class="log" id="log"></div></section>
+    <section class="pnl pnl--f"><div class="pnl__l">CAPTURES</div><div id="caps-list"><div class="empty">Aucune capture</div></div></section>
+    <div class="pnl"><div class="pnl__l">SYSTEME</div><div id="sys" style="font-size:13px;line-height:1.7">Micro: --<br>API: --<br>TTS: --<br>Mode: --</div></div>
   </main>
-  <footer class="app__ft"><span id="ft-s">En attente...</span><span>v18.1 | <span id="ft-c">--:--:--</span></span></footer>
+  <footer class="app__ft"><span id="ft-s">En attente...</span><span>v18.2 | <span id="ft-c">--:--:--</span></span></footer>
 </div>
 
-<button class="ptt" id="ptt" aria-label="Maintenir pour parler">MAINTENIR<br>POUR PARLER</button>
+<button class="ptt" id="ptt">MAINTENIR<br>POUR PARLER</button>
 <audio id="ply" style="display:none"></audio>
 
 <script>
 (function(){
 'use strict';
 
-var DEFAULTS = Object.freeze({
+const DEFAULTS = Object.freeze({
   apiKey: '',
   model: 'llama-3.3-70b-versatile',
   lang: 'fr',
@@ -270,174 +259,109 @@ var DEFAULTS = Object.freeze({
   color: '#00ff41'
 });
 
-var cfg = {};
-Object.keys(DEFAULTS).forEach(function(k){ cfg[k] = DEFAULTS[k]; });
-
-var S = {
-  ready: false,
-  ctx: null,
-  analyser: null,
-  volNode: null,
-  stream: null,
-  freq: null,
-  wave: null,
-  vol: null,
-  recActive: false,
-  recorder: null,
-  chunks: [],
-  recT0: 0,
-  recIv: null,
-  pttActive: false,
-  pttRecorder: null,
-  pttChunks: [],
-  pttIv: null,
-  pttSec: 0,
-  autoMode: false,
-  autoRunning: false,
-  lastText: ''
+let cfg = {...DEFAULTS};
+let S = {
+  ready: false, ctx: null, analyser: null, volNode: null, stream: null,
+  freq: null, wave: null, vol: null,
+  recActive: false, recorder: null, chunks: [], recT0: 0, recIv: null,
+  pttActive: false, pttRecorder: null, pttChunks: [], pttIv: null, pttSec: 0,
+  autoMode: false, autoRunning: false, lastText: '', speaking: false
 };
+let caps = [];
 
-var caps = [];
+const $ = s => document.querySelector(s);
+const now = () => new Date().toLocaleTimeString('fr-FR');
+const p2 = n => n < 10 ? '0'+n : ''+n;
+const fmt = s => p2(Math.floor(s/3600))+':'+p2(Math.floor((s%3600)/60))+':'+p2(s%60);
+const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const cleanKey = k => String(k||'').replace(/[\u200B-\u200D\uFEFF\u00A0\s]/g,'').trim();
+const isValidKey = k => typeof k === 'string' && k.startsWith('gsk_') && k.length > 30;
 
-function $(sel){ return document.querySelector(sel); }
-function now(){ return new Date().toLocaleTimeString('fr-FR'); }
-function p2(n){ return n < 10 ? '0'+n : ''+n; }
-function fmt(s){ return p2(Math.floor(s/3600))+':'+p2(Math.floor((s%3600)/60))+':'+p2(s%60); }
-function cssVar(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
-
-/* Nettoyage ultra-strict de la clé API */
-function cleanKey(raw){
-  if(!raw) return '';
-  return String(raw)
-    .replace(/[\u200B-\u200D\uFEFF\u00A0]/g, '') // zero-width + nbsp
-    .replace(/\s+/g, '')
-    .trim();
-}
-
-function isValidGroqKey(key){
-  return typeof key === 'string' && key.startsWith('gsk_') && key.length > 20;
-}
-
-function log(msg, type){
-  type = type || 'ok';
-  var el = $('#log');
+function log(msg, type='ok'){
+  const el = $('#log');
   if(!el) return;
-  var d = document.createElement('div');
-  d.className = 'log__e log__e--' + type;
-  d.textContent = '[' + now() + '] ' + msg;
+  const d = document.createElement('div');
+  d.className = 'log__e log__e--'+type;
+  d.textContent = `[${now()}] ${msg}`;
   el.appendChild(d);
   el.scrollTop = el.scrollHeight;
-  while(el.children.length > 150) el.removeChild(el.firstChild);
+  while(el.children.length > 120) el.removeChild(el.firstChild);
 }
 
-function status(txt){
-  var el = $('#ft-s');
-  if(el) el.textContent = txt;
-}
+function status(t){ const e=$('#ft-s'); if(e) e.textContent=t; }
 
 function sysUp(){
-  var el = $('#sys');
+  const el = $('#sys');
   if(!el) return;
-  function tag(v, c){ return '<span style="color:var(--'+c+')">'+v+'</span>'; }
-  var keyOk = isValidGroqKey(cfg.apiKey);
+  const tag = (v,c) => `<span style="color:var(--${c})">${v}</span>`;
+  const keyOk = isValidKey(cfg.apiKey);
   el.innerHTML =
-    'Micro: '+(S.stream ? tag('OK','fg') : tag('OFF','danger'))+'<br>'+
-    'API: '+(keyOk ? tag('OK','fg') : tag('INVALIDE / MANQUANTE','danger'))+'<br>'+
-    'Whisper: '+(keyOk ? tag('DISPONIBLE','fg') : tag('BESOIN CLE gsk_','warning'))+'<br>'+
-    'Mode: '+(S.autoMode ? tag('AUTO','warning') : tag('PTT','fg'));
+    `Micro: ${S.stream?tag('OK','fg'):tag('OFF','danger')}<br>`+
+    `API: ${keyOk?tag('OK','fg'):tag('INVALIDE','danger')}<br>`+
+    `TTS: ${cfg.tts?tag('ACTIF','fg'):tag('OFF','warning')}<br>`+
+    `Mode: ${S.autoMode?tag('AUTO','warning'):tag('PTT','fg')}`;
 }
 
 function liveSet(text, mode, timerText){
-  var tx = $('#live-tx');
-  var bd = $('#live-badge');
-  if(!tx || !bd) return;
+  const tx = $('#live-tx'), bd = $('#live-badge');
+  if(!tx||!bd) return;
   tx.className = 'live__tx';
   bd.className = 'live__badge';
-  switch(mode){
-    case 'idle':
-      tx.classList.add('live__tx--idle');
-      tx.textContent = text;
-      bd.textContent = 'PRET';
-      bd.classList.add('live__badge--off');
-      break;
-    case 'rec':
-      tx.classList.add('live__tx--rec');
-      tx.innerHTML = text + '<span class="live__cur"></span>';
-      bd.textContent = 'REC' + (timerText ? ' ' + timerText : '');
-      bd.classList.add('live__badge--rec');
-      break;
-    case 'send':
-      tx.classList.add('live__tx--think');
-      tx.textContent = text;
-      bd.textContent = 'WHISPER...';
-      bd.classList.add('live__badge--send');
-      break;
-    case 'think':
-      tx.classList.add('live__tx--think');
-      tx.textContent = text;
-      bd.textContent = 'IA...';
-      bd.classList.add('live__badge--send');
-      break;
-    case 'done':
-      tx.classList.add('live__tx--done');
-      tx.textContent = text;
-      bd.textContent = 'TRAITE';
-      bd.classList.add('live__badge--done');
-      break;
+  if(mode==='idle'){
+    tx.classList.add('live__tx--idle'); tx.textContent=text;
+    bd.textContent='PRET'; bd.classList.add('live__badge--off');
+  } else if(mode==='rec'){
+    tx.classList.add('live__tx--rec');
+    tx.innerHTML = text + '<span class="live__cur"></span>';
+    bd.textContent = 'REC'+(timerText?' '+timerText:'');
+    bd.classList.add('live__badge--rec');
+  } else if(mode==='send'){
+    tx.classList.add('live__tx--think'); tx.textContent=text;
+    bd.textContent='WHISPER...'; bd.classList.add('live__badge--send');
+  } else if(mode==='think'){
+    tx.classList.add('live__tx--think'); tx.textContent=text;
+    bd.textContent='IA...'; bd.classList.add('live__badge--send');
+  } else if(mode==='done'){
+    tx.classList.add('live__tx--done'); tx.textContent=text;
+    bd.textContent='TRAITE'; bd.classList.add('live__badge--done');
   }
 }
 
-function typeIn(el, txt, ms){
-  ms = ms || 40;
-  return new Promise(function(resolve){
-    var i = 0;
-    el.textContent = '';
-    el.classList.add('blink');
-    var iv = setInterval(function(){
-      el.textContent += txt[i];
-      i++;
-      if(i >= txt.length){
-        clearInterval(iv);
-        el.classList.remove('blink');
-        resolve();
-      }
+function typeIn(el, txt, ms=40){
+  return new Promise(res=>{
+    let i=0; el.textContent=''; el.classList.add('blink');
+    const iv=setInterval(()=>{
+      el.textContent += txt[i++];
+      if(i>=txt.length){ clearInterval(iv); el.classList.remove('blink'); res(); }
     }, ms);
   });
 }
 
+/* ===================== AUDIO ===================== */
 async function initAudio(){
-  try {
-    S.ctx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 48000 });
+  try{
+    S.ctx = new (window.AudioContext||window.webkitAudioContext)({sampleRate:48000});
     await S.ctx.resume();
-
     S.stream = await navigator.mediaDevices.getUserMedia({
-      audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
+      audio:{echoCancellation:true, noiseSuppression:true, autoGainControl:true}
     });
-
-    var src = S.ctx.createMediaStreamSource(S.stream);
-
+    const src = S.ctx.createMediaStreamSource(S.stream);
     S.analyser = S.ctx.createAnalyser();
-    S.analyser.fftSize = 2048;
-    S.analyser.smoothingTimeConstant = 0.8;
+    S.analyser.fftSize=2048; S.analyser.smoothingTimeConstant=0.8;
     src.connect(S.analyser);
     S.freq = new Uint8Array(S.analyser.frequencyBinCount);
     S.wave = new Uint8Array(S.analyser.frequencyBinCount);
-
     S.volNode = S.ctx.createAnalyser();
-    S.volNode.fftSize = 256;
+    S.volNode.fftSize=256;
     src.connect(S.volNode);
     S.vol = new Uint8Array(S.volNode.frequencyBinCount);
-
-    S.ready = true;
-    sizeCV();
-    drawLoop();
-    sysUp();
-    log('Audio 48kHz initialise — micro actif', 'ok');
+    S.ready=true;
+    sizeCV(); drawLoop(); sysUp();
+    log('Audio 48kHz prêt — micro actif','ok');
     return true;
-  } catch(e){
-    log('Micro indisponible : ' + e.message, 'err');
-    sysUp();
-    return false;
+  }catch(e){
+    log('Micro indisponible: '+e.message,'err');
+    sysUp(); return false;
   }
 }
 
@@ -447,712 +371,654 @@ function drawLoop(){
   S.analyser.getByteFrequencyData(S.freq);
   S.analyser.getByteTimeDomainData(S.wave);
   S.volNode.getByteFrequencyData(S.vol);
-  drawFreq();
-  drawWave();
-  drawVol();
+  drawFreq(); drawWave(); drawVol();
 }
 
 function drawFreq(){
-  var c = $('#cv-f'); if(!c) return;
-  var x = c.getContext('2d'), W = c.width, H = c.height;
-  x.fillStyle = '#020402'; x.fillRect(0,0,W,H);
-  x.strokeStyle = 'rgba(0,255,65,0.04)'; x.lineWidth = 1;
-  for(var gy=0;gy<H;gy+=26){ x.beginPath(); x.moveTo(0,gy); x.lineTo(W,gy); x.stroke(); }
-  var n = S.freq.length, bw = Math.max(1,W/n);
-  for(var i=0;i<n;i++){
-    var v = S.freq[i]; if(v<2) continue;
-    var h = Math.max(0,Math.log10(v+1)*24);
-    x.fillStyle = 'hsl('+Math.max(0,110-v*.45)+',100%,'+Math.max(10,v*.38)+'%)';
+  const c=$('#cv-f'); if(!c) return;
+  const x=c.getContext('2d'), W=c.width, H=c.height;
+  x.fillStyle='#020402'; x.fillRect(0,0,W,H);
+  const n=S.freq.length, bw=Math.max(1,W/n);
+  for(let i=0;i<n;i++){
+    const v=S.freq[i]; if(v<2) continue;
+    const h=Math.max(0,Math.log10(v+1)*24);
+    x.fillStyle=`hsl(${Math.max(0,110-v*.45)},100%,${Math.max(10,v*.38)}%)`;
     x.fillRect(i*bw,H-h,bw+.5,h);
   }
 }
 
 function drawWave(){
-  var c = $('#cv-w'); if(!c) return;
-  var x = c.getContext('2d'), W = c.width, H = c.height;
-  x.fillStyle = '#020402'; x.fillRect(0,0,W,H);
-  x.strokeStyle = 'rgba(0,255,65,0.06)'; x.lineWidth = 1;
-  x.beginPath(); x.moveTo(0,H/2); x.lineTo(W,H/2); x.stroke();
-  var col = cssVar('--fg');
-  x.strokeStyle = col; x.lineWidth = 2; x.shadowColor = col; x.shadowBlur = 6;
+  const c=$('#cv-w'); if(!c) return;
+  const x=c.getContext('2d'), W=c.width, H=c.height;
+  x.fillStyle='#020402'; x.fillRect(0,0,W,H);
+  const col=cssVar('--fg');
+  x.strokeStyle=col; x.lineWidth=2; x.shadowColor=col; x.shadowBlur=6;
   x.beginPath();
-  var st = W/S.wave.length;
-  for(var i=0;i<S.wave.length;i++){
-    var y = (S.wave[i]/128-0.5)*H*0.85+H/2;
-    i===0 ? x.moveTo(0,y) : x.lineTo(i*st,y);
+  const st=W/S.wave.length;
+  for(let i=0;i<S.wave.length;i++){
+    const y=(S.wave[i]/128-0.5)*H*0.85+H/2;
+    i===0?x.moveTo(0,y):x.lineTo(i*st,y);
   }
-  x.stroke(); x.shadowBlur = 0;
+  x.stroke(); x.shadowBlur=0;
 }
 
 function drawVol(){
-  var c = $('#cv-v'); if(!c) return;
-  var x = c.getContext('2d'), W = c.width, H = c.height;
-  x.fillStyle = '#020402'; x.fillRect(0,0,W,H);
-  var sum=0; for(var i=0;i<S.vol.length;i++) sum+=S.vol[i];
-  var pct = sum/S.vol.length/255;
-  var bw=W*.45, bh=Math.max(2,pct*H*.88), bx=(W-bw)/2, by=H-bh;
-  var hue=Math.max(0,120-pct*200);
-  x.fillStyle='hsl('+hue+',100%,42%)'; x.shadowColor='hsl('+hue+',100%,55%)'; x.shadowBlur=10;
+  const c=$('#cv-v'); if(!c) return;
+  const x=c.getContext('2d'), W=c.width, H=c.height;
+  x.fillStyle='#020402'; x.fillRect(0,0,W,H);
+  let sum=0; for(let i=0;i<S.vol.length;i++) sum+=S.vol[i];
+  const pct=sum/S.vol.length/255;
+  const bw=W*.45, bh=Math.max(2,pct*H*.88), bx=(W-bw)/2, by=H-bh;
+  const hue=Math.max(0,120-pct*200);
+  x.fillStyle=`hsl(${hue},100%,42%)`; x.shadowColor=`hsl(${hue},100%,55%)`; x.shadowBlur=10;
   x.fillRect(bx,by,bw,bh); x.shadowBlur=0;
-  var col=cssVar('--fg'); x.fillStyle=col; x.font='22px VT323';
-  x.textAlign='center'; x.textBaseline='middle'; x.fillText(Math.round(pct*100)+'%',W/2,H/2);
+  x.fillStyle=cssVar('--fg'); x.font='22px VT323';
+  x.textAlign='center'; x.textBaseline='middle';
+  x.fillText(Math.round(pct*100)+'%',W/2,H/2);
 }
 
 function sizeCV(){
-  var all = document.querySelectorAll('#app .cv');
-  for(var i=0;i<all.length;i++){
-    var c=all[i], r=c.parentElement.getBoundingClientRect();
+  document.querySelectorAll('#app .cv').forEach(c=>{
+    const r=c.parentElement.getBoundingClientRect();
     c.width=Math.max(80,r.width-32); c.height=110;
-  }
+  });
 }
 
 function bestMime(){
-  var t=['audio/webm;codecs=opus','audio/webm','audio/ogg;codecs=opus','audio/mpeg','audio/mp4'];
-  for(var i=0;i<t.length;i++) if(MediaRecorder.isTypeSupported(t[i])) return t[i];
+  const t=['audio/webm;codecs=opus','audio/webm','audio/ogg;codecs=opus','audio/mp4'];
+  for(const m of t) if(MediaRecorder.isTypeSupported(m)) return m;
   return '';
 }
 
+/* ===================== REC MANUEL ===================== */
 function recOn(){
   if(S.recActive||!S.stream) return;
-  var mime = bestMime();
-  if(!mime){ log('Aucun format audio supporte','err'); return; }
-  S.recActive = true; S.chunks = []; S.recT0 = Date.now();
-  try { S.recorder = new MediaRecorder(S.stream,{mimeType:mime}); }
+  const mime=bestMime();
+  if(!mime){ log('Format audio non supporté','err'); return; }
+  S.recActive=true; S.chunks=[]; S.recT0=Date.now();
+  try{ S.recorder=new MediaRecorder(S.stream,{mimeType:mime}); }
   catch(e){ log('MediaRecorder: '+e.message,'err'); S.recActive=false; return; }
-  S.recorder.ondataavailable = function(e){ if(e.data&&e.data.size>0) S.chunks.push(e.data); };
-  S.recorder.onstop = recDone;
+  S.recorder.ondataavailable=e=>{ if(e.data?.size>0) S.chunks.push(e.data); };
+  S.recorder.onstop=recDone;
   S.recorder.start(200);
   $('#b-rec').classList.add('recording');
-  $('#b-stop').disabled = false;
+  $('#b-stop').disabled=false;
   $('#timer').classList.add('recbar__t--a');
   status('Enregistrement...');
-  log('REC: '+mime.split(';')[0],'ok');
+  log('REC démarré','ok');
   startClk();
 }
 
 function recOff(){
   if(!S.recActive) return;
-  S.recActive = false; S.recorder.stop();
+  S.recActive=false; S.recorder.stop();
   $('#b-rec').classList.remove('recording');
-  $('#b-stop').disabled = true;
+  $('#b-stop').disabled=true;
   $('#timer').classList.remove('recbar__t--a');
   stopClk();
 }
 
 function recDone(){
-  var mime = S.recorder.mimeType||'', ext='webm';
-  if(mime.indexOf('ogg')!==-1) ext='ogg';
-  else if(mime.indexOf('mp4')!==-1) ext='m4a';
-  else if(mime.indexOf('mpeg')!==-1) ext='mp3';
-  var blob=new Blob(S.chunks,{type:mime}), url=URL.createObjectURL(blob);
-  var dur=Math.floor((Date.now()-S.recT0)/1000);
-  var name='Cap_'+new Date().toLocaleString('fr-FR').replace(/[/: ]/g,'-');
-  caps.unshift({name:name,url:url,blob:blob,ext:ext,dur:dur});
-  buildCaps(); status('Pret');
-  log('Capture: '+dur+'s '+ext.toUpperCase(),'ok');
+  const mime=S.recorder.mimeType||'';
+  let ext='webm';
+  if(mime.includes('ogg')) ext='ogg';
+  else if(mime.includes('mp4')) ext='m4a';
+  const blob=new Blob(S.chunks,{type:mime});
+  const url=URL.createObjectURL(blob);
+  const dur=Math.floor((Date.now()-S.recT0)/1000);
+  const name='Cap_'+new Date().toLocaleString('fr-FR').replace(/[/: ]/g,'-');
+  caps.unshift({name,url,blob,ext,dur});
+  buildCaps(); status('Prêt');
+  log(`Capture: ${dur}s ${ext.toUpperCase()}`,'ok');
 }
 
 function startClk(){
-  var s=0; $('#timer').textContent='00:00:00';
-  S.recIv=setInterval(function(){ s++; $('#timer').textContent=fmt(s); },1000);
+  let s=0; $('#timer').textContent='00:00:00';
+  S.recIv=setInterval(()=>{ s++; $('#timer').textContent=fmt(s); },1000);
 }
 function stopClk(){ clearInterval(S.recIv); $('#timer').textContent='00:00:00'; }
 
+/* ===================== CAPTURES ===================== */
 function buildCaps(){
-  var el=$('#caps-list');
-  if(!caps.length){ el.innerHTML='<div class="empty">Aucune capture.</div>'; return; }
+  const el=$('#caps-list');
+  if(!caps.length){ el.innerHTML='<div class="empty">Aucune capture</div>'; return; }
   el.innerHTML='';
-  caps.forEach(function(c,i){
-    var row=document.createElement('div'); row.className='cap';
-    var info=document.createElement('div'); info.className='cap__i';
-    var nm=document.createElement('div'); nm.className='cap__n'; nm.textContent=c.name;
-    var mt=document.createElement('div'); mt.className='cap__m'; mt.textContent=c.dur+'s | '+c.ext.toUpperCase();
-    info.appendChild(nm); info.appendChild(mt); row.appendChild(info);
-    var acts=document.createElement('div'); acts.className='cap__a';
-    [{t:'PLAY',f:capPlay},{t:'IA',f:capAI},{t:'SAVE',f:capDL},{t:'DEL',c:'btn--danger',f:capDel}].forEach(function(l){
-      var b=document.createElement('button'); b.className='btn btn--small '+(l.c||'');
-      b.textContent=l.t; b.addEventListener('click',function(){ l.f(i); }); acts.appendChild(b);
+  caps.forEach((c,i)=>{
+    const row=document.createElement('div'); row.className='cap';
+    row.innerHTML=`
+      <div class="cap__i">
+        <div class="cap__n">${c.name}</div>
+        <div class="cap__m">${c.dur}s | ${c.ext.toUpperCase()}</div>
+      </div>
+      <div class="cap__a">
+        <button class="btn btn--small" data-a="play">PLAY</button>
+        <button class="btn btn--small" data-a="ai">IA</button>
+        <button class="btn btn--small" data-a="dl">SAVE</button>
+        <button class="btn btn--small btn--danger" data-a="del">DEL</button>
+      </div>`;
+    row.querySelectorAll('button').forEach(b=>{
+      b.onclick=()=>{
+        const a=b.dataset.a;
+        if(a==='play'){ $('#ply').src=c.url; $('#ply').play(); log('Lecture: '+c.name,'ok'); }
+        if(a==='ai'){ log('Envoi IA: '+c.name,'info'); whisperThenAnalyze(c.blob); }
+        if(a==='dl'){
+          const a=document.createElement('a'); a.href=c.url; a.download=c.name+'.'+c.ext;
+          document.body.appendChild(a); a.click(); a.remove();
+        }
+        if(a==='del'){ URL.revokeObjectURL(c.url); caps.splice(i,1); buildCaps(); }
+      };
     });
-    row.appendChild(acts); el.appendChild(row);
+    el.appendChild(row);
   });
 }
-function capPlay(i){ var c=caps[i]; if(!c)return; $('#ply').src=c.url; $('#ply').play(); log('Lecture: '+c.name,'ok'); }
-function capAI(i){ var c=caps[i]; if(!c)return; log('Envoi IA: '+c.name,'info'); whisperThenAnalyze(c.blob, c.ext); }
-function capDL(i){ var c=caps[i]; if(!c)return; var a=document.createElement('a'); a.href=c.url; a.download=c.name+'.'+c.ext; document.body.appendChild(a); a.click(); document.body.removeChild(a); log('DL: '+a.download,'ok'); }
-function capDel(i){ if(!caps[i])return; URL.revokeObjectURL(caps[i].url); caps.splice(i,1); buildCaps(); log('Supprime','ok'); }
 
-/* ══════════════════════════════════════════════════
-   WHISPER — avec gestion propre du 401
-   ══════════════════════════════════════════════════ */
-async function whisperTranscribe(audioBlob){
-  var key = cleanKey(cfg.apiKey);
-
-  if(!key){
-    log('WHISPER: Cle API manquante','err');
-    return null;
-  }
-  if(!isValidGroqKey(key)){
-    log('WHISPER: Cle invalide (doit commencer par gsk_)','err');
-    log('Ouvre PARAMETRES → colle une vraie clé Groq → SAUVEGARDER → TESTER','err');
+/* ===================== WHISPER ===================== */
+async function whisperTranscribe(blob){
+  const key=cleanKey(cfg.apiKey);
+  if(!isValidKey(key)){
+    log('WHISPER: clé API invalide (gsk_...)','err');
     return null;
   }
 
-  var ext = 'webm';
-  if(audioBlob.type.indexOf('ogg')!==-1) ext='ogg';
-  else if(audioBlob.type.indexOf('mp4')!==-1) ext='m4a';
-  else if(audioBlob.type.indexOf('mpeg')!==-1) ext='mp3';
+  let ext='webm';
+  if(blob.type.includes('ogg')) ext='ogg';
+  else if(blob.type.includes('mp4')) ext='m4a';
 
-  log('WHISPER: envoi audio ('+ext+', '+Math.round(audioBlob.size/1024)+'Ko)...','info');
+  log(`WHISPER: envoi (${ext}, ${Math.round(blob.size/1024)}Ko)...`,'info');
 
-  try {
-    var formData = new FormData();
-    formData.append('file', audioBlob, 'audio.' + ext);
-    formData.append('model', 'whisper-large-v3-turbo');
-    formData.append('language', cfg.lang);
-    formData.append('response_format', 'json');
+  try{
+    const fd=new FormData();
+    fd.append('file', blob, 'audio.'+ext);
+    fd.append('model','whisper-large-v3-turbo');
+    fd.append('language', cfg.lang);
+    fd.append('response_format','json');
+    fd.append('temperature','0.0');
+    fd.append('prompt','Transcris en français tout ce qui est audible : paroles, bruits, sons, onomatopées, environnement, musique, silence partiel. Sois descriptif si ce n\'est pas de la parole claire.');
 
-    var response = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
-      method: 'POST',
-      headers: {
-        'Authorization': 'Bearer ' + key
-      },
-      body: formData
+    const res=await fetch('https://api.groq.com/openai/v1/audio/transcriptions',{
+      method:'POST',
+      headers:{'Authorization':'Bearer '+key},
+      body:fd
     });
 
-    if(!response.ok){
-      var errBody = await response.text();
-      var short = errBody.substring(0, 300);
-
-      if(response.status === 401){
-        log('WHISPER 401 — CLE API INVALIDE','err');
-        log('La clé envoyée est refusée par Groq.','err');
-        log('1. Va sur console.groq.com → API Keys','err');
-        log('2. Crée une nouvelle clé (gsk_...)','err');
-        log('3. PARAMETRES → colle → SAUVEGARDER → TESTER','err');
-        throw new Error('401 Invalid API Key — regarde le journal');
+    if(!res.ok){
+      const err=await res.text();
+      if(res.status===401){
+        log('WHISPER 401 — Clé refusée par Groq','err');
+        throw new Error('401 Invalid API Key');
       }
-      throw new Error(response.status + ' — ' + short);
+      throw new Error(res.status+' — '+err.substring(0,180));
     }
 
-    var data = await response.json();
-    var text = (data.text || '').trim();
-
+    const data=await res.json();
+    const text=(data.text||'').trim();
     if(text){
-      log('WHISPER OK: "' + text + '"', 'ok');
+      log('WHISPER OK: "'+text+'"','ok');
       return text;
-    } else {
-      log('WHISPER: texte vide (silence ou bruit)','dbg');
-      return null;
     }
-  } catch(error){
-    log('WHISPER ERREUR: ' + error.message, 'err');
+    log('WHISPER: segment silencieux / bruit non identifiable','dbg');
+    return null;
+  }catch(e){
+    log('WHISPER ERREUR: '+e.message,'err');
     return null;
   }
 }
 
-async function whisperThenAnalyze(blob, ext){
-  liveSet('Transcription Whisper...', 'send');
-  var text = await whisperTranscribe(blob);
+async function whisperThenAnalyze(blob){
+  liveSet('Transcription Whisper...','send');
+  const text=await whisperTranscribe(blob);
   if(text){
-    liveSet(text, 'done');
+    liveSet(text,'done');
     await sendToGroq(text);
-  } else {
-    liveSet('Aucune parole detectee dans cette capture', 'idle');
-    status('Pret');
+  }else{
+    liveSet('Aucune parole claire détectée','idle');
+    status('Prêt');
   }
 }
 
-/* ══════════════════════════════════════════════════
-   PTT
-   ══════════════════════════════════════════════════ */
+/* ===================== PTT ===================== */
 function pttDown(e){
   e.preventDefault();
-  if(!S.ready){ log('Systeme non initialise','err'); return; }
-  if(S.autoMode){ log('Desactivez AUTO d\'abord','err'); return; }
+  if(!S.ready){ log('Système non prêt','err'); return; }
+  if(S.autoMode){ log('Désactive AUTO d\'abord','err'); return; }
   if(S.pttActive) return;
 
-  S.pttActive = true;
-  S.pttChunks = [];
-  S.pttSec = 0;
+  S.pttActive=true; S.pttChunks=[]; S.pttSec=0;
+  const mime=bestMime();
+  try{ S.pttRecorder=new MediaRecorder(S.stream,{mimeType:mime}); }
+  catch(err){ log('PTT erreur: '+err.message,'err'); S.pttActive=false; return; }
 
-  var mime = bestMime();
-  try {
-    S.pttRecorder = new MediaRecorder(S.stream, { mimeType: mime });
-  } catch(err){
-    log('PTT MediaRecorder echec: ' + err.message, 'err');
-    S.pttActive = false;
-    return;
-  }
-
-  S.pttRecorder.ondataavailable = function(ev){
-    if(ev.data && ev.data.size > 0) S.pttChunks.push(ev.data);
-  };
-  S.pttRecorder.onstop = function(){ onPTTComplete(); };
+  S.pttRecorder.ondataavailable=ev=>{ if(ev.data?.size>0) S.pttChunks.push(ev.data); };
+  S.pttRecorder.onstop=onPTTComplete;
   S.pttRecorder.start(200);
 
-  var btn = $('#ptt');
+  const btn=$('#ptt');
   btn.classList.add('ptt--rec');
-  btn.innerHTML = 'ENREGISTRE...<br><small>relachez</small>';
+  btn.innerHTML='ENREGISTRE...<br><small>relâchez</small>';
 
-  S.pttIv = setInterval(function(){
+  S.pttIv=setInterval(()=>{
     S.pttSec++;
-    liveSet('Enregistrement...', 'rec', fmt(S.pttSec));
-  }, 1000);
+    liveSet('Enregistrement...','rec',fmt(S.pttSec));
+  },1000);
 
-  liveSet('Enregistrement...', 'rec', '00:00');
-  status('Enregistrement PTT...');
-  log('PTT: appui — enregistrement demarre (' + mime.split(';')[0] + ')', 'ok');
+  liveSet('Enregistrement...','rec','00:00');
+  status('PTT en cours...');
+  log('PTT démarré','ok');
 }
 
 function pttUp(e){
   e.preventDefault();
   if(!S.pttActive) return;
-  S.pttActive = false;
+  S.pttActive=false;
   clearInterval(S.pttIv);
 
-  var btn = $('#ptt');
+  const btn=$('#ptt');
   btn.classList.remove('ptt--rec');
-  btn.innerHTML = 'MAINTENIR<br>POUR PARLER';
+  btn.innerHTML='MAINTENIR<br>POUR PARLER';
 
-  log('PTT: relache — finalisation en 400ms...', 'ok');
-  liveSet('Finalisation...', 'send');
+  liveSet('Finalisation...','send');
   status('Finalisation...');
 
-  setTimeout(function(){
-    if(S.pttRecorder && S.pttRecorder.state === 'recording'){
-      S.pttRecorder.stop();
-    } else {
-      log('PTT: enregistrement trop court','err');
-      liveSet('Trop court — maintenez plus longtemps', 'idle');
-      status('Pret');
+  setTimeout(()=>{
+    if(S.pttRecorder?.state==='recording') S.pttRecorder.stop();
+    else{
+      liveSet('Trop court','idle');
+      status('Prêt');
     }
-  }, 400);
+  },400);
 }
 
 async function onPTTComplete(){
-  if(!S.pttRecorder) return;
-  var mime = S.pttRecorder.mimeType || bestMime();
-  var blob = new Blob(S.pttChunks, { type: mime });
-  var sizeKo = Math.round(blob.size / 1024);
-
-  log('PTT: blob cree (' + sizeKo + 'Ko)', 'dbg');
-
-  if(blob.size < 1500){
-    log('PTT: blob trop petit (' + sizeKo + 'Ko), abandon', 'err');
-    liveSet('Enregistrement trop court', 'idle');
-    status('Pret — maintenez plus longtemps');
+  const mime=S.pttRecorder?.mimeType||bestMime();
+  const blob=new Blob(S.pttChunks,{type:mime});
+  if(blob.size<1200){
+    log('PTT trop court','err');
+    liveSet('Trop court — maintenez plus longtemps','idle');
+    status('Prêt');
     return;
   }
 
-  liveSet('Transcription Whisper...', 'send');
-  status('Transcription Whisper...');
-
-  var text = await whisperTranscribe(blob);
-
+  liveSet('Transcription Whisper...','send');
+  status('Whisper...');
+  const text=await whisperTranscribe(blob);
   if(text){
-    S.lastText = text;
-    liveSet(text, 'done');
+    S.lastText=text;
+    liveSet(text,'done');
     await sendToGroq(text);
-  } else {
-    liveSet('Aucune parole detectee — parlez plus fort ou plus longtemps', 'idle');
-    status('Pret');
+  }else{
+    liveSet('Rien de clair détecté','idle');
+    status('Prêt');
   }
 }
 
-/* ══════════════════════════════════════════════════
-   MODE AUTO
-   ══════════════════════════════════════════════════ */
+/* ===================== MODE AUTO ===================== */
 async function autoOn(){
   if(S.autoRunning) return;
-  S.autoMode = true;
-  S.autoRunning = true;
-
+  S.autoMode=true; S.autoRunning=true;
   $('#b-auto').classList.add('btn--active');
-  log('MODE AUTO: demarre (tranches de 5s)', 'info');
+  log('MODE AUTO démarré — capture parole + bruits + sons','info');
   sysUp();
 
   while(S.autoMode){
-    liveSet('Enregistrement AUTO (5s)...', 'rec', '00:00');
-    status('Enregistrement AUTO...');
+    liveSet('Écoute AUTO (5s)...','rec','00:00');
+    status('Écoute AUTO...');
 
-    var blob = await recordForDuration(5000);
+    const blob=await recordForDuration(5000);
     if(!S.autoMode) break;
 
-    if(blob.size < 1500){
-      log('AUTO: segment silencieux, ignore', 'dbg');
+    if(blob.size<700){
+      log('AUTO: quasi silence, skip','dbg');
       continue;
     }
 
-    liveSet('Transcription Whisper...', 'send');
-    status('Transcription AUTO...');
+    liveSet('Transcription...','send');
+    status('Whisper AUTO...');
 
-    var text = await whisperTranscribe(blob);
+    let text=await whisperTranscribe(blob);
     if(!S.autoMode) break;
 
     if(!text){
-      log('AUTO: pas de parole dans ce segment', 'dbg');
-      await sleep(500);
-      continue;
+      text='[bruit ambiant / sons non identifiés / silence partiel]';
+      log('AUTO: segment traité comme bruit','dbg');
     }
 
-    S.lastText = text;
-    liveSet(text, 'done');
-    log('AUTO: "' + text + '"', 'ok');
+    S.lastText=text;
+    liveSet(text,'done');
+    log('AUTO → "'+text+'"','ok');
     await sendToGroq(text);
 
     if(!S.autoMode) break;
-    await sleep(800);
+    await sleep(500);
   }
-
-  S.autoRunning = false;
-  log('MODE AUTO: arrete', 'ok');
+  S.autoRunning=false;
+  log('MODE AUTO arrêté','ok');
 }
 
 function autoOff(){
-  S.autoMode = false;
+  S.autoMode=false;
   $('#b-auto').classList.remove('btn--active');
-  liveSet('Mode arret.', 'idle');
-  status('Pret');
-  log('MODE AUTO: desactive', 'ok');
+  liveSet('Mode arrêté','idle');
+  status('Prêt');
+  log('AUTO désactivé','ok');
   sysUp();
 }
 
 function recordForDuration(ms){
-  return new Promise(function(resolve){
-    var chunks = [];
-    var mime = bestMime();
-    try {
-      var recorder = new MediaRecorder(S.stream, { mimeType: mime });
-    } catch(e){
-      log('AUTO MediaRecorder echec: ' + e.message, 'err');
-      resolve(new Blob([], { type: mime }));
-      return;
-    }
+  return new Promise(resolve=>{
+    const chunks=[];
+    const mime=bestMime();
+    let rec;
+    try{ rec=new MediaRecorder(S.stream,{mimeType:mime}); }
+    catch(e){ resolve(new Blob([],{type:mime})); return; }
 
-    recorder.ondataavailable = function(e){
-      if(e.data && e.data.size > 0) chunks.push(e.data);
-    };
-    recorder.onstop = function(){
-      resolve(new Blob(chunks, { type: recorder.mimeType || mime }));
-    };
+    rec.ondataavailable=e=>{ if(e.data?.size>0) chunks.push(e.data); };
+    rec.onstop=()=>resolve(new Blob(chunks,{type:rec.mimeType||mime}));
 
-    var sec = 0;
-    var iv = setInterval(function(){
+    let sec=0;
+    const iv=setInterval(()=>{
       sec++;
-      liveSet('Enregistrement AUTO (5s)...', 'rec', fmt(sec));
-    }, 1000);
+      liveSet('Écoute AUTO (5s)...','rec',fmt(sec));
+    },1000);
 
-    recorder.start(200);
-    setTimeout(function(){
+    rec.start(200);
+    setTimeout(()=>{
       clearInterval(iv);
-      if(recorder.state === 'recording') recorder.stop();
-      else resolve(new Blob(chunks, { type: recorder.mimeType || mime }));
-    }, ms);
+      if(rec.state==='recording') rec.stop();
+      else resolve(new Blob(chunks,{type:mime}));
+    },ms);
   });
 }
 
-function sleep(ms){
-  return new Promise(function(resolve){ setTimeout(resolve, ms); });
-}
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
-/* ══════════════════════════════════════════════════
-   GROQ CHAT
-   ══════════════════════════════════════════════════ */
+/* ===================== GROQ + TTS ===================== */
 async function sendToGroq(text){
-  var el = $('#ai-rpt');
-  var key = cleanKey(cfg.apiKey);
-
-  if(!isValidGroqKey(key)){
-    el.textContent = 'Cle API invalide ou manquante.\nPARAMETRES > colle une clé gsk_... puis SAUVEGARDER + TESTER';
-    log('Cle API manquante/invalide','err');
-    status('Cle API manquante');
+  const el=$('#ai-rpt');
+  const key=cleanKey(cfg.apiKey);
+  if(!isValidKey(key)){
+    el.textContent='Clé API manquante ou invalide.\nVa dans PARAMÈTRES.';
+    log('Clé API invalide','err');
     return;
   }
 
-  liveSet('Analyse IA en cours...', 'think');
-  el.textContent = 'Analyse en cours...';
-  status('Analyse IA...');
+  liveSet('Analyse IA...','think');
+  el.textContent='Analyse en cours...';
+  status('IA en cours...');
 
-  var prompt =
-    'Analyse ce contenu vocal en francais:\n"' + text + '"\n' +
-    '- Corrige les erreurs de transcription.\n' +
-    '- Donne une interpretation breve et precise.\n' +
-    '- Maximum 5 phrases, sois direct.';
+  const prompt=`Analyse ce contenu audio en français :
+"${text}"
 
-  try {
-    var response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + key
+- Corrige les erreurs de transcription si besoin
+- Interprète brièvement (parole, bruit, son, ambiance...)
+- Maximum 4-5 phrases, sois direct et naturel`;
+
+  try{
+    const res=await fetch('https://api.groq.com/openai/v1/chat/completions',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'Authorization':'Bearer '+key
       },
-      body: JSON.stringify({
-        model: cfg.model,
-        messages: [
-          { role: 'system', content: 'Analyste audio expert. Francais, precis, concis.' },
-          { role: 'user', content: prompt }
+      body:JSON.stringify({
+        model:cfg.model,
+        messages:[
+          {role:'system',content:'Tu es un analyste audio expert. Réponds en français, de façon claire, concise et naturelle.'},
+          {role:'user',content:prompt}
         ],
-        temperature: 0.3,
-        max_tokens: 400
+        temperature:0.35,
+        max_tokens:350
       })
     });
 
-    if(!response.ok){
-      var errBody = await response.text();
-      if(response.status === 401){
-        throw new Error('401 — Clé API invalide (même problème que Whisper)');
-      }
-      throw new Error(response.status + ' — ' + errBody.substring(0, 150));
+    if(!res.ok){
+      const err=await res.text();
+      if(res.status===401) throw new Error('401 — Clé API invalide');
+      throw new Error(res.status+' — '+err.substring(0,150));
     }
 
-    var data = await response.json();
-    var answer = (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content)
-                 || 'Aucune reponse.';
+    const data=await res.json();
+    const answer=(data.choices?.[0]?.message?.content||'Aucune réponse.').trim();
 
-    el.textContent =
-      'TRANSCRIPTION:\n"' + text + '"\n\n' +
-      '────────────────────────\n' +
-      'ANALYSE IA (' + cfg.model + ')\n' +
-      '────────────────────────\n\n' +
-      answer + '\n\n' + now();
+    el.textContent=
+`TRANSCRIPTION:
+"${text}"
 
-    log('IA: analyse terminee', 'ok');
-    status('Pret');
-    speak(answer.substring(0, 280));
-  } catch(error){
-    el.textContent = 'Erreur: ' + error.message + '\nVerifiez la cle API et la connexion.';
-    log('IA erreur: ' + error.message, 'err');
+────────────────────────
+ANALYSE IA (${cfg.model})
+────────────────────────
+
+${answer}
+
+${now()}`;
+
+    log('IA terminée','ok');
+    status('Prêt');
+    // TTS oral (même en mode AUTO)
+    speak(answer);
+  }catch(e){
+    el.textContent='Erreur: '+e.message;
+    log('IA erreur: '+e.message,'err');
     status('Erreur IA');
-    liveSet('Erreur IA', 'idle');
+    liveSet('Erreur IA','idle');
   }
 }
 
+/* ===================== TTS AMÉLIORÉ ===================== */
 function speak(text){
-  if(!cfg.tts || !window.speechSynthesis || S.pttActive || S.autoMode) return;
+  if(!cfg.tts || !window.speechSynthesis || !text) return;
+
+  // Coupe ce qui est déjà en train de parler
   window.speechSynthesis.cancel();
-  var u = new SpeechSynthesisUtterance(text);
-  u.lang = cfg.lang === 'fr' ? 'fr-FR' : cfg.lang;
-  u.rate = 0.95;
-  window.speechSynthesis.speak(u);
+  S.speaking=true;
+
+  const doSpeak=()=>{
+    const u=new SpeechSynthesisUtterance(text.substring(0,400));
+    u.lang = cfg.lang==='fr'?'fr-FR':(cfg.lang==='es'?'es-ES':'en-US');
+    u.rate=0.94;
+    u.pitch=1;
+    u.volume=1;
+
+    const voices=window.speechSynthesis.getVoices();
+    // Priorité : voix française de qualité
+    let voice=voices.find(v=>v.lang.startsWith(cfg.lang)&&(v.name.includes('Google')||v.name.includes('Microsoft')||v.localService));
+    if(!voice) voice=voices.find(v=>v.lang.startsWith(cfg.lang));
+    if(voice) u.voice=voice;
+
+    u.onend=()=>{ S.speaking=false; };
+    u.onerror=e=>{
+      S.speaking=false;
+      log('TTS erreur: '+(e.error||'inconnu'),'err');
+    };
+
+    window.speechSynthesis.speak(u);
+    log('TTS: lecture orale démarrée','dbg');
+  };
+
+  // Attendre le chargement des voix (crucial sur Android)
+  const voices=window.speechSynthesis.getVoices();
+  if(voices.length){
+    doSpeak();
+  }else{
+    window.speechSynthesis.onvoiceschanged=()=>{
+      doSpeak();
+      window.speechSynthesis.onvoiceschanged=null;
+    };
+    // Fallback
+    setTimeout(doSpeak,400);
+  }
 }
 
+/* ===================== TEXTE MANUEL ===================== */
 function sendText(){
-  var inp = $('#txt-in');
-  var text = inp.value.trim();
+  const inp=$('#txt-in');
+  const text=inp.value.trim();
   if(!text){ log('Champ vide','err'); return; }
-  log('Texte: "' + text + '"', 'info');
-  S.lastText = text;
-  liveSet(text, 'done');
-  inp.value = '';
+  log('Texte: "'+text+'"','info');
+  S.lastText=text;
+  liveSet(text,'done');
+  inp.value='';
   sendToGroq(text);
 }
 
-/* ══════════════════════════════════════════════════
-   PARAMETRES + TEST CLÉ
-   ══════════════════════════════════════════════════ */
+/* ===================== CONFIG ===================== */
 function loadCfg(){
-  try {
-    var r = localStorage.getItem('sl18');
+  try{
+    const r=localStorage.getItem('sl18');
     if(r){
-      var p = JSON.parse(r);
-      Object.keys(p).forEach(function(k){
-        if(p.hasOwnProperty(k) && DEFAULTS.hasOwnProperty(k)) cfg[k] = p[k];
-      });
-      cfg.apiKey = cleanKey(cfg.apiKey);
+      const p=JSON.parse(r);
+      Object.keys(DEFAULTS).forEach(k=>{ if(p[k]!==undefined) cfg[k]=p[k]; });
+      cfg.apiKey=cleanKey(cfg.apiKey);
     }
-  } catch(e){}
+  }catch(e){}
   applyCfg();
 }
 
 function applyCfg(){
-  var c = cfg.color;
-  var r = parseInt(c.slice(1,3),16), g = parseInt(c.slice(3,5),16), b = parseInt(c.slice(5,7),16);
-  document.documentElement.style.setProperty('--fg', c);
-  document.documentElement.style.setProperty('--fg-dim', c+'88');
-  document.documentElement.style.setProperty('--fg-muted', c+'44');
-  document.documentElement.style.setProperty('--glow', '0 0 8px rgba('+r+','+g+','+b+',0.4)');
-  document.documentElement.style.setProperty('--glow-s', '0 0 20px rgba('+r+','+g+','+b+',0.6)');
-  document.documentElement.style.setProperty('--glow-d', '0 0 12px rgba(255,0,68,0.5)');
-  document.documentElement.style.setProperty('--glow-i', '0 0 12px rgba(0,204,255,0.5)');
-  document.documentElement.style.setProperty('--bg-panel', 'rgba('+Math.floor(r*.04)+','+Math.floor(g*.08)+','+Math.floor(b*.04)+',1)');
-  $('#i-key').value = cfg.apiKey || '';
-  $('#i-model').value = cfg.model;
-  $('#i-lang').value = cfg.lang;
-  $('#i-tts').checked = cfg.tts;
-  $('#i-col').value = cfg.color;
-  $('#hd-m').textContent = 'WHISPER ' + cfg.model.split('-').slice(0,2).join(' ').toUpperCase();
+  const c=cfg.color;
+  const r=parseInt(c.slice(1,3),16), g=parseInt(c.slice(3,5),16), b=parseInt(c.slice(5,7),16);
+  document.documentElement.style.setProperty('--fg',c);
+  document.documentElement.style.setProperty('--fg-dim',c+'88');
+  document.documentElement.style.setProperty('--fg-muted',c+'44');
+  document.documentElement.style.setProperty('--glow',`0 0 8px rgba(${r},${g},${b},0.4)`);
+  document.documentElement.style.setProperty('--glow-s',`0 0 20px rgba(${r},${g},${b},0.6)`);
+  document.documentElement.style.setProperty('--bg-panel',`rgba(${Math.floor(r*.04)},${Math.floor(g*.08)},${Math.floor(b*.04)},1)`);
+  $('#i-key').value=cfg.apiKey||'';
+  $('#i-model').value=cfg.model;
+  $('#i-lang').value=cfg.lang;
+  $('#i-tts').checked=cfg.tts;
+  $('#i-col').value=cfg.color;
+  $('#hd-m').textContent='WHISPER + VOIX';
   sysUp();
 }
 
 function saveCfg(){
-  cfg.apiKey = cleanKey($('#i-key').value);
-  cfg.model = $('#i-model').value;
-  cfg.lang = $('#i-lang').value;
-  cfg.tts = $('#i-tts').checked;
-  cfg.color = $('#i-col').value;
-
-  localStorage.setItem('sl18', JSON.stringify(cfg));
+  cfg.apiKey=cleanKey($('#i-key').value);
+  cfg.model=$('#i-model').value;
+  cfg.lang=$('#i-lang').value;
+  cfg.tts=$('#i-tts').checked;
+  cfg.color=$('#i-col').value;
+  localStorage.setItem('sl18',JSON.stringify(cfg));
   applyCfg();
-
-  if(isValidGroqKey(cfg.apiKey)){
-    log('Config sauvee — clé valide (gsk_...)', 'ok');
-  } else {
-    log('Config sauvee — ATTENTION : clé invalide ou manquante', 'err');
-  }
+  log(isValidKey(cfg.apiKey)?'Config sauvée — clé OK':'Config sauvée — clé invalide','ok');
 }
 
 function rstCfg(){
-  if(!confirm('Reinitialiser?')) return;
-  Object.keys(DEFAULTS).forEach(function(k){ cfg[k] = DEFAULTS[k]; });
+  if(!confirm('Réinitialiser ?')) return;
+  cfg={...DEFAULTS};
   localStorage.removeItem('sl18');
   applyCfg();
-  log('Reset','err');
+  log('Reset effectué','err');
 }
 
 async function testApiKey(){
-  var key = cleanKey($('#i-key').value || cfg.apiKey);
-  if(!key){
-    log('TEST: aucune clé collée','err');
-    alert('Colle d\'abord une clé gsk_...');
+  const key=cleanKey($('#i-key').value||cfg.apiKey);
+  if(!isValidKey(key)){
+    alert('Colle une clé qui commence par gsk_');
     return;
   }
-  if(!isValidGroqKey(key)){
-    log('TEST: la clé ne commence pas par gsk_','err');
-    alert('Clé invalide. Elle doit commencer par gsk_');
-    return;
-  }
-
-  log('TEST: vérification de la clé auprès de Groq...','info');
-  status('Test clé API...');
-
-  try {
-    // On teste avec un endpoint léger (models)
-    var response = await fetch('https://api.groq.com/openai/v1/models', {
-      method: 'GET',
-      headers: {
-        'Authorization': 'Bearer ' + key
-      }
+  log('TEST de la clé...','info');
+  status('Test clé...');
+  try{
+    const res=await fetch('https://api.groq.com/openai/v1/models',{
+      headers:{'Authorization':'Bearer '+key}
     });
-
-    if(response.status === 401){
-      log('TEST ÉCHEC — 401 Invalid API Key','err');
-      alert('Clé REFUSÉE par Groq (401).\n\nVa sur https://console.groq.com/keys\nCrée une nouvelle clé et recolle-la.');
+    if(res.status===401){
+      log('TEST ÉCHEC — 401','err');
+      alert('Clé REFUSÉE par Groq.\nCrée une nouvelle clé sur console.groq.com/keys');
       return;
     }
-    if(!response.ok){
-      var t = await response.text();
-      throw new Error(response.status + ' — ' + t.substring(0,120));
-    }
-
-    log('TEST RÉUSSI — Clé API valide !','ok');
-    alert('Clé API VALIDE ✓\nTu peux maintenant utiliser Whisper + IA.');
-    // On sauvegarde automatiquement si le test réussit
-    cfg.apiKey = key;
-    localStorage.setItem('sl18', JSON.stringify(cfg));
+    if(!res.ok) throw new Error(res.status);
+    log('TEST RÉUSSI — Clé valide ✓','ok');
+    alert('Clé API VALIDE ✓');
+    cfg.apiKey=key;
+    localStorage.setItem('sl18',JSON.stringify(cfg));
     applyCfg();
-  } catch(e){
-    log('TEST ERREUR: ' + e.message, 'err');
-    alert('Erreur réseau ou clé: ' + e.message);
-  } finally {
-    status('Pret');
-  }
+  }catch(e){
+    log('TEST erreur: '+e.message,'err');
+    alert('Erreur: '+e.message);
+  }finally{ status('Prêt'); }
 }
 
 function initEye(){
-  var inp=$('#i-key'), btn=$('#i-eye'), show=false;
+  const inp=$('#i-key'), btn=$('#i-eye');
+  let show=false;
   inp.style.webkitTextSecurity='disc';
-  btn.addEventListener('click',function(){
+  btn.onclick=()=>{
     show=!show;
     inp.style.webkitTextSecurity=show?'none':'disc';
     btn.textContent=show?'CACHE':'OEIL';
-  });
+  };
 }
 
-function tick(){ var e=$('#ft-c'); if(e) e.textContent=now(); }
-setInterval(tick,1000); tick();
-
+/* ===================== LAUNCH ===================== */
 async function launch(){
-  $('#boot').style.display = 'none';
+  $('#boot').style.display='none';
   $('#app').classList.add('app--v');
   $('#ptt').classList.add('ptt--v');
 
-  log('=== SUPRA LAB v18.1 — WHISPER FIX ===','ok');
-  log('Transcription: Groq Whisper (whisper-large-v3-turbo)','ok');
+  log('=== SUPRA LAB v18.2 — WHISPER + VOIX ===','ok');
+  log('TTS oral activé même en mode AUTO','ok');
+  log('Mode AUTO capture parole + bruits + sons','ok');
 
-  if(!isValidGroqKey(cfg.apiKey)){
-    log('ATTENTION: aucune clé API valide détectée','err');
-    log('Ouvre PARAMETRES → colle ta clé gsk_ → SAUVEGARDER → TESTER','err');
-  } else {
-    log('Clé API présente et format valide (gsk_...)','ok');
+  if(!isValidKey(cfg.apiKey)){
+    log('ATTENTION: aucune clé API valide','err');
   }
 
-  var ok = await initAudio();
+  const ok=await initAudio();
   if(ok){
-    status('Pret — Maintenez PTT ou appuyez AUTO');
-    log('Pret. 3 modes: PTT / AUTO / Texte','info');
-  } else {
-    status('Erreur micro');
-  }
+    status('Prêt — PTT ou AUTO');
+    // Précharge les voix TTS
+    if(window.speechSynthesis) window.speechSynthesis.getVoices();
+  }else status('Erreur micro');
 }
 
 function bind(){
-  $('#b-go').addEventListener('click', launch);
-  $('#b-cfg').addEventListener('click', function(){ $('#dlg').showModal(); });
+  $('#b-go').onclick=launch;
+  $('#b-cfg').onclick=()=>$('#dlg').showModal();
+  $('#dlg-x').onclick=()=>$('#dlg').close();
+  $('#dlg-save').onclick=()=>{ saveCfg(); $('#dlg').close(); };
+  $('#dlg-rst').onclick=rstCfg;
+  $('#btn-test-key').onclick=testApiKey;
+  $('#dlg').onclick=e=>{ if(e.target===$('#dlg')) $('#dlg').close(); };
 
-  $('#dlg-x').addEventListener('click', function(){ $('#dlg').close(); });
-  $('#dlg-save').addEventListener('click', function(){ saveCfg(); $('#dlg').close(); });
-  $('#dlg-rst').addEventListener('click', rstCfg);
-  $('#btn-test-key').addEventListener('click', testApiKey);
-  $('#dlg').addEventListener('click', function(e){ if(e.target===e.currentTarget) e.currentTarget.close(); });
+  $('#b-rec').onclick=()=>{ if(!S.ready) return; S.recActive?recOff():recOn(); };
+  $('#b-stop').onclick=recOff;
+  $('#b-play').onclick=()=>{ if(caps[0]){ $('#ply').src=caps[0].url; $('#ply').play(); } };
+  $('#b-dl').onclick=()=>{ if(caps[0]){ const a=document.createElement('a'); a.href=caps[0].url; a.download=caps[0].name+'.'+caps[0].ext; a.click(); } };
+  $('#b-auto').onclick=()=>S.autoMode?autoOff():autoOn();
 
-  $('#b-rec').addEventListener('click', function(){
-    if(!S.ready){ log('Non pret','err'); return; }
-    S.recActive ? recOff() : recOn();
-  });
-  $('#b-stop').addEventListener('click', recOff);
-  $('#b-play').addEventListener('click', function(){
-    if(caps.length) capPlay(0); else log('Rien a lire','err');
-  });
-  $('#b-dl').addEventListener('click', function(){
-    if(caps.length) capDL(0); else log('Rien a sauver','err');
-  });
+  $('#txt-send').onclick=sendText;
+  $('#txt-in').onkeydown=e=>{ if(e.key==='Enter') sendText(); };
 
-  $('#b-auto').addEventListener('click', function(){
-    if(S.autoMode) autoOff(); else autoOn();
-  });
+  const ptt=$('#ptt');
+  ptt.addEventListener('touchstart',pttDown,{passive:false});
+  ptt.addEventListener('touchend',pttUp,{passive:false});
+  ptt.addEventListener('touchcancel',pttUp,{passive:false});
+  ptt.addEventListener('mousedown',pttDown);
+  ptt.addEventListener('mouseup',pttUp);
+  ptt.addEventListener('mouseleave',pttUp);
 
-  $('#txt-send').addEventListener('click', sendText);
-  $('#txt-in').addEventListener('keydown', function(e){ if(e.key==='Enter') sendText(); });
-
-  var ptt = $('#ptt');
-  ptt.addEventListener('touchstart', pttDown, { passive: false });
-  ptt.addEventListener('touchend', pttUp, { passive: false });
-  ptt.addEventListener('touchcancel', pttUp, { passive: false });
-  ptt.addEventListener('mousedown', pttDown);
-  ptt.addEventListener('mouseup', pttUp);
-  ptt.addEventListener('mouseleave', pttUp);
-
-  window.addEventListener('resize', function(){ if(S.ready) sizeCV(); });
+  window.addEventListener('resize',()=>{ if(S.ready) sizeCV(); });
 }
 
-window.addEventListener('beforeunload', function(){
+window.addEventListener('beforeunload',()=>{
   clearInterval(S.pttIv);
-  if(S.stream) S.stream.getTracks().forEach(function(t){ t.stop(); });
-  if(S.pttRecorder && S.pttRecorder.state==='recording') S.pttRecorder.stop();
-  if(S.recorder && S.recActive) S.recorder.stop();
-  if(window.speechSynthesis && window.speechSynthesis.speaking) window.speechSynthesis.cancel();
-  caps.forEach(function(c){ URL.revokeObjectURL(c.url); });
+  if(S.stream) S.stream.getTracks().forEach(t=>t.stop());
+  if(S.pttRecorder?.state==='recording') S.pttRecorder.stop();
+  if(S.recorder&&S.recActive) S.recorder.stop();
+  if(window.speechSynthesis) window.speechSynthesis.cancel();
+  caps.forEach(c=>URL.revokeObjectURL(c.url));
 });
 
-document.addEventListener('DOMContentLoaded', async function(){
+document.addEventListener('DOMContentLoaded',async()=>{
   loadCfg();
   initEye();
   bind();
+  setInterval(()=>{ const e=$('#ft-c'); if(e) e.textContent=now(); },1000);
 
-  await typeIn($('#bt'), 'SUPRA LAB v18.1', 35);
-
-  var sub = $('#bs');
-  sub.innerHTML = 'WHISPER FIX — GESTION 401 AMELIOREE<br><span style="color:var(--info);font-size:14px">Teste ta clé API avant d\'utiliser</span>';
+  await typeIn($('#bt'),'SUPRA LAB v18.2',35);
+  const sub=$('#bs');
+  sub.innerHTML='WHISPER + TTS ORAL — MODE AUTO BRUITS<br><span style="color:var(--info);font-size:14px">Parole + sons + ambiances → IA + voix</span>';
   sub.classList.add('boot__sub--v');
   $('#ba').classList.add('boot__acts--v');
   $('#b-go').focus();
