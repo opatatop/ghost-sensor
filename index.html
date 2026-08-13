@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>SUPRA LAB v18.0 — WHISPER</title>
+  <title>SUPRA LAB v18.1 — WHISPER FIX</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
   <style>
@@ -46,7 +46,7 @@
     .boot__acts{margin-top:36px;display:flex;gap:16px;flex-wrap:wrap;justify-content:center;opacity:0;transition:opacity .6s}
     .boot__acts--v{opacity:1}
     .boot__go{font-size:28px;padding:16px 50px;border-width:5px}
-    .blink::after{content:'\2588';animation:bl .6s step-end infinite}
+    .blink::after{content:'█';animation:bl .6s step-end infinite}
     @keyframes bl{50%{opacity:0}}
 
     .app{display:none;position:fixed;inset:0;border:6px solid var(--fg);z-index:100;flex-direction:column;background:var(--bg)}
@@ -119,7 +119,7 @@
     dialog::backdrop{background:rgba(0,0,0,.88)}
     .dh{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:3px solid var(--fg);font-size:22px;letter-spacing:3px;text-shadow:var(--glow)}
     .db{padding:18px 22px}
-    .df{display:flex;justify-content:center;gap:14px;padding:18px 22px;border-top:2px solid var(--fg-muted)}
+    .df{display:flex;justify-content:center;gap:14px;padding:18px 22px;border-top:2px solid var(--fg-muted);flex-wrap:wrap}
     .fl{margin-bottom:18px}
     .fl__l{display:block;margin-bottom:7px;font-size:15px;letter-spacing:1px}
     .fl__i,.fl__s{width:100%;padding:11px;background:var(--bg-deep);color:var(--fg);border:2px solid var(--fg-dim);font-family:var(--font);font-size:16px;outline:none;transition:border-color .2s,box-shadow .2s;-webkit-user-select:text!important;user-select:text!important;touch-action:auto!important}
@@ -137,6 +137,7 @@
     ::-webkit-scrollbar{width:6px}
     ::-webkit-scrollbar-track{background:var(--bg-panel)}
     ::-webkit-scrollbar-thumb{background:var(--fg-muted);border-radius:3px}
+
     @media(max-width:768px){
       .boot__title{font-size:28px;letter-spacing:3px}
       .app__mn{grid-template-columns:1fr;padding:8px;gap:10px}
@@ -159,24 +160,26 @@
 <div class="fx-scan" aria-hidden="true"></div>
 <div class="fx-vig" aria-hidden="true"></div>
 
-<!-- ═══════════ DIALOGUE PARAMETRES ═══════════ -->
 <dialog id="dlg" aria-labelledby="dlg-t">
   <div class="dh"><span id="dlg-t">PARAMETRES</span><button class="btn btn--close" id="dlg-x" aria-label="Fermer">&times;</button></div>
   <div class="db">
     <div class="fl__sec">API Groq (obligatoire)</div>
     <div class="fl">
-      <label class="fl__l" for="i-key">Cle API</label>
+      <label class="fl__l" for="i-key">Cle API Groq</label>
       <div class="kw">
-        <input class="fl__i" type="text" id="i-key" placeholder="Collez gsk_..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+        <input class="fl__i" type="text" id="i-key" placeholder="gsk_..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
         <button type="button" class="kw__t" id="i-eye">OEIL</button>
       </div>
-      <div class="fl__note">Utilisee pour la transcription Whisper ET l'analyse IA.</div>
+      <div class="fl__note">Doit commencer par <b>gsk_</b>. Colle puis clique SAUVEGARDER puis TESTER.</div>
+    </div>
+    <div class="fl">
+      <button class="btn btn--info" id="btn-test-key" style="width:100%">TESTER LA CLE API</button>
     </div>
     <div class="fl">
       <label class="fl__l" for="i-model">Modele IA (analyse)</label>
       <select class="fl__s" id="i-model">
         <option value="llama-3.3-70b-versatile">Llama 3.3 70B</option>
-        <option value="llama3-8b-8192">Llama 3 8B</option>
+        <option value="llama-3.1-8b-instant">Llama 3.1 8B Instant</option>
         <option value="mixtral-8x7b-32768">Mixtral 8x7B</option>
       </select>
     </div>
@@ -204,10 +207,12 @@
       </select>
     </div>
   </div>
-  <div class="df"><button class="btn" id="dlg-save">SAUVEGARDER</button><button class="btn btn--danger" id="dlg-rst">RESET</button></div>
+  <div class="df">
+    <button class="btn" id="dlg-save">SAUVEGARDER</button>
+    <button class="btn btn--danger" id="dlg-rst">RESET</button>
+  </div>
 </dialog>
 
-<!-- ═══════════ BOOT ═══════════ -->
 <section class="boot" id="boot" role="region">
   <div class="boot__title blink" id="bt"></div>
   <div class="boot__sub" id="bs"></div>
@@ -217,9 +222,8 @@
   </div>
 </section>
 
-<!-- ═══════════ APP ═══════════ -->
 <div class="app" id="app" role="application">
-  <header class="app__hd">SUPRA LAB v18.0 — <span id="hd-m">WHISPER</span></header>
+  <header class="app__hd">SUPRA LAB v18.1 — <span id="hd-m">WHISPER</span></header>
   <main class="app__mn">
     <div class="recbar">
       <button class="btn recbar__b recbar__b--rec" id="b-rec">REC</button>
@@ -239,7 +243,7 @@
       <div class="live__tx live__tx--idle" id="live-tx">Maintenez PTT pour parler, ou appuyez AUTO.</div>
     </div>
     <div class="tinp">
-      <div class="tinp__pre">&gt;</div>
+      <div class="tinp__pre">></div>
       <input class="tinp__f" id="txt-in" placeholder="Tapez du texte et envoyez a l'IA..." autocomplete="off">
       <button class="tinp__b" id="txt-send">ENVOYER</button>
     </div>
@@ -248,7 +252,7 @@
     <section class="pnl pnl--f"><div class="pnl__l">CAPTURES</div><div id="caps-list"><div class="empty">Aucune capture.</div></div></section>
     <div class="pnl"><div class="pnl__l">SYSTEME</div><div id="sys" style="font-size:13px;line-height:1.7">Micro: --<br>API: --<br>Whisper: --<br>Mode: --</div></div>
   </main>
-  <footer class="app__ft"><span id="ft-s">En attente...</span><span>v18.0 | <span id="ft-c">--:--:--</span></span></footer>
+  <footer class="app__ft"><span id="ft-s">En attente...</span><span>v18.1 | <span id="ft-c">--:--:--</span></span></footer>
 </div>
 
 <button class="ptt" id="ptt" aria-label="Maintenir pour parler">MAINTENIR<br>POUR PARLER</button>
@@ -258,9 +262,6 @@
 (function(){
 'use strict';
 
-/* ══════════════════════════════════════════════════
-   1. CONFIGURATION
-   ══════════════════════════════════════════════════ */
 var DEFAULTS = Object.freeze({
   apiKey: '',
   model: 'llama-3.3-70b-versatile',
@@ -272,11 +273,7 @@ var DEFAULTS = Object.freeze({
 var cfg = {};
 Object.keys(DEFAULTS).forEach(function(k){ cfg[k] = DEFAULTS[k]; });
 
-/* ══════════════════════════════════════════════════
-   2. ETAT GLOBAL
-   ══════════════════════════════════════════════════ */
 var S = {
-  // Audio
   ready: false,
   ctx: null,
   analyser: null,
@@ -285,43 +282,42 @@ var S = {
   freq: null,
   wave: null,
   vol: null,
-
-  // Enregistreur manuel (REC/STOP)
   recActive: false,
   recorder: null,
   chunks: [],
   recT0: 0,
   recIv: null,
-
-  // PTT (Push-To-Talk avec Whisper)
   pttActive: false,
   pttRecorder: null,
   pttChunks: [],
   pttIv: null,
   pttSec: 0,
-
-  // AUTO mode
   autoMode: false,
   autoRunning: false,
-
-  // Résultat
   lastText: ''
 };
 
 var caps = [];
 
-/* ══════════════════════════════════════════════════
-   3. UTILITAIRES
-   ══════════════════════════════════════════════════ */
 function $(sel){ return document.querySelector(sel); }
 function now(){ return new Date().toLocaleTimeString('fr-FR'); }
 function p2(n){ return n < 10 ? '0'+n : ''+n; }
 function fmt(s){ return p2(Math.floor(s/3600))+':'+p2(Math.floor((s%3600)/60))+':'+p2(s%60); }
 function cssVar(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
 
-/* ══════════════════════════════════════════════════
-   4. JOURNAL
-   ══════════════════════════════════════════════════ */
+/* Nettoyage ultra-strict de la clé API */
+function cleanKey(raw){
+  if(!raw) return '';
+  return String(raw)
+    .replace(/[\u200B-\u200D\uFEFF\u00A0]/g, '') // zero-width + nbsp
+    .replace(/\s+/g, '')
+    .trim();
+}
+
+function isValidGroqKey(key){
+  return typeof key === 'string' && key.startsWith('gsk_') && key.length > 20;
+}
+
 function log(msg, type){
   type = type || 'ok';
   var el = $('#log');
@@ -343,24 +339,20 @@ function sysUp(){
   var el = $('#sys');
   if(!el) return;
   function tag(v, c){ return '<span style="color:var(--'+c+')">'+v+'</span>'; }
+  var keyOk = isValidGroqKey(cfg.apiKey);
   el.innerHTML =
     'Micro: '+(S.stream ? tag('OK','fg') : tag('OFF','danger'))+'<br>'+
-    'API: '+(cfg.apiKey ? tag('OK','fg') : tag('MANQUANTE','warning'))+'<br>'+
-    'Whisper: '+(cfg.apiKey ? tag('DISPONIBLE','fg') : tag('BESOIN CLE','warning'))+'<br>'+
+    'API: '+(keyOk ? tag('OK','fg') : tag('INVALIDE / MANQUANTE','danger'))+'<br>'+
+    'Whisper: '+(keyOk ? tag('DISPONIBLE','fg') : tag('BESOIN CLE gsk_','warning'))+'<br>'+
     'Mode: '+(S.autoMode ? tag('AUTO','warning') : tag('PTT','fg'));
 }
 
-/* ══════════════════════════════════════════════════
-   5. PANNEAU LIVE
-   ══════════════════════════════════════════════════ */
 function liveSet(text, mode, timerText){
   var tx = $('#live-tx');
   var bd = $('#live-badge');
   if(!tx || !bd) return;
-
   tx.className = 'live__tx';
   bd.className = 'live__badge';
-
   switch(mode){
     case 'idle':
       tx.classList.add('live__tx--idle');
@@ -395,9 +387,6 @@ function liveSet(text, mode, timerText){
   }
 }
 
-/* ══════════════════════════════════════════════════
-   6. ANIMATION BOOT
-   ══════════════════════════════════════════════════ */
 function typeIn(el, txt, ms){
   ms = ms || 40;
   return new Promise(function(resolve){
@@ -416,9 +405,6 @@ function typeIn(el, txt, ms){
   });
 }
 
-/* ══════════════════════════════════════════════════
-   7. AUDIO — Initialisation
-   ══════════════════════════════════════════════════ */
 async function initAudio(){
   try {
     S.ctx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 48000 });
@@ -430,7 +416,6 @@ async function initAudio(){
 
     var src = S.ctx.createMediaStreamSource(S.stream);
 
-    // Analyseur fréquences + forme d'onde
     S.analyser = S.ctx.createAnalyser();
     S.analyser.fftSize = 2048;
     S.analyser.smoothingTimeConstant = 0.8;
@@ -438,7 +423,6 @@ async function initAudio(){
     S.freq = new Uint8Array(S.analyser.frequencyBinCount);
     S.wave = new Uint8Array(S.analyser.frequencyBinCount);
 
-    // Analyseur volume
     S.volNode = S.ctx.createAnalyser();
     S.volNode.fftSize = 256;
     src.connect(S.volNode);
@@ -457,9 +441,6 @@ async function initAudio(){
   }
 }
 
-/* ══════════════════════════════════════════════════
-   8. VISUALISATION — Boucle de rendu
-   ══════════════════════════════════════════════════ */
 function drawLoop(){
   if(!S.ready) return;
   requestAnimationFrame(drawLoop);
@@ -525,9 +506,6 @@ function sizeCV(){
   }
 }
 
-/* ══════════════════════════════════════════════════
-   9. ENREGISTREUR MANUEL (REC/STOP/PLAY/SAVE)
-   ══════════════════════════════════════════════════ */
 function bestMime(){
   var t=['audio/webm;codecs=opus','audio/webm','audio/ogg;codecs=opus','audio/mpeg','audio/mp4'];
   for(var i=0;i<t.length;i++) if(MediaRecorder.isTypeSupported(t[i])) return t[i];
@@ -580,9 +558,6 @@ function startClk(){
 }
 function stopClk(){ clearInterval(S.recIv); $('#timer').textContent='00:00:00'; }
 
-/* ══════════════════════════════════════════════════
-   10. CAPTURES
-   ══════════════════════════════════════════════════ */
 function buildCaps(){
   var el=$('#caps-list');
   if(!caps.length){ el.innerHTML='<div class="empty">Aucune capture.</div>'; return; }
@@ -607,17 +582,21 @@ function capDL(i){ var c=caps[i]; if(!c)return; var a=document.createElement('a'
 function capDel(i){ if(!caps[i])return; URL.revokeObjectURL(caps[i].url); caps.splice(i,1); buildCaps(); log('Supprime','ok'); }
 
 /* ══════════════════════════════════════════════════
-   11. WHISPER — Transcription via Groq
-       Remplace Web Speech API (bloquee par Realme)
-       Fonctionne sur 100% des telephones Android
+   WHISPER — avec gestion propre du 401
    ══════════════════════════════════════════════════ */
 async function whisperTranscribe(audioBlob){
-  if(!cfg.apiKey){
+  var key = cleanKey(cfg.apiKey);
+
+  if(!key){
     log('WHISPER: Cle API manquante','err');
     return null;
   }
+  if(!isValidGroqKey(key)){
+    log('WHISPER: Cle invalide (doit commencer par gsk_)','err');
+    log('Ouvre PARAMETRES → colle une vraie clé Groq → SAUVEGARDER → TESTER','err');
+    return null;
+  }
 
-  // Determiner l'extension du fichier
   var ext = 'webm';
   if(audioBlob.type.indexOf('ogg')!==-1) ext='ogg';
   else if(audioBlob.type.indexOf('mp4')!==-1) ext='m4a';
@@ -632,19 +611,27 @@ async function whisperTranscribe(audioBlob){
     formData.append('language', cfg.lang);
     formData.append('response_format', 'json');
 
-    // IMPORTANT : ne PAS mettre Content-Type header !
-    // Le navigateur le definit automatiquement avec le bon boundary
     var response = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
       method: 'POST',
       headers: {
-        'Authorization': 'Bearer ' + cfg.apiKey
+        'Authorization': 'Bearer ' + key
       },
       body: formData
     });
 
     if(!response.ok){
       var errBody = await response.text();
-      throw new Error(response.status + ' — ' + errBody.substring(0, 200));
+      var short = errBody.substring(0, 300);
+
+      if(response.status === 401){
+        log('WHISPER 401 — CLE API INVALIDE','err');
+        log('La clé envoyée est refusée par Groq.','err');
+        log('1. Va sur console.groq.com → API Keys','err');
+        log('2. Crée une nouvelle clé (gsk_...)','err');
+        log('3. PARAMETRES → colle → SAUVEGARDER → TESTER','err');
+        throw new Error('401 Invalid API Key — regarde le journal');
+      }
+      throw new Error(response.status + ' — ' + short);
     }
 
     var data = await response.json();
@@ -657,14 +644,12 @@ async function whisperTranscribe(audioBlob){
       log('WHISPER: texte vide (silence ou bruit)','dbg');
       return null;
     }
-
   } catch(error){
     log('WHISPER ERREUR: ' + error.message, 'err');
     return null;
   }
 }
 
-/* Transcrire puis analyser (utilisé par le bouton IA des captures) */
 async function whisperThenAnalyze(blob, ext){
   liveSet('Transcription Whisper...', 'send');
   var text = await whisperTranscribe(blob);
@@ -678,33 +663,18 @@ async function whisperThenAnalyze(blob, ext){
 }
 
 /* ══════════════════════════════════════════════════
-   12. PTT — Push-To-Talk avec Whisper
-       1. Appui → demarrer MediaRecorder
-       2. Parler (les visualisations bougent)
-       3. Relacher → attendre 400ms → stopper
-       4. Envoyer le blob à Whisper
-       5. Envoyer le texte à Groq Chat
+   PTT
    ══════════════════════════════════════════════════ */
 function pttDown(e){
   e.preventDefault();
-
-  if(!S.ready){
-    log('Systeme non initialise','err');
-    return;
-  }
-  if(S.autoMode){
-    log('Desactivez AUTO d\'abord','err');
-    return;
-  }
-  if(S.pttActive){
-    return;
-  }
+  if(!S.ready){ log('Systeme non initialise','err'); return; }
+  if(S.autoMode){ log('Desactivez AUTO d\'abord','err'); return; }
+  if(S.pttActive) return;
 
   S.pttActive = true;
   S.pttChunks = [];
   S.pttSec = 0;
 
-  // Demarrer le MediaRecorder
   var mime = bestMime();
   try {
     S.pttRecorder = new MediaRecorder(S.stream, { mimeType: mime });
@@ -715,23 +685,15 @@ function pttDown(e){
   }
 
   S.pttRecorder.ondataavailable = function(ev){
-    if(ev.data && ev.data.size > 0){
-      S.pttChunks.push(ev.data);
-    }
+    if(ev.data && ev.data.size > 0) S.pttChunks.push(ev.data);
   };
-
-  S.pttRecorder.onstop = function(){
-    onPTTComplete();
-  };
-
+  S.pttRecorder.onstop = function(){ onPTTComplete(); };
   S.pttRecorder.start(200);
 
-  // UI : bouton rouge
   var btn = $('#ptt');
   btn.classList.add('ptt--rec');
   btn.innerHTML = 'ENREGISTRE...<br><small>relachez</small>';
 
-  // Timer dans le panneau live
   S.pttIv = setInterval(function(){
     S.pttSec++;
     liveSet('Enregistrement...', 'rec', fmt(S.pttSec));
@@ -744,14 +706,10 @@ function pttDown(e){
 
 function pttUp(e){
   e.preventDefault();
-
   if(!S.pttActive) return;
   S.pttActive = false;
-
-  // Arreter le timer
   clearInterval(S.pttIv);
 
-  // UI : bouton normal
   var btn = $('#ptt');
   btn.classList.remove('ptt--rec');
   btn.innerHTML = 'MAINTENIR<br>POUR PARLER';
@@ -760,12 +718,10 @@ function pttUp(e){
   liveSet('Finalisation...', 'send');
   status('Finalisation...');
 
-  // Attendre 400ms pour capturer la fin de la phrase
   setTimeout(function(){
     if(S.pttRecorder && S.pttRecorder.state === 'recording'){
       S.pttRecorder.stop();
     } else {
-      // Déjà arrêté ou jamais démarré
       log('PTT: enregistrement trop court','err');
       liveSet('Trop court — maintenez plus longtemps', 'idle');
       status('Pret');
@@ -776,22 +732,18 @@ function pttUp(e){
 async function onPTTComplete(){
   if(!S.pttRecorder) return;
   var mime = S.pttRecorder.mimeType || bestMime();
-
-  // Creer le blob audio
   var blob = new Blob(S.pttChunks, { type: mime });
   var sizeKo = Math.round(blob.size / 1024);
 
   log('PTT: blob cree (' + sizeKo + 'Ko)', 'dbg');
 
-  // Vérifier que le blob n'est pas trop petit (< 1 Ko = rien)
-  if(blob.size < 1024){
+  if(blob.size < 1500){
     log('PTT: blob trop petit (' + sizeKo + 'Ko), abandon', 'err');
     liveSet('Enregistrement trop court', 'idle');
     status('Pret — maintenez plus longtemps');
     return;
   }
 
-  // Envoyer à Whisper
   liveSet('Transcription Whisper...', 'send');
   status('Transcription Whisper...');
 
@@ -808,8 +760,7 @@ async function onPTTComplete(){
 }
 
 /* ══════════════════════════════════════════════════
-   13. MODE AUTO — Boucle continue avec Whisper
-       Enregistre 5 secondes → Whisper → Groq → repeat
+   MODE AUTO
    ══════════════════════════════════════════════════ */
 async function autoOn(){
   if(S.autoRunning) return;
@@ -818,51 +769,38 @@ async function autoOn(){
 
   $('#b-auto').classList.add('btn--active');
   log('MODE AUTO: demarre (tranches de 5s)', 'info');
-  log('Chaque tranche est envoyee a Whisper puis a l\'IA', 'info');
   sysUp();
 
-  // Boucle principale
   while(S.autoMode){
-    // --- PHASE 1 : ENREGISTREMENT 5 SECONDES ---
     liveSet('Enregistrement AUTO (5s)...', 'rec', '00:00');
     status('Enregistrement AUTO...');
 
     var blob = await recordForDuration(5000);
-
-    // Vérifier si le mode est toujours actif
     if(!S.autoMode) break;
 
-    // Vérifier la taille du blob
-    if(blob.size < 1024){
+    if(blob.size < 1500){
       log('AUTO: segment silencieux, ignore', 'dbg');
       continue;
     }
 
-    // --- PHASE 2 : TRANSCRIPTION WHISPER ---
     liveSet('Transcription Whisper...', 'send');
     status('Transcription AUTO...');
 
     var text = await whisperTranscribe(blob);
-
     if(!S.autoMode) break;
 
     if(!text){
       log('AUTO: pas de parole dans ce segment', 'dbg');
-      // Petit délai avant le prochain segment
       await sleep(500);
       continue;
     }
 
-    // --- PHASE 3 : ANALYSE GROQ ---
     S.lastText = text;
     liveSet(text, 'done');
     log('AUTO: "' + text + '"', 'ok');
-
     await sendToGroq(text);
 
     if(!S.autoMode) break;
-
-    // Petit délai entre les segments
     await sleep(800);
   }
 
@@ -879,12 +817,10 @@ function autoOff(){
   sysUp();
 }
 
-/* Enregistrer pendant une durée donnée et retourner le Blob */
 function recordForDuration(ms){
   return new Promise(function(resolve){
     var chunks = [];
     var mime = bestMime();
-
     try {
       var recorder = new MediaRecorder(S.stream, { mimeType: mime });
     } catch(e){
@@ -896,12 +832,10 @@ function recordForDuration(ms){
     recorder.ondataavailable = function(e){
       if(e.data && e.data.size > 0) chunks.push(e.data);
     };
-
     recorder.onstop = function(){
       resolve(new Blob(chunks, { type: recorder.mimeType || mime }));
     };
 
-    // Timer dans le panneau live
     var sec = 0;
     var iv = setInterval(function(){
       sec++;
@@ -909,15 +843,10 @@ function recordForDuration(ms){
     }, 1000);
 
     recorder.start(200);
-
-    // Arrêter après la durée demandée
     setTimeout(function(){
       clearInterval(iv);
-      if(recorder.state === 'recording'){
-        recorder.stop();
-      } else {
-        resolve(new Blob(chunks, { type: recorder.mimeType || mime }));
-      }
+      if(recorder.state === 'recording') recorder.stop();
+      else resolve(new Blob(chunks, { type: recorder.mimeType || mime }));
     }, ms);
   });
 }
@@ -927,14 +856,15 @@ function sleep(ms){
 }
 
 /* ══════════════════════════════════════════════════
-   14. GROQ — Analyse IA (Chat Completions)
+   GROQ CHAT
    ══════════════════════════════════════════════════ */
 async function sendToGroq(text){
   var el = $('#ai-rpt');
+  var key = cleanKey(cfg.apiKey);
 
-  if(!cfg.apiKey){
-    el.textContent = 'Cle API manquante.\nPARAMETRES > collez votre cle gsk_...';
-    log('Cle API manquante','err');
+  if(!isValidGroqKey(key)){
+    el.textContent = 'Cle API invalide ou manquante.\nPARAMETRES > colle une clé gsk_... puis SAUVEGARDER + TESTER';
+    log('Cle API manquante/invalide','err');
     status('Cle API manquante');
     return;
   }
@@ -954,7 +884,7 @@ async function sendToGroq(text){
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + cfg.apiKey
+        'Authorization': 'Bearer ' + key
       },
       body: JSON.stringify({
         model: cfg.model,
@@ -969,6 +899,9 @@ async function sendToGroq(text){
 
     if(!response.ok){
       var errBody = await response.text();
+      if(response.status === 401){
+        throw new Error('401 — Clé API invalide (même problème que Whisper)');
+      }
       throw new Error(response.status + ' — ' + errBody.substring(0, 150));
     }
 
@@ -978,15 +911,14 @@ async function sendToGroq(text){
 
     el.textContent =
       'TRANSCRIPTION:\n"' + text + '"\n\n' +
-      '\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n' +
+      '────────────────────────\n' +
       'ANALYSE IA (' + cfg.model + ')\n' +
-      '\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n\n' +
+      '────────────────────────\n\n' +
       answer + '\n\n' + now();
 
     log('IA: analyse terminee', 'ok');
     status('Pret');
     speak(answer.substring(0, 280));
-
   } catch(error){
     el.textContent = 'Erreur: ' + error.message + '\nVerifiez la cle API et la connexion.';
     log('IA erreur: ' + error.message, 'err');
@@ -995,21 +927,15 @@ async function sendToGroq(text){
   }
 }
 
-/* ══════════════════════════════════════════════════
-   15. SYNTHESE VOCALE
-   ══════════════════════════════════════════════════ */
 function speak(text){
   if(!cfg.tts || !window.speechSynthesis || S.pttActive || S.autoMode) return;
   window.speechSynthesis.cancel();
   var u = new SpeechSynthesisUtterance(text);
-  u.lang = cfg.lang;
+  u.lang = cfg.lang === 'fr' ? 'fr-FR' : cfg.lang;
   u.rate = 0.95;
   window.speechSynthesis.speak(u);
 }
 
-/* ══════════════════════════════════════════════════
-   16. TEXTE MANUEL
-   ══════════════════════════════════════════════════ */
 function sendText(){
   var inp = $('#txt-in');
   var text = inp.value.trim();
@@ -1022,7 +948,7 @@ function sendText(){
 }
 
 /* ══════════════════════════════════════════════════
-   17. PARAMETRES
+   PARAMETRES + TEST CLÉ
    ══════════════════════════════════════════════════ */
 function loadCfg(){
   try {
@@ -1032,6 +958,7 @@ function loadCfg(){
       Object.keys(p).forEach(function(k){
         if(p.hasOwnProperty(k) && DEFAULTS.hasOwnProperty(k)) cfg[k] = p[k];
       });
+      cfg.apiKey = cleanKey(cfg.apiKey);
     }
   } catch(e){}
   applyCfg();
@@ -1058,14 +985,20 @@ function applyCfg(){
 }
 
 function saveCfg(){
-  cfg.apiKey = $('#i-key').value.trim();
+  cfg.apiKey = cleanKey($('#i-key').value);
   cfg.model = $('#i-model').value;
   cfg.lang = $('#i-lang').value;
   cfg.tts = $('#i-tts').checked;
   cfg.color = $('#i-col').value;
+
   localStorage.setItem('sl18', JSON.stringify(cfg));
   applyCfg();
-  log('Config sauvee','ok');
+
+  if(isValidGroqKey(cfg.apiKey)){
+    log('Config sauvee — clé valide (gsk_...)', 'ok');
+  } else {
+    log('Config sauvee — ATTENTION : clé invalide ou manquante', 'err');
+  }
 }
 
 function rstCfg(){
@@ -1074,6 +1007,55 @@ function rstCfg(){
   localStorage.removeItem('sl18');
   applyCfg();
   log('Reset','err');
+}
+
+async function testApiKey(){
+  var key = cleanKey($('#i-key').value || cfg.apiKey);
+  if(!key){
+    log('TEST: aucune clé collée','err');
+    alert('Colle d\'abord une clé gsk_...');
+    return;
+  }
+  if(!isValidGroqKey(key)){
+    log('TEST: la clé ne commence pas par gsk_','err');
+    alert('Clé invalide. Elle doit commencer par gsk_');
+    return;
+  }
+
+  log('TEST: vérification de la clé auprès de Groq...','info');
+  status('Test clé API...');
+
+  try {
+    // On teste avec un endpoint léger (models)
+    var response = await fetch('https://api.groq.com/openai/v1/models', {
+      method: 'GET',
+      headers: {
+        'Authorization': 'Bearer ' + key
+      }
+    });
+
+    if(response.status === 401){
+      log('TEST ÉCHEC — 401 Invalid API Key','err');
+      alert('Clé REFUSÉE par Groq (401).\n\nVa sur https://console.groq.com/keys\nCrée une nouvelle clé et recolle-la.');
+      return;
+    }
+    if(!response.ok){
+      var t = await response.text();
+      throw new Error(response.status + ' — ' + t.substring(0,120));
+    }
+
+    log('TEST RÉUSSI — Clé API valide !','ok');
+    alert('Clé API VALIDE ✓\nTu peux maintenant utiliser Whisper + IA.');
+    // On sauvegarde automatiquement si le test réussit
+    cfg.apiKey = key;
+    localStorage.setItem('sl18', JSON.stringify(cfg));
+    applyCfg();
+  } catch(e){
+    log('TEST ERREUR: ' + e.message, 'err');
+    alert('Erreur réseau ou clé: ' + e.message);
+  } finally {
+    status('Pret');
+  }
 }
 
 function initEye(){
@@ -1086,54 +1068,43 @@ function initEye(){
   });
 }
 
-/* ══════════════════════════════════════════════════
-   18. HORLOGE
-   ══════════════════════════════════════════════════ */
 function tick(){ var e=$('#ft-c'); if(e) e.textContent=now(); }
 setInterval(tick,1000); tick();
 
-/* ══════════════════════════════════════════════════
-   19. LANCEMENT
-   ══════════════════════════════════════════════════ */
 async function launch(){
   $('#boot').style.display = 'none';
   $('#app').classList.add('app--v');
   $('#ptt').classList.add('ptt--v');
 
-  log('=== SUPRA LAB v18.0 — WHISPER EDITION ===','ok');
+  log('=== SUPRA LAB v18.1 — WHISPER FIX ===','ok');
   log('Transcription: Groq Whisper (whisper-large-v3-turbo)','ok');
-  log('Fonctionne sur TOUS les telephones Android','ok');
-  log('Plus de dependance a Web Speech API','ok');
+
+  if(!isValidGroqKey(cfg.apiKey)){
+    log('ATTENTION: aucune clé API valide détectée','err');
+    log('Ouvre PARAMETRES → colle ta clé gsk_ → SAUVEGARDER → TESTER','err');
+  } else {
+    log('Clé API présente et format valide (gsk_...)','ok');
+  }
 
   var ok = await initAudio();
-
   if(ok){
     status('Pret — Maintenez PTT ou appuyez AUTO');
-    log('Pret. 3 modes d\'utilisation:','info');
-    log('  1. PTT = maintenir le bouton, parler, relacher','info');
-    log('  2. AUTO = ecoute continue par tranches de 5s','info');
-    log('  3. Texte = taper dans le champ en bas','info');
-    log('Chaque mode transcrit via Whisper puis analyse via IA','info');
+    log('Pret. 3 modes: PTT / AUTO / Texte','info');
   } else {
     status('Erreur micro');
   }
 }
 
-/* ══════════════════════════════════════════════════
-   20. EVENEMENTS
-   ══════════════════════════════════════════════════ */
 function bind(){
-  // Boot
   $('#b-go').addEventListener('click', launch);
   $('#b-cfg').addEventListener('click', function(){ $('#dlg').showModal(); });
 
-  // Dialog
   $('#dlg-x').addEventListener('click', function(){ $('#dlg').close(); });
   $('#dlg-save').addEventListener('click', function(){ saveCfg(); $('#dlg').close(); });
   $('#dlg-rst').addEventListener('click', rstCfg);
+  $('#btn-test-key').addEventListener('click', testApiKey);
   $('#dlg').addEventListener('click', function(e){ if(e.target===e.currentTarget) e.currentTarget.close(); });
 
-  // Enregistreur
   $('#b-rec').addEventListener('click', function(){
     if(!S.ready){ log('Non pret','err'); return; }
     S.recActive ? recOff() : recOn();
@@ -1146,16 +1117,13 @@ function bind(){
     if(caps.length) capDL(0); else log('Rien a sauver','err');
   });
 
-  // AUTO
   $('#b-auto').addEventListener('click', function(){
     if(S.autoMode) autoOff(); else autoOn();
   });
 
-  // Texte
   $('#txt-send').addEventListener('click', sendText);
   $('#txt-in').addEventListener('keydown', function(e){ if(e.key==='Enter') sendText(); });
 
-  // PTT
   var ptt = $('#ptt');
   ptt.addEventListener('touchstart', pttDown, { passive: false });
   ptt.addEventListener('touchend', pttUp, { passive: false });
@@ -1164,13 +1132,9 @@ function bind(){
   ptt.addEventListener('mouseup', pttUp);
   ptt.addEventListener('mouseleave', pttUp);
 
-  // Resize
   window.addEventListener('resize', function(){ if(S.ready) sizeCV(); });
 }
 
-/* ══════════════════════════════════════════════════
-   21. NETTOYAGE
-   ══════════════════════════════════════════════════ */
 window.addEventListener('beforeunload', function(){
   clearInterval(S.pttIv);
   if(S.stream) S.stream.getTracks().forEach(function(t){ t.stop(); });
@@ -1180,23 +1144,19 @@ window.addEventListener('beforeunload', function(){
   caps.forEach(function(c){ URL.revokeObjectURL(c.url); });
 });
 
-/* ══════════════════════════════════════════════════
-   22. ENTREE
-   ══════════════════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', async function(){
   loadCfg();
   initEye();
   bind();
 
-  await typeIn($('#bt'), 'SUPRA LAB v18.0', 35);
+  await typeIn($('#bt'), 'SUPRA LAB v18.1', 35);
 
   var sub = $('#bs');
-  sub.innerHTML = 'WHISPER IA — FONCTIONNE SUR TOUS LES ANDROID<br><span style="color:var(--info);font-size:14px">Plus de Web Speech API — Transcription par Groq Cloud</span>';
+  sub.innerHTML = 'WHISPER FIX — GESTION 401 AMELIOREE<br><span style="color:var(--info);font-size:14px">Teste ta clé API avant d\'utiliser</span>';
   sub.classList.add('boot__sub--v');
   $('#ba').classList.add('boot__acts--v');
   $('#b-go').focus();
 });
-
 })();
 </script>
 </body>
