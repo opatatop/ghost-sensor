@@ -504,7 +504,6 @@ video,.preview{max-width:100%;max-height:150px;border:2px solid var(--dim);backg
       });
       var src = st.ctx.createMediaStreamSource(st.stream);
 
-      /* Analyseur pour spectro/oscillo */
       st.an = st.ctx.createAnalyser();
       st.an.fftSize = 2048;
       st.an.smoothingTimeConstant = 0.75;
@@ -512,7 +511,6 @@ video,.preview{max-width:100%;max-height:150px;border:2px solid var(--dim);backg
       st.fdata = new Uint8Array(st.an.frequencyBinCount);
       st.wdata = new Uint8Array(st.an.frequencyBinCount);
 
-      /* Analyseur séparé pour le volume */
       st.vol = st.ctx.createAnalyser();
       st.vol.fftSize = 256;
       src.connect(st.vol);
@@ -531,7 +529,6 @@ video,.preview{max-width:100%;max-height:150px;border:2px solid var(--dim);backg
     }
   }
 
-  /* Volume brut 0-255 */
   function rawVol() {
     if (!st.vol) return 0;
     st.vol.getByteFrequencyData(st.vdata);
@@ -624,7 +621,6 @@ video,.preview{max-width:100%;max-height:150px;border:2px solid var(--dim);backg
     });
   }
 
-  /* Trouver le meilleur format audio supporté */
   function mime() {
     var formats = ['audio/webm;codecs=opus', 'audio/webm', 'audio/ogg;codecs=opus', 'audio/mp4'];
     for (var i = 0; i < formats.length; i++) {
@@ -636,9 +632,6 @@ video,.preview{max-width:100%;max-height:150px;border:2px solid var(--dim);backg
   /* =============================================
      DÉTECTION VOCALE — ANTI-COUPURE
      ============================================= */
-
-  /* Attend que le volume lissé dépasse le seuil
-     pendant 5 ticks consécutifs (250ms) */
   function waitSpeak() {
     return new Promise(function(resolve) {
       var aboveCount = 0;
@@ -651,7 +644,6 @@ video,.preview{max-width:100%;max-height:150px;border:2px solid var(--dim);backg
           aboveCount++;
           if (aboveCount >= THRESH) return resolve(true);
         } else {
-          /* Décroissance graduelle : un creux ne reset pas tout */
           aboveCount = Math.max(0, aboveCount - 2);
         }
         setTimeout(check, VB_MS);
@@ -660,9 +652,6 @@ video,.preview{max-width:100%;max-height:150px;border:2px solid var(--dim);backg
     });
   }
 
-  /* Enregistre jusqu'à détection de silence stable
-     avec buffer de queue de 200ms pour attraper la
-     fin des mots */
   function recUntilSilent() {
     return new Promise(function(resolve) {
       var chunks = [];
@@ -713,7 +702,6 @@ video,.preview{max-width:100%;max-height:150px;border:2px solid var(--dim);backg
           silentMs += VB_MS;
         }
 
-        /* Arrêt : parole détectée + durée min + silence suffisant */
         if (hasSpoken && elapsed >= MIN_REC && silentMs >= cfg.silence && !tailScheduled) {
           tailScheduled = true;
           setTimeout(function() {
@@ -723,7 +711,6 @@ video,.preview{max-width:100%;max-height:150px;border:2px solid var(--dim);backg
           return;
         }
 
-        /* Sécurité durée max */
         if (elapsed >= MAX_REC) {
           clearInterval(iv);
           if (rec.state === 'recording') rec.stop();
@@ -754,14 +741,12 @@ video,.preview{max-width:100%;max-height:150px;border:2px solid var(--dim);backg
 
     st.mr.onstop = function() {
       var blob = new Blob(st.chunks, { type: st.mr.mimeType });
-      /* Libérer l'ancien blob URL */
       if (caps.length > 0 && caps[0].url) URL.revokeObjectURL(caps[0].url);
       caps.unshift({
         url: URL.createObjectURL(blob),
         blob: blob,
         dur: Math.floor((Date.now() - st.t0) / 1000)
       });
-      /* Limiter à 10 */
       while (caps.length > 10) URL.revokeObjectURL(caps.pop().url);
       updateRecBadge();
       status('Prêt');
@@ -829,7 +814,6 @@ video,.preview{max-width:100%;max-height:150px;border:2px solid var(--dim);backg
     clearInterval(st.piv);
     var el = $('#ptt');
     if (el) { el.classList.remove('rec'); el.innerHTML = 'MAINTENIR<br>POUR PARLER'; }
-    /* Buffer de queue 200ms pour attraper la fin du mot */
     setTimeout(function() {
       if (st.pmr && st.pmr.state === 'recording') st.pmr.stop();
     }, 200);
@@ -874,14 +858,11 @@ video,.preview{max-width:100%;max-height:150px;border:2px solid var(--dim);backg
     while (st.auto) {
       st.abortFlag = false;
       try {
-        /* Ne pas traiter si l'onglet est caché */
         if (document.hidden) { await sleep(300); continue; }
 
-        /* 1. Attendre que quelqu'un parle */
         if (!await waitSpeak()) continue;
         if (!st.auto || st.abortFlag) break;
 
-        /* 2. Enregistrer jusqu'au silence */
         live('Je t\'écoute...', 'rec');
         var blob = await recUntilSilent();
         if (!st.auto || st.abortFlag) break;
@@ -891,7 +872,6 @@ video,.preview{max-width:100%;max-height:150px;border:2px solid var(--dim);backg
           continue;
         }
 
-        /* 3. Transcrire */
         live('Transcription...', 'think');
         var text = await whisper(blob);
         if (!st.auto || st.abortFlag) break;
@@ -900,7 +880,6 @@ video,.preview{max-width:100%;max-height:150px;border:2px solid var(--dim);backg
           continue;
         }
 
-        /* 4. Vérifier mot d'arrêt */
         if (isStop(text)) {
           stopAll();
           live('Stop reçu — je réécoute', 'listen');
@@ -909,12 +888,10 @@ video,.preview{max-width:100%;max-height:150px;border:2px solid var(--dim);backg
           continue;
         }
 
-        /* 5. Envoyer au LLM */
         live(text, 'ok');
         await chat(text, true);
         if (!st.auto || st.abortFlag) break;
 
-        /* 6. Retour à l'écoute */
         live(st.comp ? 'Compagnon en écoute...' : 'Écoute...', 'listen');
         await sleep(150);
       } catch (e) {
@@ -923,7 +900,6 @@ video,.preview{max-width:100%;max-height:150px;border:2px solid var(--dim);backg
       }
     }
 
-    /* Nettoyage sortie de boucle */
     stopVB();
     st.run = false;
     st.comp = false;
@@ -1021,7 +997,6 @@ video,.preview{max-width:100%;max-height:150px;border:2px solid var(--dim);backg
       return;
     }
 
-    /* En mode AUTO sans "toujours répondre", ignorer si pas appelé */
     if (fromAuto && !cfg.always && !st.comp) {
       var low = text.toLowerCase();
       var wakeWords = ['supra', 'lab', 'assistant', 'hey', 'hel'];
@@ -1032,7 +1007,6 @@ video,.preview{max-width:100%;max-height:150px;border:2px solid var(--dim);backg
       if (!isForMe) { live('Pas pour moi', 'listen'); return; }
     }
 
-    /* Annuler un stream précédent */
     if (st.ctrl) {
       try { st.ctrl.abort(); } catch (e) { /* ignoré */ }
     }
@@ -1043,12 +1017,10 @@ video,.preview{max-width:100%;max-height:150px;border:2px solid var(--dim);backg
     if (outEl) outEl.textContent = '';
     status('Stream...');
 
-    /* Construire le prompt système */
     var systemPrompt = (PERSONA[cfg.persona] || PERSONA.pro)
       + (st.comp ? '\nMode compagnon permanent.' : '')
       + (st.mem ? '\n\nMémoire:\n' + st.mem : '');
 
-    /* Construire le message utilisateur avec vision si nécessaire */
     var userMsg;
     if (st.imgBase64 && isVisionModel()) {
       userMsg = {
@@ -1115,7 +1087,6 @@ video,.preview{max-width:100%;max-height:150px;border:2px solid var(--dim);backg
             var delta = j.choices && j.choices[0] && j.choices[0].delta && j.choices[0].delta.content;
             if (delta) {
               full += delta;
-              /* Nettoyage en temps réel des astérisques */
               if (outEl) {
                 outEl.textContent = full.replace(/\*{1,3}/g, '');
                 outEl.scrollTop = outEl.scrollHeight;
@@ -1125,7 +1096,6 @@ video,.preview{max-width:100%;max-height:150px;border:2px solid var(--dim);backg
         }
       }
 
-      /* Nettoyage final complet */
       full = full.replace(/\*{1,3}/g, '').replace(/#{1,6}\s?/g, '').trim();
       if (!full) full = '...';
 
@@ -1142,13 +1112,11 @@ video,.preview{max-width:100%;max-height:150px;border:2px solid var(--dim);backg
       log('OK ' + st.lat + 'ms');
       status(st.auto ? (st.comp ? '24/7' : 'AUTO') : 'Prêt');
 
-      /* Effacer l'image après utilisation */
       st.imgBase64 = null;
       st.img = null;
       var prevEl = $('#preview');
       if (prevEl) prevEl.style.display = 'none';
 
-      /* PARLER — appelé en dernier, après tout le reste */
       speak(full);
 
     } catch (e) {
@@ -1178,7 +1146,6 @@ video,.preview{max-width:100%;max-height:150px;border:2px solid var(--dim);backg
       if (typeof m.content === 'string') {
         txtParts.push(m.role + ': ' + m.content);
       } else {
-        /* Message vision : extraire le texte */
         var textParts = [];
         for (var j = 0; j < m.content.length; j++) {
           if (m.content[j].type === 'text') textParts.push(m.content[j].text);
@@ -1223,32 +1190,23 @@ video,.preview{max-width:100%;max-height:150px;border:2px solid var(--dim);backg
 
   /* =============================================
      TTS — SYNTHÈSE VOCALE (CORRIGÉ CHROME)
-     
-     Bug Chrome connu : speechSynthesis.cancel()
-     suivi immédiatement de speechSynthesis.speak()
-     fait que speak() ne déclenche aucune voix.
-     
-     Solution : délai de 100ms après cancel().
-     
-     Bug Chrome 2 : la voix se coupe après ~15s
-     de parole continue.
-     
-     Solution : keep-alive toutes les 10s qui
-     fait pause(0)/resume() imperceptible.
+
+     Bug Chrome : cancel() suivi de speak()
+     immédiat = speak() ignoré.
+     Solution : délai 100ms après cancel().
+
+     Bug Chrome 2 : voix coupée après ~15s.
+     Solution : keep-alive pause/resume toutes les 10s.
      ============================================= */
   function speak(text) {
     if (!cfg.tts) return;
     if (!window.speechSynthesis) return;
     if (!text || text.length < 1) return;
 
-    /* Annuler la parole en cours */
     speechSynthesis.cancel();
     stopTTSKeepAlive();
 
-    /* Délai OBLIGATOIRE après cancel() sur Chrome */
     setTimeout(function() {
-      /* Re-vérifier que TTS est toujours activé
-         (l'utilisateur a pu appuyer STOP entre-temps) */
       if (!cfg.tts || !window.speechSynthesis) return;
 
       var u = new SpeechSynthesisUtterance(text.slice(0, 2000));
@@ -1256,7 +1214,6 @@ video,.preview{max-width:100%;max-height:150px;border:2px solid var(--dim);backg
       u.rate = 0.94;
       u.volume = 1;
 
-      /* Chercher une voix dans la bonne langue */
       var availableVoices = speechSynthesis.getVoices();
       for (var i = 0; i < availableVoices.length; i++) {
         if (availableVoices[i].lang.indexOf(cfg.lang) === 0) {
@@ -1267,13 +1224,11 @@ video,.preview{max-width:100%;max-height:150px;border:2px solid var(--dim);backg
 
       u.onstart = function() {
         live('Parle...', 'speak');
-        /* Démarrer le keep-alive pour éviter la coupure Chrome */
         startTTSKeepAlive();
       };
 
       u.onend = function() {
         stopTTSKeepAlive();
-        /* Revenir à l'état précédent */
         if (st.auto) {
           live(st.comp ? 'Compagnon en écoute...' : 'Écoute...', 'listen');
         } else {
@@ -1295,9 +1250,6 @@ video,.preview{max-width:100%;max-height:150px;border:2px solid var(--dim);backg
     }, 100);
   }
 
-  /* Keep-alive TTS : pause(0)/resume() toutes les 10s
-     pour contourner le bug Chrome qui coupe la voix
-     après ~15 secondes de parole continue */
   function startTTSKeepAlive() {
     stopTTSKeepAlive();
     ttsKeepAlive = setInterval(function() {
@@ -1315,7 +1267,6 @@ video,.preview{max-width:100%;max-height:150px;border:2px solid var(--dim);backg
     }
   }
 
-  /* Précharger les voices */
   function loadVoices() {
     voices = speechSynthesis.getVoices();
     if (voices.length === 0) {
@@ -1329,18 +1280,15 @@ video,.preview{max-width:100%;max-height:150px;border:2px solid var(--dim);backg
      STOP GLOBAL
      ============================================= */
   function stopAll() {
-    /* Arrêter le TTS */
     if (window.speechSynthesis) {
       speechSynthesis.cancel();
     }
     stopTTSKeepAlive();
 
-    /* Arrêter le stream en cours */
     if (st.ctrl) {
       try { st.ctrl.abort(); } catch (e) { /* ignoré */ }
     }
 
-    /* Signaler l'arrêt à la boucle auto */
     st.abortFlag = true;
 
     if (st.auto) {
@@ -1410,19 +1358,15 @@ video,.preview{max-width:100%;max-height:150px;border:2px solid var(--dim);backg
      BINDINGS — TOUS LES ÉVÉNEMENTS
      ============================================= */
   function bind() {
-    /* Bouton CFG — ouvre les paramètres */
     var cfgBtn = $('#cfg');
     if (cfgBtn) cfgBtn.onclick = function() { $('#dlg').showModal(); };
 
-    /* Fermer paramètres */
     var xBtn = $('#x');
     if (xBtn) xBtn.onclick = function() { $('#dlg').close(); };
 
-    /* Sauvegarder */
     var saveBtn = $('#save');
     if (saveBtn) saveBtn.onclick = function() { save(); $('#dlg').close(); };
 
-    /* Reset */
     var rstBtn = $('#rst');
     if (rstBtn) rstBtn.onclick = function() {
       cfg = {};
@@ -1433,7 +1377,6 @@ video,.preview{max-width:100%;max-height:150px;border:2px solid var(--dim);backg
       toast('Reset effectué', 'warn');
     };
 
-    /* Coller la clé */
     var pasteBtn = $('#paste');
     if (pasteBtn) pasteBtn.onclick = async function() {
       try {
@@ -1451,7 +1394,6 @@ video,.preview{max-width:100%;max-height:150px;border:2px solid var(--dim);backg
       }
     };
 
-    /* Tester la clé */
     var testBtn = $('#test');
     if (testBtn) testBtn.onclick = async function() {
       var k = clean(($('#key') || {}).value || cfg.key);
@@ -1472,15 +1414,12 @@ video,.preview{max-width:100%;max-height:150px;border:2px solid var(--dim);backg
       }
     };
 
-    /* REC manuel */
     var recBtn = $('#rec');
     if (recBtn) recBtn.onclick = function() { if (st.ready) { if (st.rec) stopRec(); else startRec(); } };
 
-    /* STOP manuel */
     var stopBtn = $('#stop');
     if (stopBtn) stopBtn.onclick = stopRec;
 
-    /* PLAY dernier enregistrement */
     var playBtn = $('#play');
     if (playBtn) playBtn.onclick = function() {
       if (!caps.length) return toast('Aucun enregistrement', 'warn');
@@ -1489,15 +1428,12 @@ video,.preview{max-width:100%;max-height:150px;border:2px solid var(--dim);backg
       toast('Lecture ' + fmt(caps[0].dur), 'info', 1500);
     };
 
-    /* AUTO */
     var autoBtn = $('#auto');
     if (autoBtn) autoBtn.onclick = function() { if (st.auto) autoStop(); else autoStart(false); };
 
-    /* 24/7 */
     var compBtn = $('#comp');
     if (compBtn) compBtn.onclick = function() { if (st.auto) autoStop(); else autoStart(true); };
 
-    /* CLR */
     var clrBtn = $('#clr');
     if (clrBtn) clrBtn.onclick = function() {
       st.hist = [];
@@ -1514,21 +1450,18 @@ video,.preview{max-width:100%;max-height:150px;border:2px solid var(--dim);backg
       toast('Effacé', 'ok', 1500);
     };
 
-    /* RÉSUMÉ */
     var sumBtn = $('#sum');
     if (sumBtn) sumBtn.onclick = function() {
       if (!st.hist.length && !st.mem) return toast('Rien à résumer', 'warn');
       chat('Fais un résumé clair et oral de notre conversation.');
     };
 
-    /* STOP vocal */
     var muteBtn = $('#mute');
     if (muteBtn) muteBtn.onclick = function() {
       stopAll();
       if (st.auto) toast('Réécoute...', 'info', 1500);
     };
 
-    /* Image fichier */
     var imgBtn = $('#img');
     if (imgBtn) imgBtn.onclick = function() { var f = $('#file'); if (f) f.click(); };
     var fileInput = $('#file');
@@ -1537,11 +1470,9 @@ video,.preview{max-width:100%;max-height:150px;border:2px solid var(--dim);backg
       e.target.value = '';
     };
 
-    /* Caméra */
     var camBtn = $('#cam');
     if (camBtn) camBtn.onclick = function() { if (st.camOn) stopCam(); else startCam(); };
 
-    /* Capture caméra */
     var captureBtn = $('#capture');
     if (captureBtn) captureBtn.onclick = function() {
       var v = $('#video');
@@ -1562,11 +1493,9 @@ video,.preview{max-width:100%;max-height:150px;border:2px solid var(--dim);backg
       sys();
     };
 
-    /* Fermer caméra */
     var camstopBtn = $('#camstop');
     if (camstopBtn) camstopBtn.onclick = stopCam;
 
-    /* Envoi texte */
     var sendBtn = $('#send');
     if (sendBtn) sendBtn.onclick = function() {
       var txtEl = $('#txt');
@@ -1579,16 +1508,13 @@ video,.preview{max-width:100%;max-height:150px;border:2px solid var(--dim);backg
       chat(t);
     };
 
-    /* Entrée texte */
     var txtInput = $('#txt');
     if (txtInput) txtInput.onkeydown = function(e) {
       if (e.key === 'Enter') { e.preventDefault(); var sendBtn2 = $('#send'); if (sendBtn2) sendBtn2.click(); }
     };
 
-    /* Escape = stop global */
     document.onkeydown = function(e) { if (e.key === 'Escape') stopAll(); };
 
-    /* PTT — tous les événements touch et mouse */
     var pttBtn = $('#ptt');
     if (pttBtn) {
       pttBtn.addEventListener('touchstart', pttDown, { passive: false });
@@ -1599,7 +1525,6 @@ video,.preview{max-width:100%;max-height:150px;border:2px solid var(--dim);backg
       pttBtn.addEventListener('mouseleave', pttUp);
     }
 
-    /* Sliders */
     var sensInput = $('#sens');
     var vsensEl = $('#vsens');
     if (sensInput) sensInput.oninput = function() { if (vsensEl) vsensEl.textContent = sensInput.value; };
@@ -1608,7 +1533,6 @@ video,.preview{max-width:100%;max-height:150px;border:2px solid var(--dim);backg
     var vsilEl = $('#vsil');
     if (silInput) silInput.oninput = function() { if (vsilEl) vsilEl.textContent = silInput.value; };
 
-    /* Resize avec debounce */
     var resizeTimer = null;
     window.onresize = function() {
       clearTimeout(resizeTimer);
@@ -1623,7 +1547,6 @@ video,.preview{max-width:100%;max-height:150px;border:2px solid var(--dim);backg
     var appEl = $('#app');
     if (appEl) appEl.classList.add('show');
 
-    /* Horloge */
     setInterval(function() {
       var clockEl = $('#clock');
       if (clockEl) clockEl.textContent = now();
@@ -1631,18 +1554,15 @@ video,.preview{max-width:100%;max-height:150px;border:2px solid var(--dim);backg
 
     log('SUPRA LAB v24.1 — Auto-boot');
 
-    /* Si pas de clé : afficher les paramètres et attendre */
     if (!valid(cfg.key)) {
       status('Clé requise');
       sys();
       toast('Clique CFG pour entrer ta clé Groq', 'warn', 5000);
       live('Clique CFG pour entrer ta clé API Groq — gratuite sur groq.com', 'idle');
-      /* Initialiser l'audio quand même pour les visuels */
       await initAudio();
       return;
     }
 
-    /* Clé présente → démarrage automatique complet */
     status('Démarrage auto...');
     log('Clé détectée, démarrage automatique');
     var ok = await initAudio();
