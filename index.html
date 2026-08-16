@@ -4,247 +4,974 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#050905">
-<title>SUPRA LAB v24.1</title>
+<title>SUPRA LAB v28.1 — Real Only</title>
 <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#050905;--bg2:#020402;--panel:#081208;--fg:#00ff41;--dim:#007a20;--muted:#004d14;--red:#ff0044;--orange:#ffaa00;--blue:#00ccff;--font:'VT323',monospace;--glow:0 0 10px rgba(0,255,65,.35)}
-*{margin:0;padding:0;box-sizing:border-box}
-html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--fg);font-family:var(--font)}
-body{background-image:linear-gradient(rgba(0,255,65,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,255,65,.025) 1px,transparent 1px);background-size:32px 32px}
-button,input,select,textarea{font-family:var(--font);touch-action:manipulation}
-.scan,.vig{position:fixed;inset:0;pointer-events:none;z-index:9990}
-.scan{background:repeating-linear-gradient(0deg,transparent 0,transparent 2px,rgba(0,0,0,.07) 2px,rgba(0,0,0,.07) 4px)}
-.vig{background:radial-gradient(ellipse at center,transparent 50%,rgba(0,0,0,.5) 100%)}
-#toasts{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;gap:6px;pointer-events:none}
-.toast{background:var(--panel);border:2px solid var(--fg);color:var(--fg);padding:7px 18px;font-size:14px;opacity:0;transform:translateY(-10px);transition:.3s;white-space:nowrap;max-width:94vw;overflow:hidden;text-overflow:ellipsis}
-.toast.show{opacity:1;transform:translateY(0)}
-.toast.err{border-color:var(--red);color:var(--red)}
-.toast.warn{border-color:var(--orange);color:var(--orange)}
-.toast.info{border-color:var(--blue);color:var(--blue)}
-.btn{background:transparent;border:3px solid var(--fg);color:var(--fg);padding:10px 18px;font-size:17px;letter-spacing:1px;cursor:pointer;box-shadow:var(--glow);transition:.12s}
-.btn:hover{background:rgba(0,255,65,.1)}
-.btn:active{transform:scale(.96);background:var(--fg);color:var(--bg)}
-.btn:disabled{opacity:.3;cursor:not-allowed;box-shadow:none}
-.btn.red{border-color:var(--red);color:var(--red)}
-.btn.blue{border-color:var(--blue);color:var(--blue)}
-.btn.orange{border-color:var(--orange);color:var(--orange)}
-.btn.on{background:var(--fg);color:var(--bg)}
-.btn.sm{padding:6px 11px;font-size:14px;border-width:2px}
-#app{position:fixed;inset:0;border:6px solid var(--fg);flex-direction:column;background:var(--bg);display:none}
-#app.show{display:flex}
-header{background:var(--panel);border-bottom:3px solid var(--fg);padding:11px 14px;text-align:center;font-size:17px;letter-spacing:2px;position:relative;overflow:hidden;flex-shrink:0}
-header::after{content:'v24.1  •  TTS FIX  •  ANTI-COUPURE  •  VISION  •  STOP = RÉÉCOUTE ';position:absolute;top:1px;left:0;font-size:11px;color:var(--muted);white-space:nowrap;animation:marquee 24s linear infinite}
-@keyframes marquee{from{transform:translateX(100vw)}to{transform:translateX(-100%)}}
-main{flex:1;overflow-y:auto;padding:10px;display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px;align-content:start;padding-bottom:120px}
-footer{position:absolute;bottom:0;left:0;right:0;background:var(--panel);border-top:3px solid var(--fg);padding:6px 12px;font-size:13px;display:flex;justify-content:space-between;flex-shrink:0}
-.bar{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:8px;justify-content:center;align-items:center;padding:10px;background:var(--panel);border:3px solid var(--fg)}
-.bar .round{width:56px;height:56px;border-radius:50%;font-size:12px;display:flex;align-items:center;justify-content:center;text-align:center;line-height:1.1;padding:0;position:relative}
-.bar .round.rec-on{background:var(--red);border-color:var(--red);color:#fff;animation:pulse 1.1s ease-out infinite}
-.bar .round .cnt{position:absolute;top:-5px;right:-5px;background:var(--orange);color:var(--bg);font-size:10px;width:18px;height:18px;border-radius:50%;display:none;align-items:center;justify-content:center}
-.bar .round .cnt.show{display:flex}
-@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(255,0,68,.5)}100%{box-shadow:0 0 0 14px rgba(255,0,68,0)}}
-.timer{font-size:18px;min-width:80px;text-align:center}
-.timer.on{color:var(--red);animation:blink 1s step-end infinite}
-.sep{width:2px;height:28px;background:var(--muted)}
-.live{grid-column:1/-1;background:var(--bg2);border:3px solid var(--fg);position:relative;min-height:80px}
-.live .label{position:absolute;top:-10px;left:10px;background:var(--bg2);padding:0 7px;font-size:12px}
-.live .badge{position:absolute;top:8px;right:10px;font-size:12px;padding:2px 7px;border:1px solid var(--muted);color:var(--muted)}
-.live .badge.listen{color:var(--blue);border-color:var(--blue);animation:blink 1.2s step-end infinite}
-.live .badge.rec{color:var(--red);border-color:var(--red);animation:blink .5s step-end infinite}
-.live .badge.think{color:var(--orange);border-color:var(--orange)}
-.live .badge.ok{color:var(--fg);border-color:var(--fg)}
-.live .badge.speak{color:var(--orange);border-color:var(--orange);animation:blink .8s step-end infinite}
-.live .txt{padding:24px 12px 10px;font-size:18px;line-height:1.35;min-height:60px;word-break:break-word}
-.live .txt.dim{color:var(--muted);font-size:14px}
-.live .txt.red{color:var(--red)}
-.live .txt.orange{color:var(--orange);font-size:15px}
-.input-row{grid-column:1/-1;display:flex;background:var(--bg2);border:2px solid var(--dim)}
-.input-row .pre{display:flex;align-items:center;padding:0 10px;color:var(--dim);font-size:18px;border-right:2px solid var(--dim)}
-.input-row input{flex:1;background:transparent;border:none;color:var(--fg);padding:11px;font-size:16px;outline:none}
-.input-row input::placeholder{color:var(--muted)}
-.input-row button{border:none;border-left:2px solid var(--dim);background:rgba(0,255,65,.06);color:var(--fg);padding:0 14px;font-size:15px;cursor:pointer}
-.panel{background:var(--panel);border:3px solid var(--fg);padding:12px;position:relative;min-height:100px}
-.panel .label{position:absolute;top:-10px;left:10px;background:var(--panel);padding:0 7px;font-size:12px}
-.panel.full{grid-column:1/-1}
-canvas{display:block;width:100%;height:90px;background:var(--bg2);image-rendering:pixelated}
-.out{background:var(--bg2);border:2px dashed var(--dim);padding:12px;font-size:15px;line-height:1.45;white-space:pre-wrap;word-break:break-word;max-height:320px;overflow-y:auto;min-height:70px;color:var(--dim)}
-.log{max-height:120px;overflow-y:auto;font-size:12px;background:var(--bg2);border:2px dashed var(--orange);padding:6px}
-.log div{padding:2px 3px;border-left:3px solid transparent;margin:1px 0}
-.log .ok{color:var(--dim);border-color:var(--muted)}
-.log .err{color:var(--red);border-color:var(--red)}
-.log .info{color:var(--orange);border-color:var(--orange)}
-.sys{font-size:13px;line-height:1.55}
-.stats{font-size:12px;color:var(--muted);margin-top:4px}
-#ptt{position:fixed;bottom:62px;left:50%;transform:translateX(-50%);width:115px;height:115px;border-radius:50%;font-size:13px;text-align:center;line-height:1.2;z-index:200;border-width:5px;display:none;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 0 20px rgba(0,255,65,.4)}
-#ptt.show{display:flex}
-#ptt:active{transform:translateX(-50%) scale(.93)}
-#ptt.rec{background:var(--red);border-color:var(--red);color:#fff;animation:pulse 1s ease-out infinite}
-dialog{border:5px solid var(--fg);background:var(--bg);color:var(--fg);padding:0;max-width:520px;width:94vw;max-height:88vh;overflow-y:auto;box-shadow:0 0 30px rgba(0,255,65,.25)}
-dialog::backdrop{background:rgba(0,0,0,.85)}
-.dh{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:3px solid var(--fg);font-size:18px}
-.db{padding:14px 16px}
-.df{display:flex;gap:10px;justify-content:center;padding:12px;border-top:2px solid var(--muted);flex-wrap:wrap}
-.fl{margin-bottom:12px}
-.fl label{display:block;margin-bottom:4px;font-size:13px}
-.fl input,.fl select,.fl textarea{width:100%;padding:9px;background:var(--bg2);color:var(--fg);border:2px solid var(--dim);font-size:15px;outline:none}
-.fl textarea{min-height:70px;resize:vertical}
-.fl input:focus,.fl select:focus,.fl textarea:focus{border-color:var(--fg)}
-.check{display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px}
-.check input{width:16px;height:16px;accent-color:var(--fg)}
-.sec{font-size:14px;margin:14px 0 8px;padding-bottom:4px;border-bottom:1px solid var(--muted)}
-.range{display:flex;align-items:center;gap:8px}
-.range input{flex:1;accent-color:var(--fg)}
-.range span{min-width:36px;text-align:right;color:var(--orange)}
-.cam-box{grid-column:1/-1;display:none;flex-direction:column;align-items:center;gap:8px;padding:8px;background:var(--bg2);border:3px solid var(--blue)}
-.cam-box.show{display:flex}
-video,.preview{max-width:100%;max-height:150px;border:2px solid var(--dim);background:#000;display:none}
-.blink::after{content:'█';animation:blink .6s step-end infinite}
-@keyframes blink{50%{opacity:0}}
-@media(max-width:600px){.bar .round{width:48px;height:48px;font-size:11px}#ptt{width:100px;height:100px;font-size:12px;bottom:54px}main{padding-bottom:130px}}
+:root {
+  --bg: #050905;
+  --bg2: #020402;
+  --panel: #081208;
+  --fg: #00ff41;
+  --dim: #007a20;
+  --muted: #004d14;
+  --red: #ff0044;
+  --orange: #ffaa00;
+  --blue: #00ccff;
+  --font: 'VT323', monospace;
+  --glow: 0 0 10px rgba(0, 255, 65, 0.35);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font);
+}
+
+body {
+  background-image:
+    linear-gradient(rgba(0, 255, 65, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 255, 65, 0.025) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+button, input, select, textarea {
+  font-family: var(--font);
+  touch-action: manipulation;
+}
+
+.scan, .vig {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9990;
+}
+
+.scan {
+  background: repeating-linear-gradient(
+    0deg,
+    transparent 0,
+    transparent 2px,
+    rgba(0, 0, 0, 0.07) 2px,
+    rgba(0, 0, 0, 0.07) 4px
+  );
+}
+
+.vig {
+  background: radial-gradient(
+    ellipse at center,
+    transparent 48%,
+    rgba(0, 0, 0, 0.6) 100%
+  );
+}
+
+.btn {
+  background: transparent;
+  border: 3px solid var(--fg);
+  color: var(--fg);
+  padding: 10px 18px;
+  font-size: 17px;
+  cursor: pointer;
+  box-shadow: var(--glow);
+  transition: 0.12s;
+  border-radius: 0;
+}
+
+.btn:hover {
+  background: rgba(0, 255, 65, 0.1);
+}
+
+.btn:active {
+  transform: scale(0.96);
+  background: var(--fg);
+  color: var(--bg);
+}
+
+.btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.btn.red {
+  border-color: var(--red);
+  color: var(--red);
+}
+
+.btn.blue {
+  border-color: var(--blue);
+  color: var(--blue);
+}
+
+.btn.on {
+  background: var(--fg) !important;
+  color: var(--bg) !important;
+}
+
+.btn.sm {
+  padding: 6px 11px;
+  font-size: 14px;
+  border-width: 2px;
+}
+
+#boot {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 6px solid var(--fg);
+  background: var(--bg);
+  text-align: center;
+  padding: 20px;
+}
+
+#boot h1 {
+  font-size: 28px;
+  letter-spacing: 3px;
+  text-shadow: 0 0 15px rgba(0, 255, 65, 0.5);
+  min-height: 40px;
+}
+
+#boot p {
+  color: var(--orange);
+  margin-top: 12px;
+  font-size: 15px;
+  opacity: 0;
+  transition: 0.5s;
+  line-height: 1.4;
+}
+
+#boot p.show {
+  opacity: 1;
+}
+
+#boot .acts {
+  margin-top: 26px;
+  display: flex;
+  gap: 12px;
+  opacity: 0;
+  transition: 0.5s;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+#boot .acts.show {
+  opacity: 1;
+}
+
+.blink::after {
+  content: '█';
+  animation: blink 0.6s step-end infinite;
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+#app {
+  display: none;
+  position: fixed;
+  inset: 0;
+  border: 6px solid var(--fg);
+  flex-direction: column;
+  background: var(--bg);
+}
+
+#app.show {
+  display: flex;
+}
+
+header {
+  background: var(--panel);
+  border-bottom: 3px solid var(--fg);
+  padding: 10px 14px;
+  text-align: center;
+  font-size: 15px;
+  letter-spacing: 2px;
+  position: relative;
+  overflow: hidden;
+}
+
+header::after {
+  content: 'v28.1 REAL ONLY  •  QUE DU RÉEL  •  RIEN D\'INVENTÉ  •  TOUT ENTENDRE  •  STOP=RÉÉCOUTE';
+  position: absolute;
+  top: 1px;
+  left: 0;
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
+  animation: marquee 28s linear infinite;
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(100vw);
+  }
+  to {
+    transform: translateX(-100%);
+  }
+}
+
+main {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 10px;
+  align-content: start;
+  padding-bottom: 105px;
+}
+
+footer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--panel);
+  border-top: 3px solid var(--fg);
+  padding: 6px 12px;
+  font-size: 13px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.bar {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  align-items: center;
+  padding: 10px;
+  background: var(--panel);
+  border: 3px solid var(--fg);
+}
+
+.bar .round {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  line-height: 1.1;
+  padding: 0;
+}
+
+.bar .round.rec-on {
+  background: var(--red);
+  border-color: var(--red);
+  color: #fff;
+  animation: pulse 1.1s ease-out infinite;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 0, 68, 0.5);
+  }
+  100% {
+    box-shadow: 0 0 0 14px rgba(255, 0, 68, 0);
+  }
+}
+
+.timer {
+  font-size: 18px;
+  min-width: 80px;
+  text-align: center;
+}
+
+.timer.on {
+  color: var(--red);
+  animation: blink 1s step-end infinite;
+}
+
+.sep {
+  width: 2px;
+  height: 28px;
+  background: var(--muted);
+}
+
+.live {
+  grid-column: 1 / -1;
+  background: var(--bg2);
+  border: 3px solid var(--fg);
+  position: relative;
+  min-height: 80px;
+}
+
+.live .label {
+  position: absolute;
+  top: -10px;
+  left: 10px;
+  background: var(--bg2);
+  padding: 0 7px;
+  font-size: 12px;
+}
+
+.live .badge {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  font-size: 12px;
+  padding: 2px 7px;
+  border: 1px solid var(--muted);
+  color: var(--muted);
+}
+
+.live .badge.listen {
+  color: var(--blue);
+  border-color: var(--blue);
+  animation: blink 1.2s step-end infinite;
+}
+
+.live .badge.rec {
+  color: var(--red);
+  border-color: var(--red);
+  animation: blink 0.5s step-end infinite;
+}
+
+.live .badge.think {
+  color: var(--orange);
+  border-color: var(--orange);
+}
+
+.live .badge.ok {
+  color: var(--fg);
+  border-color: var(--fg);
+}
+
+.live .txt {
+  padding: 24px 12px 10px;
+  font-size: 18px;
+  line-height: 1.35;
+  min-height: 60px;
+  word-break: break-word;
+}
+
+.live .txt.dim {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.live .txt.red {
+  color: var(--red);
+}
+
+.live .txt.orange {
+  color: var(--orange);
+  font-size: 15px;
+}
+
+.input-row {
+  grid-column: 1 / -1;
+  display: flex;
+  background: var(--bg2);
+  border: 2px solid var(--dim);
+}
+
+.input-row .pre {
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  color: var(--dim);
+  font-size: 18px;
+  border-right: 2px solid var(--dim);
+}
+
+.input-row input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--fg);
+  padding: 11px;
+  font-size: 16px;
+  outline: none;
+}
+
+.input-row input::placeholder {
+  color: var(--muted);
+}
+
+.input-row button {
+  border: none;
+  border-left: 2px solid var(--dim);
+  background: rgba(0, 255, 65, 0.06);
+  color: var(--fg);
+  padding: 0 14px;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.panel {
+  background: var(--panel);
+  border: 3px solid var(--fg);
+  padding: 12px;
+  position: relative;
+  min-height: 100px;
+}
+
+.panel .label {
+  position: absolute;
+  top: -10px;
+  left: 10px;
+  background: var(--panel);
+  padding: 0 7px;
+  font-size: 12px;
+}
+
+.panel.full {
+  grid-column: 1 / -1;
+}
+
+canvas {
+  display: block;
+  width: 100%;
+  height: 90px;
+  background: var(--bg2);
+  image-rendering: pixelated;
+}
+
+.out {
+  background: var(--bg2);
+  border: 2px dashed var(--dim);
+  padding: 12px;
+  font-size: 15px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 340px;
+  overflow-y: auto;
+  min-height: 70px;
+  color: var(--dim);
+}
+
+.log {
+  max-height: 130px;
+  overflow-y: auto;
+  font-size: 12px;
+  background: var(--bg2);
+  border: 2px dashed var(--orange);
+  padding: 6px;
+}
+
+.log div {
+  padding: 2px 3px;
+  border-left: 3px solid transparent;
+  margin: 1px 0;
+}
+
+.log .ok {
+  color: var(--dim);
+  border-color: var(--muted);
+}
+
+.log .err {
+  color: var(--red);
+  border-color: var(--red);
+}
+
+.log .info {
+  color: var(--orange);
+  border-color: var(--orange);
+}
+
+.sys {
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.stats {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+#ptt {
+  position: fixed;
+  bottom: 55px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 115px;
+  height: 115px;
+  border-radius: 50%;
+  font-size: 13px;
+  text-align: center;
+  line-height: 1.2;
+  z-index: 200;
+  border-width: 5px;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 20px rgba(0, 255, 65, 0.4);
+}
+
+#ptt.show {
+  display: flex;
+}
+
+#ptt:active {
+  transform: translateX(-50%) scale(0.93);
+}
+
+#ptt.rec {
+  background: var(--red);
+  border-color: var(--red);
+  color: #fff;
+  animation: pulse 1s ease-out infinite;
+}
+
+dialog {
+  border: 5px solid var(--fg);
+  background: var(--bg);
+  color: var(--fg);
+  padding: 0;
+  max-width: 560px;
+  width: 95vw;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 0 30px rgba(0, 255, 65, 0.25);
+}
+
+dialog::backdrop {
+  background: rgba(0, 0, 0, 0.88);
+}
+
+.dh {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 3px solid var(--fg);
+  font-size: 18px;
+}
+
+.db {
+  padding: 14px 16px;
+}
+
+.df {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  padding: 12px;
+  border-top: 2px solid var(--muted);
+  flex-wrap: wrap;
+}
+
+.fl {
+  margin-bottom: 13px;
+}
+
+.fl label {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 13px;
+}
+
+.fl input[type="text"],
+.fl select,
+.fl textarea {
+  width: 100%;
+  padding: 9px;
+  background: var(--bg2);
+  color: var(--fg);
+  border: 2px solid var(--dim);
+  font-size: 15px;
+  outline: none;
+}
+
+.fl textarea {
+  min-height: 70px;
+  resize: vertical;
+}
+
+.fl input:focus,
+.fl select:focus,
+.fl textarea:focus {
+  border-color: var(--fg);
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.check input {
+  width: 17px;
+  height: 17px;
+  accent-color: var(--fg);
+}
+
+.sec {
+  font-size: 15px;
+  margin: 16px 0 10px;
+  padding-bottom: 5px;
+  border-bottom: 2px solid var(--muted);
+}
+
+.range {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.range input {
+  flex: 1;
+  accent-color: var(--fg);
+}
+
+.range span {
+  min-width: 42px;
+  text-align: right;
+  color: var(--orange);
+}
+
+.cam-box {
+  grid-column: 1 / -1;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  background: var(--bg2);
+  border: 3px solid var(--blue);
+}
+
+.cam-box.show {
+  display: flex;
+}
+
+video, .preview {
+  max-width: 100%;
+  max-height: 150px;
+  border: 2px solid var(--dim);
+  background: #000;
+  display: none;
+}
+
+.keys-list {
+  max-height: 100px;
+  overflow-y: auto;
+  font-size: 13px;
+  margin-top: 6px;
+}
+
+.key-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 7px;
+  border: 1px solid var(--muted);
+  margin-bottom: 5px;
+  gap: 8px;
+}
+
+@media (max-width: 600px) {
+  #boot h1 {
+    font-size: 22px;
+  }
+  .bar .round {
+    width: 50px;
+    height: 50px;
+    font-size: 11px;
+  }
+  #ptt {
+    width: 100px;
+    height: 100px;
+    font-size: 12px;
+    bottom: 48px;
+  }
+}
 </style>
 </head>
 <body>
 <div class="scan"></div>
 <div class="vig"></div>
-<div id="toasts"></div>
 
 <dialog id="dlg">
-  <div class="dh"><span>PARAMÈTRES</span><button class="btn sm" id="x" type="button" style="border:none;box-shadow:none;font-size:22px">&times;</button></div>
+  <div class="dh">
+    <span>REAL ONLY — PARAMÈTRES</span>
+    <button class="btn sm" id="x" type="button" style="border: none; box-shadow: none; font-size: 22px">&times;</button>
+  </div>
   <div class="db">
-    <div class="sec">Clé API Groq</div>
-    <div class="fl"><label>Clé (gsk_...)</label><textarea id="key" placeholder="Colle ta clé Groq ici — gratuite sur groq.com" spellcheck="false"></textarea></div>
-    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
-      <button class="btn blue" id="paste" type="button" style="flex:1.4">COLLER</button>
-      <button class="btn blue" id="test" type="button" style="flex:1">TESTER</button>
+    <div class="sec">1. Clé API Groq</div>
+    <div class="fl">
+      <label>Clé (gsk_...)</label>
+      <textarea id="key" placeholder="Colle ta clé" spellcheck="false"></textarea>
     </div>
-    <div class="fl"><label>Modèle</label>
+    <div style="display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;">
+      <button class="btn blue" id="paste" type="button" style="flex: 1.5;">COLLER</button>
+      <button class="btn blue" id="test" type="button" style="flex: 1;">TESTER</button>
+      <button class="btn" id="savekey" type="button" style="flex: 1;">SAUVER</button>
+    </div>
+    <div class="fl">
+      <label>Clés sauvées</label>
+      <div class="keys-list" id="keys-list"></div>
+    </div>
+
+    <div class="sec">2. Modèle</div>
+    <div class="fl">
+      <label>Modèle</label>
       <select id="model">
         <option value="llama-3.3-70b-versatile">Llama 3.3 70B</option>
         <option value="llama-3.1-8b-instant">Llama 3.1 8B Instant</option>
-        <option value="meta-llama/llama-4-scout-17b-16e-instruct">Llama 4 Scout (vision)</option>
+        <option value="mixtral-8x7b-32768">Mixtral 8x7B</option>
       </select>
     </div>
-    <div class="fl"><label>Personnalité</label>
-      <select id="persona">
-        <option value="pro">Pro (recommandé)</option>
-        <option value="default">Classique</option>
-        <option value="chill">Détendu</option>
-        <option value="strict">Direct & court</option>
+    <div class="fl">
+      <label>Température <span id="vtemp">0.25</span></label>
+      <div class="range">
+        <input type="range" id="temp" min="0.1" max="0.6" step="0.05" value="0.25">
+      </div>
+    </div>
+    <div class="fl">
+      <label>Max tokens <span id="vtokens">1800</span></label>
+      <div class="range">
+        <input type="range" id="tokens" min="500" max="3000" step="100" value="1800">
+      </div>
+    </div>
+
+    <div class="sec">3. Écoute (tout entendre)</div>
+    <div class="fl">
+      <label>Sensibilité <span id="vsens">8</span></label>
+      <div class="range">
+        <input type="range" id="sens" min="3" max="22" value="8">
+      </div>
+    </div>
+    <div class="fl">
+      <label>Silence fin (ms) <span id="vsil">700</span></label>
+      <div class="range">
+        <input type="range" id="sil" min="400" max="1500" step="25" value="700">
+      </div>
+    </div>
+    <div class="fl">
+      <label>Durée mini (ms) <span id="vmin">250</span></label>
+      <div class="range">
+        <input type="range" id="min" min="150" max="600" step="20" value="250">
+      </div>
+    </div>
+    <div class="fl">
+      <label>Durée max (s) <span id="vmax">50</span></label>
+      <div class="range">
+        <input type="range" id="max" min="15" max="90" value="50">
+      </div>
+    </div>
+    <div class="fl">
+      <label class="check">
+        <input type="checkbox" id="always" checked> Toujours répondre
+      </label>
+    </div>
+    <div class="fl">
+      <label class="check">
+        <input type="checkbox" id="noise" checked> Analyser tous les bruits
+      </label>
+    </div>
+    <div class="fl">
+      <label>Mots d'appel</label>
+      <input type="text" id="wake" value="supra,lab,assistant">
+    </div>
+
+    <div class="sec">4. Voix & Système</div>
+    <div class="fl">
+      <label class="check">
+        <input type="checkbox" id="tts" checked> Voix
+      </label>
+    </div>
+    <div class="fl">
+      <label>Vitesse <span id="vrate">0.93</span></label>
+      <div class="range">
+        <input type="range" id="rate" min="0.7" max="1.15" step="0.02" value="0.93">
+      </div>
+    </div>
+    <div class="fl">
+      <label>Langue</label>
+      <select id="lang">
+        <option value="fr">Français</option>
+        <option value="en">English</option>
+        <option value="es">Español</option>
       </select>
     </div>
-    <div class="sec">Écoute</div>
-    <div class="fl"><label>Sensibilité <span id="vsens">12</span></label><div class="range"><input type="range" id="sens" min="5" max="30" value="12"></div></div>
-    <div class="fl"><label>Silence fin (ms) <span id="vsil">600</span></label><div class="range"><input type="range" id="sil" min="300" max="1200" step="25" value="600"></div></div>
-    <div class="fl"><label class="check"><input type="checkbox" id="always" checked> Toujours répondre</label></div>
-    <div class="fl"><label class="check"><input type="checkbox" id="tts" checked> Voix TTS</label></div>
-    <div class="fl"><label>Langue</label>
-      <select id="lang"><option value="fr">Français</option><option value="en">English</option><option value="es">Español</option></select>
+    <div class="fl">
+      <label>Couleur</label>
+      <select id="col">
+        <option value="#00ff41">Vert</option>
+        <option value="#00ccff">Cyan</option>
+        <option value="#ff6600">Orange</option>
+        <option value="#aa00ff">Violet</option>
+      </select>
     </div>
-    <div class="fl"><label>Couleur</label>
-      <select id="col"><option value="#00ff41">Vert</option><option value="#00ccff">Cyan</option><option value="#ff6600">Orange</option><option value="#ff00aa">Rose</option></select>
+    <div class="fl">
+      <label class="check">
+        <input type="checkbox" id="wakelock" checked> Écran allumé
+      </label>
+    </div>
+    <div class="fl">
+      <label class="check">
+        <input type="checkbox" id="debug"> Debug
+      </label>
     </div>
   </div>
   <div class="df">
     <button class="btn" id="save" type="button">SAUVEGARDER</button>
+    <button class="btn blue" id="exportcfg" type="button">EXPORT</button>
     <button class="btn red" id="rst" type="button">RESET</button>
   </div>
 </dialog>
 
+<section id="boot">
+  <h1 class="blink" id="title"></h1>
+  <p id="sub"></p>
+  <div class="acts" id="acts">
+    <button class="btn" id="go" type="button" style="font-size: 20px; padding: 12px 28px; border-width: 4px;">LANCER REAL ONLY</button>
+    <button class="btn" id="cfg" type="button">PARAMÈTRES</button>
+  </div>
+</section>
+
 <div id="app">
-  <header>SUPRA LAB v24.1 — <span id="mode">PRÊT</span></header>
+  <header>SUPRA LAB v28.1 — <span id="mode">REAL</span></header>
   <main>
     <div class="bar">
-      <button class="btn round" id="rec" type="button">REC<span class="cnt" id="reccnt">0</span></button>
+      <button class="btn round" id="rec" type="button">REC</button>
       <div class="timer" id="timer">00:00</div>
       <button class="btn round" id="stop" type="button" disabled>STOP</button>
       <button class="btn round" id="play" type="button">PLAY</button>
       <div class="sep"></div>
       <button class="btn round blue" id="auto" type="button">AUTO</button>
       <button class="btn round" id="comp" type="button">24/7</button>
-      <div class="sep"></div>
-      <button class="btn round orange" id="cfg" type="button">CFG</button>
       <button class="btn round" id="img" type="button">IMG</button>
       <button class="btn round" id="cam" type="button">CAM</button>
-      <div class="sep"></div>
       <button class="btn round" id="sum" type="button">RÉSUMÉ</button>
+      <button class="btn round" id="export" type="button">EXPORT</button>
       <button class="btn round red" id="clr" type="button">CLR</button>
       <button class="btn round red" id="mute" type="button">STOP</button>
     </div>
 
     <input type="file" id="file" accept="image/*" hidden>
-    <img id="preview" class="preview" alt="">
+    <img id="preview" class="preview" alt="" hidden>
 
     <div class="cam-box" id="cambox">
-      <video id="video" autoplay playsinline muted></video>
-      <div style="display:flex;gap:8px">
+      <video id="video" autoplay playsinline muted hidden></video>
+      <div style="display: flex; gap: 8px;">
         <button class="btn sm blue" id="capture" type="button">CAPTURER</button>
         <button class="btn sm red" id="camstop" type="button">FERMER</button>
       </div>
     </div>
 
-    <div class="panel"><div class="label">SPECTRO</div><canvas id="c1"></canvas></div>
-    <div class="panel"><div class="label">OSCILLO</div><canvas id="c2"></canvas></div>
-    <div class="panel"><div class="label">VOLUME</div><canvas id="c3"></canvas></div>
+    <div class="panel">
+      <div class="label">SPECTRO</div>
+      <canvas id="c1"></canvas>
+    </div>
+    <div class="panel">
+      <div class="label">OSCILLO</div>
+      <canvas id="c2"></canvas>
+    </div>
+    <div class="panel">
+      <div class="label">VOLUME</div>
+      <canvas id="c3"></canvas>
+    </div>
 
     <div class="live">
-      <div class="label">ÉCOUTE</div>
-      <div class="badge" id="badge">PRET</div>
-      <div class="txt dim" id="live">Dis « stop » pour couper et réécouter</div>
+      <div class="label">ÉCOUTE RÉELLE</div>
+      <div class="badge" id="badge">PRÊT</div>
+      <div class="txt dim" id="live">Real Only — que du réel, rien d'inventé</div>
     </div>
 
     <div class="input-row">
       <div class="pre">&gt;</div>
-      <input id="txt" placeholder="Écris ou parle..." autocomplete="off">
+      <input id="txt" placeholder="Parle ou laisse un bruit..." autocomplete="off">
       <button type="button" id="send">ENVOYER</button>
     </div>
 
-    <div class="panel full"><div class="label">RÉPONSE</div><div class="out" id="out">En attente...</div></div>
-    <div class="panel full"><div class="label">JOURNAL</div><div class="log" id="log"></div></div>
-    <div class="panel"><div class="label">SYSTÈME</div><div class="sys" id="sys">—</div><div class="stats" id="stats">—</div></div>
+    <div class="panel full">
+      <div class="label">INTERPRÉTATION RÉELLE</div>
+      <div class="out" id="out">En attente...</div>
+    </div>
+    <div class="panel full">
+      <div class="label">JOURNAL</div>
+      <div class="log" id="log"></div>
+    </div>
+    <div class="panel">
+      <div class="label">SYSTÈME</div>
+      <div class="sys" id="sys">—</div>
+      <div class="stats" id="stats">—</div>
+    </div>
   </main>
-  <footer><span id="status">Démarrage...</span><span>v24.1 | <span id="clock">--:--:--</span></span></footer>
+  <footer>
+    <span id="status">En attente...</span>
+    <span>v28.1 Real Only | <span id="clock">--:--:--</span></span>
+  </footer>
 </div>
 
 <button class="btn" id="ptt" type="button">MAINTENIR<br>POUR PARLER</button>
 <audio id="audio" hidden></audio>
 
 <script>
+// =============================================
+// SUPRA LAB v28.1 — REAL ONLY
+// =============================================
 (() => {
-  /* =============================================
-     CONFIGURATION PAR DÉFAUT
-     ============================================= */
-  var DEFAULT = {
+  // =========================================
+  // CONFIGURATION
+  // =========================================
+  const DEFAULT = {
     key: '',
     model: 'llama-3.3-70b-versatile',
     lang: 'fr',
     tts: true,
     color: '#00ff41',
-    sens: 12,
-    silence: 600,
+    sens: 8,
+    silence: 700,
+    minSpeech: 250,
+    maxRecord: 50,
     always: true,
-    persona: 'pro'
+    noise: true,
+    wakeWords: 'supra,lab,assistant',
+    temp: 0.25,
+    maxTokens: 1800,
+    rate: 0.93,
+    wakelock: true,
+    debug: false
   };
 
-  var PERSONA = {
-    default: 'Tu es SUPRA, compagnon intelligent.\nRÈGLES STRICTES :\n- Réponds UNIQUEMENT en texte brut.\n- N\'utilise JAMAIS de markdown, d\'astérisques, de **, de *, de listes à puces, de titres #.\n- Pas de formatage. Texte simple et clair.\n- Tutoiement. Français.\n- Si on dit stop/arrête/tais-toi, tu t\'arrêtes.',
-    pro: 'Tu es SUPRA en mode Pro.\nRÈGLES STRICTES :\n- Réponds UNIQUEMENT en texte brut, sans aucun formatage.\n- INTERDICTION totale : *, **, ***, markdown, listes, puces, #, liens formatés.\n- Phrases claires et utiles. Tutoiement.\n- Ne invente pas de mots bizarres.\n- Si on dit stop, arrête ou tais-toi, tu t\'arrêtes immédiatement.',
-    chill: 'Tu es SUPRA détendu.\nTexte brut uniquement. Jamais d\'astérisques ni de markdown. Tutoiement. Si stop, tu te tais.',
-    strict: 'Tu es SUPRA direct.\nRéponses très courtes. Texte brut uniquement. Aucun * ni markdown. Si stop, stop immédiat.'
-  };
+  const SYSTEM_PROMPT = `Tu es SUPRA. Tu fais UNIQUEMENT des interprétations réelles et factuelles des sons et de l'environnement.
 
-  var STOP_WORDS = ['stop', 'arrête', 'arrete', 'tais-toi', 'taistoi', 'silence', 'shut up', 'enough', 'basta'];
+RÈGLES ABSOLUES :
+- Réponds uniquement en texte brut. Aucun *, aucun markdown, aucune liste.
+- Ne commence jamais par "Je vais", "Voici", "D'accord", "Mon analyse" ou toute phrase d'introduction.
+- Commence directement par les faits.
+- Tu n'inventes RIEN. Pas d'entités, pas de présences, pas de phénomènes paranormaux, pas de spéculations.
+- Tu décris uniquement ce qui est réellement probable d'un point de vue physique et acoustique (objets, vent, structure, animaux, électroménager, voix humaines, etc.).
+- Si tu n'es pas sûr, dis clairement "je ne peux pas déterminer avec certitude".
+- Tutoiement. Français. Concis et concret.
+- Si on dit stop / arrête / tais-toi → tu t'arrêtes immédiatement.`;
 
-  /* =============================================
-     ÉTAT GLOBAL
-     ============================================= */
-  var cfg = {};
-  Object.assign(cfg, DEFAULT);
+  const STOP_WORDS = ['stop', 'arrête', 'arrete', 'tais-toi', 'taistoi', 'silence', 'shut up', 'enough', 'basta'];
 
-  var st = {
+  let cfg = { ...DEFAULT };
+  let st = {
     ready: false,
     ctx: null,
     an: null,
-    vol: null,
+    volNode: null,
     stream: null,
     fdata: null,
     wdata: null,
@@ -262,159 +989,77 @@ video,.preview{max-width:100%;max-height:150px;border:2px solid var(--dim);backg
     auto: false,
     run: false,
     comp: false,
-    abortFlag: false,
     hist: [],
     mem: '',
     img: null,
-    imgBase64: null,
     cam: null,
     camOn: false,
     ctrl: null,
     reqs: 0,
     lat: 0,
-    tokens: 0
+    tokens: 0,
+    savedKeys: [],
+    summarizing: false,
+    lastVol: 0,
+    noiseCount: 0
   };
+  let caps = [];
 
-  var caps = [];
-  var voices = [];
-  var ttsKeepAlive = null;
-
-  /* =============================================
-     ROLLING BUFFER ANTI-COUPURE
-     6 échantillons × 50ms = 300ms de fenêtre
-     ============================================= */
-  var VB_SIZE = 6;
-  var VB_MS = 50;
-  var vbIv = null;
-  var vb = [];
-
-  function startVB() {
-    if (vbIv !== null) return;
-    vb = [];
-    vbIv = setInterval(function() {
-      vb.push(rawVol());
-      if (vb.length > VB_SIZE) vb.shift();
-    }, VB_MS);
-  }
-
-  function stopVB() {
-    if (vbIv !== null) {
-      clearInterval(vbIv);
-      vbIv = null;
-    }
-    vb = [];
-  }
-
-  function smoothVol() {
-    if (!vb.length) return 0;
-    var s = 0;
-    for (var i = 0; i < vb.length; i++) s += vb[i];
-    return s / vb.length;
-  }
-
-  /* =============================================
-     UTILITAIRES
-     ============================================= */
-  var $ = function(s) { return document.querySelector(s); };
-  var now = function() { return new Date().toLocaleTimeString('fr-FR'); };
-  var pad = function(n) { return n < 10 ? '0' + n : '' + n; };
-  var fmt = function(s) { return pad(Math.floor(s / 60)) + ':' + pad(s % 60); };
-  var clean = function(k) { return String(k || '').replace(/[\u200B-\u200D\uFEFF\u00A0\s]/g, '').trim(); };
-  var valid = function(k) { return k && k.startsWith('gsk_') && k.length > 30; };
-  var sleep = function(ms) { return new Promise(function(r) { setTimeout(r, ms); }); };
-  var isVisionModel = function() {
-    return cfg.model.indexOf('scout') !== -1 || cfg.model.indexOf('vision') !== -1 || cfg.model.indexOf('llama-4') !== -1;
-  };
+  // =========================================
+  // UTILITAIRES
+  // =========================================
+  const $ = s => document.querySelector(s);
+  const now = () => new Date().toLocaleTimeString('fr-FR');
+  const pad = n => n < 10 ? '0' + n : n;
+  const fmt = s => pad(Math.floor(s / 60)) + ':' + pad(s % 60);
+  const clean = k => String(k || '').replace(/[\u200B-\u200D\uFEFF\u00A0\s]/g, '').trim();
+  const valid = k => typeof k === 'string' && k.startsWith('gsk_') && k.length > 30;
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
 
   function isStop(text) {
-    var t = (text || '').toLowerCase().trim();
-    for (var i = 0; i < STOP_WORDS.length; i++) {
-      var w = STOP_WORDS[i];
-      if (t === w || t.startsWith(w + ' ') || t.endsWith(' ' + w) || t.indexOf(' ' + w + ' ') !== -1) return true;
-    }
-    return false;
+    const t = (text || '').toLowerCase().trim();
+    return STOP_WORDS.some(w => t === w || t.startsWith(w + ' ') || t.endsWith(' ' + w) || t.includes(' ' + w + ' '));
   }
 
-  /* Toast non-bloquant */
-  function toast(msg, type, dur) {
-    type = type || 'info';
-    dur = dur || 2500;
-    var el = document.createElement('div');
-    el.className = 'toast ' + type;
-    el.textContent = msg;
-    $('#toasts').appendChild(el);
-    requestAnimationFrame(function() {
-      el.classList.add('show');
-    });
-    setTimeout(function() {
-      el.classList.remove('show');
-      setTimeout(function() { el.remove(); }, 300);
-    }, dur);
-  }
-
-  /* Log dans le journal */
-  function log(m, t) {
-    t = t || 'ok';
-    var el = $('#log');
+  // =========================================
+  // JOURNAL
+  // =========================================
+  function log(m, t = 'ok') {
+    const el = $('#log');
     if (!el) return;
-    var d = document.createElement('div');
+    const d = document.createElement('div');
     d.className = t;
-    d.textContent = '[' + now() + '] ' + m;
+    d.textContent = `[${now()}] ${m}`;
     el.appendChild(d);
     el.scrollTop = el.scrollHeight;
-    while (el.children.length > 80) el.firstChild.remove();
+    while (el.children.length > 110) el.firstChild.remove();
+    if (cfg.debug) console.log('[SUPRA]', m);
   }
 
   function status(t) {
-    var el = $('#status');
-    if (el) el.textContent = t;
+    $('#status').textContent = t;
   }
 
   function sys() {
-    var ok = function(v) { return '<span style="color:var(--fg)">' + v + '</span>'; };
-    var ko = function(v) { return '<span style="color:var(--red)">' + v + '</span>'; };
-    var wa = function(v) { return '<span style="color:var(--orange)">' + v + '</span>'; };
-    var el = $('#sys');
-    if (el) {
-      el.innerHTML =
-        'Micro ' + (st.stream ? ok('OK') : ko('OFF')) +
-        ' · API ' + (valid(cfg.key) ? ok('OK') : ko('—')) +
-        (st.imgBase64 ? ' · Img ' + wa('OUI') : '') +
-        '<br>Mode ' + (st.comp ? wa('24/7') : st.auto ? wa('AUTO') : ok('PTT')) +
-        ' · ' + cfg.persona +
-        '<br>Mémoire ' + st.hist.length + ' msgs' + (st.mem ? ' +résumé' : '');
-    }
-    var el2 = $('#stats');
-    if (el2) {
-      el2.textContent = '\u2248' + st.tokens + ' tokens · ' + (st.lat || '—') + 'ms · ' + st.reqs + ' req';
-    }
-  }
-
-  function updateRecBadge() {
-    var el = $('#reccnt');
-    if (!el) return;
-    if (caps.length > 0) {
-      el.textContent = caps.length;
-      el.classList.add('show');
-    } else {
-      el.classList.remove('show');
-    }
+    const ok = v => `<span style="color:var(--fg)">${v}</span>`;
+    const ko = v => `<span style="color:var(--red)">${v}</span>`;
+    const wa = v => `<span style="color:var(--orange)">${v}</span>`;
+    $('#sys').innerHTML = `Micro ${st.stream ? ok('OK') : ko('OFF')} · API ${valid(cfg.key) ? ok('OK') : ko('—')} · Mode ${st.comp ? wa('24/7') : st.auto ? wa('AUTO') : ok('PTT')}<br>Bruit ${cfg.noise ? 'ON' : 'off'} · Real Only`;
+    $('#stats').textContent = `≈${st.tokens} tok · ${st.lat || '—'}ms · ${st.reqs} req · bruits:${st.noiseCount}`;
   }
 
   function live(txt, mode) {
-    var t = $('#live');
-    var b = $('#badge');
-    if (!t || !b) return;
+    const t = $('#live'), b = $('#badge');
     t.className = 'txt';
     b.className = 'badge';
     if (mode === 'idle') {
       t.classList.add('dim');
       t.textContent = txt;
-      b.textContent = 'PRET';
+      b.textContent = 'PRÊT';
     } else if (mode === 'listen') {
       t.classList.add('dim');
       t.textContent = txt;
-      b.textContent = 'ECOUTE';
+      b.textContent = 'ÉCOUTE';
       b.classList.add('listen');
     } else if (mode === 'rec') {
       t.classList.add('red');
@@ -424,55 +1069,132 @@ video,.preview{max-width:100%;max-height:150px;border:2px solid var(--dim);backg
     } else if (mode === 'think') {
       t.classList.add('orange');
       t.textContent = txt;
-      b.textContent = 'SUPRA';
+      b.textContent = 'ANALYSE';
       b.classList.add('think');
     } else if (mode === 'ok') {
       t.textContent = txt;
       b.textContent = 'OK';
       b.classList.add('ok');
-    } else if (mode === 'speak') {
-      t.textContent = txt;
-      b.textContent = 'VOIX';
-      b.classList.add('speak');
     }
   }
 
-  /* =============================================
-     CONFIG PERSISTENCE
-     ============================================= */
+  function type(el, str, speed = 24) {
+    return new Promise(res => {
+      let i = 0;
+      el.textContent = '';
+      el.classList.add('blink');
+      const iv = setInterval(() => {
+        el.textContent += str[i++];
+        if (i >= str.length) {
+          clearInterval(iv);
+          el.classList.remove('blink');
+          res();
+        }
+      }, speed);
+    });
+  }
+
+  // =========================================
+  // GESTION DES CLÉS
+  // =========================================
+  function loadKeys() {
+    try {
+      st.savedKeys = JSON.parse(localStorage.getItem('sl28_keys') || '[]');
+    } catch {
+      st.savedKeys = [];
+    }
+    renderKeys();
+  }
+
+  function saveKeys() {
+    localStorage.setItem('sl28_keys', JSON.stringify(st.savedKeys));
+    renderKeys();
+  }
+
+  function renderKeys() {
+    const list = $('#keys-list');
+    if (!list) return;
+    if (!st.savedKeys.length) {
+      list.innerHTML = '<div style="padding:8px;color:var(--muted)">Aucune</div>';
+      return;
+    }
+    list.innerHTML = '';
+    st.savedKeys.forEach((k, i) => {
+      const div = document.createElement('div');
+      div.className = 'key-item';
+      div.innerHTML = `
+        <div style="flex:1;min-width:0">
+          <div>${k.name || 'Clé'}</div>
+          <div style="font-size:11px;color:var(--muted)">${k.key.slice(0, 16)}...</div>
+        </div>
+        <button class="btn sm blue" data-i="${i}" data-a="use">USE</button>
+        <button class="btn sm red" data-i="${i}" data-a="del">DEL</button>
+      `;
+      div.querySelectorAll('button').forEach(btn => {
+        btn.onclick = () => {
+          const idx = +btn.dataset.i;
+          if (btn.dataset.a === 'use') {
+            cfg.key = st.savedKeys[idx].key;
+            $('#key').value = cfg.key;
+            localStorage.setItem('sl28', JSON.stringify(cfg));
+            apply();
+            log('Clé OK');
+          } else if (confirm('Supprimer ?')) {
+            st.savedKeys.splice(idx, 1);
+            saveKeys();
+          }
+        };
+      });
+      list.appendChild(div);
+    });
+  }
+
+  // =========================================
+  // CONFIGURATION
+  // =========================================
   function load() {
     try {
-      var saved = JSON.parse(localStorage.getItem('sl241') || '{}');
-      Object.assign(cfg, saved);
-    } catch (e) { /* ignoré */ }
-    if (cfg.silence === undefined) cfg.silence = 600;
-    if (cfg.sens === undefined) cfg.sens = 12;
+      Object.assign(cfg, JSON.parse(localStorage.getItem('sl28') || '{}'));
+    } catch {}
+    loadKeys();
     apply();
   }
 
   function apply() {
-    var c = cfg.color || '#00ff41';
-    var r = parseInt(c.slice(1, 3), 16);
-    var g = parseInt(c.slice(3, 5), 16);
-    var b = parseInt(c.slice(5, 7), 16);
-    var root = document.documentElement.style;
-    root.setProperty('--fg', c);
-    root.setProperty('--dim', c + '99');
-    root.setProperty('--muted', c + '55');
-    root.setProperty('--glow', '0 0 10px rgba(' + r + ',' + g + ',' + b + ',.35)');
+    const c = cfg.color;
+    const r = parseInt(c.slice(1, 3), 16);
+    const g = parseInt(c.slice(3, 5), 16);
+    const b = parseInt(c.slice(5, 7), 16);
+    document.documentElement.style.setProperty('--fg', c);
+    document.documentElement.style.setProperty('--dim', c + '99');
+    document.documentElement.style.setProperty('--muted', c + '55');
+    document.documentElement.style.setProperty('--glow', `0 0 10px rgba(${r},${g},${b},.35)`);
 
-    var el;
-    el = $('#key'); if (el) el.value = cfg.key || '';
-    el = $('#model'); if (el) el.value = cfg.model;
-    el = $('#lang'); if (el) el.value = cfg.lang;
-    el = $('#tts'); if (el) el.checked = cfg.tts;
-    el = $('#col'); if (el) el.value = cfg.color;
-    el = $('#sens'); if (el) el.value = cfg.sens;
-    el = $('#vsens'); if (el) el.textContent = cfg.sens;
-    el = $('#sil'); if (el) el.value = cfg.silence;
-    el = $('#vsil'); if (el) el.textContent = cfg.silence;
-    el = $('#always'); if (el) el.checked = cfg.always;
-    el = $('#persona'); if (el) el.value = cfg.persona;
+    $('#key').value = cfg.key || '';
+    $('#model').value = cfg.model;
+    $('#lang').value = cfg.lang;
+    $('#tts').checked = cfg.tts;
+    $('#col').value = cfg.color;
+    $('#sens').value = cfg.sens;
+    $('#vsens').textContent = cfg.sens;
+    $('#sil').value = cfg.silence;
+    $('#vsil').textContent = cfg.silence;
+    $('#min').value = cfg.minSpeech;
+    $('#vmin').textContent = cfg.minSpeech;
+    $('#max').value = cfg.maxRecord;
+    $('#vmax').textContent = cfg.maxRecord;
+    $('#always').checked = cfg.always;
+    $('#noise').checked = cfg.noise;
+    $('#wake').value = cfg.wakeWords;
+    $('#temp').value = cfg.temp;
+    $('#vtemp').textContent = cfg.temp;
+    $('#tokens').value = cfg.maxTokens;
+    $('#vtokens').textContent = cfg.maxTokens;
+    $('#rate').value = cfg.rate;
+    $('#vrate').textContent = cfg.rate;
+    $('#wakelock').checked = cfg.wakelock;
+    $('#debug').checked = cfg.debug;
+
     sys();
   }
 
@@ -484,127 +1206,134 @@ video,.preview{max-width:100%;max-height:150px;border:2px solid var(--dim);backg
     cfg.color = $('#col').value;
     cfg.sens = +$('#sens').value;
     cfg.silence = +$('#sil').value;
+    cfg.minSpeech = +$('#min').value;
+    cfg.maxRecord = +$('#max').value;
     cfg.always = $('#always').checked;
-    cfg.persona = $('#persona').value;
-    localStorage.setItem('sl241', JSON.stringify(cfg));
+    cfg.noise = $('#noise').checked;
+    cfg.wakeWords = $('#wake').value.trim();
+    cfg.temp = +$('#temp').value;
+    cfg.maxTokens = +$('#tokens').value;
+    cfg.rate = +$('#rate').value;
+    cfg.wakelock = $('#wakelock').checked;
+    cfg.debug = $('#debug').checked;
+
+    localStorage.setItem('sl28', JSON.stringify(cfg));
     apply();
-    log('Config sauvée');
-    toast('Sauvegardé', 'ok', 1500);
+    log('Sauvegardé');
   }
 
-  /* =============================================
-     AUDIO — INITIALISATION MICRO
-     ============================================= */
+  // =========================================
+  // AUDIO
+  // =========================================
   async function initAudio() {
     try {
-      st.ctx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 48000 });
+      st.ctx = new (AudioContext || webkitAudioContext)({ sampleRate: 48000 });
       await st.ctx.resume();
       st.stream = await navigator.mediaDevices.getUserMedia({
-        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
+        }
       });
-      var src = st.ctx.createMediaStreamSource(st.stream);
 
+      const src = st.ctx.createMediaStreamSource(st.stream);
       st.an = st.ctx.createAnalyser();
       st.an.fftSize = 2048;
-      st.an.smoothingTimeConstant = 0.75;
+      st.an.smoothingTimeConstant = 0.78;
       src.connect(st.an);
       st.fdata = new Uint8Array(st.an.frequencyBinCount);
       st.wdata = new Uint8Array(st.an.frequencyBinCount);
 
-      st.vol = st.ctx.createAnalyser();
-      st.vol.fftSize = 256;
-      src.connect(st.vol);
-      st.vdata = new Uint8Array(st.vol.frequencyBinCount);
+      st.volNode = st.ctx.createAnalyser();
+      st.volNode.fftSize = 256;
+      src.connect(st.volNode);
+      st.vdata = new Uint8Array(st.volNode.frequencyBinCount);
 
       st.ready = true;
       size();
-      drawLoop();
+      loop();
       sys();
       log('Audio OK');
       return true;
     } catch (e) {
       log('Micro: ' + e.message, 'err');
-      toast('Micro inaccessible', 'err', 3000);
       return false;
     }
   }
 
-  function rawVol() {
-    if (!st.vol) return 0;
-    st.vol.getByteFrequencyData(st.vdata);
-    var s = 0;
-    for (var i = 0; i < st.vdata.length; i++) s += st.vdata[i];
+  function vol() {
+    if (!st.volNode) return 0;
+    st.volNode.getByteFrequencyData(st.vdata);
+    let s = 0;
+    for (let i = 0; i < st.vdata.length; i++) s += st.vdata[i];
     return s / st.vdata.length;
   }
 
-  /* =============================================
-     CANVAS — VISUALISATIONS
-     ============================================= */
-  function drawLoop() {
+  function loop() {
     if (!st.ready) return;
-    requestAnimationFrame(drawLoop);
+    requestAnimationFrame(loop);
     st.an.getByteFrequencyData(st.fdata);
     st.an.getByteTimeDomainData(st.wdata);
-    st.vol.getByteFrequencyData(st.vdata);
+    st.volNode.getByteFrequencyData(st.vdata);
     draw1();
     draw2();
     draw3();
   }
 
   function draw1() {
-    var c = $('#c1');
+    const c = $('#c1');
     if (!c) return;
-    var x = c.getContext('2d');
-    var w = c.width;
-    var h = c.height;
+    const x = c.getContext('2d');
+    const w = c.width;
+    const h = c.height;
     x.fillStyle = '#020402';
     x.fillRect(0, 0, w, h);
-    var n = st.fdata.length;
-    var bw = Math.max(1, w / n);
-    for (var i = 0; i < n; i++) {
-      var v = st.fdata[i];
+    const n = st.fdata.length;
+    const bw = Math.max(1, w / n);
+    for (let i = 0; i < n; i++) {
+      const v = st.fdata[i];
       if (v < 3) continue;
-      var bh = Math.log10(v + 1) * 18;
-      x.fillStyle = 'hsl(' + Math.max(0, 110 - v * 0.4) + ',100%,' + Math.max(15, v * 0.3) + '%)';
+      const bh = Math.log10(v + 1) * 18;
+      x.fillStyle = `hsl(${Math.max(0, 110 - v * 0.4)}, 100%, ${Math.max(15, v * 0.3)}%)`;
       x.fillRect(i * bw, h - bh, bw + 0.3, bh);
     }
   }
 
   function draw2() {
-    var c = $('#c2');
+    const c = $('#c2');
     if (!c) return;
-    var x = c.getContext('2d');
-    var w = c.width;
-    var h = c.height;
+    const x = c.getContext('2d');
+    const w = c.width;
+    const h = c.height;
     x.fillStyle = '#020402';
     x.fillRect(0, 0, w, h);
-    var col = getComputedStyle(document.documentElement).getPropertyValue('--fg').trim();
+    const col = getComputedStyle(document.documentElement).getPropertyValue('--fg').trim();
     x.strokeStyle = col;
     x.lineWidth = 1.5;
     x.beginPath();
-    var step = w / st.wdata.length;
-    for (var i = 0; i < st.wdata.length; i++) {
-      var y = (st.wdata[i] / 128 - 0.5) * h * 0.75 + h / 2;
-      if (i) x.lineTo(i * step, y);
-      else x.moveTo(0, y);
+    const step = w / st.wdata.length;
+    for (let i = 0; i < st.wdata.length; i++) {
+      const y = (st.wdata[i] / 128 - 0.5) * h * 0.75 + h / 2;
+      i ? x.lineTo(i * step, y) : x.moveTo(0, y);
     }
     x.stroke();
   }
 
   function draw3() {
-    var c = $('#c3');
+    const c = $('#c3');
     if (!c) return;
-    var x = c.getContext('2d');
-    var w = c.width;
-    var h = c.height;
+    const x = c.getContext('2d');
+    const w = c.width;
+    const h = c.height;
     x.fillStyle = '#020402';
     x.fillRect(0, 0, w, h);
-    var s = 0;
-    for (var i = 0; i < st.vdata.length; i++) s += st.vdata[i];
-    var p = s / st.vdata.length / 255;
-    var bw = w * 0.38;
-    var bh = Math.max(2, p * h * 0.8);
-    x.fillStyle = 'hsl(' + Math.max(0, 120 - p * 160) + ',100%,40%)';
+    let s = 0;
+    for (let i = 0; i < st.vdata.length; i++) s += st.vdata[i];
+    const p = s / st.vdata.length / 255;
+    const bw = w * 0.38;
+    const bh = Math.max(2, p * h * 0.8);
+    x.fillStyle = `hsl(${Math.max(0, 120 - p * 160)}, 100%, 40%)`;
     x.fillRect((w - bw) / 2, h - bh, bw, bh);
     x.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--fg').trim();
     x.font = '16px VT323';
@@ -614,174 +1343,129 @@ video,.preview{max-width:100%;max-height:150px;border:2px solid var(--dim);backg
   }
 
   function size() {
-    document.querySelectorAll('canvas').forEach(function(c) {
-      var r = c.parentElement.getBoundingClientRect();
+    document.querySelectorAll('canvas').forEach(c => {
+      const r = c.parentElement.getBoundingClientRect();
       c.width = Math.max(60, r.width - 24);
       c.height = 90;
     });
   }
 
   function mime() {
-    var formats = ['audio/webm;codecs=opus', 'audio/webm', 'audio/ogg;codecs=opus', 'audio/mp4'];
-    for (var i = 0; i < formats.length; i++) {
-      if (MediaRecorder.isTypeSupported(formats[i])) return formats[i];
+    for (const m of ['audio/webm;codecs=opus', 'audio/webm', 'audio/ogg;codecs=opus', 'audio/mp4']) {
+      if (MediaRecorder.isTypeSupported(m)) return m;
     }
     return '';
   }
 
-  /* =============================================
-     DÉTECTION VOCALE — ANTI-COUPURE
-     ============================================= */
+  // =========================================
+  // ENREGISTREMENT
+  // =========================================
   function waitSpeak() {
-    return new Promise(function(resolve) {
-      var aboveCount = 0;
-      var THRESH = 5;
-
-      function check() {
-        if (!st.auto || st.abortFlag) return resolve(false);
-        var sv = smoothVol();
-        if (sv >= cfg.sens) {
-          aboveCount++;
-          if (aboveCount >= THRESH) return resolve(true);
+    return new Promise(res => {
+      let t = null;
+      const tick = () => {
+        if (!st.auto) return res(false);
+        if (vol() >= cfg.sens) {
+          if (!t) t = Date.now();
+          if (Date.now() - t >= cfg.minSpeech) return res(true);
         } else {
-          aboveCount = Math.max(0, aboveCount - 2);
+          t = null;
         }
-        setTimeout(check, VB_MS);
-      }
-      setTimeout(check, VB_MS);
+        requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
     });
   }
 
   function recUntilSilent() {
-    return new Promise(function(resolve) {
-      var chunks = [];
-      var rec;
+    return new Promise(res => {
+      const chunks = [];
+      let rec;
       try {
         rec = new MediaRecorder(st.stream, { mimeType: mime() });
-      } catch (e) {
-        log('MediaRecorder: ' + e.message, 'err');
-        return resolve(null);
+      } catch {
+        return res(null);
       }
+      rec.ondataavailable = e => e.data?.size && chunks.push(e.data);
+      rec.onstop = () => res(new Blob(chunks, { type: rec.mimeType }));
 
-      var MIN_REC = 600;
-      var MAX_REC = 30000;
-      var TAIL_MS = 200;
-      var t0 = Date.now();
-      var hasSpoken = false;
-      var silentMs = 0;
-      var tailScheduled = false;
+      const start = Date.now();
+      let last = Date.now();
+      let spoken = false;
+      const max = cfg.maxRecord * 1000;
 
-      rec.ondataavailable = function(e) {
-        if (e.data && e.data.size) chunks.push(e.data);
-      };
-
-      rec.onstop = function() {
-        var blob = new Blob(chunks, { type: rec.mimeType });
-        resolve(blob.size >= 500 ? blob : null);
-      };
-
-      rec.onerror = function() {
-        resolve(null);
-      };
-
-      var iv = setInterval(function() {
-        if (!st.auto || st.abortFlag) {
+      const iv = setInterval(() => {
+        if (!st.auto) {
           clearInterval(iv);
           if (rec.state === 'recording') rec.stop();
           return;
         }
-
-        var sv = smoothVol();
-        var elapsed = Date.now() - t0;
-
-        if (sv >= cfg.sens * 0.4) {
-          silentMs = 0;
-          tailScheduled = false;
-          if (sv >= cfg.sens) hasSpoken = true;
-        } else if (hasSpoken) {
-          silentMs += VB_MS;
+        const v = vol();
+        if (v >= cfg.sens * 0.38) {
+          last = Date.now();
+          spoken = true;
+          st.lastVol = v;
         }
-
-        if (hasSpoken && elapsed >= MIN_REC && silentMs >= cfg.silence && !tailScheduled) {
-          tailScheduled = true;
-          setTimeout(function() {
-            clearInterval(iv);
-            if (rec.state === 'recording') rec.stop();
-          }, TAIL_MS);
-          return;
-        }
-
-        if (elapsed >= MAX_REC) {
+        if (spoken && (Date.now() - last >= cfg.silence || Date.now() - start >= max)) {
           clearInterval(iv);
           if (rec.state === 'recording') rec.stop();
         }
-      }, VB_MS);
+      }, 28);
 
-      rec.start(40);
+      rec.start(35);
+      setTimeout(() => {
+        if (rec.state === 'recording') rec.stop();
+      }, max + 250);
     });
   }
 
-  /* =============================================
-     ENREGISTREMENT MANUEL
-     ============================================= */
   function startRec() {
     if (st.rec || !st.stream) return;
-    var m = mime();
-    if (!m) { log('Format non supporté', 'err'); return; }
+    const m = mime();
+    if (!m) return log('Format non supporté', 'err');
     st.rec = true;
     st.chunks = [];
     st.t0 = Date.now();
     try {
       st.mr = new MediaRecorder(st.stream, { mimeType: m });
-    } catch (e) { st.rec = false; return; }
-
-    st.mr.ondataavailable = function(e) {
-      if (e.data && e.data.size) st.chunks.push(e.data);
-    };
-
-    st.mr.onstop = function() {
-      var blob = new Blob(st.chunks, { type: st.mr.mimeType });
-      if (caps.length > 0 && caps[0].url) URL.revokeObjectURL(caps[0].url);
-      caps.unshift({
-        url: URL.createObjectURL(blob),
-        blob: blob,
-        dur: Math.floor((Date.now() - st.t0) / 1000)
-      });
-      while (caps.length > 10) URL.revokeObjectURL(caps.pop().url);
-      updateRecBadge();
+    } catch {
+      st.rec = false;
+      return;
+    }
+    st.mr.ondataavailable = e => e.data?.size && st.chunks.push(e.data);
+    st.mr.onstop = () => {
+      const blob = new Blob(st.chunks, { type: st.mr.mimeType });
+      const url = URL.createObjectURL(blob);
+      caps.unshift({ url, blob, dur: Math.floor((Date.now() - st.t0) / 1000) });
       status('Prêt');
     };
-
     st.mr.start(200);
-    var el;
-    el = $('#rec'); if (el) el.classList.add('rec-on');
-    el = $('#stop'); if (el) el.disabled = false;
-    el = $('#timer'); if (el) el.classList.add('on');
+    $('#rec').classList.add('rec-on');
+    $('#stop').disabled = false;
+    $('#timer').classList.add('on');
     status('REC...');
-    var s = 0;
-    el = $('#timer'); if (el) el.textContent = '00:00';
-    st.iv = setInterval(function() {
+    let s = 0;
+    $('#timer').textContent = '00:00';
+    st.iv = setInterval(() => {
       s++;
-      var el2 = $('#timer');
-      if (el2) el2.textContent = fmt(s);
+      $('#timer').textContent = fmt(s);
     }, 1000);
   }
 
   function stopRec() {
     if (!st.rec) return;
     st.rec = false;
-    if (st.mr && st.mr.state === 'recording') st.mr.stop();
-    var el;
-    el = $('#rec'); if (el) el.classList.remove('rec-on');
-    el = $('#stop'); if (el) el.disabled = true;
-    el = $('#timer'); if (el) el.classList.remove('on');
+    if (st.mr?.state === 'recording') st.mr.stop();
+    $('#rec').classList.remove('rec-on');
+    $('#stop').disabled = true;
+    $('#timer').classList.remove('on');
     clearInterval(st.iv);
-    el = $('#timer'); if (el) el.textContent = '00:00';
+    $('#timer').textContent = '00:00';
   }
 
-  /* =============================================
-     PTT — PUSH TO TALK
-     ============================================= */
+  // =========================================
+  // PTT
+  // =========================================
   function pttDown(e) {
     e.preventDefault();
     if (!st.ready || st.auto || st.ptt) return;
@@ -790,21 +1474,20 @@ video,.preview{max-width:100%;max-height:150px;border:2px solid var(--dim);backg
     st.psec = 0;
     try {
       st.pmr = new MediaRecorder(st.stream, { mimeType: mime() });
-    } catch (e) { st.ptt = false; return; }
-
-    st.pmr.ondataavailable = function(e) {
-      if (e.data && e.data.size) st.pchunks.push(e.data);
-    };
+    } catch {
+      st.ptt = false;
+      return;
+    }
+    st.pmr.ondataavailable = e => e.data?.size && st.pchunks.push(e.data);
     st.pmr.onstop = pttDone;
     st.pmr.start(150);
-
-    var el = $('#ptt');
-    if (el) { el.classList.add('rec'); el.innerHTML = 'REC...<br><small>relâche</small>'; }
-    live('Enregistrement 00:00', 'rec');
-    st.piv = setInterval(function() {
+    $('#ptt').classList.add('rec');
+    $('#ptt').innerHTML = 'REC...<br><small>relâche</small>';
+    st.piv = setInterval(() => {
       st.psec++;
       live('Enregistrement ' + fmt(st.psec), 'rec');
     }, 1000);
+    live('Enregistrement 00:00', 'rec');
   }
 
   function pttUp(e) {
@@ -812,101 +1495,104 @@ video,.preview{max-width:100%;max-height:150px;border:2px solid var(--dim);backg
     if (!st.ptt) return;
     st.ptt = false;
     clearInterval(st.piv);
-    var el = $('#ptt');
-    if (el) { el.classList.remove('rec'); el.innerHTML = 'MAINTENIR<br>POUR PARLER'; }
-    setTimeout(function() {
-      if (st.pmr && st.pmr.state === 'recording') st.pmr.stop();
-    }, 200);
+    $('#ptt').classList.remove('rec');
+    $('#ptt').innerHTML = 'MAINTENIR<br>POUR PARLER';
+    setTimeout(() => {
+      if (st.pmr?.state === 'recording') st.pmr.stop();
+    }, 220);
   }
 
   async function pttDone() {
-    var blob = new Blob(st.pchunks, { type: (st.pmr && st.pmr.mimeType) || mime() });
-    if (blob.size < 500) { live('Trop court', 'idle'); return; }
+    const blob = new Blob(st.pchunks, { type: st.pmr?.mimeType || mime() });
+    if (blob.size < 500) {
+      live('Trop court', 'idle');
+      return;
+    }
     live('Transcription...', 'think');
-    var text = await whisper(blob);
-    if (!text) { live('Rien compris', 'idle'); return; }
-    if (isStop(text)) { stopAll(); live('Stop — en écoute', 'listen'); return; }
+    const text = await whisper(blob);
+    if (!text) {
+      live('Rien compris', 'idle');
+      return;
+    }
+    if (isStop(text)) {
+      stopAll();
+      live('Stop — en écoute', 'listen');
+      return;
+    }
     live(text, 'ok');
     await chat(text);
   }
 
-  /* =============================================
-     MODE AUTO / 24-7
-     ============================================= */
+  // =========================================
+  // MODE AUTO
+  // =========================================
   async function autoStart(comp) {
     if (st.run) return;
-    if (!valid(cfg.key)) {
-      toast('Clé API requise — bouton CFG', 'err', 3500);
-      return;
-    }
     st.auto = true;
     st.run = true;
     st.comp = !!comp;
-    st.abortFlag = false;
-
-    var el;
-    el = $('#auto'); if (el) el.classList.toggle('on', !comp);
-    el = $('#comp'); if (el) el.classList.toggle('on', !!comp);
-    el = $('#mode'); if (el) el.textContent = comp ? '24/7' : 'AUTO';
-
-    live(comp ? 'Compagnon actif' : 'Écoute en cours...', 'listen');
+    $('#auto').classList.toggle('on', !comp);
+    $('#comp').classList.toggle('on', !!comp);
+    $('#mode').textContent = comp ? '24/7' : 'AUTO';
+    live(comp ? '24/7 Real actif' : 'Écoute réelle de tout...', 'listen');
     status(comp ? '24/7' : 'AUTO');
     sys();
-    log(comp ? 'Mode 24/7' : 'Mode AUTO', 'info');
-    startVB();
+    log(comp ? '24/7 Real' : 'AUTO Real', 'info');
 
     while (st.auto) {
-      st.abortFlag = false;
       try {
-        if (document.hidden) { await sleep(300); continue; }
-
+        if (document.hidden) {
+          await sleep(250);
+          continue;
+        }
         if (!await waitSpeak()) continue;
-        if (!st.auto || st.abortFlag) break;
-
-        live('Je t\'écoute...', 'rec');
-        var blob = await recUntilSilent();
-        if (!st.auto || st.abortFlag) break;
-
+        if (!st.auto) break;
+        live('Écoute...', 'rec');
+        const blob = await recUntilSilent();
+        if (!st.auto) break;
         if (!blob || blob.size < 500) {
-          live(st.comp ? 'Compagnon en écoute...' : 'Écoute...', 'listen');
+          live(st.comp ? 'En écoute...' : 'Écoute...', 'listen');
           continue;
         }
 
-        live('Transcription...', 'think');
-        var text = await whisper(blob);
-        if (!st.auto || st.abortFlag) break;
+        const volLevel = Math.round(st.lastVol);
+        live('Analyse réelle...', 'think');
+        const text = await whisper(blob);
+        if (!st.auto) break;
+
         if (!text) {
-          live(st.comp ? 'Compagnon en écoute...' : 'Écoute...', 'listen');
+          if (cfg.noise && volLevel > 5) {
+            st.noiseCount++;
+            const prompt = `Bruit détecté. Volume approximatif ${volLevel}. Aucune parole claire. Décris uniquement ce que ce son est probablement d'un point de vue réel et physique. N'invente rien.`;
+            live('Bruit → interprétation réelle...', 'think');
+            await chat(prompt, true);
+          } else {
+            live(st.comp ? 'En écoute...' : 'Écoute...', 'listen');
+          }
           continue;
         }
 
         if (isStop(text)) {
           stopAll();
-          live('Stop reçu — je réécoute', 'listen');
+          live('Stop — je réécoute', 'listen');
           log('Stop vocal', 'info');
-          await sleep(400);
+          await sleep(450);
           continue;
         }
-
         live(text, 'ok');
         await chat(text, true);
-        if (!st.auto || st.abortFlag) break;
-
-        live(st.comp ? 'Compagnon en écoute...' : 'Écoute...', 'listen');
-        await sleep(150);
+        live(st.comp ? 'En écoute...' : 'Écoute...', 'listen');
+        await sleep(130);
       } catch (e) {
         log('Auto: ' + e.message, 'err');
-        await sleep(400);
+        await sleep(350);
       }
     }
-
-    stopVB();
     st.run = false;
     st.comp = false;
-    st.abortFlag = false;
-    el = $('#auto'); if (el) el.classList.remove('on');
-    el = $('#comp'); if (el) el.classList.remove('on');
-    el = $('#mode'); if (el) el.textContent = 'PRÊT';
+    $('#auto').classList.remove('on');
+    $('#comp').classList.remove('on');
+    $('#mode').textContent = 'REAL';
     live('Arrêté', 'idle');
     status('Prêt');
     sys();
@@ -914,692 +1600,478 @@ video,.preview{max-width:100%;max-height:150px;border:2px solid var(--dim);backg
 
   function autoStop() {
     st.auto = false;
-    st.abortFlag = true;
     st.comp = false;
-    stopVB();
-    var el;
-    el = $('#auto'); if (el) el.classList.remove('on');
-    el = $('#comp'); if (el) el.classList.remove('on');
-    el = $('#mode'); if (el) el.textContent = 'PRÊT';
+    $('#auto').classList.remove('on');
+    $('#comp').classList.remove('on');
     live('Arrêté', 'idle');
     status('Prêt');
     sys();
   }
 
-  /* =============================================
-     WHISPER — TRANSCRIPTION AVEC RETRY
-     ============================================= */
-  async function whisper(blob, retry) {
-    retry = retry || 1;
+  // =========================================
+  // WHISPER
+  // =========================================
+  async function whisper(blob) {
     if (!valid(cfg.key)) {
       log('Clé manquante', 'err');
-      toast('Clé API manquante', 'err');
       return null;
     }
+    let ext = 'webm';
+    if (blob.type.includes('ogg')) ext = 'ogg';
+    else if (blob.type.includes('mp4')) ext = 'm4a';
 
-    var ext = 'webm';
-    if (blob.type.indexOf('ogg') !== -1) ext = 'ogg';
-    else if (blob.type.indexOf('mp4') !== -1) ext = 'm4a';
+    const t0 = performance.now();
+    try {
+      const fd = new FormData();
+      fd.append('file', blob, 'a.' + ext);
+      fd.append('model', 'whisper-large-v3-turbo');
+      fd.append('language', cfg.lang);
+      fd.append('response_format', 'json');
 
-    for (var attempt = 0; attempt <= retry; attempt++) {
-      var t0 = performance.now();
-      try {
-        var fd = new FormData();
-        fd.append('file', blob, 'audio.' + ext);
-        fd.append('model', 'whisper-large-v3-turbo');
-        fd.append('language', cfg.lang);
-        fd.append('response_format', 'json');
+      const r = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
+        method: 'POST',
+        headers: {
+          Authorization: 'Bearer ' + cfg.key
+        },
+        body: fd
+      });
 
-        var r = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
-          method: 'POST',
-          headers: { Authorization: 'Bearer ' + cfg.key },
-          body: fd
-        });
+      if (!r.ok) throw new Error((await r.text()).slice(0, 80));
 
-        if (!r.ok) {
-          var errText = (await r.text()).slice(0, 100);
-          if (r.status === 429 && attempt < retry) {
-            log('Rate limit, retry ' + (attempt + 1) + '...', 'info');
-            await sleep(1000 * (attempt + 1));
-            continue;
-          }
-          throw new Error(errText);
-        }
+      const d = await r.json();
+      st.lat = Math.round(performance.now() - t0);
+      st.reqs++;
+      sys();
 
-        var d = await r.json();
-        st.lat = Math.round(performance.now() - t0);
-        st.reqs++;
-        sys();
-        var text = (d.text || '').trim();
-        if (text) log('\u2192 ' + text);
-        return text || null;
-      } catch (e) {
-        if (attempt < retry) {
-          log('Whisper retry ' + (attempt + 1) + '...', 'info');
-          await sleep(800);
-          continue;
-        }
-        log('Whisper: ' + e.message, 'err');
-        return null;
-      }
+      const text = (d.text || '').trim();
+      if (text) log('→ ' + text);
+      return text || null;
+    } catch (e) {
+      log('Whisper: ' + e.message, 'err');
+      return null;
     }
-    return null;
   }
 
-  /* =============================================
-     CHAT / STREAM AVEC VISION
-     ============================================= */
-  async function chat(text, fromAuto) {
+  // =========================================
+  // CHAT
+  // =========================================
+  async function chat(text, fromAuto = false) {
     if (!valid(cfg.key)) {
-      var outEl = $('#out');
-      if (outEl) outEl.textContent = 'Clé API manquante — bouton CFG';
-      toast('Clé API manquante', 'err', 3000);
+      $('#out').textContent = 'Clé API manquante';
       return;
     }
 
     if (fromAuto && !cfg.always && !st.comp) {
-      var low = text.toLowerCase();
-      var wakeWords = ['supra', 'lab', 'assistant', 'hey', 'hel'];
-      var isForMe = false;
-      for (var i = 0; i < wakeWords.length; i++) {
-        if (low.indexOf(wakeWords[i]) !== -1) { isForMe = true; break; }
+      const low = text.toLowerCase();
+      const words = (cfg.wakeWords || '').toLowerCase().split(',');
+      if (!words.some(w => w.trim() && low.includes(w.trim())) && !text.startsWith('Bruit détecté')) {
+        live('Pas pour moi', 'listen');
+        return;
       }
-      if (!isForMe) { live('Pas pour moi', 'listen'); return; }
     }
 
-    if (st.ctrl) {
-      try { st.ctrl.abort(); } catch (e) { /* ignoré */ }
-    }
+    if (st.ctrl) try { st.ctrl.abort(); } catch {}
     st.ctrl = new AbortController();
 
-    live('Réflexion...', 'think');
-    var outEl = $('#out');
-    if (outEl) outEl.textContent = '';
+    live('Interprétation réelle...', 'think');
+    $('#out').textContent = '';
     status('Stream...');
 
-    var systemPrompt = (PERSONA[cfg.persona] || PERSONA.pro)
-      + (st.comp ? '\nMode compagnon permanent.' : '')
-      + (st.mem ? '\n\nMémoire:\n' + st.mem : '');
+    let system = SYSTEM_PROMPT;
+    if (st.comp) system += `\nMode compagnon permanent.`;
+    if (st.mem) system += `\n\nMémoire:\n${st.mem}`;
 
-    var userMsg;
-    if (st.imgBase64 && isVisionModel()) {
-      userMsg = {
-        role: 'user',
-        content: [
-          { type: 'text', text: text || 'Décris ce que tu vois.' },
-          { type: 'image_url', image_url: { url: st.imgBase64 } }
-        ]
-      };
-    } else if (st.imgBase64 && !isVisionModel()) {
-      toast('Change de modèle pour la vision (Llama 4 Scout)', 'warn', 3500);
-      userMsg = { role: 'user', content: text };
-    } else {
-      userMsg = { role: 'user', content: text };
-    }
+    st.hist.push({ role: 'user', content: text });
+    if (st.hist.length > 16) await summarize();
 
-    st.hist.push(userMsg);
-    if (st.hist.length > 18) await summarize();
-
-    var messages = [{ role: 'system', content: systemPrompt }].concat(st.hist);
-    var t0 = performance.now();
+    const messages = [{ role: 'system', content: system }, ...st.hist];
+    const t0 = performance.now();
 
     try {
-      var r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + cfg.key
+          Authorization: 'Bearer ' + cfg.key
         },
         body: JSON.stringify({
           model: cfg.model,
-          messages: messages,
-          temperature: 0.35,
-          max_tokens: 1800,
+          messages,
+          temperature: cfg.temp,
+          max_tokens: cfg.maxTokens,
           stream: true
         }),
         signal: st.ctrl.signal
       });
 
-      if (!r.ok) {
-        var errBody = (await r.text()).slice(0, 120);
-        throw new Error(r.status + ' — ' + errBody);
-      }
+      if (!r.ok) throw new Error((await r.text()).slice(0, 100));
 
-      var reader = r.body.getReader();
-      var dec = new TextDecoder();
-      var full = '';
-      var buf = '';
+      const reader = r.body.getReader();
+      const dec = new TextDecoder();
+      let full = '', buf = '';
+
+      $('#out').textContent = '';
 
       while (true) {
-        var result = await reader.read();
-        if (result.done) break;
-        buf += dec.decode(result.value, { stream: true });
-        var lines = buf.split('\n');
+        const { done, value } = await reader.read();
+        if (done) break;
+        buf += dec.decode(value, { stream: true });
+        const lines = buf.split('\n');
         buf = lines.pop() || '';
-
-        for (var li = 0; li < lines.length; li++) {
-          var line = lines[li];
-          if (line.indexOf('data: ') !== 0) continue;
-          var raw = line.slice(6);
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          const raw = line.slice(6);
           if (raw === '[DONE]') continue;
           try {
-            var j = JSON.parse(raw);
-            var delta = j.choices && j.choices[0] && j.choices[0].delta && j.choices[0].delta.content;
-            if (delta) {
-              full += delta;
-              if (outEl) {
-                outEl.textContent = full.replace(/\*{1,3}/g, '');
-                outEl.scrollTop = outEl.scrollHeight;
-              }
+            const j = JSON.parse(raw);
+            const d = j.choices?.[0]?.delta?.content;
+            if (d) {
+              full += d;
+              $('#out').textContent = full;
+              $('#out').scrollTop = $('#out').scrollHeight;
             }
-          } catch (parseErr) { /* ignoré */ }
+          } catch {}
         }
       }
 
-      full = full.replace(/\*{1,3}/g, '').replace(/#{1,6}\s?/g, '').trim();
-      if (!full) full = '...';
-
+      full = full.replace(/\*{1,5}/g, '').trim() || '...';
       st.hist.push({ role: 'assistant', content: full });
       st.tokens += Math.ceil((text.length + full.length) / 3.8);
       st.lat = Math.round(performance.now() - t0);
       st.reqs++;
       sys();
 
-      if (outEl) {
-        outEl.textContent = full + '\n\n' + now();
-        outEl.scrollTop = outEl.scrollHeight;
-      }
-      log('OK ' + st.lat + 'ms');
+      $('#out').textContent = full + '\n\n' + now();
+      log(`OK ${st.lat}ms`);
       status(st.auto ? (st.comp ? '24/7' : 'AUTO') : 'Prêt');
-
-      st.imgBase64 = null;
-      st.img = null;
-      var prevEl = $('#preview');
-      if (prevEl) prevEl.style.display = 'none';
-
       speak(full);
-
     } catch (e) {
       if (e.name === 'AbortError') {
         log('Interrompu', 'info');
         live('Stoppé', 'idle');
         return;
       }
-      if (outEl) outEl.textContent = 'Erreur: ' + e.message;
+      $('#out').textContent = 'Erreur: ' + e.message;
       log(e.message, 'err');
       live('Erreur', 'idle');
-      toast('Erreur: ' + e.message.slice(0, 50), 'err', 3000);
     } finally {
       st.ctrl = null;
     }
   }
 
-  /* =============================================
-     RÉSUMÉ MÉMOIRE
-     ============================================= */
+  // =========================================
+  // RÉSUMÉ
+  // =========================================
   async function summarize() {
-    if (st.hist.length < 14) return;
-    var old = st.hist.splice(0, st.hist.length - 5);
-    var txtParts = [];
-    for (var i = 0; i < old.length; i++) {
-      var m = old[i];
-      if (typeof m.content === 'string') {
-        txtParts.push(m.role + ': ' + m.content);
-      } else {
-        var textParts = [];
-        for (var j = 0; j < m.content.length; j++) {
-          if (m.content[j].type === 'text') textParts.push(m.content[j].text);
-        }
-        txtParts.push(m.role + ': ' + textParts.join(' ') + ' [image]');
-      }
-    }
-    var txt = txtParts.join('\n');
-
+    if (st.summarizing || st.hist.length < 12) return;
+    st.summarizing = true;
+    const old = st.hist.splice(0, st.hist.length - 4);
+    const txt = old.map(m => m.role + ': ' + m.content).join('\n');
     try {
-      var r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + cfg.key
+          Authorization: 'Bearer ' + cfg.key
         },
         body: JSON.stringify({
           model: 'llama-3.1-8b-instant',
-          messages: [
-            { role: 'system', content: 'Résume densément en texte brut uniquement. Pas d\'astérisques ni markdown.' },
-            { role: 'user', content: (st.mem ? st.mem + '\n\n' : '') + txt }
-          ],
-          temperature: 0.2,
+          messages: [{
+            role: 'system',
+            content: 'Résume densément en texte brut uniquement. Aucun astérisque. Que des faits.'
+          }, {
+            role: 'user',
+            content: (st.mem ? st.mem + '\n\n' : '') + txt
+          }],
+          temperature: 0.15,
           max_tokens: 400
         })
       });
       if (r.ok) {
-        var d = await r.json();
-        var s = '';
-        if (d.choices && d.choices[0] && d.choices[0].message && d.choices[0].message.content) {
-          s = d.choices[0].message.content;
-        }
-        s = s.replace(/\*{1,3}/g, '').trim();
+        const d = await r.json();
+        const s = (d.choices?.[0]?.message?.content || '').replace(/\*{1,5}/g, '').trim();
         if (s) {
           st.mem = s;
           log('Mémoire résumée', 'info');
         }
       }
-    } catch (e) { /* ignoré */ }
+    } catch {}
+    st.summarizing = false;
     sys();
   }
 
-  /* =============================================
-     TTS — SYNTHÈSE VOCALE (CORRIGÉ CHROME)
-
-     Bug Chrome : cancel() suivi de speak()
-     immédiat = speak() ignoré.
-     Solution : délai 100ms après cancel().
-
-     Bug Chrome 2 : voix coupée après ~15s.
-     Solution : keep-alive pause/resume toutes les 10s.
-     ============================================= */
-  function speak(text) {
-    if (!cfg.tts) return;
-    if (!window.speechSynthesis) return;
-    if (!text || text.length < 1) return;
-
+  // =========================================
+  // SYNTHÈSE VOCALE
+  // =========================================
+  function speak(t) {
+    if (!cfg.tts || !window.speechSynthesis || !t) return;
     speechSynthesis.cancel();
-    stopTTSKeepAlive();
-
-    setTimeout(function() {
-      if (!cfg.tts || !window.speechSynthesis) return;
-
-      var u = new SpeechSynthesisUtterance(text.slice(0, 2000));
-      u.lang = cfg.lang === 'fr' ? 'fr-FR' : cfg.lang === 'es' ? 'es-ES' : 'en-US';
-      u.rate = 0.94;
-      u.volume = 1;
-
-      var availableVoices = speechSynthesis.getVoices();
-      for (var i = 0; i < availableVoices.length; i++) {
-        if (availableVoices[i].lang.indexOf(cfg.lang) === 0) {
-          u.voice = availableVoices[i];
-          break;
-        }
-      }
-
-      u.onstart = function() {
-        live('Parle...', 'speak');
-        startTTSKeepAlive();
-      };
-
-      u.onend = function() {
-        stopTTSKeepAlive();
-        if (st.auto) {
-          live(st.comp ? 'Compagnon en écoute...' : 'Écoute...', 'listen');
-        } else {
-          live('Prêt', 'idle');
-        }
-      };
-
-      u.onerror = function(e) {
-        stopTTSKeepAlive();
-        log('TTS erreur: ' + (e.error || 'inconnu'), 'err');
-        if (st.auto) {
-          live(st.comp ? 'Compagnon en écoute...' : 'Écoute...', 'listen');
-        } else {
-          live('Prêt', 'idle');
-        }
-      };
-
-      speechSynthesis.speak(u);
-    }, 100);
-  }
-
-  function startTTSKeepAlive() {
-    stopTTSKeepAlive();
-    ttsKeepAlive = setInterval(function() {
-      if (window.speechSynthesis && speechSynthesis.speaking) {
-        speechSynthesis.pause();
-        speechSynthesis.resume();
-      }
-    }, 10000);
-  }
-
-  function stopTTSKeepAlive() {
-    if (ttsKeepAlive !== null) {
-      clearInterval(ttsKeepAlive);
-      ttsKeepAlive = null;
+    const u = new SpeechSynthesisUtterance(t.slice(0, 800));
+    u.lang = cfg.lang === 'fr' ? 'fr-FR' : cfg.lang === 'es' ? 'es-ES' : 'en-US';
+    u.rate = cfg.rate;
+    const vs = speechSynthesis.getVoices();
+    for (const v of vs) if (v.lang.startsWith(cfg.lang)) {
+      u.voice = v;
+      break;
     }
+    speechSynthesis.speak(u);
   }
 
-  function loadVoices() {
-    voices = speechSynthesis.getVoices();
-    if (voices.length === 0) {
-      speechSynthesis.addEventListener('voiceschanged', function() {
-        voices = speechSynthesis.getVoices();
-      }, { once: true });
-    }
-  }
-
-  /* =============================================
-     STOP GLOBAL
-     ============================================= */
   function stopAll() {
-    if (window.speechSynthesis) {
-      speechSynthesis.cancel();
-    }
-    stopTTSKeepAlive();
-
-    if (st.ctrl) {
-      try { st.ctrl.abort(); } catch (e) { /* ignoré */ }
-    }
-
-    st.abortFlag = true;
-
-    if (st.auto) {
-      live('Stop — réécoute...', 'listen');
-    } else {
-      live('Stoppé', 'idle');
-    }
+    speechSynthesis?.cancel();
+    if (st.ctrl) try { st.ctrl.abort(); } catch {}
+    live('Stoppé', 'idle');
     log('Stop', 'info');
   }
 
-  /* =============================================
-     IMAGE / CAMÉRA
-     ============================================= */
+  // =========================================
+  // IMAGE & CAMÉRA
+  // =========================================
   function loadImg(f) {
-    if (!f || !f.type || f.type.indexOf('image/') !== 0) return;
-    var reader = new FileReader();
-    reader.onload = function(e) {
+    if (!f?.type.startsWith('image/')) return;
+    const r = new FileReader();
+    r.onload = e => {
       st.img = e.target.result;
-      st.imgBase64 = e.target.result;
-      var prevEl = $('#preview');
-      if (prevEl) { prevEl.src = st.img; prevEl.style.display = 'block'; }
-      log('Image chargée (' + Math.round(f.size / 1024) + ' Ko)');
-      if (isVisionModel()) {
-        live('Image prête — envoie un message', 'ok');
-      } else {
-        live('Image prête — change de modèle pour vision', 'ok');
-        toast('Sélectionne Llama 4 Scout pour l\'image', 'warn', 3500);
-      }
-      sys();
+      $('#preview').src = st.img;
+      $('#preview').hidden = false;
+      log('Image OK');
+      live('Image prête', 'ok');
     };
-    reader.readAsDataURL(f);
+    r.readAsDataURL(f);
   }
 
   async function startCam() {
     try {
-      st.cam = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'user' },
-        audio: false
-      });
-      var vidEl = $('#video');
-      if (vidEl) { vidEl.srcObject = st.cam; vidEl.style.display = 'block'; }
-      var boxEl = $('#cambox');
-      if (boxEl) boxEl.classList.add('show');
+      st.cam = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
+      $('#video').srcObject = st.cam;
+      $('#video').hidden = false;
+      $('#cambox').classList.add('show');
       st.camOn = true;
       sys();
       live('Cam active', 'ok');
     } catch (e) {
       log('Cam: ' + e.message, 'err');
-      toast('Caméra inaccessible', 'err');
     }
   }
 
   function stopCam() {
-    if (st.cam) {
-      st.cam.getTracks().forEach(function(t) { t.stop(); });
-      st.cam = null;
-    }
-    var vidEl = $('#video');
-    if (vidEl) { vidEl.srcObject = null; vidEl.style.display = 'none'; }
-    var boxEl = $('#cambox');
-    if (boxEl) boxEl.classList.remove('show');
+    st.cam?.getTracks().forEach(t => t.stop());
+    st.cam = null;
+    $('#video').srcObject = null;
+    $('#video').hidden = true;
+    $('#cambox').classList.remove('show');
     st.camOn = false;
     sys();
   }
 
-  /* =============================================
-     BINDINGS — TOUS LES ÉVÉNEMENTS
-     ============================================= */
+  // =========================================
+  // EXPORT
+  // =========================================
+  function exportMem() {
+    let c = '=== SUPRA LAB REAL ONLY EXPORT ===\n' + now() + '\n\n';
+    if (st.mem) c += 'RÉSUMÉ:\n' + st.mem + '\n\n';
+    st.hist.forEach(m => c += m.role.toUpperCase() + ': ' + m.content + '\n\n');
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([c], { type: 'text/plain' }));
+    a.download = 'supra-real-only-' + Date.now() + '.txt';
+    a.click();
+    log('Export');
+  }
+
+  function exportCfg() {
+    const data = { cfg, savedKeys: st.savedKeys, date: new Date().toISOString() };
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
+    a.download = 'supra-config-v28-' + Date.now() + '.json';
+    a.click();
+    log('Export config');
+  }
+
+  // =========================================
+  // BIND
+  // =========================================
   function bind() {
-    var cfgBtn = $('#cfg');
-    if (cfgBtn) cfgBtn.onclick = function() { $('#dlg').showModal(); };
+    // Boot
+    $('#go').onclick = async () => {
+      $('#boot').style.display = 'none';
+      $('#app').classList.add('show');
+      $('#ptt').classList.add('show');
+      log('SUPRA LAB v28.1 Real Only');
+      if (!valid(cfg.key)) log('Mets ta clé', 'err');
+      const ok = await initAudio();
+      if (ok) status('Prêt');
+    };
 
-    var xBtn = $('#x');
-    if (xBtn) xBtn.onclick = function() { $('#dlg').close(); };
+    $('#cfg').onclick = () => $('#dlg').showModal();
+    $('#x').onclick = () => $('#dlg').close();
 
-    var saveBtn = $('#save');
-    if (saveBtn) saveBtn.onclick = function() { save(); $('#dlg').close(); };
+    // Paramètres
+    $('#save').onclick = () => {
+      save();
+      $('#dlg').close();
+    };
 
-    var rstBtn = $('#rst');
-    if (rstBtn) rstBtn.onclick = function() {
-      cfg = {};
-      Object.assign(cfg, DEFAULT);
-      localStorage.removeItem('sl241');
+    $('#rst').onclick = () => {
+      if (!confirm('Reset ?')) return;
+      cfg = { ...DEFAULT };
+      localStorage.removeItem('sl28');
       apply();
       log('Reset', 'err');
-      toast('Reset effectué', 'warn');
     };
 
-    var pasteBtn = $('#paste');
-    if (pasteBtn) pasteBtn.onclick = async function() {
+    $('#exportcfg').onclick = exportCfg;
+
+    // Clé API
+    $('#paste').onclick = async () => {
       try {
-        var t = await navigator.clipboard.readText();
-        if (!t.trim()) return toast('Presse-papiers vide', 'warn');
-        var keyEl = $('#key');
-        if (keyEl) keyEl.value = clean(t);
+        const t = await navigator.clipboard.readText();
+        if (!t.trim()) return alert('Vide');
+        $('#key').value = clean(t);
         cfg.key = clean(t);
         log('Clé collée');
-        toast('Clé collée', 'ok', 1500);
-      } catch (e) {
-        toast('Clique dans le champ puis Ctrl+V', 'warn');
-        var keyEl2 = $('#key');
-        if (keyEl2) keyEl2.focus();
+      } catch {
+        alert('Clique puis Ctrl+V');
+        $('#key').focus();
       }
     };
 
-    var testBtn = $('#test');
-    if (testBtn) testBtn.onclick = async function() {
-      var k = clean(($('#key') || {}).value || cfg.key);
-      if (!valid(k)) return toast('Clé invalide (gsk_...)', 'err');
-      toast('Test en cours...', 'info', 2000);
+    $('#test').onclick = async () => {
+      const k = clean($('#key').value || cfg.key);
+      if (!valid(k)) return alert('Clé invalide');
       try {
-        var r = await fetch('https://api.groq.com/openai/v1/models', {
+        const r = await fetch('https://api.groq.com/openai/v1/models', {
           headers: { Authorization: 'Bearer ' + k }
         });
-        if (r.status === 401) return toast('Clé refusée (401)', 'err');
-        if (!r.ok) throw new Error('HTTP ' + r.status);
-        toast('Clé valide', 'ok');
+        if (r.status === 401) return alert('Refusée');
+        if (!r.ok) throw new Error(r.status);
+        alert('Clé valide ✓');
         cfg.key = k;
-        localStorage.setItem('sl241', JSON.stringify(cfg));
+        localStorage.setItem('sl28', JSON.stringify(cfg));
         apply();
       } catch (e) {
-        toast('Erreur: ' + e.message, 'err');
+        alert(e.message);
       }
     };
 
-    var recBtn = $('#rec');
-    if (recBtn) recBtn.onclick = function() { if (st.ready) { if (st.rec) stopRec(); else startRec(); } };
-
-    var stopBtn = $('#stop');
-    if (stopBtn) stopBtn.onclick = stopRec;
-
-    var playBtn = $('#play');
-    if (playBtn) playBtn.onclick = function() {
-      if (!caps.length) return toast('Aucun enregistrement', 'warn');
-      var audioEl = $('#audio');
-      if (audioEl) { audioEl.src = caps[0].url; audioEl.play(); }
-      toast('Lecture ' + fmt(caps[0].dur), 'info', 1500);
+    $('#savekey').onclick = () => {
+      const key = clean($('#key').value);
+      if (!valid(key)) return alert('Clé invalide');
+      const name = prompt('Nom ?', 'Real ' + (st.savedKeys.length + 1));
+      if (name === null) return;
+      if (st.savedKeys.some(k => k.key === key)) return alert('Déjà là');
+      st.savedKeys.push({ name: name || 'Clé', key });
+      saveKeys();
+      cfg.key = key;
+      localStorage.setItem('sl28', JSON.stringify(cfg));
+      apply();
+      log('Clé sauvée');
     };
 
-    var autoBtn = $('#auto');
-    if (autoBtn) autoBtn.onclick = function() { if (st.auto) autoStop(); else autoStart(false); };
+    // Enregistrement
+    $('#rec').onclick = () => st.ready && (st.rec ? stopRec() : startRec());
+    $('#stop').onclick = stopRec;
+    $('#play').onclick = () => {
+      if (caps[0]) {
+        $('#audio').src = caps[0].url;
+        $('#audio').play();
+      }
+    };
 
-    var compBtn = $('#comp');
-    if (compBtn) compBtn.onclick = function() { if (st.auto) autoStop(); else autoStart(true); };
-
-    var clrBtn = $('#clr');
-    if (clrBtn) clrBtn.onclick = function() {
+    // Modes
+    $('#auto').onclick = () => st.auto ? autoStop() : autoStart(false);
+    $('#comp').onclick = () => st.auto ? autoStop() : autoStart(true);
+    $('#clr').onclick = () => {
       st.hist = [];
       st.mem = '';
       st.tokens = 0;
-      st.img = null;
-      st.imgBase64 = null;
-      var prevEl = $('#preview');
-      if (prevEl) prevEl.style.display = 'none';
-      var outEl = $('#out');
-      if (outEl) outEl.textContent = 'Mémoire effacée.';
-      log('Mémoire clear', 'info');
+      st.noiseCount = 0;
+      $('#out').textContent = 'Mémoire effacée.';
+      log('Clear', 'info');
       sys();
-      toast('Effacé', 'ok', 1500);
     };
 
-    var sumBtn = $('#sum');
-    if (sumBtn) sumBtn.onclick = function() {
-      if (!st.hist.length && !st.mem) return toast('Rien à résumer', 'warn');
-      chat('Fais un résumé clair et oral de notre conversation.');
+    $('#sum').onclick = () => {
+      if (!st.hist.length && !st.mem) return alert('Rien');
+      chat('Fais un résumé factuel et direct de nos échanges.');
     };
 
-    var muteBtn = $('#mute');
-    if (muteBtn) muteBtn.onclick = function() {
-      stopAll();
-      if (st.auto) toast('Réécoute...', 'info', 1500);
-    };
+    $('#export').onclick = exportMem;
+    $('#mute').onclick = stopAll;
 
-    var imgBtn = $('#img');
-    if (imgBtn) imgBtn.onclick = function() { var f = $('#file'); if (f) f.click(); };
-    var fileInput = $('#file');
-    if (fileInput) fileInput.onchange = function(e) {
-      if (e.target.files && e.target.files[0]) loadImg(e.target.files[0]);
-      e.target.value = '';
-    };
+    // Image
+    $('#img').onclick = () => $('#file').click();
+    $('#file').onchange = e => e.target.files[0] && loadImg(e.target.files[0]);
 
-    var camBtn = $('#cam');
-    if (camBtn) camBtn.onclick = function() { if (st.camOn) stopCam(); else startCam(); };
-
-    var captureBtn = $('#capture');
-    if (captureBtn) captureBtn.onclick = function() {
-      var v = $('#video');
+    // Caméra
+    $('#cam').onclick = () => st.camOn ? stopCam() : startCam();
+    $('#capture').onclick = () => {
+      const v = $('#video');
       if (!v || !st.camOn) return;
-      var c = document.createElement('canvas');
+      const c = document.createElement('canvas');
       c.width = v.videoWidth || 640;
       c.height = v.videoHeight || 480;
       c.getContext('2d').drawImage(v, 0, 0);
       st.img = c.toDataURL('image/jpeg', 0.85);
-      st.imgBase64 = st.img;
-      log('Capture caméra');
-      if (isVisionModel()) {
-        chat('Décris ce que tu vois sur cette image.');
-      } else {
-        toast('Sélectionne Llama 4 Scout pour analyser', 'warn', 3500);
-        live('Image capturée — change de modèle', 'ok');
-      }
-      sys();
+      chat('Décris uniquement ce qui est réellement visible. Rien d\'inventé.');
     };
+    $('#camstop').onclick = stopCam;
 
-    var camstopBtn = $('#camstop');
-    if (camstopBtn) camstopBtn.onclick = stopCam;
-
-    var sendBtn = $('#send');
-    if (sendBtn) sendBtn.onclick = function() {
-      var txtEl = $('#txt');
-      if (!txtEl) return;
-      var t = txtEl.value.trim();
+    // Texte
+    $('#send').onclick = () => {
+      const t = $('#txt').value.trim();
       if (!t) return;
-      txtEl.value = '';
-      if (isStop(t)) { stopAll(); live('Stop — en écoute', 'listen'); return; }
+      $('#txt').value = '';
+      if (isStop(t)) {
+        stopAll();
+        live('Stop — en écoute', 'listen');
+        return;
+      }
       live(t, 'ok');
       chat(t);
     };
 
-    var txtInput = $('#txt');
-    if (txtInput) txtInput.onkeydown = function(e) {
-      if (e.key === 'Enter') { e.preventDefault(); var sendBtn2 = $('#send'); if (sendBtn2) sendBtn2.click(); }
-    };
+    $('#txt').onkeydown = e => e.key === 'Enter' && $('#send').click();
+    document.onkeydown = e => e.key === 'Escape' && stopAll();
 
-    document.onkeydown = function(e) { if (e.key === 'Escape') stopAll(); };
+    // PTT
+    const p = $('#ptt');
+    p.addEventListener('touchstart', pttDown, { passive: false });
+    p.addEventListener('touchend', pttUp, { passive: false });
+    p.addEventListener('mousedown', pttDown);
+    p.addEventListener('mouseup', pttUp);
+    p.addEventListener('mouseleave', pttUp);
 
-    var pttBtn = $('#ptt');
-    if (pttBtn) {
-      pttBtn.addEventListener('touchstart', pttDown, { passive: false });
-      pttBtn.addEventListener('touchend', pttUp, { passive: false });
-      pttBtn.addEventListener('touchcancel', pttUp, { passive: false });
-      pttBtn.addEventListener('mousedown', pttDown);
-      pttBtn.addEventListener('mouseup', pttUp);
-      pttBtn.addEventListener('mouseleave', pttUp);
-    }
+    // Sliders
+    ['sens', 'sil', 'min', 'max', 'temp', 'tokens', 'rate'].forEach(id => {
+      const el = $('#' + id);
+      if (el) el.oninput = () => $('#v' + id).textContent = el.value;
+    });
 
-    var sensInput = $('#sens');
-    var vsensEl = $('#vsens');
-    if (sensInput) sensInput.oninput = function() { if (vsensEl) vsensEl.textContent = sensInput.value; };
-
-    var silInput = $('#sil');
-    var vsilEl = $('#vsil');
-    if (silInput) silInput.oninput = function() { if (vsilEl) vsilEl.textContent = silInput.value; };
-
-    var resizeTimer = null;
-    window.onresize = function() {
-      clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(function() { if (st.ready) size(); }, 100);
-    };
+    // Resize
+    window.onresize = () => st.ready && size();
   }
 
-  /* =============================================
-     AUTO-BOOT — LANCEMENT AUTOMATIQUE
-     ============================================= */
-  async function boot() {
-    var appEl = $('#app');
-    if (appEl) appEl.classList.add('show');
-
-    setInterval(function() {
-      var clockEl = $('#clock');
-      if (clockEl) clockEl.textContent = now();
-    }, 1000);
-
-    log('SUPRA LAB v24.1 — Auto-boot');
-
-    if (!valid(cfg.key)) {
-      status('Clé requise');
-      sys();
-      toast('Clique CFG pour entrer ta clé Groq', 'warn', 5000);
-      live('Clique CFG pour entrer ta clé API Groq — gratuite sur groq.com', 'idle');
-      await initAudio();
-      return;
-    }
-
-    status('Démarrage auto...');
-    log('Clé détectée, démarrage automatique');
-    var ok = await initAudio();
-    if (ok) {
-      status('Prêt — PTT ou AUTO');
-      toast('SUPRA LAB prêt', 'ok', 2000);
-      live('Prêt — Maintiens le bouton pour parler, ou appuie AUTO', 'idle');
-    } else {
-      status('Micro requis');
-      live('Autorise le micro puis rafraîchis', 'idle');
-    }
-  }
-
-  /* =============================================
-     NETTOYAGE À LA FERMETURE
-     ============================================= */
-  window.onbeforeunload = function() {
+  // =========================================
+  // CLEANUP
+  // =========================================
+  window.onbeforeunload = () => {
     stopCam();
-    stopVB();
-    stopTTSKeepAlive();
-    if (st.stream) st.stream.getTracks().forEach(function(t) { t.stop(); });
-    if (window.speechSynthesis) speechSynthesis.cancel();
-    for (var i = 0; i < caps.length; i++) {
-      if (caps[i].url) URL.revokeObjectURL(caps[i].url);
-    }
+    st.stream?.getTracks().forEach(t => t.stop());
+    speechSynthesis?.cancel();
   };
 
-  /* =============================================
-     POINT D'ENTRÉE
-     ============================================= */
-  document.addEventListener('DOMContentLoaded', function() {
+  // =========================================
+  // INIT
+  // =========================================
+  document.addEventListener('DOMContentLoaded', async () => {
     load();
     bind();
-    loadVoices();
-    boot();
+    setInterval(() => $('#clock').textContent = now(), 1000);
+    await type($('#title'), 'SUPRA LAB v28.1', 24);
+    $('#sub').innerHTML = 'REAL ONLY — que du réel, rien d\'inventé<br><span style="color:var(--blue)">Dis « stop » pour couper et réécouter</span>';
+    $('#sub').classList.add('show');
+    $('#acts').classList.add('show');
   });
-
 })();
 </script>
 </body>
