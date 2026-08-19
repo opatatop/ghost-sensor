@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#050905">
-<title>SUPRA LAB v28.2 — Real Only</title>
+<title>SUPRA LAB v29.0 — Real Only (Multi-API)</title>
 <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -17,6 +17,7 @@
   --red: #ff0044;
   --orange: #ffaa00;
   --blue: #00ccff;
+  --purple: #aa00ff;
   --font: 'VT323', monospace;
   --glow: 0 0 10px rgba(0, 255, 65, 0.35);
 }
@@ -108,6 +109,11 @@ button, input, select, textarea {
 .btn.blue {
   border-color: var(--blue);
   color: var(--blue);
+}
+
+.btn.purple {
+  border-color: var(--purple);
+  color: var(--purple);
 }
 
 .btn.on {
@@ -205,7 +211,7 @@ header {
 }
 
 header::after {
-  content: 'v28.2 REAL ONLY  •  QUE DU RÉEL  •  RIEN D\'INVENTÉ  •  STOP=ARRÊT  •  TOUT ENTENDRE';
+  content: 'v29.0 REAL ONLY  •  MULTI-API  •  QUE DU RÉEL  •  STOP=ARRÊT  •  TOUT ENTENDRE';
   position: absolute;
   top: 1px;
   left: 0;
@@ -541,7 +547,7 @@ dialog {
   background: var(--bg);
   color: var(--fg);
   padding: 0;
-  max-width: 560px;
+  max-width: 600px;
   width: 95vw;
   max-height: 90vh;
   overflow-y: auto;
@@ -685,6 +691,26 @@ video, .preview {
   gap: 8px;
 }
 
+.api-selector {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.api-btn {
+  flex: 1;
+  min-width: 80px;
+  padding: 8px;
+  font-size: 14px;
+  border-width: 2px;
+}
+
+.api-btn.active {
+  background: rgba(0, 255, 65, 0.2);
+  border-color: var(--fg);
+}
+
 @media (max-width: 600px) {
   #boot h1 {
     font-size: 22px;
@@ -700,6 +726,9 @@ video, .preview {
     font-size: 12px;
     bottom: 48px;
   }
+  dialog {
+    width: 98vw;
+  }
 }
 </style>
 </head>
@@ -709,14 +738,23 @@ video, .preview {
 
 <dialog id="dlg">
   <div class="dh">
-    <span>REAL ONLY — PARAMÈTRES</span>
+    <span>REAL ONLY — PARAMÈTRES (Multi-API)</span>
     <button class="btn sm" id="x" type="button" style="border: none; box-shadow: none; font-size: 22px">&times;</button>
   </div>
   <div class="db">
-    <div class="sec">1. Clé API Groq</div>
+    <!-- Sélection du fournisseur d'API -->
+    <div class="sec">1. Fournisseur d'API</div>
+    <div class="api-selector">
+      <button class="btn api-btn active" id="api-groq" data-api="groq">Groq</button>
+      <button class="btn api-btn" id="api-openai" data-api="openai">OpenAI</button>
+      <button class="btn api-btn" id="api-mistral" data-api="mistral">Mistral</button>
+    </div>
+
+    <!-- Clé API -->
+    <div class="sec">2. Clé API</div>
     <div class="fl">
-      <label>Clé (gsk_...)</label>
-      <textarea id="key" placeholder="Colle ta clé" spellcheck="false"></textarea>
+      <label id="api-label">Clé API Groq (gsk_...)</label>
+      <textarea id="key" placeholder="Colle ta clé API" spellcheck="false"></textarea>
     </div>
     <div style="display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;">
       <button class="btn blue" id="paste" type="button" style="flex: 1.5;">COLLER</button>
@@ -728,15 +766,23 @@ video, .preview {
       <div class="keys-list" id="keys-list"></div>
     </div>
 
-    <div class="sec">2. Modèle</div>
+    <!-- Modèle -->
+    <div class="sec">3. Modèle</div>
     <div class="fl">
       <label>Modèle</label>
       <select id="model">
-        <option value="llama-3.3-70b-versatile">Llama 3.3 70B</option>
-        <option value="llama-3.1-8b-instant">Llama 3.1 8B Instant</option>
-        <option value="mixtral-8x7b-32768">Mixtral 8x7B</option>
+        <option value="llama-3.1-70b-versatile">Llama 3.1 70B (Groq)</option>
+        <option value="llama-3.1-8b-instant">Llama 3.1 8B (Groq)</option>
+        <option value="mixtral-8x7b-32768">Mixtral 8x7B (Groq)</option>
+        <option value="gpt-4o-mini">GPT-4o Mini (OpenAI)</option>
+        <option value="gpt-4o">GPT-4o (OpenAI)</option>
+        <option value="mistral-large-latest">Mistral Large (Mistral)</option>
+        <option value="mistral-small-latest">Mistral Small (Mistral)</option>
       </select>
+      <button class="btn sm blue" id="refresh-models" type="button" style="margin-top: 5px;">RAFRAÎCHIR</button>
     </div>
+
+    <!-- Paramètres du modèle -->
     <div class="fl">
       <label>Température <span id="vtemp">0.25</span></label>
       <div class="range">
@@ -750,7 +796,8 @@ video, .preview {
       </div>
     </div>
 
-    <div class="sec">3. Écoute (tout entendre)</div>
+    <!-- Écoute -->
+    <div class="sec">4. Écoute (tout entendre)</div>
     <div class="fl">
       <label>Sensibilité <span id="vsens">8</span></label>
       <div class="range">
@@ -787,10 +834,11 @@ video, .preview {
     </div>
     <div class="fl">
       <label>Mots d'appel (séparés par des virgules)</label>
-      <input type="text" id="wake" value="supra,lab,assistant,hey,ok,écoute,dis">
+      <input type="text" id="wake" value="supra,lab,assistant,hey,ok,écoute,dis,stop">
     </div>
 
-    <div class="sec">4. Voix & Système</div>
+    <!-- Voix & Système -->
+    <div class="sec">5. Voix & Système</div>
     <div class="fl">
       <label class="check">
         <input type="checkbox" id="tts" checked> Voix
@@ -847,7 +895,7 @@ video, .preview {
 </section>
 
 <div id="app">
-  <header>SUPRA LAB v28.2 — <span id="mode">REAL</span></header>
+  <header>SUPRA LAB v29.0 — <span id="mode">REAL</span></header>
   <main>
     <div class="bar">
       <button class="btn round" id="rec" type="button">REC</button>
@@ -917,7 +965,7 @@ video, .preview {
   </main>
   <footer>
     <span id="status">En attente...</span>
-    <span>v28.2 Real Only | <span id="clock">--:--:--</span></span>
+    <span>v29.0 Real Only | <span id="clock">--:--:--</span></span>
   </footer>
 </div>
 
@@ -926,15 +974,16 @@ video, .preview {
 
 <script>
 // =============================================
-// SUPRA LAB v28.2 — REAL ONLY
+// SUPRA LAB v29.0 — REAL ONLY (Multi-API)
 // =============================================
 (() => {
   // =========================================
   // CONFIGURATION
   // =========================================
   const DEFAULT = {
+    api: 'groq', // Fournisseur par défaut
     key: '',
-    model: 'llama-3.3-70b-versatile',
+    model: 'llama-3.1-70b-versatile',
     lang: 'fr',
     tts: true,
     color: '#00ff41',
@@ -1009,9 +1058,49 @@ RÈGLES ABSOLUES :
     summarizing: false,
     lastVol: 0,
     noiseCount: 0,
-    wasAutoBeforeStop: false // Pour se souvenir si on était en mode auto avant un STOP
+    wasAutoBeforeStop: false,
+    availableModels: [] // Liste des modèles disponibles pour l'API actuelle
   };
   let caps = [];
+
+  // =========================================
+  // CONFIGURATION DES API
+  // =========================================
+  const API_CONFIG = {
+    groq: {
+      name: 'Groq',
+      baseUrl: 'https://api.groq.com/openai/v1',
+      authHeader: 'Authorization',
+      authPrefix: 'Bearer',
+      whisperEndpoint: '/audio/transcriptions',
+      chatEndpoint: '/chat/completions',
+      modelsEndpoint: '/models',
+      validKeyPrefix: 'gsk_',
+      defaultModels: ['llama-3.1-70b-versatile', 'llama-3.1-8b-instant', 'mixtral-8x7b-32768', 'gemma2-9b-it']
+    },
+    openai: {
+      name: 'OpenAI',
+      baseUrl: 'https://api.openai.com/v1',
+      authHeader: 'Authorization',
+      authPrefix: 'Bearer',
+      whisperEndpoint: '/audio/transcriptions',
+      chatEndpoint: '/chat/completions',
+      modelsEndpoint: '/models',
+      validKeyPrefix: 'sk-',
+      defaultModels: ['gpt-4o-mini', 'gpt-4o', 'gpt-3.5-turbo']
+    },
+    mistral: {
+      name: 'Mistral',
+      baseUrl: 'https://api.mistral.ai/v1',
+      authHeader: 'Authorization',
+      authPrefix: 'Bearer',
+      whisperEndpoint: null, // Mistral n'a pas de Whisper, on utilisera Groq pour la transcription
+      chatEndpoint: '/chat/completions',
+      modelsEndpoint: '/models',
+      validKeyPrefix: 'mistral-',
+      defaultModels: ['mistral-large-latest', 'mistral-small-latest']
+    }
+  };
 
   // =========================================
   // UTILITAIRES
@@ -1021,10 +1110,12 @@ RÈGLES ABSOLUES :
   const pad = n => n < 10 ? '0' + n : n;
   const fmt = s => pad(Math.floor(s / 60)) + ':' + pad(s % 60);
   const clean = k => String(k || '').replace(/[\u200B-\u200D\uFEFF\u00A0\s]/g, '').trim();
-  const valid = k => typeof k === 'string' && k.startsWith('gsk_') && k.length > 30;
+  const validKey = (key, api) => {
+    const config = API_CONFIG[api || cfg.api];
+    return typeof key === 'string' && key.startsWith(config.validKeyPrefix) && key.length > 30;
+  };
   const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-  // Vérifie si le texte contient un mot d'arrêt ou un mot d'appel
   function isStop(text) {
     const t = (text || '').toLowerCase().trim();
     return STOP_WORDS.some(w => t === w || t.startsWith(w + ' ') || t.endsWith(' ' + w) || t.includes(' ' + w + ' '));
@@ -1059,7 +1150,9 @@ RÈGLES ABSOLUES :
     const ok = v => `<span style="color:var(--fg)">${v}</span>`;
     const ko = v => `<span style="color:var(--red)">${v}</span>`;
     const wa = v => `<span style="color:var(--orange)">${v}</span>`;
-    $('#sys').innerHTML = `Micro ${st.stream ? ok('OK') : ko('OFF')} · API ${valid(cfg.key) ? ok('OK') : ko('—')} · Mode ${st.comp ? wa('24/7') : st.auto ? wa('AUTO') : ok('PTT')}<br>Bruit ${cfg.noise ? 'ON' : 'off'} · Real Only`;
+    const apiConfig = API_CONFIG[cfg.api];
+    const apiName = apiConfig ? apiConfig.name : 'Inconnu';
+    $('#sys').innerHTML = `Micro ${st.stream ? ok('OK') : ko('OFF')} · API ${validKey(cfg.key, cfg.api) ? ok(apiName) : ko('—')} · Mode ${st.comp ? wa('24/7') : st.auto ? wa('AUTO') : ok('PTT')}<br>Bruit ${cfg.noise ? 'ON' : 'off'} · Real Only`;
     $('#stats').textContent = `≈${st.tokens} tok · ${st.lat || '—'}ms · ${st.reqs} req · bruits:${st.noiseCount}`;
   }
 
@@ -1114,7 +1207,7 @@ RÈGLES ABSOLUES :
   // =========================================
   function loadKeys() {
     try {
-      st.savedKeys = JSON.parse(localStorage.getItem('sl28_keys') || '[]');
+      st.savedKeys = JSON.parse(localStorage.getItem('sl29_keys') || '[]');
     } catch {
       st.savedKeys = [];
     }
@@ -1122,7 +1215,7 @@ RÈGLES ABSOLUES :
   }
 
   function saveKeys() {
-    localStorage.setItem('sl28_keys', JSON.stringify(st.savedKeys));
+    localStorage.setItem('sl29_keys', JSON.stringify(st.savedKeys));
     renderKeys();
   }
 
@@ -1139,7 +1232,7 @@ RÈGLES ABSOLUES :
       div.className = 'key-item';
       div.innerHTML = `
         <div style="flex:1;min-width:0">
-          <div>${k.name || 'Clé'}</div>
+          <div>${k.name || 'Clé'} (${k.api || 'Groq'})</div>
           <div style="font-size:11px;color:var(--muted)">${k.key.slice(0, 16)}...</div>
         </div>
         <button class="btn sm blue" data-i="${i}" data-a="use">USE</button>
@@ -1150,10 +1243,17 @@ RÈGLES ABSOLUES :
           const idx = +btn.dataset.i;
           if (btn.dataset.a === 'use') {
             cfg.key = st.savedKeys[idx].key;
+            cfg.api = st.savedKeys[idx].api || 'groq';
             $('#key').value = cfg.key;
-            localStorage.setItem('sl28', JSON.stringify(cfg));
+            $('#api-' + cfg.api).classList.add('active');
+            Object.values(API_CONFIG).forEach(api => {
+              if (api.name !== API_CONFIG[cfg.api].name) {
+                $('#api-' + api.name.toLowerCase()).classList.remove('active');
+              }
+            });
+            localStorage.setItem('sl29', JSON.stringify(cfg));
             apply();
-            log('Clé OK');
+            log('Clé et API chargées');
           } else if (confirm('Supprimer ?')) {
             st.savedKeys.splice(idx, 1);
             saveKeys();
@@ -1169,8 +1269,10 @@ RÈGLES ABSOLUES :
   // =========================================
   function load() {
     try {
-      Object.assign(cfg, JSON.parse(localStorage.getItem('sl28') || '{}'));
+      Object.assign(cfg, JSON.parse(localStorage.getItem('sl29') || '{}'));
     } catch {}
+    // S'assurer que cfg.api est valide
+    if (!API_CONFIG[cfg.api]) cfg.api = 'groq';
     loadKeys();
     apply();
   }
@@ -1184,6 +1286,17 @@ RÈGLES ABSOLUES :
     document.documentElement.style.setProperty('--dim', c + '99');
     document.documentElement.style.setProperty('--muted', c + '55');
     document.documentElement.style.setProperty('--glow', `0 0 10px rgba(${r},${g},${b},.35)`);
+
+    // Mettre à jour l'interface en fonction de l'API sélectionnée
+    Object.values(API_CONFIG).forEach(api => {
+      const btn = $('#api-' + api.name.toLowerCase());
+      if (btn) {
+        btn.classList.toggle('active', api.name.toLowerCase() === cfg.api);
+      }
+    });
+
+    const apiConfig = API_CONFIG[cfg.api];
+    $('#api-label').textContent = `Clé API ${apiConfig.name} (${apiConfig.validKeyPrefix}...)`;
 
     $('#key').value = cfg.key || '';
     $('#model').value = cfg.model;
@@ -1232,9 +1345,90 @@ RÈGLES ABSOLUES :
     cfg.wakelock = $('#wakelock').checked;
     cfg.debug = $('#debug').checked;
 
-    localStorage.setItem('sl28', JSON.stringify(cfg));
+    localStorage.setItem('sl29', JSON.stringify(cfg));
     apply();
     log('Sauvegardé');
+  }
+
+  // =========================================
+  // GESTION DES API
+  // =========================================
+  async function fetchAvailableModels() {
+    const apiConfig = API_CONFIG[cfg.api];
+    if (!validKey(cfg.key, cfg.api)) {
+      st.availableModels = apiConfig.defaultModels;
+      return st.availableModels;
+    }
+
+    try {
+      const response = await fetch(apiConfig.baseUrl + apiConfig.modelsEndpoint, {
+        headers: {
+          [apiConfig.authHeader]: apiConfig.authPrefix + ' ' + cfg.key
+        }
+      });
+
+      if (!response.ok) throw new Error('Erreur API');
+
+      const data = await response.json();
+      if (apiConfig.name === 'Groq') {
+        // Filtrer les modèles de type "chat" pour Groq
+        st.availableModels = data.data
+          .filter(m => m.id.startsWith('llama') || m.id.startsWith('mixtral') || m.id.startsWith('gemma'))
+          .map(m => m.id);
+      } else if (apiConfig.name === 'OpenAI') {
+        st.availableModels = data.data.map(m => m.id);
+      } else if (apiConfig.name === 'Mistral') {
+        st.availableModels = data.data.map(m => m.id);
+      }
+
+      // Garder les modèles par défaut si aucun n'est trouvé
+      if (!st.availableModels.length) {
+        st.availableModels = apiConfig.defaultModels;
+      }
+
+      return st.availableModels;
+    } catch (e) {
+      console.error('Erreur:', e);
+      st.availableModels = apiConfig.defaultModels;
+      return st.availableModels;
+    }
+  }
+
+  async function checkModelAccess(model) {
+    const apiConfig = API_CONFIG[cfg.api];
+    if (!validKey(cfg.key, cfg.api)) return false;
+
+    // Pour Mistral, on ne peut pas vérifier les modèles via une requête GET
+    if (apiConfig.name === 'Mistral') return true;
+
+    try {
+      const response = await fetch(apiConfig.baseUrl + apiConfig.modelsEndpoint + '/' + model, {
+        headers: {
+          [apiConfig.authHeader]: apiConfig.authPrefix + ' ' + cfg.key
+        }
+      });
+      return response.ok;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  async function getValidModel() {
+    const apiConfig = API_CONFIG[cfg.api];
+    const models = await fetchAvailableModels();
+
+    // Vérifier si le modèle actuel est valide
+    const currentModelValid = await checkModelAccess(cfg.model);
+    if (currentModelValid) return cfg.model;
+
+    // Sinon, essayer les modèles disponibles
+    for (const model of models) {
+      const ok = await checkModelAccess(model);
+      if (ok) return model;
+    }
+
+    // Dernier recours : utiliser le premier modèle par défaut
+    return apiConfig.defaultModels[0];
   }
 
   // =========================================
@@ -1531,7 +1725,6 @@ RÈGLES ABSOLUES :
     }
     if (isStop(text)) {
       stopAll();
-      // Ne pas réactiver l'auto ici, car c'est un PTT manuel
       live('Stop — en écoute', 'listen');
       return;
     }
@@ -1547,7 +1740,7 @@ RÈGLES ABSOLUES :
     st.auto = true;
     st.run = true;
     st.comp = !!comp;
-    st.wasAutoBeforeStop = true; // On était en mode auto avant un éventuel STOP
+    st.wasAutoBeforeStop = true;
     $('#auto').classList.toggle('on', !comp);
     $('#comp').classList.toggle('on', !!comp);
     $('#mode').textContent = comp ? '24/7' : 'AUTO';
@@ -1593,7 +1786,7 @@ RÈGLES ABSOLUES :
           stopAll();
           // Réactiver l'auto après un STOP
           if (st.wasAutoBeforeStop) {
-            await sleep(500); // Petit délai pour éviter les boucles
+            await sleep(500);
             autoStart(st.comp);
           }
           live('Stop — je réécoute', 'listen');
@@ -1601,7 +1794,6 @@ RÈGLES ABSOLUES :
           continue;
         }
 
-        // Vérifier si c'est un mot d'appel (si on n'est pas en mode "Toujours répondre")
         if (!cfg.always && !isWakeWord(text)) {
           live(st.comp ? 'En écoute...' : 'Écoute...', 'listen');
           continue;
@@ -1639,13 +1831,18 @@ RÈGLES ABSOLUES :
   }
 
   // =========================================
-  // WHISPER
+  // WHISPER (Transcription)
   // =========================================
   async function whisper(blob) {
-    if (!valid(cfg.key)) {
-      log('Clé manquante', 'err');
+    const apiConfig = API_CONFIG[cfg.api];
+
+    // Pour Mistral, on utilise Groq pour la transcription (car Mistral n'a pas de Whisper)
+    const whisperApi = apiConfig.name === 'Mistral' ? API_CONFIG.groq : apiConfig;
+    if (!validKey(cfg.key, whisperApi.name.toLowerCase())) {
+      log('Clé API invalide pour la transcription', 'err');
       return null;
     }
+
     let ext = 'webm';
     if (blob.type.includes('ogg')) ext = 'ogg';
     else if (blob.type.includes('mp4')) ext = 'm4a';
@@ -1658,10 +1855,10 @@ RÈGLES ABSOLUES :
       fd.append('language', cfg.lang);
       fd.append('response_format', 'json');
 
-      const r = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
+      const r = await fetch(whisperApi.baseUrl + whisperApi.whisperEndpoint, {
         method: 'POST',
         headers: {
-          Authorization: 'Bearer ' + cfg.key
+          [whisperApi.authHeader]: whisperApi.authPrefix + ' ' + cfg.key
         },
         body: fd
       });
@@ -1683,15 +1880,15 @@ RÈGLES ABSOLUES :
   }
 
   // =========================================
-  // CHAT
+  // CHAT (Analyse IA)
   // =========================================
   async function chat(text, fromAuto = false) {
-    if (!valid(cfg.key)) {
-      $('#out').textContent = 'Clé API manquante';
+    const apiConfig = API_CONFIG[cfg.api];
+    if (!validKey(cfg.key, cfg.api)) {
+      $('#out').textContent = 'Clé API manquante ou invalide';
       return;
     }
 
-    // Si on est en mode auto et qu'on n'a pas "Toujours répondre", vérifier les mots d'appel
     if (fromAuto && !cfg.always) {
       if (!isWakeWord(text) && !text.startsWith('Bruit détecté')) {
         live('Pas pour moi', 'listen');
@@ -1699,7 +1896,6 @@ RÈGLES ABSOLUES :
       }
     }
 
-    // Arrêter toute synthèse vocale en cours
     if (st.ctrl) try { st.ctrl.abort(); } catch {}
     st.ctrl = new AbortController();
 
@@ -1718,14 +1914,22 @@ RÈGLES ABSOLUES :
     const t0 = performance.now();
 
     try {
-      const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      const modelToUse = await getValidModel();
+      if (modelToUse !== cfg.model) {
+        log(`Modèle ${cfg.model} non accessible. Utilisation de ${modelToUse}.`, 'info');
+        cfg.model = modelToUse;
+        localStorage.setItem('sl29', JSON.stringify(cfg));
+        apply();
+      }
+
+      const r = await fetch(apiConfig.baseUrl + apiConfig.chatEndpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: 'Bearer ' + cfg.key
+          [apiConfig.authHeader]: apiConfig.authPrefix + ' ' + cfg.key
         },
         body: JSON.stringify({
-          model: cfg.model,
+          model: modelToUse,
           messages,
           temperature: cfg.temp,
           max_tokens: cfg.maxTokens,
@@ -1754,9 +1958,15 @@ RÈGLES ABSOLUES :
           if (raw === '[DONE]') continue;
           try {
             const j = JSON.parse(raw);
-            const d = j.choices?.[0]?.delta?.content;
-            if (d) {
-              full += d;
+            // Gérer les différences de format entre les API
+            let content;
+            if (apiConfig.name === 'Groq' || apiConfig.name === 'OpenAI') {
+              content = j.choices?.[0]?.delta?.content;
+            } else if (apiConfig.name === 'Mistral') {
+              content = j.choices?.[0]?.delta?.content;
+            }
+            if (content) {
+              full += content;
               $('#out').textContent = full;
               $('#out').scrollTop = $('#out').scrollHeight;
             }
@@ -1802,14 +2012,17 @@ RÈGLES ABSOLUES :
     const old = st.hist.splice(0, st.hist.length - 4);
     const txt = old.map(m => m.role + ': ' + m.content).join('\n');
     try {
-      const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      const apiConfig = API_CONFIG[cfg.api];
+      const modelToUse = await getValidModel();
+
+      const r = await fetch(apiConfig.baseUrl + apiConfig.chatEndpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: 'Bearer ' + cfg.key
+          [apiConfig.authHeader]: apiConfig.authPrefix + ' ' + cfg.key
         },
         body: JSON.stringify({
-          model: 'llama-3.1-8b-instant',
+          model: modelToUse,
           messages: [{
             role: 'system',
             content: 'Résume densément en texte brut uniquement. Aucun astérisque. Que des faits concrets et réels. Pas d\'interprétations spéculatives.'
@@ -1823,7 +2036,12 @@ RÈGLES ABSOLUES :
       });
       if (r.ok) {
         const d = await r.json();
-        const s = (d.choices?.[0]?.message?.content || '').replace(/\*{1,5}/g, '').trim();
+        let s;
+        if (apiConfig.name === 'Groq' || apiConfig.name === 'OpenAI') {
+          s = (d.choices?.[0]?.message?.content || '').replace(/\*{1,5}/g, '').trim();
+        } else if (apiConfig.name === 'Mistral') {
+          s = (d.choices?.[0]?.message?.content || '').replace(/\*{1,5}/g, '').trim();
+        }
         if (s) {
           st.mem = s;
           log('Mémoire résumée', 'info');
@@ -1919,6 +2137,8 @@ RÈGLES ABSOLUES :
   // =========================================
   function exportMem() {
     let c = '=== SUPRA LAB REAL ONLY EXPORT ===\n' + now() + '\n\n';
+    c += `API: ${API_CONFIG[cfg.api].name}\n`;
+    c += `Modèle: ${cfg.model}\n\n`;
     if (st.mem) c += 'RÉSUMÉ:\n' + st.mem + '\n\n';
     st.hist.forEach(m => c += m.role.toUpperCase() + ': ' + m.content + '\n\n');
     const a = document.createElement('a');
@@ -1929,10 +2149,15 @@ RÈGLES ABSOLUES :
   }
 
   function exportCfg() {
-    const data = { cfg, savedKeys: st.savedKeys, date: new Date().toISOString() };
+    const data = {
+      cfg,
+      savedKeys: st.savedKeys,
+      date: new Date().toISOString(),
+      version: '29.0'
+    };
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
-    a.download = 'supra-config-v28-' + Date.now() + '.json';
+    a.download = 'supra-config-v29-' + Date.now() + '.json';
     a.click();
     log('Export config');
   }
@@ -1946,14 +2171,56 @@ RÈGLES ABSOLUES :
       $('#boot').style.display = 'none';
       $('#app').classList.add('show');
       $('#ptt').classList.add('show');
-      log('SUPRA LAB v28.2 Real Only');
-      if (!valid(cfg.key)) log('Mets ta clé', 'err');
+      log('SUPRA LAB v29.0 Real Only (Multi-API)');
+      if (!validKey(cfg.key, cfg.api)) {
+        log('Mets ta clé API', 'err');
+      } else {
+        // Vérifier que le modèle est valide
+        getValidModel().then(model => {
+          if (model !== cfg.model) {
+            log(`Modèle ${cfg.model} non valide. Bascule vers ${model}.`, 'info');
+            cfg.model = model;
+            localStorage.setItem('sl29', JSON.stringify(cfg));
+            apply();
+          }
+        });
+      }
       const ok = await initAudio();
       if (ok) status('Prêt');
     };
 
     $('#cfg').onclick = () => $('#dlg').showModal();
     $('#x').onclick = () => $('#dlg').close();
+
+    // Sélection de l'API
+    Object.keys(API_CONFIG).forEach(api => {
+      const btn = $('#api-' + api);
+      if (btn) {
+        btn.onclick = () => {
+          cfg.api = api;
+          Object.keys(API_CONFIG).forEach(a => {
+            $('#api-' + a).classList.toggle('active', a === api);
+          });
+          $('#api-label').textContent = `Clé API ${API_CONFIG[api].name} (${API_CONFIG[api].validKeyPrefix}...)`;
+          // Rafraîchir la liste des modèles
+          fetchAvailableModels().then(models => {
+            const select = $('#model');
+            select.innerHTML = '';
+            models.forEach(model => {
+              const option = document.createElement('option');
+              option.value = model;
+              option.textContent = model;
+              select.appendChild(option);
+            });
+            // Sélectionner le premier modèle si le modèle actuel n'est pas dans la liste
+            if (!models.includes(cfg.model)) {
+              cfg.model = models[0];
+              select.value = models[0];
+            }
+          });
+        };
+      }
+    });
 
     // Paramètres
     $('#save').onclick = () => {
@@ -1964,7 +2231,7 @@ RÈGLES ABSOLUES :
     $('#rst').onclick = () => {
       if (!confirm('Reset ?')) return;
       cfg = { ...DEFAULT };
-      localStorage.removeItem('sl28');
+      localStorage.removeItem('sl29');
       apply();
       log('Reset', 'err');
     };
@@ -1987,16 +2254,20 @@ RÈGLES ABSOLUES :
 
     $('#test').onclick = async () => {
       const k = clean($('#key').value || cfg.key);
-      if (!valid(k)) return alert('Clé invalide');
+      const api = cfg.api;
+      if (!validKey(k, api)) return alert('Clé invalide pour ' + API_CONFIG[api].name);
       try {
-        const r = await fetch('https://api.groq.com/openai/v1/models', {
-          headers: { Authorization: 'Bearer ' + k }
+        const apiConfig = API_CONFIG[api];
+        const response = await fetch(apiConfig.baseUrl + apiConfig.modelsEndpoint, {
+          headers: {
+            [apiConfig.authHeader]: apiConfig.authPrefix + ' ' + k
+          }
         });
-        if (r.status === 401) return alert('Refusée');
-        if (!r.ok) throw new Error(r.status);
-        alert('Clé valide ✓');
+        if (response.status === 401) return alert('Clé refusée');
+        if (!response.ok) throw new Error(response.status);
+        alert('Clé valide ✓ pour ' + apiConfig.name);
         cfg.key = k;
-        localStorage.setItem('sl28', JSON.stringify(cfg));
+        localStorage.setItem('sl29', JSON.stringify(cfg));
         apply();
       } catch (e) {
         alert(e.message);
@@ -2005,16 +2276,37 @@ RÈGLES ABSOLUES :
 
     $('#savekey').onclick = () => {
       const key = clean($('#key').value);
-      if (!valid(key)) return alert('Clé invalide');
-      const name = prompt('Nom ?', 'Real ' + (st.savedKeys.length + 1));
+      const api = cfg.api;
+      if (!validKey(key, api)) return alert('Clé invalide pour ' + API_CONFIG[api].name);
+      const name = prompt('Nom ?', API_CONFIG[api].name + ' ' + (st.savedKeys.length + 1));
       if (name === null) return;
-      if (st.savedKeys.some(k => k.key === key)) return alert('Déjà là');
-      st.savedKeys.push({ name: name || 'Clé', key });
+      if (st.savedKeys.some(k => k.key === key && k.api === api)) return alert('Déjà là');
+      st.savedKeys.push({ name: name || 'Clé', key, api });
       saveKeys();
       cfg.key = key;
-      localStorage.setItem('sl28', JSON.stringify(cfg));
+      localStorage.setItem('sl29', JSON.stringify(cfg));
       apply();
       log('Clé sauvée');
+    };
+
+    // Rafraîchir les modèles
+    $('#refresh-models').onclick = async () => {
+      const models = await fetchAvailableModels();
+      const select = $('#model');
+      select.innerHTML = '';
+      models.forEach(model => {
+        const option = document.createElement('option');
+        option.value = model;
+        option.textContent = model;
+        select.appendChild(option);
+      });
+      if (!models.includes(cfg.model)) {
+        cfg.model = models[0];
+        select.value = models[0];
+        localStorage.setItem('sl29', JSON.stringify(cfg));
+        apply();
+      }
+      log('Modèles mis à jour');
     };
 
     // Enregistrement
@@ -2073,7 +2365,6 @@ RÈGLES ABSOLUES :
       $('#txt').value = '';
       if (isStop(t)) {
         stopAll();
-        // Si on était en mode auto avant, le réactiver
         if (st.wasAutoBeforeStop) {
           setTimeout(() => autoStart(st.comp), 500);
         }
@@ -2130,10 +2421,15 @@ RÈGLES ABSOLUES :
     load();
     bind();
     setInterval(() => $('#clock').textContent = now(), 1000);
-    await type($('#title'), 'SUPRA LAB v28.2', 24);
-    $('#sub').innerHTML = 'REAL ONLY — que du réel, rien d\'inventé<br><span style="color:var(--blue)">Dis « stop » pour couper et réécouter</span>';
+    await type($('#title'), 'SUPRA LAB v29.0', 24);
+    $('#sub').innerHTML = 'REAL ONLY — Multi-API — que du réel, rien d\'inventé<br><span style="color:var(--blue)">Dis « stop » pour couper et réécouter</span>';
     $('#sub').classList.add('show');
     $('#acts').classList.add('show');
+
+    // Charger les modèles disponibles au démarrage
+    if (validKey(cfg.key, cfg.api)) {
+      fetchAvailableModels();
+    }
   });
 })();
 </script>
