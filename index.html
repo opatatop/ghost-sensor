@@ -148,7 +148,6 @@ video,.preview{max-width:100%;max-height:150px;border:2px solid var(--dim);backg
       <label>Clés sauvées</label>
       <div class="keys-list" id="keys-list"></div>
     </div>
-
     <div class="sec">2. Modèle</div>
     <div class="fl">
       <label>Modèle IA</label>
@@ -163,7 +162,6 @@ video,.preview{max-width:100%;max-height:150px;border:2px solid var(--dim);backg
       <label>Max tokens <span id="vtokens">1800</span></label>
       <div class="range"><input type="range" id="tokens" min="500" max="3000" step="100" value="1800"></div>
     </div>
-
     <div class="sec">3. Écoute</div>
     <div class="fl">
       <label>Sensibilité <span id="vsens">8</span></label>
@@ -191,7 +189,6 @@ video,.preview{max-width:100%;max-height:150px;border:2px solid var(--dim);backg
       <label>Mots d'appel (virgules)</label>
       <input type="text" id="wake" value="supra,lab,assistant,hey,ok,écoute,dis,stop">
     </div>
-
     <div class="sec">4. Voix & Système</div>
     <div class="fl">
       <label class="check"><input type="checkbox" id="tts" checked> Synthèse vocale</label>
@@ -541,28 +538,40 @@ function testKey(){
   .finally(function(){if(btn){btn.disabled=false;btn.textContent='TESTER'}});
 }
 
+/* ====== AUDIO — même ordre que l'original ====== */
 function initAudio(){
-  return navigator.mediaDevices.getUserMedia({
-    audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}
-  }).then(function(stream){
-    return(window.AudioContext||window.webkitAudioContext)({sampleRate:48000}).then(function(ctx){
-      return ctx.resume().then(function(){
-        st.ctx=ctx;st.stream=stream;
-        var src=ctx.createMediaStreamSource(stream);
-        st.an=ctx.createAnalyser();st.an.fftSize=2048;st.an.smoothingTimeConstant=0.78;
-        src.connect(st.an);
-        st.fdata=new Uint8Array(st.an.frequencyBinCount);
-        st.wdata=new Uint8Array(st.an.frequencyBinCount);
-        st.volNode=ctx.createAnalyser();st.volNode.fftSize=256;
-        src.connect(st.volNode);
-        st.vdata=new Uint8Array(st.volNode.frequencyBinCount);
-        st.ready=true;sizeCanvases();drawLoop();sys();
-        log('Audio OK');return true;
+  try {
+    st.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    var p = st.ctx.resume().then(function(){
+      return navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
       });
+    }).then(function(stream){
+      st.stream = stream;
+      var src = st.ctx.createMediaStreamSource(stream);
+      st.an = st.ctx.createAnalyser();
+      st.an.fftSize = 2048;
+      st.an.smoothingTimeConstant = 0.78;
+      src.connect(st.an);
+      st.fdata = new Uint8Array(st.an.frequencyBinCount);
+      st.wdata = new Uint8Array(st.an.frequencyBinCount);
+      st.volNode = st.ctx.createAnalyser();
+      st.volNode.fftSize = 256;
+      src.connect(st.volNode);
+      st.vdata = new Uint8Array(st.volNode.frequencyBinCount);
+      st.ready = true;
+      sizeCanvases();
+      drawLoop();
+      sys();
+      log('Audio OK');
+      return true;
     });
-  }).catch(function(e){
-    log('Micro: '+e.message,'err');toast('Micro: '+e.message,'err');return false;
-  });
+    return p;
+  } catch(e) {
+    log('Audio: ' + e.message, 'err');
+    toast('Audio: ' + e.message, 'err');
+    return Promise.resolve(false);
+  }
 }
 
 function vol(){
@@ -1046,17 +1055,29 @@ function bootSequence(){
   }).then(function(){if(acts)acts.classList.add('show')});
 }
 
+/* ====== LANCEMENT — même logique que l'original ====== */
 function launchApp(){
-  var boot=$('#boot'),app=$('#app');
+  var bootEl=$('#boot');
+  var appEl=$('#app');
   initAudio().then(function(ok){
-    if(!ok){toast('Micro requis','err');return}
+    if(!ok){
+      toast('Micro requis — vérifie les permissions Chrome','err');
+      return;
+    }
     requestWakeLock();
-    if(boot)boot.style.display='none';
-    if(app)app.classList.add('show');
+    if(bootEl)bootEl.style.display='none';
+    if(appEl)appEl.classList.add('show');
     setTimeout(sizeCanvases,50);
-    if('ontouchstart' in window){var ptt=$('#ptt');if(ptt)ptt.classList.add('show')}
-    live('Prêt — parle ou active AUTO','idle');status('Prêt');sys();
+    if('ontouchstart' in window){
+      var ptt=$('#ptt');if(ptt)ptt.classList.add('show');
+    }
+    live('Prêt — parle ou active AUTO','idle');
+    status('Prêt');
+    sys();
     log('Application lancée','ok');
+  }).catch(function(e){
+    log('Erreur lancement: '+e.message,'err');
+    toast('Erreur: '+e.message,'err');
   });
 }
 
