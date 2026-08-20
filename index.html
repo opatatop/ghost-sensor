@@ -1,2513 +1,1300 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="theme-color" content="#050905">
-  <title>SUPRA LAB v19.2</title>
-  <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --bg: #050905;
-      --bg-deep: #020402;
-      --bg-panel: #081208;
-      --fg: #00ff41;
-      --fg-dim: #007a20;
-      --fg-muted: #004d14;
-      --danger: #ff0044;
-      --warning: #ffaa00;
-      --info: #00ccff;
-      --font: 'VT323', monospace;
-      --glow: 0 0 8px rgba(0, 255, 65, .4);
-      --glow-s: 0 0 20px rgba(0, 255, 65, .6);
-      --glow-d: 0 0 12px rgba(255, 0, 68, .5);
-      --glow-i: 0 0 12px rgba(0, 204, 255, .5);
-    }
-
-    *, *::before, *::after {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    input, textarea, select, button {
-      touch-action: manipulation;
-    }
-
-    html, body {
-      height: 100%;
-      overflow: hidden;
-    }
-
-    body {
-      font-family: var(--font);
-      font-size: 17px;
-      color: var(--fg);
-      background: var(--bg);
-      background-image:
-        linear-gradient(rgba(0, 255, 65, .025) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0, 255, 65, .025) 1px, transparent 1px);
-      background-size: 40px 40px;
-    }
-
-    input, textarea, select,
-    .fl__i, #i-key, #txt-in, #i-tavily, #i-wakewords {
-      -webkit-user-select: text !important;
-      user-select: text !important;
-      -webkit-touch-callout: default !important;
-      pointer-events: auto !important;
-    }
-
-    textarea#i-key {
-      min-height: 80px;
-      resize: vertical;
-      font-size: 15px;
-      line-height: 1.35;
-      padding: 12px;
-    }
-
-    .fx-scan {
-      position: fixed;
-      inset: 0;
-      background: repeating-linear-gradient(
-        0deg,
-        transparent 0,
-        transparent 2px,
-        rgba(0, 0, 0, .1) 2px,
-        rgba(0, 0, 0, .1) 4px
-      );
-      pointer-events: none;
-      z-index: 9999;
-    }
-
-    .fx-vig {
-      position: fixed;
-      inset: 0;
-      background: radial-gradient(ellipse at center, transparent 50%, rgba(0, 0, 0, .5) 100%);
-      pointer-events: none;
-      z-index: 9998;
-    }
-
-    .btn {
-      font-family: var(--font);
-      font-size: 17px;
-      color: var(--fg);
-      background: transparent;
-      border: 3px solid var(--fg);
-      padding: 10px 22px;
-      cursor: pointer;
-      letter-spacing: 1px;
-      transition: all .15s;
-      box-shadow: var(--glow);
-      position: relative;
-      overflow: hidden;
-    }
-
-    .btn:hover {
-      background: rgba(0, 255, 65, .08);
-      box-shadow: var(--glow-s);
-    }
-
-    .btn:active {
-      background: var(--fg);
-      color: var(--bg);
-      transform: scale(.97);
-    }
-
-    .btn:disabled {
-      opacity: .35;
-      cursor: not-allowed;
-      border-color: var(--fg-muted);
-      color: var(--fg-muted);
-      box-shadow: none;
-    }
-
-    .btn--danger {
-      border-color: var(--danger);
-      color: var(--danger);
-      box-shadow: var(--glow-d);
-    }
-
-    .btn--info {
-      border-color: var(--info);
-      color: var(--info);
-      box-shadow: var(--glow-i);
-    }
-
-    .btn--small {
-      padding: 4px 10px;
-      font-size: 13px;
-      border-width: 2px;
-    }
-
-    .btn--close {
-      background: none;
-      border: none;
-      font-size: 26px;
-      padding: 0 6px;
-      box-shadow: none;
-      color: var(--fg);
-    }
-
-    .btn--close:hover {
-      color: var(--danger);
-    }
-
-    .btn--active {
-      background: var(--fg) !important;
-      color: var(--bg) !important;
-      box-shadow: var(--glow-s) !important;
-    }
-
-    .boot {
-      position: fixed;
-      inset: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      padding: 24px;
-      z-index: 100;
-      border: 6px solid var(--fg);
-      background: var(--bg);
-    }
-
-    .boot__title {
-      font-size: 36px;
-      letter-spacing: 4px;
-      text-shadow: var(--glow-s);
-      min-height: 48px;
-    }
-
-    .boot__sub {
-      font-size: 15px;
-      color: var(--warning);
-      margin-top: 10px;
-      min-height: 44px;
-      opacity: 0;
-      transition: opacity .5s;
-      line-height: 1.5;
-    }
-
-    .boot__sub--v {
-      opacity: 1;
-    }
-
-    .boot__acts {
-      margin-top: 32px;
-      display: flex;
-      gap: 14px;
-      flex-wrap: wrap;
-      justify-content: center;
-      opacity: 0;
-      transition: opacity .6s;
-    }
-
-    .boot__acts--v {
-      opacity: 1;
-    }
-
-    .boot__go {
-      font-size: 26px;
-      padding: 14px 44px;
-      border-width: 5px;
-    }
-
-    .blink::after {
-      content: '█';
-      animation: bl .6s step-end infinite;
-    }
-
-    @keyframes bl {
-      50% { opacity: 0; }
-    }
-
-    .app {
-      display: none;
-      position: fixed;
-      inset: 0;
-      border: 6px solid var(--fg);
-      z-index: 100;
-      flex-direction: column;
-      background: var(--bg);
-    }
-
-    .app--v {
-      display: flex;
-    }
-
-    .app__hd {
-      background: var(--bg-panel);
-      border-bottom: 4px solid var(--fg);
-      padding: 12px 16px;
-      text-align: center;
-      font-size: 18px;
-      letter-spacing: 2px;
-      text-shadow: var(--glow);
-      flex-shrink: 0;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .app__hd::after {
-      content: 'v19.2  COMPAGNON 24/7  MEMOIRE INFINIE  STREAM  CAM LIVE  RESUME VOCAL  CLES  COLLAGE FIX ';
-      position: absolute;
-      top: 0;
-      left: 0;
-      font-size: 11px;
-      color: var(--fg-muted);
-      white-space: nowrap;
-      animation: tick 26s linear infinite;
-      padding-top: 3px;
-    }
-
-    @keyframes tick {
-      0% { transform: translateX(100vw); }
-      100% { transform: translateX(-100%); }
-    }
-
-    .app__mn {
-      flex: 1;
-      overflow-y: auto;
-      padding: 12px;
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 12px;
-      align-content: start;
-      padding-bottom: 95px;
-    }
-
-    .app__ft {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: var(--bg-panel);
-      border-top: 3px solid var(--fg);
-      padding: 6px 14px;
-      font-size: 13px;
-      display: flex;
-      justify-content: space-between;
-      z-index: 10;
-    }
-
-    .pnl {
-      background: var(--bg-panel);
-      border: 3px solid var(--fg);
-      padding: 14px;
-      position: relative;
-      min-height: 115px;
-      box-shadow: var(--glow), inset 0 0 40px rgba(0, 255, 65, .015);
-    }
-
-    .pnl::before,
-    .pnl::after {
-      content: '';
-      position: absolute;
-      width: 12px;
-      height: 12px;
-    }
-
-    .pnl::before {
-      top: -1px;
-      left: -1px;
-      border-top: 2px solid var(--fg);
-      border-left: 2px solid var(--fg);
-    }
-
-    .pnl::after {
-      bottom: -1px;
-      right: -1px;
-      border-bottom: 2px solid var(--fg);
-      border-right: 2px solid var(--fg);
-    }
-
-    .pnl__l {
-      position: absolute;
-      top: -12px;
-      left: 14px;
-      background: var(--bg-panel);
-      padding: 0 10px;
-      font-size: 14px;
-      letter-spacing: 2px;
-      text-shadow: var(--glow);
-    }
-
-    .pnl--f {
-      grid-column: 1 / -1;
-    }
-
-    canvas.cv {
-      display: block;
-      width: 100%;
-      height: 100px;
-      background: var(--bg-deep);
-      image-rendering: pixelated;
-      border: 1px solid rgba(0, 255, 65, .08);
-    }
-
-    .recbar {
-      grid-column: 1 / -1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 7px;
-      padding: 10px;
-      background: var(--bg-panel);
-      border: 3px solid var(--fg);
-      flex-wrap: wrap;
-    }
-
-    .recbar__b {
-      width: 50px;
-      height: 50px;
-      border-radius: 50%;
-      font-size: 9px;
-      padding: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      line-height: 1.1;
-      border-width: 3px;
-    }
-
-    .recbar__b--rec.recording {
-      background: var(--danger);
-      border-color: var(--danger);
-      color: #fff;
-      animation: pr 1.2s ease-out infinite;
-    }
-
-    @keyframes pr {
-      0% { box-shadow: 0 0 0 0 rgba(255, 0, 68, .6); }
-      100% { box-shadow: 0 0 0 16px rgba(255, 0, 68, 0); }
-    }
-
-    .recbar__t {
-      font-size: 18px;
-      letter-spacing: 2px;
-      min-width: 85px;
-      text-align: center;
-      text-shadow: var(--glow);
-    }
-
-    .recbar__t--a {
-      color: var(--danger);
-      text-shadow: var(--glow-d);
-      animation: bl 1s step-end infinite;
-    }
-
-    .recbar__sep {
-      width: 2px;
-      height: 26px;
-      background: var(--fg-muted);
-    }
-
-    .live {
-      grid-column: 1 / -1;
-      background: var(--bg-deep);
-      border: 3px solid var(--fg);
-      padding: 0;
-      position: relative;
-      min-height: 88px;
-      box-shadow: var(--glow-s);
-      overflow: hidden;
-    }
-
-    .live__l {
-      position: absolute;
-      top: -12px;
-      left: 14px;
-      background: var(--bg-deep);
-      padding: 0 10px;
-      font-size: 14px;
-      letter-spacing: 2px;
-      text-shadow: var(--glow);
-      z-index: 2;
-    }
-
-    .live__badge {
-      position: absolute;
-      top: 10px;
-      right: 14px;
-      font-size: 12px;
-      padding: 2px 8px;
-      border: 1px solid;
-      z-index: 2;
-    }
-
-    .live__badge--off { color: var(--fg-muted); border-color: var(--fg-muted); }
-    .live__badge--rec { color: var(--danger); border-color: var(--danger); animation: bl .5s step-end infinite; }
-    .live__badge--send { color: var(--warning); border-color: var(--warning); animation: bl .7s step-end infinite; }
-    .live__badge--done { color: var(--fg); border-color: var(--fg); }
-    .live__badge--listen { color: var(--info); border-color: var(--info); animation: bl 1.2s step-end infinite; }
-    .live__badge--bg { color: var(--warning); border-color: var(--warning); }
-
-    .live__tx {
-      padding: 26px 16px 14px;
-      font-size: 20px;
-      line-height: 1.4;
-      min-height: 68px;
-      word-break: break-word;
-    }
-
-    .live__tx--idle { color: var(--fg-muted); font-size: 15px; }
-    .live__tx--rec { color: var(--danger); text-shadow: var(--glow-d); }
-    .live__tx--done { color: var(--fg-dim); }
-    .live__tx--think { color: var(--warning); font-size: 15px; }
-
-    .live__cur {
-      display: inline-block;
-      width: 10px;
-      height: 18px;
-      background: var(--fg);
-      animation: bl .5s step-end infinite;
-      vertical-align: text-bottom;
-      margin-left: 2px;
-    }
-
-    .tinp {
-      grid-column: 1 / -1;
-      display: flex;
-      background: var(--bg-deep);
-      border: 2px solid var(--fg-dim);
-      overflow: hidden;
-    }
-
-    .tinp__pre {
-      display: flex;
-      align-items: center;
-      padding: 0 12px;
-      color: var(--fg-dim);
-      font-size: 20px;
-      border-right: 2px solid var(--fg-dim);
-    }
-
-    .tinp__f {
-      flex: 1;
-      padding: 12px;
-      background: transparent;
-      color: var(--fg);
-      border: none;
-      font-family: var(--font);
-      font-size: 16px;
-      outline: none;
-    }
-
-    .tinp__f::placeholder {
-      color: var(--fg-muted);
-    }
-
-    .tinp__b {
-      border: none;
-      border-left: 2px solid var(--fg-dim);
-      padding: 12px 16px;
-      font-size: 15px;
-      cursor: pointer;
-      background: rgba(0, 255, 65, .05);
-      color: var(--fg);
-      font-family: var(--font);
-    }
-
-    .ai {
-      background: var(--bg-deep);
-      border: 2px dashed var(--fg-dim);
-      padding: 14px;
-      font-size: 15px;
-      line-height: 1.55;
-      white-space: pre-wrap;
-      word-break: break-word;
-      max-height: 340px;
-      overflow-y: auto;
-      min-height: 80px;
-      color: var(--fg-dim);
-    }
-
-    .log {
-      max-height: 140px;
-      overflow-y: auto;
-      font-size: 12px;
-      line-height: 1.4;
-      padding: 8px;
-      background: var(--bg-deep);
-      border: 2px dashed var(--warning);
-    }
-
-    .log__e {
-      padding: 2px 4px;
-      margin: 1px 0;
-      border-left: 3px solid transparent;
-    }
-
-    .log__e--err { color: var(--danger); background: rgba(255, 0, 68, .06); border-left-color: var(--danger); }
-    .log__e--ok { color: var(--fg-dim); border-left-color: var(--fg-muted); }
-    .log__e--info { color: var(--warning); border-left-color: var(--warning); }
-    .log__e--dbg { color: var(--info); border-left-color: var(--info); font-size: 11px; }
-
-    .cap {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px;
-      margin-bottom: 6px;
-      background: rgba(0, 255, 65, .03);
-      border: 1px solid rgba(0, 255, 65, .12);
-    }
-
-    .cap__i { flex: 1; min-width: 0; }
-    .cap__n {
-      font-size: 13px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .cap__m { font-size: 11px; color: var(--fg-muted); margin-top: 2px; }
-    .cap__a { display: flex; gap: 5px; flex-wrap: wrap; }
-
-    .empty {
-      text-align: center;
-      color: var(--fg-muted);
-      padding: 20px;
-      font-size: 15px;
-    }
-
-    .ptt {
-      position: fixed;
-      bottom: 56px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 110px;
-      height: 110px;
-      border-radius: 50%;
-      font-size: 12px;
-      text-align: center;
-      line-height: 1.25;
-      z-index: 300;
-      border-width: 5px;
-      box-shadow: var(--glow-s);
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .ptt--v { display: flex; }
-    .ptt:active { transform: translateX(-50%) scale(.94); }
-    .ptt--rec {
-      background: var(--danger);
-      border-color: var(--danger);
-      color: #fff;
-      animation: pr 1s ease-out infinite;
-    }
-
-    dialog {
-      font-family: var(--font);
-      color: var(--fg);
-      background: var(--bg);
-      border: 5px solid var(--fg);
-      padding: 0;
-      max-width: 560px;
-      width: 95vw;
-      max-height: 92vh;
-      overflow-y: auto;
-      box-shadow: var(--glow-s);
-    }
-
-    dialog::backdrop {
-      background: rgba(0, 0, 0, .88);
-    }
-
-    .dh {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 14px 18px;
-      border-bottom: 3px solid var(--fg);
-      font-size: 20px;
-      letter-spacing: 2px;
-    }
-
-    .db { padding: 16px 20px; }
-
-    .df {
-      display: flex;
-      justify-content: center;
-      gap: 12px;
-      padding: 14px 20px;
-      border-top: 2px solid var(--fg-muted);
-      flex-wrap: wrap;
-    }
-
-    .fl { margin-bottom: 14px; }
-
-    .fl__l {
-      display: block;
-      margin-bottom: 6px;
-      font-size: 14px;
-      letter-spacing: 1px;
-    }
-
-    .fl__i, .fl__s {
-      width: 100%;
-      padding: 10px;
-      background: var(--bg-deep);
-      color: var(--fg);
-      border: 2px solid var(--fg-dim);
-      font-family: var(--font);
-      font-size: 16px;
-      outline: none;
-    }
-
-    .fl__i:focus, .fl__s:focus {
-      border-color: var(--fg);
-      box-shadow: var(--glow);
-    }
-
-    .fl__c {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      cursor: pointer;
-    }
-
-    .fl__c input {
-      width: 18px;
-      height: 18px;
-      accent-color: var(--fg);
-    }
-
-    .fl__sec {
-      font-size: 16px;
-      margin: 18px 0 10px;
-      padding-bottom: 6px;
-      border-bottom: 2px solid var(--fg-muted);
-      letter-spacing: 2px;
-    }
-
-    .fl__sec:first-child { margin-top: 0; }
-
-    .fl__note {
-      font-size: 12px;
-      color: var(--info);
-      margin-top: 4px;
-      line-height: 1.35;
-    }
-
-    .range-wrap {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .range-wrap input[type=range] {
-      flex: 1;
-      accent-color: var(--fg);
-    }
-
-    .range-val {
-      min-width: 40px;
-      text-align: right;
-      color: var(--warning);
-      font-size: 17px;
-    }
-
-    .img-preview, .cam-preview {
-      max-width: 100%;
-      max-height: 160px;
-      margin-top: 8px;
-      border: 2px solid var(--fg-dim);
-      display: none;
-      background: #000;
-    }
-
-    .cam-box {
-      grid-column: 1 / -1;
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      gap: 8px;
-      padding: 10px;
-      background: var(--bg-deep);
-      border: 3px solid var(--info);
-    }
-
-    .cam-box--v { display: flex; }
-
-    .keys-list {
-      max-height: 140px;
-      overflow-y: auto;
-      font-size: 13px;
-      margin-top: 8px;
-    }
-
-    .key-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 8px;
-      border: 1px solid var(--fg-muted);
-      margin-bottom: 6px;
-      gap: 8px;
-    }
-
-    .key-item button { flex-shrink: 0; }
-
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-thumb { background: var(--fg-muted); }
-
-    @media (max-width: 768px) {
-      .boot__title { font-size: 26px; }
-      .app__mn { grid-template-columns: 1fr; padding: 8px; }
-      .ptt { width: 96px; height: 96px; font-size: 11px; bottom: 48px; }
-      .recbar__b { width: 42px; height: 42px; font-size: 8px; }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#050905">
+<meta name="mobile-web-app-capable" content="yes">
+<title>SUPRA LAB v30.1 — Real + Analogies (Groq)</title>
+<link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#050905;--bg2:#020402;--panel:#081208;--fg:#00ff41;--dim:#007a20;--muted:#004d14;--red:#ff0044;--orange:#ffaa00;--blue:#00ccff;--font:'VT323',monospace;--glow:0 0 10px rgba(0,255,65,.35)}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--fg);font-family:var(--font);-webkit-tap-highlight-color:transparent}
+body{background-image:linear-gradient(rgba(0,255,65,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,255,65,.025) 1px,transparent 1px);background-size:32px 32px}
+button,input,select,textarea{font-family:var(--font);touch-action:manipulation;font-size:16px}
+.scan,.vig{position:fixed;inset:0;pointer-events:none;z-index:9990}
+.scan{background:repeating-linear-gradient(0deg,transparent 0,transparent 2px,rgba(0,0,0,.07) 2px,rgba(0,0,0,.07) 4px)}
+.vig{background:radial-gradient(ellipse at center,transparent 48%,rgba(0,0,0,.55) 100%)}
+.btn{background:transparent;border:3px solid var(--fg);color:var(--fg);padding:10px 16px;font-size:16px;cursor:pointer;box-shadow:var(--glow);transition:.1s;border-radius:0;white-space:nowrap}
+.btn:active{transform:scale(.95);background:var(--fg);color:var(--bg)}
+.btn:disabled{opacity:.35;cursor:not-allowed;box-shadow:none}
+.btn.red{border-color:var(--red);color:var(--red)}
+.btn.blue{border-color:var(--blue);color:var(--blue)}
+.btn.on{background:var(--fg)!important;color:var(--bg)!important}
+.btn.sm{padding:6px 10px;font-size:13px;border-width:2px}
+#boot{position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:center;border:5px solid var(--fg);background:var(--bg);text-align:center;padding:16px}
+#boot h1{font-size:24px;letter-spacing:2px;text-shadow:0 0 12px rgba(0,255,65,.5);min-height:36px}
+#boot p{color:var(--orange);margin-top:10px;font-size:14px;opacity:0;transition:opacity .4s;line-height:1.35}
+#boot p.show{opacity:1}
+#boot .acts{margin-top:22px;display:flex;gap:10px;opacity:0;transition:opacity .4s;flex-wrap:wrap;justify-content:center}
+#boot .acts.show{opacity:1}
+.blink::after{content:'█';animation:blk .55s step-end infinite}
+@keyframes blk{50%{opacity:0}}
+#app{display:none;position:fixed;inset:0;border:5px solid var(--fg);flex-direction:column;background:var(--bg)}
+#app.show{display:flex}
+header{background:var(--panel);border-bottom:3px solid var(--fg);padding:8px 12px;text-align:center;font-size:14px;letter-spacing:1px;position:relative;overflow:hidden}
+header::after{content:'v30.1  •  STOP=PAUSE  •  24/7 ÉCOUTE  •  GROQ';position:absolute;top:1px;left:0;font-size:10px;color:var(--muted);white-space:nowrap;animation:mq 26s linear infinite}
+@keyframes mq{from{transform:translateX(100vw)}to{transform:translateX(-100%)}}
+main{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:8px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:8px;align-content:start;padding-bottom:48px}
+footer{position:absolute;bottom:0;left:0;right:0;background:var(--panel);border-top:3px solid var(--fg);padding:5px 10px;font-size:12px;display:flex;justify-content:space-between}
+.bar{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px;justify-content:center;align-items:center;padding:8px;background:var(--panel);border:3px solid var(--fg)}
+.bar .round{width:48px;height:48px;border-radius:50%;font-size:10px;display:flex;align-items:center;justify-content:center;text-align:center;line-height:1.05;padding:0}
+.bar .round.rec-on{background:var(--red);border-color:var(--red);color:#fff;animation:pls 1s ease-out infinite}
+@keyframes pls{0%{box-shadow:0 0 0 0 rgba(255,0,68,.5)}100%{box-shadow:0 0 0 12px rgba(255,0,68,0)}}
+.timer{font-size:16px;min-width:70px;text-align:center}
+.timer.on{color:var(--red);animation:blk 1s step-end infinite}
+.sep{width:2px;height:24px;background:var(--muted)}
+.live{grid-column:1/-1;background:var(--bg2);border:3px solid var(--fg);position:relative;min-height:72px}
+.live .label{position:absolute;top:-9px;left:8px;background:var(--bg2);padding:0 6px;font-size:11px}
+.live .badge{position:absolute;top:6px;right:8px;font-size:11px;padding:2px 6px;border:1px solid var(--muted);color:var(--muted)}
+.live .badge.listen{color:var(--blue);border-color:var(--blue);animation:blk 1.1s step-end infinite}
+.live .badge.rec{color:var(--red);border-color:var(--red);animation:blk .45s step-end infinite}
+.live .badge.think{color:var(--orange);border-color:var(--orange)}
+.live .badge.ok{color:var(--fg);border-color:var(--fg)}
+.live .badge.pause{color:var(--orange);border-color:var(--orange)}
+.live .txt{padding:22px 10px 8px;font-size:16px;line-height:1.3;min-height:52px;word-break:break-word}
+.live .txt.dim{color:var(--muted);font-size:13px}
+.live .txt.red{color:var(--red)}
+.live .txt.orange{color:var(--orange);font-size:14px}
+.input-row{grid-column:1/-1;display:flex;background:var(--bg2);border:2px solid var(--dim)}
+.input-row .pre{display:flex;align-items:center;padding:0 8px;color:var(--dim);font-size:16px;border-right:2px solid var(--dim)}
+.input-row input{flex:1;background:transparent;border:none;color:var(--fg);padding:10px;font-size:15px;outline:none}
+.input-row input::placeholder{color:var(--muted)}
+.input-row button{border:none;border-left:2px solid var(--dim);background:rgba(0,255,65,.06);color:var(--fg);padding:0 12px;font-size:14px;cursor:pointer}
+.panel{background:var(--panel);border:3px solid var(--fg);padding:10px;position:relative;min-height:90px}
+.panel .label{position:absolute;top:-9px;left:8px;background:var(--panel);padding:0 6px;font-size:11px}
+.panel.full{grid-column:1/-1}
+canvas{display:block;width:100%;height:80px;background:var(--bg2);image-rendering:pixelated}
+.out{background:var(--bg2);border:2px dashed var(--dim);padding:10px;font-size:14px;line-height:1.4;white-space:pre-wrap;word-break:break-word;max-height:280px;overflow-y:auto;min-height:60px;color:var(--dim)}
+.log{max-height:110px;overflow-y:auto;font-size:11px;background:var(--bg2);border:2px dashed var(--orange);padding:5px}
+.log div{padding:2px 3px;border-left:3px solid transparent;margin:1px 0}
+.log .ok{color:var(--dim);border-color:var(--muted)}
+.log .err{color:var(--red);border-color:var(--red)}
+.log .info{color:var(--orange);border-color:var(--orange)}
+.sys{font-size:12px;line-height:1.5}
+.stats{font-size:11px;color:var(--muted);margin-top:3px}
+#ptt{position:fixed;bottom:52px;left:50%;transform:translateX(-50%);width:100px;height:100px;border-radius:50%;font-size:12px;text-align:center;line-height:1.15;z-index:200;border-width:4px;display:none;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 0 18px rgba(0,255,65,.4);background:var(--bg)}
+#ptt.show{display:flex}
+#ptt:active{transform:translateX(-50%) scale(.92)}
+#ptt.rec{background:var(--red);border-color:var(--red);color:#fff;animation:pls 1s ease-out infinite}
+dialog{border:4px solid var(--fg);background:var(--bg);color:var(--fg);padding:0;max-width:640px;width:96vw;max-height:92vh;overflow-y:auto;box-shadow:0 0 28px rgba(0,255,65,.25)}
+dialog::backdrop{background:rgba(0,0,0,.9)}
+.dh{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:3px solid var(--fg);font-size:16px;position:sticky;top:0;background:var(--bg);z-index:2}
+.db{padding:12px 14px}
+.df{display:flex;gap:8px;justify-content:center;padding:10px;border-top:2px solid var(--muted);flex-wrap:wrap;position:sticky;bottom:0;background:var(--bg)}
+.fl{margin-bottom:11px}
+.fl label{display:block;margin-bottom:4px;font-size:12px}
+.fl input[type="text"],.fl select,.fl textarea{width:100%;padding:8px;background:var(--bg2);color:var(--fg);border:2px solid var(--dim);font-size:14px;outline:none}
+.fl textarea{min-height:60px;resize:vertical}
+.fl input:focus,.fl select:focus,.fl textarea:focus{border-color:var(--fg)}
+.check{display:flex;align-items:center;gap:7px;cursor:pointer;font-size:13px}
+.check input{width:16px;height:16px;accent-color:var(--fg)}
+.sec{font-size:14px;margin:14px 0 8px;padding-bottom:4px;border-bottom:2px solid var(--muted);color:var(--orange)}
+.range{display:flex;align-items:center;gap:7px}
+.range input{flex:1;accent-color:var(--fg)}
+.range span{min-width:40px;text-align:right;color:var(--orange);font-size:13px}
+.cam-box{grid-column:1/-1;display:none;flex-direction:column;align-items:center;gap:6px;padding:6px;background:var(--bg2);border:3px solid var(--blue)}
+.cam-box.show{display:flex}
+video,.preview{max-width:100%;max-height:140px;border:2px solid var(--dim);background:#000;display:none}
+.keys-list{max-height:90px;overflow-y:auto;font-size:12px;margin-top:5px}
+.key-item{display:flex;justify-content:space-between;align-items:center;padding:6px;border:1px solid var(--muted);margin-bottom:4px;gap:6px}
+.toast{position:fixed;top:16px;left:50%;transform:translateX(-50%);padding:9px 20px;font-size:14px;border:2px solid var(--fg);background:var(--panel);color:var(--fg);z-index:99999;opacity:0;transition:opacity .25s;pointer-events:none;text-align:center;max-width:92vw}
+.toast.show{opacity:1}
+.toast.err{border-color:var(--red);color:var(--red)}
+.hint{font-size:11px;color:var(--muted);margin-top:3px;line-height:1.3}
+@media(max-width:600px){
+  #boot h1{font-size:18px}
+  .bar .round{width:42px;height:42px;font-size:9px}
+  #ptt{width:92px;height:92px;font-size:11px;bottom:46px}
+  dialog{width:98vw}
+  main{grid-template-columns:1fr}
+  .live .txt{font-size:14px}
+}
+</style>
 </head>
 <body>
-  <div class="fx-scan"></div>
-  <div class="fx-vig"></div>
+<div class="scan"></div>
+<div class="vig"></div>
+<div class="toast" id="toast"></div>
 
-  <dialog id="dlg">
-    <div class="dh">
-      <span>PARAMÈTRES</span>
-      <button class="btn btn--close" id="dlg-x" type="button">&times;</button>
-    </div>
-    <div class="db">
-      <div class="fl__sec">API Groq — Clés (COLLAGE FIXÉ)</div>
-      <div class="fl">
-        <label class="fl__l" for="i-key">Clé API (gsk_...)</label>
-        <textarea class="fl__i" id="i-key" placeholder="1. Clique COLLER  ou  2. Ctrl+V / Cmd+V ici" spellcheck="false" autocomplete="off"></textarea>
-      </div>
-      <div class="fl" style="display:flex;gap:8px;flex-wrap:wrap;">
-        <button class="btn btn--info" id="btn-paste-key" type="button" style="flex:1.5">COLLER LA CLÉ</button>
-        <button class="btn btn--info" id="btn-test-key" type="button" style="flex:1">TESTER</button>
-        <button class="btn" id="btn-save-key" type="button" style="flex:1">SAUVER</button>
-      </div>
-      <div class="fl">
-        <label class="fl__l">Clés sauvegardées (clique CHOISIR)</label>
-        <div class="keys-list" id="keys-list"></div>
-      </div>
-
-      <div class="fl">
-        <label class="fl__l" for="i-model">Modèle IA</label>
-        <select class="fl__s" id="i-model">
-          <option value="llama-3.3-70b-versatile">Llama 3.3 70B</option>
-          <option value="llama-3.1-8b-instant">Llama 3.1 8B Instant</option>
-          <option value="meta-llama/llama-4-scout-17b-16e-instruct">Llama 4 Scout (vision)</option>
-        </select>
-      </div>
-
-      <div class="fl__sec">Recherche web</div>
-      <div class="fl">
-        <label class="fl__c"><input type="checkbox" id="i-web" checked> Activer la recherche web</label>
-      </div>
-      <div class="fl">
-        <label class="fl__l" for="i-tavily">Clé Tavily (optionnel)</label>
-        <input class="fl__i" type="text" id="i-tavily" placeholder="tvly-..." autocomplete="off" spellcheck="false">
-      </div>
-
-      <div class="fl__sec">Détection AUTO / Compagnon 24/7</div>
-      <div class="fl">
-        <label class="fl__l">Sensibilité <span class="range-val" id="v-sens">14</span></label>
-        <div class="range-wrap"><input type="range" id="i-sens" min="5" max="28" step="1" value="14"></div>
-      </div>
-      <div class="fl">
-        <label class="fl__l">Silence de fin (ms) <span class="range-val" id="v-sil">420</span></label>
-        <div class="range-wrap"><input type="range" id="i-sil" min="180" max="1100" step="40" value="420"></div>
-      </div>
-      <div class="fl">
-        <label class="fl__l">Durée mini parole (ms) <span class="range-val" id="v-min">250</span></label>
-        <div class="range-wrap"><input type="range" id="i-min" min="100" max="700" step="30" value="250"></div>
-      </div>
-      <div class="fl">
-        <label class="fl__l">Durée max (s) <span class="range-val" id="v-max">30</span></label>
-        <div class="range-wrap"><input type="range" id="i-max" min="5" max="90" step="1" value="30"></div>
-      </div>
-      <div class="fl"><label class="fl__c"><input type="checkbox" id="i-noise" checked> Analyser les bruits</label></div>
-      <div class="fl"><label class="fl__c"><input type="checkbox" id="i-always" checked> Toujours répondre</label></div>
-      <div class="fl">
-        <label class="fl__l" for="i-wakewords">Mots d'appel</label>
-        <input class="fl__i" type="text" id="i-wakewords" value="supra,lab,assistant,hey supra">
-      </div>
-      <div class="fl"><label class="fl__c"><input type="checkbox" id="i-wake" checked> Écran allumé en AUTO</label></div>
-
-      <div class="fl__sec">Audio & Voix</div>
-      <div class="fl">
-        <label class="fl__l" for="i-lang">Langue</label>
-        <select class="fl__s" id="i-lang">
-          <option value="fr">Français</option>
-          <option value="en">Anglais</option>
-          <option value="es">Espagnol</option>
-        </select>
-      </div>
-      <div class="fl"><label class="fl__c"><input type="checkbox" id="i-tts" checked> Synthèse vocale</label></div>
-
-      <div class="fl__sec">Apparence</div>
-      <div class="fl">
-        <label class="fl__l" for="i-col">Couleur</label>
-        <select class="fl__s" id="i-col">
-          <option value="#00ff41">Vert</option>
-          <option value="#00ccff">Cyan</option>
-          <option value="#ff6600">Orange</option>
-          <option value="#ff00aa">Rose</option>
-        </select>
-      </div>
-    </div>
-    <div class="df">
-      <button class="btn" id="dlg-save" type="button">SAUVEGARDER</button>
-      <button class="btn btn--danger" id="dlg-rst" type="button">RESET</button>
-    </div>
-  </dialog>
-
-  <section class="boot" id="boot">
-    <div class="boot__title blink" id="bt"></div>
-    <div class="boot__sub" id="bs"></div>
-    <div class="boot__acts" id="ba">
-      <button class="btn boot__go" id="b-go" type="button">LANCER LE LAB</button>
-      <button class="btn" id="b-cfg" type="button">PARAMÈTRES</button>
-    </div>
-  </section>
-
-  <div class="app" id="app">
-    <header class="app__hd">SUPRA LAB v19.2 — <span id="hd-m">COMPAGNON 24/7</span></header>
-    <main class="app__mn">
-      <div class="recbar">
-        <button class="btn recbar__b recbar__b--rec" id="b-rec" type="button">REC</button>
-        <div class="recbar__t" id="timer">00:00:00</div>
-        <button class="btn recbar__b" id="b-stop" type="button" disabled>STOP</button>
-        <button class="btn recbar__b" id="b-play" type="button">PLAY</button>
-        <button class="btn recbar__b" id="b-dl" type="button">SAVE</button>
-        <div class="recbar__sep"></div>
-        <button class="btn recbar__b btn--info" id="b-auto" type="button">AUTO</button>
-        <button class="btn recbar__b" id="b-comp" type="button" style="font-size:8px">24/7</button>
-        <button class="btn recbar__b" id="b-img" type="button">IMG</button>
-        <button class="btn recbar__b" id="b-cam" type="button">CAM</button>
-        <button class="btn recbar__b" id="b-resume" type="button" style="font-size:8px">RÉSUMÉ</button>
-        <button class="btn recbar__b" id="b-export" type="button" style="font-size:8px">EXPORT</button>
-        <button class="btn recbar__b btn--danger" id="b-clear" type="button">CLR</button>
-      </div>
-
-      <input type="file" id="img-file" accept="image/*" style="display:none">
-      <img id="img-preview" class="img-preview" alt="preview">
-
-      <div class="cam-box" id="cam-box">
-        <video id="cam-video" class="cam-preview" autoplay playsinline muted></video>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
-          <button class="btn btn--small btn--info" id="b-cam-capture" type="button">CAPTURER & ANALYSER</button>
-          <button class="btn btn--small btn--danger" id="b-cam-stop" type="button">STOP CAM</button>
-        </div>
-      </div>
-
-      <div class="pnl"><div class="pnl__l">SPECTRO</div><canvas class="cv" id="cv-f"></canvas></div>
-      <div class="pnl"><div class="pnl__l">OSCILLO</div><canvas class="cv" id="cv-w"></canvas></div>
-      <div class="pnl"><div class="pnl__l">VOLUME</div><canvas class="cv" id="cv-v"></canvas></div>
-
-      <div class="live">
-        <div class="live__l">ÉCOUTE / TRANSCRIPTION</div>
-        <div class="live__badge live__badge--off" id="live-badge">PRET</div>
-        <div class="live__tx live__tx--idle" id="live-tx">Collage de clé 100% fixé • Compagnon 24/7 prêt</div>
-      </div>
-
-      <div class="tinp">
-        <div class="tinp__pre">&gt;</div>
-        <input class="tinp__f" id="txt-in" placeholder="Parle librement ou tape ici..." autocomplete="off">
-        <button class="tinp__b" id="txt-send" type="button">ENVOYER</button>
-      </div>
-
-      <section class="pnl pnl--f">
-        <div class="pnl__l">SUPRA LAB — RÉPONSE (STREAM)</div>
-        <div class="ai" id="ai-rpt">En attente...</div>
-      </section>
-      <section class="pnl pnl--f">
-        <div class="pnl__l">JOURNAL</div>
-        <div class="log" id="log"></div>
-      </section>
-      <section class="pnl pnl--f">
-        <div class="pnl__l">CAPTURES</div>
-        <div id="caps-list"><div class="empty">Aucune capture</div></div>
-      </section>
-      <div class="pnl">
-        <div class="pnl__l">SYSTÈME</div>
-        <div id="sys" style="font-size:13px;line-height:1.7">—</div>
-      </div>
-    </main>
-    <footer class="app__ft">
-      <span id="ft-s">En attente...</span>
-      <span>v19.2 | <span id="ft-c">--:--:--</span></span>
-    </footer>
+<dialog id="dlg">
+  <div class="dh">
+    <span>PARAMÈTRES — SUPRA v30.1</span>
+    <button class="btn sm" id="x" type="button" style="border:none;box-shadow:none;font-size:20px">&times;</button>
   </div>
+  <div class="db">
+    <div class="sec">1. Clé API Groq</div>
+    <div class="fl">
+      <label>Clé Groq (gsk_...)</label>
+      <textarea id="key" placeholder="Colle ta clé API Groq ici" spellcheck="false"></textarea>
+      <div class="hint">Tu peux SAUVER sans tester. Le test est optionnel.</div>
+    </div>
+    <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">
+      <button class="btn blue sm" id="paste" type="button" style="flex:1.4">COLLER</button>
+      <button class="btn blue sm" id="test" type="button" style="flex:1">TESTER</button>
+      <button class="btn sm" id="savekey" type="button" style="flex:1">SAUVER</button>
+    </div>
+    <div class="fl">
+      <label>Clés sauvées</label>
+      <div class="keys-list" id="keys-list"></div>
+    </div>
 
-  <button class="ptt" id="ptt" type="button">MAINTENIR<br>POUR PARLER</button>
-  <audio id="ply" style="display:none"></audio>
+    <div class="sec">2. Modèle & Génération</div>
+    <div class="fl">
+      <label>Modèle IA</label>
+      <select id="model"></select>
+      <button class="btn sm blue" id="refresh-models" type="button" style="margin-top:4px">RAFRAÎCHIR MODÈLES</button>
+    </div>
+    <div class="fl">
+      <label>Température <span id="vtemp">0.3</span></label>
+      <div class="range"><input type="range" id="temp" min="0.1" max="0.7" step="0.05" value="0.3"></div>
+    </div>
+    <div class="fl">
+      <label>Max tokens <span id="vtokens">1600</span></label>
+      <div class="range"><input type="range" id="tokens" min="400" max="3000" step="100" value="1600"></div>
+    </div>
 
-  <script>
-  (function () {
-    'use strict';
+    <div class="sec">3. Écoute & Détection</div>
+    <div class="fl">
+      <label>Sensibilité micro <span id="vsens">8</span></label>
+      <div class="range"><input type="range" id="sens" min="3" max="25" value="8"></div>
+    </div>
+    <div class="fl">
+      <label>Silence de fin (ms) <span id="vsil">650</span></label>
+      <div class="range"><input type="range" id="sil" min="350" max="1600" step="25" value="650"></div>
+    </div>
+    <div class="fl">
+      <label>Durée mini parole (ms) <span id="vmin">220</span></label>
+      <div class="range"><input type="range" id="min" min="120" max="600" step="20" value="220"></div>
+    </div>
+    <div class="fl">
+      <label>Durée max enregistrement (s) <span id="vmax">45</span></label>
+      <div class="range"><input type="range" id="max" min="12" max="90" value="45"></div>
+    </div>
+    <div class="fl">
+      <label>Seuil bruit (volume) <span id="vnoisevol">6</span></label>
+      <div class="range"><input type="range" id="noisevol" min="2" max="20" value="6"></div>
+    </div>
 
-    const DEFAULTS = {
-      apiKey: '',
-      model: 'llama-3.3-70b-versatile',
-      lang: 'fr',
-      tts: true,
-      color: '#00ff41',
-      sens: 14,
-      silence: 420,
-      minSpeech: 250,
-      maxRecord: 30,
-      analyzeNoise: true,
-      alwaysReply: true,
-      wakeWords: 'supra,lab,assistant,hey supra',
-      wakeLock: true,
-      webSearch: true,
-      tavilyKey: ''
-    };
+    <div class="sec">4. Analyse Sons / Bruits / Fréquences</div>
+    <div class="fl"><label class="check"><input type="checkbox" id="noise" checked> Analyser les bruits sans parole</label></div>
+    <div class="fl"><label class="check"><input type="checkbox" id="freq" checked> Inclure fréquences (basse/médium/aiguë)</label></div>
+    <div class="fl"><label class="check"><input type="checkbox" id="analogy" checked> Proposer des analogies réalistes</label></div>
+    <div class="fl"><label class="check"><input type="checkbox" id="entity" checked> Sources possibles (objets, animaux, mécaniques…)</label></div>
+    <div class="fl">
+      <label>Nombre d’analogies max <span id="vana">3</span></label>
+      <div class="range"><input type="range" id="ana" min="1" max="5" value="3"></div>
+    </div>
+    <div class="fl">
+      <label>Style d’analyse</label>
+      <select id="style">
+        <option value="real">Strictement réel</option>
+        <option value="real+ana" selected>Réel + analogies</option>
+        <option value="detailed">Détaillé (fréquences + environnement)</option>
+      </select>
+    </div>
 
-    let cfg = Object.assign({}, DEFAULTS);
-    let S = {
-      ready: false,
-      ctx: null,
-      analyser: null,
-      volNode: null,
-      stream: null,
-      freq: null,
-      wave: null,
-      vol: null,
-      recActive: false,
-      recorder: null,
-      chunks: [],
-      recT0: 0,
-      recIv: null,
-      pttActive: false,
-      pttRecorder: null,
-      pttChunks: [],
-      pttIv: null,
-      pttSec: 0,
-      autoMode: false,
-      autoRunning: false,
-      autoWasOn: false,
-      lastText: '',
-      speaking: false,
-      wakeLock: null,
-      keepAliveCtx: null,
-      keepAliveOsc: null,
-      chatHistory: [],
-      memorySummary: '',
-      lastImageBase64: null,
-      camStream: null,
-      camActive: false,
-      companion: false,
-      savedKeys: [],
-      summarizing: false
-    };
-    let caps = [];
+    <div class="sec">5. Mots & Déclencheurs</div>
+    <div class="fl"><label class="check"><input type="checkbox" id="always" checked> Toujours répondre</label></div>
+    <div class="fl">
+      <label>Mots d’appel</label>
+      <input type="text" id="wake" value="supra,lab,assistant,hey,ok,écoute,dis">
+    </div>
+    <div class="fl">
+      <label>Mots STOP (pause réponses, écoute continue)</label>
+      <input type="text" id="stopw" value="stop,arrête,arrete,tais-toi,taistoi,silence,shut up,assez,basta">
+    </div>
+    <div class="fl">
+      <label>Mots REPRISE (optionnel)</label>
+      <input type="text" id="resumew" value="reprends,continue,ok,vas-y,supra">
+    </div>
 
-    const $ = s => document.querySelector(s);
-    const now = () => new Date().toLocaleTimeString('fr-FR');
-    const p2 = n => (n < 10 ? '0' + n : '' + n);
-    const fmt = s => p2(Math.floor(s / 3600)) + ':' + p2(Math.floor((s % 3600) / 60)) + ':' + p2(s % 60);
-    const cleanKey = k => String(k || '').replace(/[\u200B-\u200D\uFEFF\u00A0\s]/g, '').trim();
-    const isValidKey = k => typeof k === 'string' && k.startsWith('gsk_') && k.length > 30;
-    const sleep = ms => new Promise(r => setTimeout(r, ms));
+    <div class="sec">6. Voix & Interface</div>
+    <div class="fl"><label class="check"><input type="checkbox" id="tts" checked> Synthèse vocale</label></div>
+    <div class="fl">
+      <label>Vitesse voix <span id="vrate">0.92</span></label>
+      <div class="range"><input type="range" id="rate" min="0.7" max="1.2" step="0.02" value="0.92"></div>
+    </div>
+    <div class="fl">
+      <label>Langue</label>
+      <select id="lang">
+        <option value="fr">Français</option>
+        <option value="en">English</option>
+        <option value="es">Español</option>
+      </select>
+    </div>
+    <div class="fl">
+      <label>Couleur</label>
+      <select id="col">
+        <option value="#00ff41">Vert</option>
+        <option value="#00ccff">Cyan</option>
+        <option value="#ff6600">Orange</option>
+        <option value="#aa00ff">Violet</option>
+      </select>
+    </div>
+    <div class="fl"><label class="check"><input type="checkbox" id="wakelock" checked> Écran allumé</label></div>
+    <div class="fl"><label class="check"><input type="checkbox" id="debug"> Debug</label></div>
+  </div>
+  <div class="df">
+    <button class="btn" id="save" type="button">SAUVEGARDER</button>
+    <button class="btn blue" id="exportcfg" type="button">EXPORT</button>
+    <button class="btn red" id="rst" type="button">RESET</button>
+  </div>
+</dialog>
 
-    function log(msg, type = 'ok') {
-      const el = $('#log');
-      if (!el) return;
-      const d = document.createElement('div');
-      d.className = 'log__e log__e--' + type;
-      d.textContent = '[' + now() + '] ' + msg;
-      el.appendChild(d);
-      el.scrollTop = el.scrollHeight;
-      while (el.children.length > 160) el.removeChild(el.firstChild);
-    }
+<section id="boot">
+  <h1 class="blink" id="title"></h1>
+  <p id="sub"></p>
+  <div class="acts" id="acts">
+    <button class="btn" id="go" type="button" style="font-size:18px;padding:11px 24px;border-width:4px">LANCER</button>
+    <button class="btn" id="cfg" type="button">PARAMÈTRES</button>
+  </div>
+</section>
 
-    function status(t) {
-      const e = $('#ft-s');
-      if (e) e.textContent = t;
-    }
+<div id="app">
+  <header>SUPRA LAB v30.1 — <span id="mode">REAL</span></header>
+  <main>
+    <div class="bar">
+      <button class="btn round" id="rec" type="button">REC</button>
+      <div class="timer" id="timer">00:00</div>
+      <button class="btn round" id="stop" type="button" disabled>STOP</button>
+      <button class="btn round" id="play" type="button">PLAY</button>
+      <div class="sep"></div>
+      <button class="btn round blue" id="auto" type="button">AUTO</button>
+      <button class="btn round" id="comp" type="button">24/7</button>
+      <button class="btn round" id="img" type="button">IMG</button>
+      <button class="btn round" id="cam" type="button">CAM</button>
+      <button class="btn round" id="sum" type="button">RÉSUMÉ</button>
+      <button class="btn round" id="export" type="button">EXPORT</button>
+      <button class="btn round red" id="clr" type="button">CLR</button>
+      <button class="btn round red" id="mute" type="button">MUTE</button>
+    </div>
+    <input type="file" id="file" accept="image/*" hidden>
+    <img id="preview" class="preview" alt="" hidden>
+    <div class="cam-box" id="cambox">
+      <video id="video" autoplay playsinline muted hidden></video>
+      <div style="display:flex;gap:6px">
+        <button class="btn sm blue" id="capture" type="button">CAPTURER</button>
+        <button class="btn sm red" id="camstop" type="button">FERMER</button>
+      </div>
+    </div>
+    <div class="panel"><div class="label">SPECTRO</div><canvas id="c1"></canvas></div>
+    <div class="panel"><div class="label">OSCILLO</div><canvas id="c2"></canvas></div>
+    <div class="panel"><div class="label">VOLUME</div><canvas id="c3"></canvas></div>
+    <div class="live">
+      <div class="label">ÉCOUTE RÉELLE</div>
+      <div class="badge" id="badge">PRÊT</div>
+      <div class="txt dim" id="live">Real + analogies — prêt</div>
+    </div>
+    <div class="input-row">
+      <div class="pre">&gt;</div>
+      <input id="txt" placeholder="Parle, question ou bruit..." autocomplete="off">
+      <button type="button" id="send">ENVOYER</button>
+    </div>
+    <div class="panel full">
+      <div class="label">INTERPRÉTATION</div>
+      <div class="out" id="out">En attente...</div>
+    </div>
+    <div class="panel full">
+      <div class="label">JOURNAL</div>
+      <div class="log" id="log"></div>
+    </div>
+    <div class="panel">
+      <div class="label">SYSTÈME</div>
+      <div class="sys" id="sys">—</div>
+      <div class="stats" id="stats">—</div>
+    </div>
+  </main>
+  <footer>
+    <span id="status">En attente...</span>
+    <span>v30.1 | <span id="clock">--:--:--</span></span>
+  </footer>
+</div>
 
-    function sysUp() {
-      const el = $('#sys');
-      if (!el) return;
-      const tag = (v, c) => `<span style="color:var(--${c})">${v}</span>`;
-      el.innerHTML =
-        'Micro: ' + (S.stream ? tag('OK', 'fg') : tag('OFF', 'danger')) + '<br>' +
-        'API: ' + (isValidKey(cfg.apiKey) ? tag('OK', 'fg') : tag('INVALIDE', 'danger')) + '<br>' +
-        'Mode: ' + (S.companion ? tag('COMPAGNON 24/7', 'warning') : (S.autoMode ? tag('AUTO', 'warning') : tag('PTT', 'fg'))) + '<br>' +
-        'Mémoire: ' + tag(S.chatHistory.length + ' msgs', 'info') + (S.memorySummary ? ' + résumé' : '') + '<br>' +
-        'Cam: ' + (S.camActive ? tag('LIVE', 'info') : 'OFF') + '<br>' +
-        'Clés: ' + S.savedKeys.length;
-    }
+<button class="btn" id="ptt" type="button">MAINTENIR<br>POUR PARLER</button>
+<audio id="audio" hidden></audio>
 
-    function liveSet(text, mode, timerText) {
-      const tx = $('#live-tx');
-      const bd = $('#live-badge');
-      if (!tx || !bd) return;
-      tx.className = 'live__tx';
-      bd.className = 'live__badge';
+<script>
+(function(){
+'use strict';
 
-      if (mode === 'idle') {
-        tx.classList.add('live__tx--idle');
-        tx.textContent = text;
-        bd.textContent = 'PRET';
-        bd.classList.add('live__badge--off');
-      } else if (mode === 'listen') {
-        tx.classList.add('live__tx--idle');
-        tx.textContent = text;
-        bd.textContent = 'ECOUTE';
-        bd.classList.add('live__badge--listen');
-      } else if (mode === 'rec') {
-        tx.classList.add('live__tx--rec');
-        tx.innerHTML = text + '<span class="live__cur"></span>';
-        bd.textContent = 'REC' + (timerText ? ' ' + timerText : '');
-        bd.classList.add('live__badge--rec');
-      } else if (mode === 'send') {
-        tx.classList.add('live__tx--think');
-        tx.textContent = text;
-        bd.textContent = 'WHISPER...';
-        bd.classList.add('live__badge--send');
-      } else if (mode === 'think') {
-        tx.classList.add('live__tx--think');
-        tx.textContent = text;
-        bd.textContent = 'SUPRA...';
-        bd.classList.add('live__badge--send');
-      } else if (mode === 'search') {
-        tx.classList.add('live__tx--think');
-        tx.textContent = text;
-        bd.textContent = 'WEB...';
-        bd.classList.add('live__badge--send');
-      } else if (mode === 'done') {
-        tx.classList.add('live__tx--done');
-        tx.textContent = text;
-        bd.textContent = 'TRAITE';
-        bd.classList.add('live__badge--done');
-      } else if (mode === 'bg') {
-        tx.classList.add('live__tx--idle');
-        tx.textContent = text;
-        bd.textContent = 'ARRIERE-PLAN';
-        bd.classList.add('live__badge--bg');
-      }
-    }
+var DEFAULT={
+  key:'',model:'llama-3.3-70b-versatile',lang:'fr',tts:true,color:'#00ff41',
+  sens:8,silence:650,minSpeech:220,maxRecord:45,always:true,noise:true,
+  noiseVol:6,freq:true,analogy:true,entity:true,anaCount:3,style:'real+ana',
+  wakeWords:'supra,lab,assistant,hey,ok,écoute,dis',
+  stopWords:'stop,arrête,arrete,tais-toi,taistoi,silence,shut up,assez,basta',
+  resumeWords:'reprends,continue,ok,vas-y,supra',
+  temp:0.3,maxTokens:1600,rate:0.92,wakelock:true,debug:false
+};
 
-    function typeIn(el, txt, ms = 30) {
-      return new Promise(resolve => {
-        let i = 0;
-        el.textContent = '';
-        el.classList.add('blink');
-        const iv = setInterval(() => {
-          el.textContent += txt.charAt(i++);
-          if (i >= txt.length) {
-            clearInterval(iv);
-            el.classList.remove('blink');
-            resolve();
-          }
-        }, ms);
+var GROQ_BASE='https://api.groq.com/openai/v1';
+var DEFAULT_MODELS=[
+  {id:'llama-3.3-70b-versatile',label:'Llama 3.3 70B'},
+  {id:'llama-3.1-8b-instant',label:'Llama 3.1 8B Instant'},
+  {id:'llama-4-scout-17b-16e-instruct',label:'Llama 4 Scout'},
+  {id:'gemma2-9b-it',label:'Gemma2 9B'},
+  {id:'mixtral-8x7b-32768',label:'Mixtral 8x7B'}
+];
+
+var cfg=Object.assign({},DEFAULT);
+var st={
+  ready:false,ctx:null,an:null,volNode:null,stream:null,
+  fdata:null,wdata:null,vdata:null,
+  rec:false,mr:null,chunks:[],t0:0,iv:null,
+  ptt:false,pmr:null,pchunks:[],piv:null,psec:0,
+  auto:false,run:false,comp:false,paused:false,
+  hist:[],mem:'',img:null,cam:null,camOn:false,
+  ctrl:null,reqs:0,lat:0,tokens:0,
+  savedKeys:[],lastVol:0,lastBass:0,lastMid:0,lastHigh:0,noiseCount:0,
+  modelCache:null,wakeLock:null,muted:false,caps:[],
+  currentUtterance:null,loopId:0
+};
+
+function $(s){return document.querySelector(s)}
+function now(){return new Date().toLocaleTimeString('fr-FR')}
+function pad(n){return n<10?'0'+n:''+n}
+function fmt(s){return pad(Math.floor(s/60))+':'+pad(s%60)}
+function clean(k){return String(k||'').replace(/[\u200B-\u200D\uFEFF\u00A0\s]/g,'').trim()}
+function sleep(ms){return new Promise(function(r){setTimeout(r,ms)})}
+
+/* Validation SOUPLE — ne bloque jamais l'app */
+function validKey(key){
+  key=clean(key);
+  return typeof key==='string' && key.length>=20;
+}
+
+function parseWords(str){
+  return (str||'').toLowerCase().split(',').map(function(w){return w.trim()}).filter(Boolean);
+}
+function matchWordList(text,list){
+  var t=(text||'').toLowerCase().trim();
+  if(!t)return false;
+  for(var i=0;i<list.length;i++){
+    var w=list[i];
+    if(t===w||t.startsWith(w+' ')||t.endsWith(' '+w)||t.indexOf(' '+w+' ')!==-1)return true;
+  }
+  return false;
+}
+function isStop(text){return matchWordList(text,parseWords(cfg.stopWords))}
+function isWake(text){return matchWordList(text,parseWords(cfg.wakeWords))}
+function isResumeWord(text){return matchWordList(text,parseWords(cfg.resumeWords))}
+
+function toast(msg,type){
+  type=type||'ok';
+  var el=$('#toast');if(!el)return;
+  el.textContent=msg;el.className='toast '+type+' show';
+  clearTimeout(el._tid);el._tid=setTimeout(function(){el.classList.remove('show')},2800);
+}
+function log(m,t){
+  t=t||'ok';
+  var el=$('#log');if(!el)return;
+  var d=document.createElement('div');d.className=t;
+  d.textContent='['+now()+'] '+m;
+  el.appendChild(d);el.scrollTop=el.scrollHeight;
+  while(el.children.length>120)el.firstChild.remove();
+  if(cfg.debug)console.log('[SUPRA]',m);
+}
+function status(t){var el=$('#status');if(el)el.textContent=t}
+
+function sys(){
+  function ok(v){return '<span style="color:var(--fg)">'+v+'</span>'}
+  function ko(v){return '<span style="color:var(--red)">'+v+'</span>'}
+  function wa(v){return '<span style="color:var(--orange)">'+v+'</span>'}
+  var el=$('#sys');
+  if(el){
+    el.innerHTML='Micro '+(st.stream?ok('OK'):ko('OFF'))+
+      ' · Clé '+(validKey(cfg.key)?ok('OK'):ko('—'))+
+      ' · '+(st.comp?wa('24/7'):st.auto?wa('AUTO'):ok('MANUEL'))+
+      (st.paused?' · '+wa('PAUSE'):'')+
+      '<br>Bruit '+(cfg.noise?'ON':'off')+' · Ana '+(cfg.analogy?'ON':'off')+
+      (st.muted?' · '+ko('MUET'):'');
+  }
+  var s=$('#stats');
+  if(s)s.textContent='≈'+st.tokens+' tok · '+(st.lat||'—')+'ms · '+st.reqs+' req · bruits:'+st.noiseCount;
+}
+
+function live(txt,mode){
+  var t=$('#live'),b=$('#badge');if(!t||!b)return;
+  t.className='txt';b.className='badge';
+  if(mode==='idle'){t.classList.add('dim');t.textContent=txt;b.textContent='PRÊT'}
+  else if(mode==='listen'){t.classList.add('dim');t.textContent=txt;b.textContent='ÉCOUTE';b.classList.add('listen')}
+  else if(mode==='rec'){t.classList.add('red');t.textContent=txt;b.textContent='REC';b.classList.add('rec')}
+  else if(mode==='think'){t.classList.add('orange');t.textContent=txt;b.textContent='ANALYSE';b.classList.add('think')}
+  else if(mode==='ok'){t.textContent=txt;b.textContent='OK';b.classList.add('ok')}
+  else if(mode==='pause'){t.classList.add('orange');t.textContent=txt;b.textContent='PAUSE';b.classList.add('pause')}
+}
+
+function typeEl(el,str,speed){
+  speed=speed||32;
+  return new Promise(function(res){
+    var i=0;el.textContent='';
+    var iv=setInterval(function(){
+      if(i<str.length)el.textContent+=str[i++];
+      else{clearInterval(iv);res()}
+    },speed);
+  });
+}
+
+function buildSystemPrompt(){
+  var p='Tu es SUPRA. Tu analyses sons, bruits, voix et environnements de façon réaliste.\n\n';
+  p+='RÈGLES :\n';
+  p+='- Texte brut uniquement. Pas de markdown, pas d\'emoji.\n';
+  p+='- Commence directement par les faits. Tutoiement. Français. Concis.\n';
+  p+='- Pas de paranormal ni d\'entités surnaturelles. Domaine physique uniquement.\n';
+  if(cfg.style==='real'){
+    p+='- Mode STRICT : faits clairs seulement. Si doute : « Je ne peux pas déterminer avec certitude. »\n';
+  }else{
+    p+='- Bruits ambigus : décris puis propose jusqu\'à '+cfg.anaCount+' analogies réalistes.\n';
+  }
+  if(cfg.freq)p+='- Utilise les infos de fréquences si fournies.\n';
+  if(cfg.entity)p+='- Tu peux nommer des sources possibles réalistes.\n';
+  p+='- Réponds aux questions clairement.\n';
+  return p;
+}
+
+function loadKeys(){
+  try{st.savedKeys=JSON.parse(localStorage.getItem('sl30_keys')||'[]')}catch(e){st.savedKeys=[]}
+  renderKeys();
+}
+function saveKeysToStorage(){localStorage.setItem('sl30_keys',JSON.stringify(st.savedKeys));renderKeys()}
+
+function renderKeys(){
+  var list=$('#keys-list');if(!list)return;
+  if(!st.savedKeys.length){list.innerHTML='<div style="padding:6px;color:var(--muted)">Aucune</div>';return}
+  list.innerHTML='';
+  st.savedKeys.forEach(function(k,i){
+    var div=document.createElement('div');div.className='key-item';
+    div.innerHTML='<div style="flex:1;min-width:0"><div>'+(k.name||'Clé')+'</div><div style="font-size:10px;color:var(--muted)">'+k.key.slice(0,14)+'...</div></div>'+
+      '<button class="btn sm blue" data-i="'+i+'" data-a="use" type="button">USE</button>'+
+      '<button class="btn sm red" data-i="'+i+'" data-a="del" type="button">DEL</button>';
+    div.querySelectorAll('button').forEach(function(btn){
+      btn.addEventListener('click',function(){
+        var idx=parseInt(btn.dataset.i,10);
+        if(btn.dataset.a==='use'){
+          cfg.key=st.savedKeys[idx].key;applyToUI();
+          localStorage.setItem('sl30',JSON.stringify(cfg));
+          log('Clé chargée');toast('Clé chargée');
+        }else{st.savedKeys.splice(idx,1);saveKeysToStorage()}
       });
-    }
-
-    /* ===== CLÉS ===== */
-    function loadSavedKeys() {
-      try {
-        const r = localStorage.getItem('sl192_keys');
-        if (r) S.savedKeys = JSON.parse(r) || [];
-      } catch (e) {
-        S.savedKeys = [];
-      }
-      renderSavedKeys();
-    }
-
-    function saveSavedKeys() {
-      localStorage.setItem('sl192_keys', JSON.stringify(S.savedKeys));
-      renderSavedKeys();
-    }
-
-    function renderSavedKeys() {
-      const list = $('#keys-list');
-      if (!list) return;
-      list.innerHTML = '';
-      if (!S.savedKeys.length) {
-        list.innerHTML = '<div class="empty" style="padding:12px;font-size:13px">Aucune clé sauvegardée</div>';
-        return;
-      }
-      S.savedKeys.forEach((k, i) => {
-        const div = document.createElement('div');
-        div.className = 'key-item';
-        div.innerHTML = `
-          <div style="flex:1;min-width:0">
-            <div style="font-size:14px">${k.name || 'Clé ' + (i + 1)}</div>
-            <div style="font-size:11px;color:var(--fg-muted)">${k.key.substring(0, 20)}...</div>
-          </div>
-          <button class="btn btn--small btn--info" data-act="use" data-i="${i}">CHOISIR</button>
-          <button class="btn btn--small btn--danger" data-act="del" data-i="${i}">DEL</button>`;
-        div.querySelectorAll('button').forEach(btn => {
-          btn.onclick = () => {
-            const act = btn.getAttribute('data-act');
-            const idx = parseInt(btn.getAttribute('data-i'), 10);
-            if (act === 'use') selectKey(idx);
-            else if (act === 'del' && confirm('Supprimer cette clé ?')) {
-              S.savedKeys.splice(idx, 1);
-              saveSavedKeys();
-              log('Clé supprimée', 'info');
-            }
-          };
-        });
-        list.appendChild(div);
-      });
-    }
-
-    function selectKey(index) {
-      if (!S.savedKeys[index]) return;
-      const k = S.savedKeys[index];
-      cfg.apiKey = k.key;
-      $('#i-key').value = k.key;
-      localStorage.setItem('sl192', JSON.stringify(cfg));
-      applyCfg();
-      log('Clé activée : ' + (k.name || 'Clé'), 'ok');
-      alert('Clé « ' + (k.name || 'Clé') + ' » activée !');
-      sysUp();
-    }
-
-    async function pasteKey() {
-      const ta = $('#i-key');
-      try {
-        const text = await navigator.clipboard.readText();
-        if (text && text.trim()) {
-          const cleaned = cleanKey(text);
-          ta.value = cleaned;
-          cfg.apiKey = cleaned;
-          log('Clé collée depuis le presse-papier', 'ok');
-          alert('Clé collée avec succès !\nClique sur TESTER.');
-          ta.focus();
-        } else {
-          alert('Presse-papier vide');
-        }
-      } catch (err) {
-        alert('Navigateur a bloqué le presse-papier.\n\n→ Clique dans le grand champ\n→ Fais Ctrl+V (Windows) ou Cmd+V (Mac)\nou appui long → Coller');
-        ta.focus();
-        ta.select();
-      }
-    }
-
-    function addCurrentKey() {
-      const key = cleanKey($('#i-key').value);
-      if (!isValidKey(key)) {
-        alert('Clé invalide (doit commencer par gsk_ )');
-        return;
-      }
-      const name = prompt('Nom de cette clé ?', 'Perso ' + (S.savedKeys.length + 1));
-      if (name === null) return;
-      if (S.savedKeys.find(k => k.key === key)) {
-        alert('Cette clé existe déjà');
-        return;
-      }
-      S.savedKeys.push({ name: name || 'Clé', key });
-      saveSavedKeys();
-      cfg.apiKey = key;
-      localStorage.setItem('sl192', JSON.stringify(cfg));
-      log('Clé sauvegardée : ' + name, 'ok');
-      alert('Clé sauvegardée !');
-      applyCfg();
-    }
-
-    /* ===== WEB SEARCH ===== */
-    function needsWebSearch(text) {
-      if (!cfg.webSearch) return false;
-      const t = (text || '').toLowerCase();
-      const keys = [
-        'recherche', 'cherche sur', 'cherche moi', 'search', 'sur le net', 'sur internet',
-        'google', 'wikipedia', "c'est quoi", 'cest quoi', "qu'est-ce", 'quest-ce',
-        'qui est', 'what is', 'who is', 'définition', 'definition', 'explique-moi',
-        'trouve-moi', 'info sur'
-      ];
-      return keys.some(k => t.includes(k));
-    }
-
-    function extractSearchQuery(text) {
-      let q = (text || '').trim();
-      q = q.replace(/^(supra|lab|assistant|hey supra)[,:]?\s*/i, '');
-      q = q.replace(/^(recherche|cherche|search)\s+(sur\s+)?(le\s+)?(net|internet|web|google)?\s*/i, '');
-      q = q.replace(/^(c'est quoi|cest quoi|qu'est-ce que|quest-ce que|what is|who is|définition de)\s+/i, '');
-      return q.replace(/\?+$/, '').trim() || text;
-    }
-
-    async function searchWikipedia(query) {
-      const lang = cfg.lang === 'en' ? 'en' : (cfg.lang === 'es' ? 'es' : 'fr');
-      const results = [];
-      try {
-        const res = await fetch(
-          `https://${lang}.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&srlimit=3&format=json&origin=*`
-        );
-        if (!res.ok) throw new Error('wiki');
-        const data = await res.json();
-        const hits = (data.query && data.query.search) || [];
-        for (const hit of hits) {
-          try {
-            const sumRes = await fetch(
-              `https://${lang}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(hit.title)}`
-            );
-            if (sumRes.ok) {
-              const sum = await sumRes.json();
-              results.push({
-                title: sum.title || hit.title,
-                snippet: (sum.extract || '').replace(/<[^>]+>/g, '').substring(0, 400),
-                url: (sum.content_urls && sum.content_urls.desktop && sum.content_urls.desktop.page) || ''
-              });
-            }
-          } catch (e) {}
-        }
-      } catch (e) {
-        log('Wiki: ' + e.message, 'dbg');
-      }
-      return results;
-    }
-
-    async function searchTavily(query) {
-      const key = cleanKey(cfg.tavilyKey);
-      if (!key) return [];
-      try {
-        const res = await fetch('https://api.tavily.com/search', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            api_key: key,
-            query,
-            search_depth: 'basic',
-            max_results: 4,
-            include_answer: true
-          })
-        });
-        if (!res.ok) throw new Error('Tavily');
-        const data = await res.json();
-        const out = [];
-        if (data.answer) out.push({ title: 'Synthèse Tavily', snippet: data.answer, url: '' });
-        (data.results || []).forEach(r =>
-          out.push({
-            title: r.title || '',
-            snippet: (r.content || '').substring(0, 400),
-            url: r.url || ''
-          })
-        );
-        return out;
-      } catch (e) {
-        log('Tavily: ' + e.message, 'dbg');
-        return [];
-      }
-    }
-
-    async function doWebSearch(userText) {
-      const query = extractSearchQuery(userText);
-      log('Recherche: "' + query + '"', 'info');
-      liveSet('Recherche web...', 'search');
-      const results = (await searchTavily(query)).concat(await searchWikipedia(query));
-      if (!results.length) return { query, text: 'Aucun résultat pour: ' + query };
-      const lines = ['Requête: ' + query, 'Sources:'];
-      results.forEach((r, i) => {
-        lines.push((i + 1) + '. ' + r.title);
-        if (r.snippet) lines.push('   ' + r.snippet);
-        if (r.url) lines.push('   ' + r.url);
-      });
-      log('Web OK — ' + results.length + ' sources', 'ok');
-      return { query, text: lines.join('\n') };
-    }
-
-    /* ===== AUDIO ===== */
-    async function initAudio() {
-      try {
-        S.ctx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 48000 });
-        await S.ctx.resume();
-        S.stream = await navigator.mediaDevices.getUserMedia({
-          audio: {
-            echoCancellation: true,
-            noiseSuppression: true,
-            autoGainControl: true
-          }
-        });
-        const src = S.ctx.createMediaStreamSource(S.stream);
-        S.analyser = S.ctx.createAnalyser();
-        S.analyser.fftSize = 2048;
-        S.analyser.smoothingTimeConstant = 0.7;
-        src.connect(S.analyser);
-        S.freq = new Uint8Array(S.analyser.frequencyBinCount);
-        S.wave = new Uint8Array(S.analyser.frequencyBinCount);
-        S.volNode = S.ctx.createAnalyser();
-        S.volNode.fftSize = 256;
-        src.connect(S.volNode);
-        S.vol = new Uint8Array(S.volNode.frequencyBinCount);
-        S.ready = true;
-        sizeCV();
-        drawLoop();
-        sysUp();
-        log('Audio prêt', 'ok');
-        return true;
-      } catch (e) {
-        log('Micro: ' + e.message, 'err');
-        return false;
-      }
-    }
-
-    function getVolumeAvg() {
-      if (!S.volNode || !S.vol) return 0;
-      S.volNode.getByteFrequencyData(S.vol);
-      let s = 0;
-      for (let i = 0; i < S.vol.length; i++) s += S.vol[i];
-      return s / S.vol.length;
-    }
-
-    function drawLoop() {
-      if (!S.ready) return;
-      requestAnimationFrame(drawLoop);
-      S.analyser.getByteFrequencyData(S.freq);
-      S.analyser.getByteTimeDomainData(S.wave);
-      S.volNode.getByteFrequencyData(S.vol);
-      drawFreq();
-      drawWave();
-      drawVol();
-    }
-
-    function drawFreq() {
-      const c = $('#cv-f');
-      if (!c) return;
-      const x = c.getContext('2d');
-      const W = c.width;
-      const H = c.height;
-      x.fillStyle = '#020402';
-      x.fillRect(0, 0, W, H);
-      const n = S.freq.length;
-      const bw = Math.max(1, W / n);
-      for (let i = 0; i < n; i++) {
-        const v = S.freq[i];
-        if (v < 2) continue;
-        const h = Math.max(0, Math.log10(v + 1) * 22);
-        x.fillStyle = `hsl(${Math.max(0, 110 - v * .45)},100%,${Math.max(10, v * .38)}%)`;
-        x.fillRect(i * bw, H - h, bw + .5, h);
-      }
-    }
-
-    function drawWave() {
-      const c = $('#cv-w');
-      if (!c) return;
-      const x = c.getContext('2d');
-      const W = c.width;
-      const H = c.height;
-      x.fillStyle = '#020402';
-      x.fillRect(0, 0, W, H);
-      const col = getComputedStyle(document.documentElement).getPropertyValue('--fg').trim();
-      x.strokeStyle = col;
-      x.lineWidth = 2;
-      x.shadowColor = col;
-      x.shadowBlur = 5;
-      x.beginPath();
-      const st = W / S.wave.length;
-      for (let i = 0; i < S.wave.length; i++) {
-        const y = (S.wave[i] / 128 - 0.5) * H * .85 + H / 2;
-        if (i === 0) x.moveTo(0, y);
-        else x.lineTo(i * st, y);
-      }
-      x.stroke();
-      x.shadowBlur = 0;
-    }
-
-    function drawVol() {
-      const c = $('#cv-v');
-      if (!c) return;
-      const x = c.getContext('2d');
-      const W = c.width;
-      const H = c.height;
-      x.fillStyle = '#020402';
-      x.fillRect(0, 0, W, H);
-      let sum = 0;
-      for (let i = 0; i < S.vol.length; i++) sum += S.vol[i];
-      const pct = sum / S.vol.length / 255;
-      const bw = W * .45;
-      const bh = Math.max(2, pct * H * .88);
-      const bx = (W - bw) / 2;
-      const by = H - bh;
-      const hue = Math.max(0, 120 - pct * 200);
-      x.fillStyle = `hsl(${hue},100%,42%)`;
-      x.shadowBlur = 8;
-      x.fillRect(bx, by, bw, bh);
-      x.shadowBlur = 0;
-      x.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--fg').trim();
-      x.font = '20px VT323';
-      x.textAlign = 'center';
-      x.textBaseline = 'middle';
-      x.fillText(Math.round(pct * 100) + '%', W / 2, H / 2);
-    }
-
-    function sizeCV() {
-      document.querySelectorAll('#app .cv').forEach(c => {
-        const r = c.parentElement.getBoundingClientRect();
-        c.width = Math.max(80, r.width - 32);
-        c.height = 100;
-      });
-    }
-
-    function bestMime() {
-      const t = [
-        'audio/webm;codecs=opus',
-        'audio/webm',
-        'audio/ogg;codecs=opus',
-        'audio/mp4'
-      ];
-      for (const m of t) if (MediaRecorder.isTypeSupported(m)) return m;
-      return '';
-    }
-
-    async function requestWakeLock() {
-      if (!cfg.wakeLock) return;
-      try {
-        if ('wakeLock' in navigator) {
-          S.wakeLock = await navigator.wakeLock.request('screen');
-        }
-      } catch (e) {}
-    }
-
-    async function releaseWakeLock() {
-      try {
-        if (S.wakeLock) {
-          await S.wakeLock.release();
-          S.wakeLock = null;
-        }
-      } catch (e) {}
-    }
-
-    function startKeepAlive() {
-      stopKeepAlive();
-      try {
-        const Ctx = window.AudioContext || window.webkitAudioContext;
-        S.keepAliveCtx = new Ctx();
-        const osc = S.keepAliveCtx.createOscillator();
-        const g = S.keepAliveCtx.createGain();
-        g.gain.value = 0.00008;
-        osc.frequency.value = 4;
-        osc.connect(g);
-        g.connect(S.keepAliveCtx.destination);
-        osc.start();
-        S.keepAliveOsc = osc;
-      } catch (e) {}
-    }
-
-    function stopKeepAlive() {
-      try {
-        if (S.keepAliveOsc) {
-          S.keepAliveOsc.stop();
-          S.keepAliveOsc = null;
-        }
-        if (S.keepAliveCtx) {
-          S.keepAliveCtx.close();
-          S.keepAliveCtx = null;
-        }
-      } catch (e) {}
-    }
-
-    function handleVisibility() {
-      document.addEventListener('visibilitychange', async () => {
-        if (document.hidden) {
-          if (S.autoMode || S.companion) {
-            S.autoWasOn = true;
-            log('Arrière-plan', 'info');
-            liveSet('En arrière-plan — je reste en veille', 'bg');
-          }
-        } else {
-          if (S.ctx && S.ctx.state === 'suspended') {
-            try { await S.ctx.resume(); } catch (e) {}
-          }
-          if (S.autoWasOn) {
-            S.autoWasOn = false;
-            if (S.companion || S.autoMode) {
-              liveSet(S.companion ? 'Compagnon en écoute...' : 'Écoute continue...', 'listen');
-              requestWakeLock();
-              startKeepAlive();
-            }
-          }
-        }
-      });
-    }
-
-    /* REC / PTT / AUTO */
-    function recOn() {
-      if (S.recActive || !S.stream) return;
-      const mime = bestMime();
-      if (!mime) {
-        log('Format non supporté', 'err');
-        return;
-      }
-      S.recActive = true;
-      S.chunks = [];
-      S.recT0 = Date.now();
-      try {
-        S.recorder = new MediaRecorder(S.stream, { mimeType: mime });
-      } catch (e) {
-        S.recActive = false;
-        return;
-      }
-      S.recorder.ondataavailable = e => {
-        if (e.data && e.data.size > 0) S.chunks.push(e.data);
-      };
-      S.recorder.onstop = recDone;
-      S.recorder.start(200);
-      $('#b-rec').classList.add('recording');
-      $('#b-stop').disabled = false;
-      $('#timer').classList.add('recbar__t--a');
-      status('Enregistrement...');
-      startClk();
-    }
-
-    function recOff() {
-      if (!S.recActive) return;
-      S.recActive = false;
-      if (S.recorder && S.recorder.state === 'recording') S.recorder.stop();
-      $('#b-rec').classList.remove('recording');
-      $('#b-stop').disabled = true;
-      $('#timer').classList.remove('recbar__t--a');
-      stopClk();
-    }
-
-    function recDone() {
-      const mime = (S.recorder && S.recorder.mimeType) || '';
-      let ext = 'webm';
-      if (mime.includes('ogg')) ext = 'ogg';
-      else if (mime.includes('mp4')) ext = 'm4a';
-      const blob = new Blob(S.chunks, { type: mime });
-      const url = URL.createObjectURL(blob);
-      const dur = Math.floor((Date.now() - S.recT0) / 1000);
-      caps.unshift({
-        name: 'Cap_' + new Date().toLocaleString('fr-FR').replace(/[/: ]/g, '-'),
-        url,
-        blob,
-        ext,
-        dur
-      });
-      buildCaps();
-      status('Prêt');
-    }
-
-    function startClk() {
-      let s = 0;
-      $('#timer').textContent = '00:00:00';
-      S.recIv = setInterval(() => {
-        s++;
-        $('#timer').textContent = fmt(s);
-      }, 1000);
-    }
-
-    function stopClk() {
-      clearInterval(S.recIv);
-      $('#timer').textContent = '00:00:00';
-    }
-
-    function buildCaps() {
-      const el = $('#caps-list');
-      if (!caps.length) {
-        el.innerHTML = '<div class="empty">Aucune capture</div>';
-        return;
-      }
-      el.innerHTML = '';
-      caps.forEach((c, i) => {
-        const row = document.createElement('div');
-        row.className = 'cap';
-        row.innerHTML = `
-          <div class="cap__i">
-            <div class="cap__n">${c.name}</div>
-            <div class="cap__m">${c.dur}s</div>
-          </div>
-          <div class="cap__a">
-            <button class="btn btn--small" data-a="play">PLAY</button>
-            <button class="btn btn--small" data-a="ai">IA</button>
-            <button class="btn btn--small" data-a="dl">SAVE</button>
-            <button class="btn btn--small btn--danger" data-a="del">DEL</button>
-          </div>`;
-        row.querySelectorAll('button').forEach(btn => {
-          btn.onclick = () => {
-            const a = btn.getAttribute('data-a');
-            if (a === 'play') {
-              $('#ply').src = c.url;
-              $('#ply').play();
-            }
-            if (a === 'ai') whisperThenAnalyze(c.blob);
-            if (a === 'dl') {
-              const x = document.createElement('a');
-              x.href = c.url;
-              x.download = c.name + '.' + c.ext;
-              x.click();
-            }
-            if (a === 'del') {
-              URL.revokeObjectURL(c.url);
-              caps.splice(i, 1);
-              buildCaps();
-            }
-          };
-        });
-        el.appendChild(row);
-      });
-    }
-
-    async function whisperTranscribe(blob) {
-      const key = cleanKey(cfg.apiKey);
-      if (!isValidKey(key)) {
-        log('Clé invalide', 'err');
-        return null;
-      }
-      let ext = 'webm';
-      if (blob.type.includes('ogg')) ext = 'ogg';
-      else if (blob.type.includes('mp4')) ext = 'm4a';
-      try {
-        const fd = new FormData();
-        fd.append('file', blob, 'audio.' + ext);
-        fd.append('model', 'whisper-large-v3-turbo');
-        fd.append('language', cfg.lang);
-        fd.append('response_format', 'json');
-        fd.append('temperature', '0.0');
-        const res = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
-          method: 'POST',
-          headers: { Authorization: 'Bearer ' + key },
-          body: fd
-        });
-        if (!res.ok) throw new Error((await res.text()).substring(0, 120));
-        const data = await res.json();
-        const text = (data.text || '').trim();
-        if (text) {
-          log('WHISPER: "' + text + '"', 'ok');
-          return text;
-        }
-        return null;
-      } catch (e) {
-        log('WHISPER: ' + e.message, 'err');
-        return null;
-      }
-    }
-
-    async function whisperThenAnalyze(blob) {
-      liveSet('Transcription...', 'send');
-      const text = await whisperTranscribe(blob);
-      if (text) {
-        liveSet(text, 'done');
-        await sendToGroq(text, { fromAuto: false, kind: 'parole' });
-      } else {
-        liveSet('Rien de clair', 'idle');
-      }
-    }
-
-    function pttDown(e) {
-      e.preventDefault();
-      if (!S.ready || S.autoMode || S.companion) return;
-      if (S.pttActive) return;
-      S.pttActive = true;
-      S.pttChunks = [];
-      S.pttSec = 0;
-      const mime = bestMime();
-      try {
-        S.pttRecorder = new MediaRecorder(S.stream, { mimeType: mime });
-      } catch (err) {
-        S.pttActive = false;
-        return;
-      }
-      S.pttRecorder.ondataavailable = ev => {
-        if (ev.data && ev.data.size > 0) S.pttChunks.push(ev.data);
-      };
-      S.pttRecorder.onstop = onPTTComplete;
-      S.pttRecorder.start(200);
-      $('#ptt').classList.add('ptt--rec');
-      $('#ptt').innerHTML = 'ENREGISTRE...<br><small>relâchez</small>';
-      S.pttIv = setInterval(() => {
-        S.pttSec++;
-        liveSet('Enregistrement...', 'rec', fmt(S.pttSec));
-      }, 1000);
-      liveSet('Enregistrement...', 'rec', '00:00');
-    }
-
-    function pttUp(e) {
-      e.preventDefault();
-      if (!S.pttActive) return;
-      S.pttActive = false;
-      clearInterval(S.pttIv);
-      $('#ptt').classList.remove('ptt--rec');
-      $('#ptt').innerHTML = 'MAINTENIR<br>POUR PARLER';
-      setTimeout(() => {
-        if (S.pttRecorder && S.pttRecorder.state === 'recording') S.pttRecorder.stop();
-      }, 250);
-    }
-
-    async function onPTTComplete() {
-      const blob = new Blob(S.pttChunks, {
-        type: (S.pttRecorder && S.pttRecorder.mimeType) || bestMime()
-      });
-      if (blob.size < 600) {
-        liveSet('Trop court', 'idle');
-        return;
-      }
-      liveSet('Transcription...', 'send');
-      const text = await whisperTranscribe(blob);
-      if (text) {
-        S.lastText = text;
-        liveSet(text, 'done');
-        await sendToGroq(text, { fromAuto: false, kind: 'parole' });
-      } else {
-        liveSet('Rien de clair', 'idle');
-      }
-    }
-
-    async function autoOn(isCompanion) {
-      if (S.autoRunning) return;
-      S.autoMode = true;
-      S.autoRunning = true;
-      S.companion = !!isCompanion;
-      $('#b-auto').classList.toggle('btn--active', !isCompanion);
-      $('#b-comp').classList.toggle('btn--active', !!isCompanion);
-      await requestWakeLock();
-      startKeepAlive();
-      log(isCompanion ? 'COMPAGNON 24/7 démarré' : 'AUTO démarré', 'info');
-      liveSet(isCompanion ? 'Compagnon 24/7 actif — je suis là' : 'Écoute continue...', 'listen');
-      status(isCompanion ? 'Compagnon 24/7' : 'Écoute...');
-      sysUp();
-
-      while (S.autoMode) {
-        try {
-          if (document.hidden) {
-            await sleep(200);
-            continue;
-          }
-          const ok = await waitForSpeech();
-          if (!S.autoMode) break;
-          if (!ok) continue;
-          liveSet("Je t'écoute...", 'rec', '00:00');
-          const blob = await recordUntilSilence();
-          if (!S.autoMode) break;
-          if (!blob || blob.size < 500) {
-            liveSet(S.companion ? 'Compagnon en écoute...' : 'Écoute continue...', 'listen');
-            continue;
-          }
-          const volPct = Math.round((getVolumeAvg() / 255) * 100);
-          liveSet('Transcription...', 'send');
-          const text = await whisperTranscribe(blob);
-          if (!S.autoMode) break;
-          const meta = { fromAuto: true, volume: volPct, kind: 'parole' };
-          if (!text) {
-            if (!cfg.analyzeNoise || volPct < 5) {
-              liveSet(S.companion ? 'Compagnon en écoute...' : 'Écoute continue...', 'listen');
-              continue;
-            }
-            meta.kind = 'bruit';
-            await sendToGroq('[bruit / son ambiant niveau ' + volPct + '%]', meta);
-          } else {
-            S.lastText = text;
-            liveSet(text, 'done');
-            await sendToGroq(text, meta);
-          }
-          if (!S.autoMode) break;
-          await sleep(150);
-          liveSet(S.companion ? 'Compagnon en écoute...' : 'Écoute continue...', 'listen');
-        } catch (e) {
-          log('AUTO: ' + e.message, 'err');
-          await sleep(300);
-        }
-      }
-      S.autoRunning = false;
-      S.companion = false;
-      await releaseWakeLock();
-      stopKeepAlive();
-      $('#b-auto').classList.remove('btn--active');
-      $('#b-comp').classList.remove('btn--active');
-      liveSet('Mode arrêté', 'idle');
-      status('Prêt');
-      sysUp();
-    }
-
-    function autoOff() {
-      S.autoMode = false;
-      S.companion = false;
-      S.autoWasOn = false;
-      $('#b-auto').classList.remove('btn--active');
-      $('#b-comp').classList.remove('btn--active');
-      releaseWakeLock();
-      stopKeepAlive();
-      liveSet('Mode arrêté', 'idle');
-      status('Prêt');
-      sysUp();
-    }
-
-    function waitForSpeech() {
-      return new Promise(resolve => {
-        let t0 = null;
-        function check() {
-          if (!S.autoMode) {
-            resolve(false);
-            return;
-          }
-          if (document.hidden) {
-            requestAnimationFrame(check);
-            return;
-          }
-          const avg = getVolumeAvg();
-          if (avg >= cfg.sens) {
-            if (!t0) t0 = Date.now();
-            if (Date.now() - t0 >= cfg.minSpeech) {
-              resolve(true);
-              return;
-            }
-          } else {
-            t0 = null;
-          }
-          requestAnimationFrame(check);
-        }
-        requestAnimationFrame(check);
-      });
-    }
-
-    function recordUntilSilence() {
-      return new Promise(resolve => {
-        const chunks = [];
-        const mime = bestMime();
-        let rec;
-        try {
-          rec = new MediaRecorder(S.stream, { mimeType: mime });
-        } catch (e) {
-          resolve(null);
-          return;
-        }
-        rec.ondataavailable = e => {
-          if (e.data && e.data.size > 0) chunks.push(e.data);
-        };
-        rec.onstop = () => {
-          clearInterval(timerIv);
-          clearInterval(silCheck);
-          resolve(new Blob(chunks, { type: rec.mimeType || mime }));
-        };
-        const start = Date.now();
-        let lastLoud = Date.now();
-        const maxMs = cfg.maxRecord * 1000;
-        const timerIv = setInterval(() => {
-          liveSet("Je t'écoute...", 'rec', fmt(Math.floor((Date.now() - start) / 1000)));
-        }, 100);
-        const silCheck = setInterval(() => {
-          if (!S.autoMode || document.hidden) {
-            if (rec.state === 'recording') rec.stop();
-            return;
-          }
-          if (getVolumeAvg() >= cfg.sens * 0.5) lastLoud = Date.now();
-          if (Date.now() - lastLoud >= cfg.silence || Date.now() - start >= maxMs) {
-            if (rec.state === 'recording') rec.stop();
-          }
-        }, 30);
-        rec.start(50);
-        setTimeout(() => {
-          if (rec.state === 'recording') rec.stop();
-        }, maxMs + 300);
-      });
-    }
-
-    function isAddressedToSupra(text) {
-      if (cfg.alwaysReply || S.companion) return true;
-      const low = (text || '').toLowerCase();
-      if (low.startsWith('[bruit') || low.startsWith('[son')) return true;
-      const words = (cfg.wakeWords || '').toLowerCase().split(',');
-      return words.some(w => w.trim() && low.includes(w.trim()));
-    }
-
-    /* ===== MÉMOIRE + STREAM + RÉSUMÉ ===== */
-    async function maybeSummarize() {
-      if (S.chatHistory.length < 20 || S.summarizing) return;
-      const key = cleanKey(cfg.apiKey);
-      if (!isValidKey(key)) return;
-      S.summarizing = true;
-      const toSummarize = S.chatHistory.splice(0, S.chatHistory.length - 8);
-      const transcript = toSummarize
-        .map(m => m.role.toUpperCase() + ': ' + (typeof m.content === 'string' ? m.content : JSON.stringify(m.content)))
-        .join('\n');
-      try {
-        const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: 'Bearer ' + key
-          },
-          body: JSON.stringify({
-            model: 'llama-3.1-8b-instant',
-            messages: [
-              {
-                role: 'system',
-                content: 'Résume de façon dense et fidèle : faits, préférences, décisions, contexte émotionnel, sujets en cours. Uniquement le résumé.'
-              },
-              {
-                role: 'user',
-                content: (S.memorySummary ? 'Résumé précédent:\n' + S.memorySummary + '\n\n' : '') +
-                  'Nouveaux messages:\n' + transcript
-              }
-            ],
-            temperature: 0.2,
-            max_tokens: 700
-          })
-        });
-        if (res.ok) {
-          const data = await res.json();
-          const sum =
-            (data.choices &&
-              data.choices[0] &&
-              data.choices[0].message &&
-              data.choices[0].message.content) ||
-            '';
-          if (sum) {
-            S.memorySummary = sum.trim();
-            log('Mémoire résumée', 'info');
-            sysUp();
-          }
-        }
-      } catch (e) {}
-      finally {
-        S.summarizing = false;
-      }
-    }
-
-    async function vocalSummary() {
-      if (!S.chatHistory.length && !S.memorySummary) {
-        alert('Rien à résumer');
-        return;
-      }
-      const key = cleanKey(cfg.apiKey);
-      if (!isValidKey(key)) {
-        alert('Clé invalide');
-        return;
-      }
-      liveSet('Génération résumé vocal...', 'think');
-      status('Résumé vocal...');
-      try {
-        const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: 'Bearer ' + key
-          },
-          body: JSON.stringify({
-            model: cfg.model,
-            messages: [
-              {
-                role: 'system',
-                content: 'Tu es SUPRA. Fais un résumé vocal clair, chaleureux et conversationnel de toute la mémoire. Maximum 12-15 phrases. Tutoiement.'
-              },
-              {
-                role: 'user',
-                content:
-                  'Résumé long:\n' +
-                  (S.memorySummary || 'Aucun') +
-                  '\n\nHistorique récent:\n' +
-                  S.chatHistory.slice(-12).map(m => m.role + ': ' + m.content).join('\n') +
-                  '\n\nFais le résumé vocal maintenant.'
-              }
-            ],
-            temperature: 0.4,
-            max_tokens: 800
-          })
-        });
-        if (!res.ok) throw new Error(await res.text());
-        const data = await res.json();
-        const answer = (data.choices[0].message.content || '').trim();
-        $('#ai-rpt').textContent = 'RÉSUMÉ VOCAL\n────────────────\n' + answer + '\n\n' + now();
-        speak(answer);
-        log('Résumé vocal OK', 'ok');
-        liveSet('Résumé vocal terminé', 'done');
-      } catch (e) {
-        log('Résumé: ' + e.message, 'err');
-        liveSet('Erreur résumé', 'idle');
-      }
-    }
-
-    async function sendToGroq(text, meta = {}) {
-      const el = $('#ai-rpt');
-      const key = cleanKey(cfg.apiKey);
-      if (!isValidKey(key)) {
-        el.textContent = 'Clé API invalide';
-        return;
-      }
-
-      if (meta.fromAuto && !isAddressedToSupra(text)) {
-        liveSet(S.companion ? 'Compagnon en écoute...' : 'Écoute continue... (pas pour moi)', 'listen');
-        return;
-      }
-
-      const wantVision = /analyse.*(image|photo|caméra|camera|ce que tu vois|regarde)/i.test(text);
-      if (wantVision) {
-        if (S.camActive) {
-          await captureAndAnalyzeCam(text);
-          return;
-        }
-        if (S.lastImageBase64) {
-          await analyzeImage(S.lastImageBase64, text);
-          return;
-        }
-      }
-
-      if (/résumé|resume|résume la conversation|fais un résumé/i.test(text)) {
-        await vocalSummary();
-        return;
-      }
-
-      let webBlock = '';
-      if (needsWebSearch(text)) {
-        const web = await doWebSearch(text);
-        webBlock = '\n\n=== RÉSULTATS WEB ===\n' + web.text + '\n=== FIN ===\n';
-      }
-
-      liveSet('SUPRA réfléchit (stream)...', 'think');
-      el.textContent = '';
-      status('Stream...');
-
-      const systemPrompt =
-        'Tu es SUPRA LAB, un compagnon intelligent permanent dont le but est de tout savoir et tout comprendre.\n' +
-        (S.companion
-          ? 'Tu es en mode COMPAGNON 24/7 : présent, chaleureux, attentif, tu évolues avec l’utilisateur.\n'
-          : '') +
-        'Tu as une mémoire longue. Utilise le résumé + l’historique.\n' +
-        'Réponds en français, tutoiement, naturel et clair. Tu peux être long si utile.\n' +
-        'Si résultats web → base-toi dessus.\n' +
-        (S.memorySummary ? '\n=== MÉMOIRE LONGUE ===\n' + S.memorySummary + '\n=== FIN ===\n' : '');
-
-      const userContent =
-        'Message:\n"' + text + '"' + (meta.kind ? '\nContexte: ' + meta.kind : '') + webBlock;
-      S.chatHistory.push({ role: 'user', content: userContent });
-      await maybeSummarize();
-
-      const messages = [{ role: 'system', content: systemPrompt }].concat(S.chatHistory);
-
-      try {
-        const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: 'Bearer ' + key
-          },
-          body: JSON.stringify({
-            model: cfg.model,
-            messages,
-            temperature: 0.5,
-            max_tokens: 2800,
-            stream: true
-          })
-        });
-        if (!res.ok) throw new Error((await res.text()).substring(0, 140));
-
-        const reader = res.body.getReader();
-        const decoder = new TextDecoder();
-        let fullAnswer = '';
-        let buffer = '';
-        el.textContent = 'SUPRA (stream):\n\n';
-
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split('\n');
-          buffer = lines.pop() || '';
-          for (const line of lines) {
-            const l = line.trim();
-            if (!l.startsWith('data: ')) continue;
-            const dataStr = l.slice(6);
-            if (dataStr === '[DONE]') continue;
-            try {
-              const chunk = JSON.parse(dataStr);
-              const delta =
-                chunk.choices &&
-                chunk.choices[0] &&
-                chunk.choices[0].delta &&
-                chunk.choices[0].delta.content;
-              if (delta) {
-                fullAnswer += delta;
-                el.textContent = 'SUPRA (stream):\n\n' + fullAnswer;
-                el.scrollTop = el.scrollHeight;
-              }
-            } catch (e) {}
-          }
-        }
-
-        fullAnswer = fullAnswer.trim() || '...';
-        S.chatHistory.push({ role: 'assistant', content: fullAnswer });
-        await maybeSummarize();
-        sysUp();
-
-        el.textContent =
-          'DEMANDE:\n"' +
-          text +
-          '"\n\n────────────────\nSUPRA' +
-          (S.companion ? ' 24/7' : '') +
-          '\n────────────────\n\n' +
-          fullAnswer +
-          '\n\n' +
-          now();
-        log('Stream OK', 'ok');
-        status(S.autoMode ? (S.companion ? 'Compagnon 24/7' : 'Écoute...') : 'Prêt');
-        speak(fullAnswer);
-      } catch (e) {
-        el.textContent = 'Erreur: ' + e.message;
-        log('IA: ' + e.message, 'err');
-        liveSet('Erreur', 'idle');
-      }
-    }
-
-    /* VISION + CAM */
-    function handleImageFile(file) {
-      if (!file || !file.type.startsWith('image/')) return;
-      const reader = new FileReader();
-      reader.onload = e => {
-        S.lastImageBase64 = e.target.result;
-        $('#img-preview').src = S.lastImageBase64;
-        $('#img-preview').style.display = 'block';
-        log('Image chargée', 'ok');
-        liveSet('Image prête', 'done');
-      };
-      reader.readAsDataURL(file);
-    }
-
-    async function analyzeImage(base64, prompt) {
-      const key = cleanKey(cfg.apiKey);
-      if (!isValidKey(key)) return;
-      liveSet('Vision...', 'think');
-      try {
-        const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: 'Bearer ' + key
-          },
-          body: JSON.stringify({
-            model: 'meta-llama/llama-4-scout-17b-16e-instruct',
-            messages: [
-              {
-                role: 'system',
-                content: 'Tu es SUPRA. Analyse les images de façon claire et naturelle en français.'
-              },
-              {
-                role: 'user',
-                content: [
-                  { type: 'text', text: prompt || 'Décris précisément cette image.' },
-                  { type: 'image_url', image_url: { url: base64 } }
-                ]
-              }
-            ],
-            temperature: 0.3,
-            max_tokens: 1400
-          })
-        });
-        if (!res.ok) throw new Error(await res.text());
-        const data = await res.json();
-        const answer = (data.choices[0].message.content || '').trim();
-        S.chatHistory.push({ role: 'user', content: '[Vision] ' + prompt });
-        S.chatHistory.push({ role: 'assistant', content: answer });
-        await maybeSummarize();
-        $('#ai-rpt').textContent = 'VISION\n────────────────\n' + answer + '\n\n' + now();
-        speak(answer);
-        liveSet('Vision OK', 'done');
-      } catch (e) {
-        log('Vision: ' + e.message, 'err');
-      }
-    }
-
-    async function startCam() {
-      try {
-        S.camStream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: 'user' },
-          audio: false
-        });
-        $('#cam-video').srcObject = S.camStream;
-        $('#cam-video').style.display = 'block';
-        $('#cam-box').classList.add('cam-box--v');
-        S.camActive = true;
-        sysUp();
-        liveSet('Cam live — dis « analyse ce que tu vois »', 'done');
-      } catch (e) {
-        log('Cam: ' + e.message, 'err');
-      }
-    }
-
-    function stopCam() {
-      if (S.camStream) {
-        S.camStream.getTracks().forEach(t => t.stop());
-        S.camStream = null;
-      }
-      $('#cam-video').srcObject = null;
-      $('#cam-video').style.display = 'none';
-      $('#cam-box').classList.remove('cam-box--v');
-      S.camActive = false;
-      sysUp();
-    }
-
-    async function captureAndAnalyzeCam(prompt) {
-      const vid = $('#cam-video');
-      if (!vid || !S.camActive) return;
-      const canvas = document.createElement('canvas');
-      canvas.width = vid.videoWidth || 640;
-      canvas.height = vid.videoHeight || 480;
-      canvas.getContext('2d').drawImage(vid, 0, 0);
-      const base64 = canvas.toDataURL('image/jpeg', 0.85);
-      S.lastImageBase64 = base64;
-      await analyzeImage(base64, prompt || 'Analyse ce que tu vois en ce moment.');
-    }
-
-    function speak(text) {
-      if (!cfg.tts || !window.speechSynthesis || !text) return;
-      window.speechSynthesis.cancel();
-      S.speaking = true;
-      const u = new SpeechSynthesisUtterance(text.substring(0, 800));
-      u.lang = cfg.lang === 'fr' ? 'fr-FR' : (cfg.lang === 'es' ? 'es-ES' : 'en-US');
-      u.rate = 0.93;
-      const voices = window.speechSynthesis.getVoices();
-      for (const v of voices) {
-        if (v.lang.startsWith(cfg.lang)) {
-          u.voice = v;
-          break;
-        }
-      }
-      u.onend = () => {
-        S.speaking = false;
-      };
-      window.speechSynthesis.speak(u);
-    }
-
-    function sendText() {
-      const t = $('#txt-in').value.trim();
-      if (!t) return;
-      $('#txt-in').value = '';
-      liveSet(t, 'done');
-      sendToGroq(t, { fromAuto: false, kind: 'texte' });
-    }
-
-    function clearMemory() {
-      S.chatHistory = [];
-      S.memorySummary = '';
-      log('Mémoire effacée', 'info');
-      sysUp();
-      $('#ai-rpt').textContent = 'Mémoire remise à zéro.';
-    }
-
-    function exportMemory() {
-      let content = '=== SUPRA LAB — EXPORT MÉMOIRE ===\n' + now() + '\n\n';
-      if (S.memorySummary) content += 'RÉSUMÉ LONG:\n' + S.memorySummary + '\n\n';
-      content += 'HISTORIQUE:\n';
-      S.chatHistory.forEach(m => {
-        content += m.role.toUpperCase() + ': ' + m.content + '\n\n';
-      });
-      const blob = new Blob([content], { type: 'text/plain' });
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = 'supra-memoire-' + Date.now() + '.txt';
-      a.click();
-      log('Mémoire exportée', 'ok');
-    }
-
-    function loadCfg() {
-      try {
-        const r = localStorage.getItem('sl192');
-        if (r) {
-          const p = JSON.parse(r);
-          Object.keys(DEFAULTS).forEach(k => {
-            if (p[k] !== undefined) cfg[k] = p[k];
-          });
-        }
-      } catch (e) {}
-      loadSavedKeys();
-      applyCfg();
-    }
-
-    function applyCfg() {
-      const c = cfg.color;
-      const r = parseInt(c.slice(1, 3), 16);
-      const g = parseInt(c.slice(3, 5), 16);
-      const b = parseInt(c.slice(5, 7), 16);
-      document.documentElement.style.setProperty('--fg', c);
-      document.documentElement.style.setProperty('--fg-dim', c + '88');
-      document.documentElement.style.setProperty('--fg-muted', c + '44');
-      document.documentElement.style.setProperty('--glow', `0 0 8px rgba(${r},${g},${b},.4)`);
-      document.documentElement.style.setProperty('--glow-s', `0 0 20px rgba(${r},${g},${b},.6)`);
-
-      $('#i-key').value = cfg.apiKey || '';
-      $('#i-model').value = cfg.model;
-      $('#i-lang').value = cfg.lang;
-      $('#i-tts').checked = cfg.tts;
-      $('#i-col').value = cfg.color;
-      $('#i-sens').value = cfg.sens;
-      $('#v-sens').textContent = cfg.sens;
-      $('#i-sil').value = cfg.silence;
-      $('#v-sil').textContent = cfg.silence;
-      $('#i-min').value = cfg.minSpeech;
-      $('#v-min').textContent = cfg.minSpeech;
-      $('#i-max').value = cfg.maxRecord;
-      $('#v-max').textContent = cfg.maxRecord;
-      $('#i-noise').checked = cfg.analyzeNoise;
-      $('#i-always').checked = cfg.alwaysReply;
-      $('#i-wakewords').value = cfg.wakeWords;
-      $('#i-wake').checked = cfg.wakeLock;
-      $('#i-web').checked = cfg.webSearch;
-      $('#i-tavily').value = cfg.tavilyKey || '';
-      sysUp();
-    }
-
-    function saveCfg() {
-      cfg.apiKey = cleanKey($('#i-key').value);
-      cfg.model = $('#i-model').value;
-      cfg.lang = $('#i-lang').value;
-      cfg.tts = $('#i-tts').checked;
-      cfg.color = $('#i-col').value;
-      cfg.sens = +$('#i-sens').value;
-      cfg.silence = +$('#i-sil').value;
-      cfg.minSpeech = +$('#i-min').value;
-      cfg.maxRecord = +$('#i-max').value;
-      cfg.analyzeNoise = $('#i-noise').checked;
-      cfg.alwaysReply = $('#i-always').checked;
-      cfg.wakeWords = $('#i-wakewords').value.trim();
-      cfg.wakeLock = $('#i-wake').checked;
-      cfg.webSearch = $('#i-web').checked;
-      cfg.tavilyKey = cleanKey($('#i-tavily').value);
-      localStorage.setItem('sl192', JSON.stringify(cfg));
-      applyCfg();
-      log('Config sauvée', 'ok');
-    }
-
-    function rstCfg() {
-      if (!confirm('Reset complet ?')) return;
-      Object.keys(DEFAULTS).forEach(k => (cfg[k] = DEFAULTS[k]));
-      localStorage.removeItem('sl192');
-      applyCfg();
-      log('Reset', 'err');
-    }
-
-    async function testApiKey() {
-      const key = cleanKey($('#i-key').value || cfg.apiKey);
-      if (!isValidKey(key)) {
-        alert('Clé invalide');
-        return;
-      }
-      try {
-        const res = await fetch('https://api.groq.com/openai/v1/models', {
-          headers: { Authorization: 'Bearer ' + key }
-        });
-        if (res.status === 401) {
-          alert('Clé refusée par Groq');
-          return;
-        }
-        if (!res.ok) throw new Error(res.status);
-        alert('Clé VALIDE ✓');
-        cfg.apiKey = key;
-        localStorage.setItem('sl192', JSON.stringify(cfg));
-        applyCfg();
-      } catch (e) {
-        alert('Erreur: ' + e.message);
-      }
-    }
-
-    function bindRanges() {
-      ['sens', 'sil', 'min', 'max'].forEach(id => {
-        const el = $('#i-' + id);
-        if (el) {
-          el.oninput = function () {
-            $('#v-' + id).textContent = this.value;
-          };
-        }
-      });
-    }
-
-    async function launch() {
-      $('#boot').style.display = 'none';
-      $('#app').classList.add('app--v');
-      $('#ptt').classList.add('ptt--v');
-      log('=== SUPRA LAB v19.2 — VERSION COMPLÈTE ===', 'ok');
-      if (!isValidKey(cfg.apiKey)) log('Va dans PARAMÈTRES → COLLER LA CLÉ', 'err');
-      const ok = await initAudio();
-      if (ok) {
-        status('Prêt');
-        if (window.speechSynthesis) window.speechSynthesis.getVoices();
-      }
-    }
-
-    function bind() {
-      $('#b-go').onclick = launch;
-      $('#b-cfg').onclick = () => $('#dlg').showModal();
-      $('#dlg-x').onclick = () => $('#dlg').close();
-      $('#dlg-save').onclick = () => {
-        saveCfg();
-        $('#dlg').close();
-      };
-      $('#dlg-rst').onclick = rstCfg;
-
-      $('#btn-paste-key').onclick = pasteKey;
-      $('#btn-test-key').onclick = testApiKey;
-      $('#btn-save-key').onclick = addCurrentKey;
-
-      $('#dlg').onclick = e => {
-        if (e.target === $('#dlg')) $('#dlg').close();
-      };
-
-      $('#b-rec').onclick = () => {
-        if (!S.ready) return;
-        S.recActive ? recOff() : recOn();
-      };
-      $('#b-stop').onclick = recOff;
-      $('#b-play').onclick = () => {
-        if (caps[0]) {
-          $('#ply').src = caps[0].url;
-          $('#ply').play();
-        }
-      };
-      $('#b-dl').onclick = () => {
-        if (caps[0]) {
-          const a = document.createElement('a');
-          a.href = caps[0].url;
-          a.download = caps[0].name + '.' + caps[0].ext;
-          a.click();
-        }
-      };
-      $('#b-auto').onclick = () => (S.autoMode ? autoOff() : autoOn(false));
-      $('#b-comp').onclick = () => (S.autoMode ? autoOff() : autoOn(true));
-      $('#b-clear').onclick = clearMemory;
-      $('#b-resume').onclick = vocalSummary;
-      $('#b-export').onclick = exportMemory;
-      $('#b-img').onclick = () => $('#img-file').click();
-      $('#img-file').onchange = e => {
-        if (e.target.files[0]) handleImageFile(e.target.files[0]);
-      };
-      $('#b-cam').onclick = () => (S.camActive ? stopCam() : startCam());
-      $('#b-cam-capture').onclick = () => captureAndAnalyzeCam();
-      $('#b-cam-stop').onclick = stopCam;
-      $('#txt-send').onclick = sendText;
-      $('#txt-in').onkeydown = e => {
-        if (e.key === 'Enter') sendText();
-      };
-
-      const ptt = $('#ptt');
-      ptt.addEventListener('touchstart', pttDown, { passive: false });
-      ptt.addEventListener('touchend', pttUp, { passive: false });
-      ptt.addEventListener('mousedown', pttDown);
-      ptt.addEventListener('mouseup', pttUp);
-      ptt.addEventListener('mouseleave', pttUp);
-
-      window.addEventListener('resize', () => {
-        if (S.ready) sizeCV();
-      });
-      bindRanges();
-      handleVisibility();
-    }
-
-    window.addEventListener('beforeunload', () => {
-      releaseWakeLock();
-      stopKeepAlive();
-      stopCam();
-      if (S.stream) S.stream.getTracks().forEach(t => t.stop());
-      if (window.speechSynthesis) window.speechSynthesis.cancel();
-      caps.forEach(c => URL.revokeObjectURL(c.url));
     });
+    list.appendChild(div);
+  });
+}
 
-    document.addEventListener('DOMContentLoaded', async () => {
-      loadCfg();
-      bind();
-      setInterval(() => {
-        const e = $('#ft-c');
-        if (e) e.textContent = now();
-      }, 1000);
-      await typeIn($('#bt'), 'SUPRA LAB v19.2', 28);
-      $('#bs').innerHTML =
-        'VERSION COMPLÈTE • COLLAGE FIXÉ • TOUTES LES FONCTIONS<br><span style="color:var(--info)">Utilise le bouton COLLER LA CLÉ</span>';
-      $('#bs').classList.add('boot__sub--v');
-      $('#ba').classList.add('boot__acts--v');
-      $('#b-go').focus();
+function load(){
+  try{Object.assign(cfg,JSON.parse(localStorage.getItem('sl30')||'{}'))}catch(e){}
+  loadKeys();applyToUI();updateModelSelect();
+}
+
+function applyToUI(){
+  var c=cfg.color;
+  var r=parseInt(c.slice(1,3),16),g=parseInt(c.slice(3,5),16),b=parseInt(c.slice(5,7),16);
+  var root=document.documentElement.style;
+  root.setProperty('--fg',c);root.setProperty('--dim',c+'99');root.setProperty('--muted',c+'55');
+  root.setProperty('--glow','0 0 10px rgba('+r+','+g+','+b+',.35)');
+  function sv(id,v){var e=$('#'+id);if(e)e.value=v}
+  function sc(id,v){var e=$('#'+id);if(e)e.checked=!!v}
+  sv('key',cfg.key||'');sv('lang',cfg.lang);sv('col',cfg.color);
+  sv('wake',cfg.wakeWords);sv('stopw',cfg.stopWords);sv('resumew',cfg.resumeWords);
+  sv('style',cfg.style);
+  sc('tts',cfg.tts);sc('wakelock',cfg.wakelock);sc('debug',cfg.debug);
+  sc('always',cfg.always);sc('noise',cfg.noise);sc('freq',cfg.freq);
+  sc('analogy',cfg.analogy);sc('entity',cfg.entity);
+  [['sens','vsens',cfg.sens],['sil','vsil',cfg.silence],['min','vmin',cfg.minSpeech],
+   ['max','vmax',cfg.maxRecord],['noisevol','vnoisevol',cfg.noiseVol],
+   ['temp','vtemp',cfg.temp],['tokens','vtokens',cfg.maxTokens],
+   ['rate','vrate',cfg.rate],['ana','vana',cfg.anaCount]].forEach(function(a){
+    sv(a[0],a[2]);var e=$('#'+a[1]);if(e)e.textContent=a[2];
+  });
+  sys();
+}
+
+function saveCfg(){
+  cfg.key=clean($('#key').value);
+  cfg.model=$('#model').value;
+  cfg.lang=$('#lang').value;cfg.tts=$('#tts').checked;cfg.color=$('#col').value;
+  cfg.sens=+$('#sens').value;cfg.silence=+$('#sil').value;cfg.minSpeech=+$('#min').value;
+  cfg.maxRecord=+$('#max').value;cfg.noiseVol=+$('#noisevol').value;
+  cfg.always=$('#always').checked;cfg.noise=$('#noise').checked;
+  cfg.freq=$('#freq').checked;cfg.analogy=$('#analogy').checked;cfg.entity=$('#entity').checked;
+  cfg.anaCount=+$('#ana').value;cfg.style=$('#style').value;
+  cfg.wakeWords=$('#wake').value.trim();cfg.stopWords=$('#stopw').value.trim();
+  cfg.resumeWords=$('#resumew').value.trim();
+  cfg.temp=+$('#temp').value;cfg.maxTokens=+$('#tokens').value;
+  cfg.rate=+$('#rate').value;cfg.wakelock=$('#wakelock').checked;cfg.debug=$('#debug').checked;
+  localStorage.setItem('sl30',JSON.stringify(cfg));
+  applyToUI();log('Sauvegardé');toast('Sauvegardé');
+}
+
+function updateModelSelect(){
+  var sel=$('#model');if(!sel)return;sel.innerHTML='';
+  var models=st.modelCache||DEFAULT_MODELS;var found=false;
+  models.forEach(function(m){
+    var opt=document.createElement('option');opt.value=m.id;opt.textContent=m.label||m.id;
+    if(m.id===cfg.model){opt.selected=true;found=true}
+    sel.appendChild(opt);
+  });
+  if(!found&&models.length){cfg.model=models[0].id;sel.value=cfg.model}
+}
+
+function fetchModels(){
+  var key=clean(cfg.key||$('#key').value);
+  if(!validKey(key)){toast('Sauve une clé d\'abord','err');return}
+  log('Récupération modèles...','info');
+  var btn=$('#refresh-models');if(btn){btn.disabled=true;btn.textContent='...'}
+  fetch(GROQ_BASE+'/models',{headers:{'Authorization':'Bearer '+key}})
+  .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json()})
+  .then(function(data){
+    var models=(data.data||[]).filter(function(m){return /llama|mixtral|gemma|qwen|deepseek/i.test(m.id)})
+      .map(function(m){return{id:m.id,label:m.id}});
+    if(!models.length)models=DEFAULT_MODELS;
+    st.modelCache=models;updateModelSelect();
+    log(models.length+' modèles');toast(models.length+' modèles');
+  })
+  .catch(function(e){
+    log('Modèles: '+e.message+' — modèles par défaut OK','info');
+    toast('Modèles par défaut utilisés');
+    updateModelSelect();
+  })
+  .finally(function(){if(btn){btn.disabled=false;btn.textContent='RAFRAÎCHIR MODÈLES'}});
+}
+
+/* TEST CLÉ — non bloquant */
+function testKey(){
+  var key=clean($('#key').value);
+  if(!key||key.length<10){toast('Colle une clé','err');return}
+  log('Test clé...','info');
+  var btn=$('#test');if(btn){btn.disabled=true;btn.textContent='...'}
+  fetch(GROQ_BASE+'/models',{method:'GET',headers:{'Authorization':'Bearer '+key}})
+  .then(function(r){
+    if(r.ok){
+      log('Clé valide ✓');toast('Clé valide ✓');
+      cfg.key=key;localStorage.setItem('sl30',JSON.stringify(cfg));applyToUI();
+      return;
+    }
+    if(r.status===401||r.status===403){
+      log('Clé refusée HTTP '+r.status,'err');
+      toast('Clé refusée ('+r.status+')','err');
+      return;
+    }
+    log('HTTP '+r.status+' — tu peux SAUVER quand même','info');
+    toast('HTTP '+r.status+' — SAUVE quand même');
+  })
+  .catch(function(e){
+    var msg=(e&&e.message)?e.message:String(e);
+    log('Test réseau: '+msg+' — SAUVE la clé quand même','info');
+    toast('Réseau/CORS — SAUVE la clé, ça peut marcher');
+  })
+  .finally(function(){if(btn){btn.disabled=false;btn.textContent='TESTER'}});
+}
+
+function saveKeyOnly(){
+  var key=clean($('#key').value);
+  if(!key||key.length<10){toast('Clé trop courte','err');return}
+  cfg.key=key;
+  localStorage.setItem('sl30',JSON.stringify(cfg));
+  applyToUI();
+  if(!st.savedKeys.some(function(k){return k.key===key})){
+    st.savedKeys.push({name:'Groq '+(st.savedKeys.length+1),key:key});
+    saveKeysToStorage();
+  }
+  log('Clé enregistrée');toast('Clé enregistrée — tu peux lancer');
+}
+
+/* AUDIO */
+function initAudio(){
+  try{
+    st.ctx=new (window.AudioContext||window.webkitAudioContext)();
+    return st.ctx.resume().then(function(){
+      return navigator.mediaDevices.getUserMedia({
+        audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}
+      });
+    }).then(function(stream){
+      st.stream=stream;
+      var src=st.ctx.createMediaStreamSource(stream);
+      st.an=st.ctx.createAnalyser();st.an.fftSize=2048;st.an.smoothingTimeConstant=0.78;
+      src.connect(st.an);
+      st.fdata=new Uint8Array(st.an.frequencyBinCount);
+      st.wdata=new Uint8Array(st.an.fftSize);
+      st.volNode=st.ctx.createAnalyser();st.volNode.fftSize=256;
+      src.connect(st.volNode);
+      st.vdata=new Uint8Array(st.volNode.frequencyBinCount);
+      st.ready=true;sizeCanvases();drawLoop();sys();log('Audio OK');
+      return true;
+    });
+  }catch(e){
+    log('Audio: '+e.message,'err');toast('Audio: '+e.message,'err');
+    return Promise.resolve(false);
+  }
+}
+
+function vol(){
+  if(!st.volNode||!st.vdata)return 0;
+  st.volNode.getByteFrequencyData(st.vdata);
+  var s=0;for(var i=0;i<st.vdata.length;i++)s+=st.vdata[i];
+  return s/st.vdata.length;
+}
+
+function analyzeBands(){
+  if(!st.an||!st.fdata)return{bass:0,mid:0,high:0};
+  st.an.getByteFrequencyData(st.fdata);
+  var n=st.fdata.length;
+  var b1=Math.floor(n*0.08),b2=Math.floor(n*0.35),b3=Math.floor(n*0.7);
+  var bass=0,mid=0,high=0,cB=0,cM=0,cH=0;
+  for(var i=0;i<n;i++){
+    var v=st.fdata[i];
+    if(i<b1){bass+=v;cB++}
+    else if(i<b2){mid+=v;cM++}
+    else if(i<b3){high+=v;cH++}
+  }
+  return{bass:cB?Math.round(bass/cB):0,mid:cM?Math.round(mid/cM):0,high:cH?Math.round(high/cH):0};
+}
+
+function drawLoop(){
+  if(!st.ready)return;
+  requestAnimationFrame(drawLoop);
+  if(!st.an||!st.fdata||!st.wdata)return;
+  st.an.getByteFrequencyData(st.fdata);
+  st.an.getByteTimeDomainData(st.wdata);
+  if(st.volNode&&st.vdata)st.volNode.getByteFrequencyData(st.vdata);
+  drawSpectro();drawOscillo();drawVolume();
+}
+
+function drawSpectro(){
+  var c=$('#c1');if(!c)return;
+  var x=c.getContext('2d'),w=c.width,h=c.height;
+  x.fillStyle='#020402';x.fillRect(0,0,w,h);
+  var n=st.fdata.length,bw=Math.max(1,w/n);
+  for(var i=0;i<n;i++){
+    var v=st.fdata[i];if(v<3)continue;
+    var bh=Math.log10(v+1)*16;
+    x.fillStyle='hsl('+Math.max(0,110-v*0.4)+',100%,'+Math.max(15,v*0.3)+'%)';
+    x.fillRect(i*bw,h-bh,bw+0.3,bh);
+  }
+}
+function drawOscillo(){
+  var c=$('#c2');if(!c)return;
+  var x=c.getContext('2d'),w=c.width,h=c.height;
+  x.fillStyle='#020402';x.fillRect(0,0,w,h);
+  var col=getComputedStyle(document.documentElement).getPropertyValue('--fg').trim()||'#00ff41';
+  x.strokeStyle=col;x.lineWidth=1.4;x.beginPath();
+  var step=w/st.wdata.length;
+  for(var i=0;i<st.wdata.length;i++){
+    var y=(st.wdata[i]/128-0.5)*h*0.75+h/2;
+    if(i===0)x.moveTo(0,y);else x.lineTo(i*step,y);
+  }
+  x.stroke();
+}
+function drawVolume(){
+  var c=$('#c3');if(!c)return;
+  var x=c.getContext('2d'),w=c.width,h=c.height;
+  x.fillStyle='#020402';x.fillRect(0,0,w,h);
+  var s=0;for(var i=0;i<st.vdata.length;i++)s+=st.vdata[i];
+  var p=s/st.vdata.length/255;
+  var bw=w*0.38,bh=Math.max(2,p*h*0.8);
+  x.fillStyle='hsl('+Math.max(0,120-p*160)+',100%,40%)';
+  x.fillRect((w-bw)/2,h-bh,bw,bh);
+  x.fillStyle=getComputedStyle(document.documentElement).getPropertyValue('--fg').trim()||'#00ff41';
+  x.font='14px VT323';x.textAlign='center';x.textBaseline='middle';
+  x.fillText(Math.round(p*100)+'%',w/2,h/2);
+}
+function sizeCanvases(){
+  document.querySelectorAll('canvas').forEach(function(c){
+    var r=c.parentElement.getBoundingClientRect();
+    c.width=Math.max(50,Math.floor(r.width-20));c.height=80;
+  });
+}
+function getMime(){
+  var m=['audio/webm;codecs=opus','audio/webm','audio/ogg;codecs=opus','audio/mp4'];
+  for(var i=0;i<m.length;i++)if(window.MediaRecorder&&MediaRecorder.isTypeSupported(m[i]))return m[i];
+  return'';
+}
+
+function startRec(){
+  if(st.rec||!st.stream)return;
+  var m=getMime();if(!m){log('Format non supporté','err');return}
+  st.rec=true;st.chunks=[];st.t0=Date.now();
+  try{st.mr=new MediaRecorder(st.stream,{mimeType:m})}catch(e){st.rec=false;return}
+  st.mr.ondataavailable=function(e){if(e.data&&e.data.size)st.chunks.push(e.data)};
+  st.mr.onstop=function(){
+    var blob=new Blob(st.chunks,{type:st.mr.mimeType});
+    var url=URL.createObjectURL(blob);
+    st.caps.unshift({url:url,blob:blob,dur:Math.floor((Date.now()-st.t0)/1000)});
+    while(st.caps.length>8){var o=st.caps.pop();if(o&&o.url)URL.revokeObjectURL(o.url)}
+    status('Enregistré');
+  };
+  st.mr.start(200);
+  $('#rec').classList.add('rec-on');$('#stop').disabled=false;
+  $('#timer').classList.add('on');status('REC...');
+  var s=0;$('#timer').textContent='00:00';
+  st.iv=setInterval(function(){s++;$('#timer').textContent=fmt(s)},1000);
+}
+function stopRec(){
+  if(!st.rec)return;st.rec=false;
+  if(st.mr&&st.mr.state==='recording')st.mr.stop();
+  $('#rec').classList.remove('rec-on');$('#stop').disabled=true;
+  $('#timer').classList.remove('on');clearInterval(st.iv);$('#timer').textContent='00:00';
+}
+function playLastRec(){
+  if(!st.caps.length){toast('Aucun enregistrement','err');return}
+  var audio=$('#audio');if(!audio)return;
+  audio.src=st.caps[0].url;audio.play().catch(function(e){log('Lecture: '+e.message,'err')});
+}
+
+/* PTT */
+function pttDown(e){
+  e.preventDefault();if(!st.ready||st.auto||st.ptt)return;
+  st.ptt=true;st.pchunks=[];st.psec=0;
+  var m=getMime();if(!m){st.ptt=false;return}
+  try{st.pmr=new MediaRecorder(st.stream,{mimeType:m})}catch(err){st.ptt=false;return}
+  st.pmr.ondataavailable=function(ev){if(ev.data&&ev.data.size)st.pchunks.push(ev.data)};
+  st.pmr.onstop=pttDone;st.pmr.start(120);
+  $('#ptt').classList.add('rec');$('#ptt').innerHTML='REC...<br><small>relâche</small>';
+  st.piv=setInterval(function(){st.psec++;live('Enregistrement '+fmt(st.psec),'rec')},1000);
+  live('Enregistrement 00:00','rec');
+}
+function pttUp(e){
+  e.preventDefault();if(!st.ptt)return;st.ptt=false;
+  clearInterval(st.piv);$('#ptt').classList.remove('rec');
+  $('#ptt').innerHTML='MAINTENIR<br>POUR PARLER';
+  setTimeout(function(){if(st.pmr&&st.pmr.state==='recording')st.pmr.stop()},160);
+}
+function pttDone(){
+  var mime=(st.pmr&&st.pmr.mimeType)||getMime();
+  var blob=new Blob(st.pchunks,{type:mime});
+  if(blob.size<400){live('Trop court','idle');return}
+  var bands=analyzeBands();
+  st.lastBass=bands.bass;st.lastMid=bands.mid;st.lastHigh=bands.high;st.lastVol=vol();
+  live('Transcription...','think');
+  whisper(blob).then(function(text){
+    if(!text){live('Rien compris','idle');return}
+    if(isStop(text)){pauseResponses();return}
+    if(st.paused){
+      if(isResumeWord(text)||text.length>3)resumeResponses();
+      else{live('En pause — parle pour reprendre','pause');return}
+    }
+    live(text,'ok');chat(text);
+  });
+}
+
+/* AUTO / 24/7 */
+function waitSpeak(){
+  return new Promise(function(res){
+    var t0=0,myId=st.loopId;
+    function check(){
+      if(!st.auto||st.loopId!==myId)return res(false);
+      var v=vol();
+      if(v>=cfg.sens){if(!t0)t0=Date.now();if(Date.now()-t0>=cfg.minSpeech)return res(true)}
+      else t0=0;
+      requestAnimationFrame(check);
+    }
+    requestAnimationFrame(check);
+  });
+}
+function recUntilSilent(){
+  return new Promise(function(res){
+    var chunks=[],m=getMime();if(!m)return res(null);
+    var rec;try{rec=new MediaRecorder(st.stream,{mimeType:m})}catch(e){return res(null)}
+    rec.ondataavailable=function(e){if(e.data&&e.data.size)chunks.push(e.data)};
+    rec.onstop=function(){res(new Blob(chunks,{type:rec.mimeType}))};
+    var start=Date.now(),last=Date.now(),spoken=false,max=cfg.maxRecord*1000,myId=st.loopId;
+    var iv=setInterval(function(){
+      if(!st.auto||st.loopId!==myId){clearInterval(iv);if(rec.state==='recording')rec.stop();return}
+      var v=vol();
+      if(v>=cfg.sens*0.35){
+        last=Date.now();spoken=true;st.lastVol=v;
+        var bands=analyzeBands();st.lastBass=bands.bass;st.lastMid=bands.mid;st.lastHigh=bands.high;
+      }
+      if(spoken&&(Date.now()-last>=cfg.silence||Date.now()-start>=max)){
+        clearInterval(iv);if(rec.state==='recording')rec.stop();
+      }
+    },28);
+    rec.start(30);
+    setTimeout(function(){if(rec.state==='recording')rec.stop()},max+700);
+  });
+}
+
+function autoStart(comp){
+  if(st.run)return;
+  st.auto=true;st.run=true;st.comp=!!comp;st.loopId++;
+  var myId=st.loopId;
+  $('#auto').classList.toggle('on',!comp);$('#comp').classList.toggle('on',!!comp);
+  var modeEl=$('#mode');if(modeEl)modeEl.textContent=comp?'24/7':'AUTO';
+  live(comp?'24/7 actif — j\'écoute':'Écoute active...','listen');
+  status(comp?'24/7':'AUTO');sys();log(comp?'Mode 24/7':'Mode AUTO','info');
+
+  (function loop(){
+    if(!st.auto||st.loopId!==myId)return;
+    if(document.hidden){setTimeout(loop,450);return}
+    waitSpeak().then(function(speak){
+      if(!st.auto||st.loopId!==myId||!speak)return null;
+      live('Écoute...','rec');
+      return recUntilSilent();
+    }).then(function(blob){
+      if(!st.auto||st.loopId!==myId)return;
+      if(!blob||blob.size<400){
+        live(st.paused?'En écoute (pause)...':'En écoute...','listen');
+        if(st.auto&&st.loopId===myId)setTimeout(loop,50);
+        return;
+      }
+      var volLevel=Math.round(st.lastVol);
+      live('Analyse...','think');
+      return whisper(blob).then(function(text){
+        if(!st.auto||st.loopId!==myId)return;
+        if(!text){
+          if(cfg.noise&&volLevel>=cfg.noiseVol&&!st.paused){
+            st.noiseCount++;
+            live('Bruit → analyse...','think');
+            return chat(buildNoisePrompt(volLevel),true).then(function(){
+              live('En écoute...','listen');
+              if(st.auto&&st.loopId===myId)setTimeout(loop,160);
+            });
+          }
+          live(st.paused?'En écoute (pause)...':'En écoute...','listen');
+          if(st.auto&&st.loopId===myId)setTimeout(loop,50);
+          return;
+        }
+        if(isStop(text)){
+          pauseResponses();
+          if(st.auto&&st.loopId===myId)setTimeout(loop,120);
+          return;
+        }
+        if(st.paused){
+          if(isResumeWord(text)||text.length>3)resumeResponses();
+          else{
+            live('En écoute (pause)...','pause');
+            if(st.auto&&st.loopId===myId)setTimeout(loop,50);
+            return;
+          }
+        }
+        if(!cfg.always&&!isWake(text)){
+          live('En écoute...','listen');
+          if(st.auto&&st.loopId===myId)setTimeout(loop,50);
+          return;
+        }
+        live(text,'ok');
+        return chat(text,true).then(function(){
+          live('En écoute...','listen');
+          if(st.auto&&st.loopId===myId)setTimeout(loop,160);
+        });
+      });
+    }).catch(function(e){
+      log('Auto: '+e.message,'err');
+      if(st.auto&&st.loopId===myId)setTimeout(loop,450);
     });
   })();
-  </script>
+}
+
+function buildNoisePrompt(volLevel){
+  var p='Bruit détecté sans parole claire. Volume approx '+volLevel+'.';
+  if(cfg.freq)p+=' Fréquences: basse≈'+st.lastBass+', médium≈'+st.lastMid+', aiguë≈'+st.lastHigh+'.';
+  p+='\nDécris ce son de façon réaliste.';
+  if(cfg.analogy)p+=' Propose jusqu\'à '+cfg.anaCount+' analogies réalistes.';
+  if(cfg.entity)p+=' Indique des sources possibles (objet, animal, mécanisme, environnement).';
+  p+=' Domaine physique uniquement. Pas de paranormal.';
+  return p;
+}
+
+function autoStop(){
+  st.auto=false;st.comp=false;st.run=false;st.loopId++;
+  $('#auto').classList.remove('on');$('#comp').classList.remove('on');
+  var modeEl=$('#mode');if(modeEl)modeEl.textContent='REAL';
+  st.paused=false;
+  live('Arrêté','idle');status('Prêt');sys();
+}
+
+function pauseResponses(){
+  st.paused=true;
+  if(st.ctrl){try{st.ctrl.abort()}catch(e){}st.ctrl=null}
+  stopTTS();
+  live('Pause — j\'écoute toujours (24/7)','pause');
+  status('PAUSE (écoute active)');sys();
+  log('Réponses en pause — écoute continue','info');
+  toast('Stop → pause (écoute continue)');
+}
+function resumeResponses(){
+  if(!st.paused)return;
+  st.paused=false;
+  live('Reprise — je réponds','ok');
+  status(st.comp?'24/7':(st.auto?'AUTO':'Prêt'));
+  sys();log('Réponses reprises','info');toast('Je réponds à nouveau');
+}
+function stopAll(){
+  stopRec();autoStop();st.paused=false;
+  if(st.ctrl){try{st.ctrl.abort()}catch(e){}st.ctrl=null}
+  stopTTS();live('Arrêt complet','idle');status('Arrêté');sys();
+}
+
+/* WHISPER + CHAT */
+function whisper(blob){
+  var key=clean(cfg.key);
+  if(!validKey(key)){
+    toast('Pas de clé — Paramètres → SAUVER','err');
+    return Promise.resolve(null);
+  }
+  var ext='webm';
+  if(blob.type.indexOf('ogg')!==-1)ext='ogg';
+  else if(blob.type.indexOf('mp4')!==-1)ext='m4a';
+  var t0=performance.now();
+  var fd=new FormData();
+  fd.append('file',blob,'audio.'+ext);
+  fd.append('model','whisper-large-v3-turbo');
+  fd.append('language',cfg.lang);
+  fd.append('response_format','json');
+  return fetch(GROQ_BASE+'/audio/transcriptions',{
+    method:'POST',headers:{'Authorization':'Bearer '+key},body:fd
+  }).then(function(r){
+    if(!r.ok)return r.text().then(function(t){throw new Error(t.slice(0,120))});
+    return r.json();
+  }).then(function(d){
+    st.lat=Math.round(performance.now()-t0);st.reqs++;sys();
+    var text=(d.text||'').trim();
+    if(text)log('→ '+text);
+    return text||null;
+  }).catch(function(e){
+    log('Whisper: '+e.message,'err');
+    return speechRecognition();
+  });
+}
+
+function speechRecognition(){
+  return new Promise(function(resolve){
+    var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+    if(!SR){resolve(null);return}
+    var rec=new SR();
+    rec.lang=cfg.lang==='fr'?'fr-FR':cfg.lang==='es'?'es-ES':'en-US';
+    rec.interimResults=false;rec.maxAlternatives=1;rec.continuous=false;
+    var done=false;
+    function finish(r){if(done)return;done=true;try{rec.abort()}catch(e){}resolve(r)}
+    rec.onresult=function(e){
+      var text=(e.results[0]&&e.results[0][0].transcript||'').trim();
+      if(text)log('→ [nav] '+text);finish(text||null);
+    };
+    rec.onerror=function(){finish(null)};
+    rec.onend=function(){finish(null)};
+    setTimeout(function(){finish(null)},7000);
+    try{rec.start()}catch(e){finish(null)}
+  });
+}
+
+function chat(text,fromAuto){
+  var key=clean(cfg.key);
+  if(!validKey(key)){
+    var outEl=$('#out');if(outEl)outEl.textContent='Pas de clé. Paramètres → colle ta clé → SAUVER.';
+    toast('Pas de clé — SAUVER dans Paramètres','err');
+    return Promise.resolve();
+  }
+  if(fromAuto&&!cfg.always&&!isWake(text)&&text.indexOf('Bruit détecté')!==0){
+    live('Pas pour moi','listen');return Promise.resolve();
+  }
+  if(st.ctrl){try{st.ctrl.abort()}catch(e){}}
+  st.ctrl=new AbortController();
+  live('Interprétation...','think');
+  var outEl=$('#out');if(outEl)outEl.textContent='';
+  status('Analyse...');
+
+  var system=buildSystemPrompt();
+  if(st.comp)system+='\nMode compagnon 24/7.';
+  if(st.mem)system+='\n\nMémoire:\n'+st.mem;
+
+  var userContent=st.img
+    ?[{type:'text',text:text},{type:'image_url',image_url:{url:st.img}}]
+    :text;
+
+  st.hist.push({role:'user',content:userContent});
+  if(st.hist.length>18)summarize();
+
+  var messages=[{role:'system',content:system}].concat(st.hist);
+  var t0=performance.now();
+
+  return fetch(GROQ_BASE+'/chat/completions',{
+    method:'POST',signal:st.ctrl.signal,
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+    body:JSON.stringify({
+      model:cfg.model,messages:messages,
+      temperature:cfg.temp,max_tokens:cfg.maxTokens,stream:true
+    })
+  }).then(function(r){
+    if(!r.ok)return r.text().then(function(t){throw new Error('HTTP '+r.status+': '+t.slice(0,180))});
+    var reader=r.body.getReader(),decoder=new TextDecoder(),full='',buffer='';
+    function pump(){
+      return reader.read().then(function(result){
+        if(result.done){
+          st.lat=Math.round(performance.now()-t0);st.reqs++;
+          st.hist.push({role:'assistant',content:full});sys();
+          if(full){
+            live(full.slice(0,100)+(full.length>100?'...':''),'ok');
+            if(cfg.tts&&!st.muted&&!st.paused)speak(full);
+          }else live('Pas de réponse','idle');
+          st.img=null;
+          var preview=$('#preview');
+          if(preview){preview.hidden=true;preview.src='';preview.style.display='none'}
+          return;
+        }
+        buffer+=decoder.decode(result.value,{stream:true});
+        var lines=buffer.split('\n');buffer=lines.pop()||'';
+        for(var i=0;i<lines.length;i++){
+          var trimmed=lines[i].trim();
+          if(!trimmed||trimmed.indexOf('data: ')!==0)continue;
+          var data=trimmed.slice(6);if(data==='[DONE]')continue;
+          try{
+            var json=JSON.parse(data);
+            var delta=json.choices&&json.choices[0]&&json.choices[0].delta;
+            if(delta&&delta.content){full+=delta.content;if(outEl)outEl.textContent=full;st.tokens++}
+          }catch(e){}
+        }
+        return pump();
+      });
+    }
+    return pump();
+  }).catch(function(e){
+    if(e.name!=='AbortError'){
+      log('Chat: '+e.message,'err');
+      if(outEl)outEl.textContent='Erreur: '+e.message;
+      toast('Erreur API — vérifie la clé / le réseau','err');
+      live('Erreur','idle');status('Erreur');
+    }else log('Requête annulée','info');
+  });
+}
+
+function summarize(){
+  var key=clean(cfg.key);
+  if(st.hist.length<=6||!validKey(key)){st.hist=st.hist.slice(-6);return Promise.resolve()}
+  var old=st.hist.slice(0,-4);
+  var prompt='Résume en 3 phrases max. Texte brut.\n\n'+
+    old.map(function(m){return m.role+': '+(typeof m.content==='string'?m.content:'[image]')}).join('\n');
+  return fetch(GROQ_BASE+'/chat/completions',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+    body:JSON.stringify({model:cfg.model,messages:[{role:'user',content:prompt}],temperature:0.2,max_tokens:250,stream:false})
+  }).then(function(r){return r.json()}).then(function(d){
+    var summary=(d.choices&&d.choices[0]&&d.choices[0].message&&d.choices[0].message.content)||'';
+    if(summary){st.mem=summary;st.hist=st.hist.slice(-4);log('Historique résumé','info')}
+  }).catch(function(){st.hist=st.hist.slice(-6)});
+}
+
+function speak(text){
+  if(!window.speechSynthesis)return;
+  stopTTS();
+  var u=new SpeechSynthesisUtterance(text);
+  u.lang=cfg.lang==='fr'?'fr-FR':cfg.lang==='es'?'es-ES':'en-US';
+  u.rate=cfg.rate;u.volume=1;
+  var voices=speechSynthesis.getVoices();
+  var prefix=u.lang.split('-')[0];
+  var match=voices.find(function(v){return v.lang.indexOf(prefix)===0});
+  if(match)u.voice=match;
+  u.onend=function(){st.currentUtterance=null};
+  u.onerror=function(){st.currentUtterance=null};
+  st.currentUtterance=u;speechSynthesis.speak(u);
+}
+function stopTTS(){if(window.speechSynthesis)speechSynthesis.cancel();st.currentUtterance=null}
+
+function handleImage(file){
+  if(!file||file.type.indexOf('image/')!==0){toast('Image requise','err');return}
+  var reader=new FileReader();
+  reader.onload=function(e){
+    st.img=e.target.result;
+    var preview=$('#preview');
+    if(preview){preview.src=st.img;preview.hidden=false;preview.style.display='block'}
+    log('Image chargée');toast('Image OK');live('Image chargée','ok');
+  };
+  reader.readAsDataURL(file);
+}
+function openCam(){
+  navigator.mediaDevices.getUserMedia({video:{facingMode:'environment',width:{ideal:640},height:{ideal:480}}})
+  .then(function(stream){
+    st.cam=stream;st.camOn=true;
+    var video=$('#video');
+    if(video){video.srcObject=stream;video.hidden=false;video.style.display='block'}
+    var box=$('#cambox');if(box)box.classList.add('show');
+    log('Caméra ouverte');
+  }).catch(function(e){log('Caméra: '+e.message,'err');toast('Caméra inaccessible','err')});
+}
+function closeCam(){
+  if(st.cam){st.cam.getTracks().forEach(function(t){t.stop()});st.cam=null}
+  st.camOn=false;
+  var video=$('#video');if(video){video.hidden=true;video.style.display='none';video.srcObject=null}
+  var box=$('#cambox');if(box)box.classList.remove('show');
+}
+function captureCam(){
+  var video=$('#video');if(!video||!st.camOn)return;
+  var canvas=document.createElement('canvas');
+  canvas.width=video.videoWidth||640;canvas.height=video.videoHeight||480;
+  canvas.getContext('2d').drawImage(video,0,0);
+  st.img=canvas.toDataURL('image/jpeg',0.82);
+  var preview=$('#preview');
+  if(preview){preview.src=st.img;preview.hidden=false;preview.style.display='block'}
+  log('Capture OK');toast('Capture OK');live('Capture caméra','ok');
+}
+
+function requestWakeLock(){
+  if(!cfg.wakelock||!('wakeLock' in navigator))return;
+  navigator.wakeLock.request('screen').then(function(lock){
+    st.wakeLock=lock;lock.addEventListener('release',function(){st.wakeLock=null});
+  }).catch(function(){});
+}
+document.addEventListener('visibilitychange',function(){
+  if(!document.hidden&&cfg.wakelock&&st.ready)requestWakeLock();
+});
+
+function exportConversation(){
+  if(!st.hist.length){toast('Aucune conversation','err');return}
+  var lines=st.hist.map(function(m){
+    var c=typeof m.content==='string'?m.content:'[image]';
+    return(m.role==='user'?'>>> ':'<<< ')+c;
+  });
+  if(st.mem)lines.unshift('--- MÉMOIRE ---',st.mem,'---');
+  var blob=new Blob([lines.join('\n\n')],{type:'text/plain;charset=utf-8'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='supra-'+new Date().toISOString().slice(0,10)+'.txt';a.click();
+  toast('Exporté');
+}
+function exportConfig(){
+  var blob=new Blob([JSON.stringify(cfg,null,2)],{type:'application/json'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='supra-config.json';a.click();toast('Config exportée');
+}
+
+function bootSequence(){
+  var title=$('#title'),sub=$('#sub'),acts=$('#acts');
+  if(!title)return Promise.resolve();
+  return typeEl(title,'SUPRA LAB',30)
+    .then(function(){return sleep(300)})
+    .then(function(){return typeEl(title,'SUPRA LAB v30.1',30)})
+    .then(function(){return sleep(200)})
+    .then(function(){return typeEl(title,'SUPRA LAB v30.1 — REAL',28)})
+    .then(function(){return sleep(150)})
+    .then(function(){
+      title.classList.remove('blink');
+      if(sub){sub.textContent='Groq • Whisper • Analogies réalistes';sub.classList.add('show')}
+      return sleep(450);
+    })
+    .then(function(){
+      if(sub)sub.textContent='Stop = pause • 24/7 écoute • SAUVER la clé suffit';
+      return sleep(300);
+    })
+    .then(function(){if(acts)acts.classList.add('show')});
+}
+
+function launchApp(){
+  if(!validKey(cfg.key)){
+    toast('Colle ta clé dans Paramètres puis SAUVER','err');
+    var d=$('#dlg');if(d)d.showModal();
+    return;
+  }
+  initAudio().then(function(ok){
+    if(!ok){toast('Autorise le micro dans Chrome','err');return}
+    requestWakeLock();
+    var bootEl=$('#boot'),appEl=$('#app');
+    if(bootEl)bootEl.style.display='none';
+    if(appEl)appEl.classList.add('show');
+    setTimeout(sizeCanvases,60);
+    if('ontouchstart' in window||navigator.maxTouchPoints>0){
+      var ptt=$('#ptt');if(ptt)ptt.classList.add('show');
+    }
+    live('Prêt — AUTO / 24/7 / PTT','idle');
+    status('Prêt');sys();log('Lancé','ok');
+  }).catch(function(e){
+    log('Erreur: '+e.message,'err');toast('Erreur: '+e.message,'err');
+  });
+}
+
+function tickClock(){var el=$('#clock');if(el)el.textContent=now()}
+
+function bindEvents(){
+  $('#go')&&$('#go').addEventListener('click',launchApp);
+  $('#cfg')&&$('#cfg').addEventListener('click',function(){$('#dlg').showModal()});
+  $('#x')&&$('#x').addEventListener('click',function(){$('#dlg').close()});
+  $('#paste')&&$('#paste').addEventListener('click',function(){
+    navigator.clipboard.readText().then(function(t){$('#key').value=t;toast('Collé')})
+    .catch(function(){toast('Colle manuellement (Ctrl+V)','err')});
+  });
+  $('#test')&&$('#test').addEventListener('click',testKey);
+  $('#savekey')&&$('#savekey').addEventListener('click',saveKeyOnly);
+  $('#refresh-models')&&$('#refresh-models').addEventListener('click',fetchModels);
+  $('#save')&&$('#save').addEventListener('click',saveCfg);
+  $('#exportcfg')&&$('#exportcfg').addEventListener('click',exportConfig);
+  $('#rst')&&$('#rst').addEventListener('click',function(){
+    if(confirm('Réinitialiser ?')){
+      localStorage.removeItem('sl30');localStorage.removeItem('sl30_keys');
+      cfg=Object.assign({},DEFAULT);st.modelCache=null;
+      applyToUI();updateModelSelect();renderKeys();toast('Reset OK');
+    }
+  });
+
+  [['sens','vsens'],['sil','vsil'],['min','vmin'],['max','vmax'],['noisevol','vnoisevol'],
+   ['temp','vtemp'],['tokens','vtokens'],['rate','vrate'],['ana','vana']].forEach(function(a){
+    var s=$('#'+a[0]),d=$('#'+a[1]);
+    if(s&&d)s.addEventListener('input',function(){d.textContent=s.value});
+  });
+
+  $('#rec')&&$('#rec').addEventListener('click',startRec);
+  $('#stop')&&$('#stop').addEventListener('click',stopRec);
+  $('#play')&&$('#play').addEventListener('click',playLastRec);
+  $('#auto')&&$('#auto').addEventListener('click',function(){if(st.auto&&!st.comp)autoStop();else autoStart(false)});
+  $('#comp')&&$('#comp').addEventListener('click',function(){if(st.auto&&st.comp)autoStop();else autoStart(true)});
+  $('#img')&&$('#img').addEventListener('click',function(){$('#file').click()});
+  $('#file')&&$('#file').addEventListener('change',function(e){
+    if(e.target.files&&e.target.files[0])handleImage(e.target.files[0]);e.target.value='';
+  });
+  $('#cam')&&$('#cam').addEventListener('click',function(){if(st.camOn)closeCam();else openCam()});
+  $('#capture')&&$('#capture').addEventListener('click',captureCam);
+  $('#camstop')&&$('#camstop').addEventListener('click',closeCam);
+  $('#sum')&&$('#sum').addEventListener('click',function(){
+    if(!st.hist.length){toast('Aucun historique','err');return}
+    summarize().then(function(){toast('Résumé OK')});
+  });
+  $('#export')&&$('#export').addEventListener('click',exportConversation);
+  $('#clr')&&$('#clr').addEventListener('click',function(){
+    st.hist=[];st.mem='';st.tokens=0;st.reqs=0;st.lat=0;st.noiseCount=0;
+    var out=$('#out');if(out)out.textContent='Effacé.';
+    var logEl=$('#log');if(logEl)logEl.innerHTML='';
+    sys();live('Effacé','idle');toast('Effacé');
+  });
+  $('#mute')&&$('#mute').addEventListener('click',function(){
+    stopTTS();st.muted=!st.muted;
+    $('#mute').textContent=st.muted?'SON':'MUTE';
+    $('#mute').classList.toggle('on',st.muted);sys();
+    toast(st.muted?'Son coupé':'Son ON');
+  });
+
+  var txtInput=$('#txt'),sendBtn=$('#send');
+  function sendText(){
+    var text=txtInput?txtInput.value.trim():'';if(!text)return;
+    if(isStop(text)){pauseResponses();txtInput.value='';return}
+    if(st.paused)resumeResponses();
+    live(text,'ok');txtInput.value='';chat(text);
+  }
+  if(sendBtn)sendBtn.addEventListener('click',sendText);
+  if(txtInput)txtInput.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();sendText()}});
+
+  var ptt=$('#ptt');
+  if(ptt){
+    ptt.addEventListener('touchstart',pttDown,{passive:false});
+    ptt.addEventListener('touchend',pttUp,{passive:false});
+    ptt.addEventListener('touchcancel',pttUp,{passive:false});
+    ptt.addEventListener('mousedown',pttDown);
+    ptt.addEventListener('mouseup',pttUp);
+    ptt.addEventListener('mouseleave',pttUp);
+  }
+
+  document.addEventListener('keydown',function(e){
+    if(e.key==='Escape'){
+      var dlg=$('#dlg');if(dlg&&dlg.open){dlg.close();return}
+      stopAll();
+    }
+  });
+  window.addEventListener('resize',function(){if(st.ready)sizeCanvases()});
+  if(window.speechSynthesis)speechSynthesis.onvoiceschanged=function(){};
+}
+
+function init(){load();bindEvents();tickClock();setInterval(tickClock,1000);bootSequence()}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);
+else init();
+
+})();
+</script>
 </body>
 </html>
