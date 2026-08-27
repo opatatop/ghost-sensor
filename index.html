@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#000000">
 <meta name="mobile-web-app-capable" content="yes">
-<title>SUPRA LAB v49.2 PRO — KITT</title>
+<title>SUPRA LAB v49.3 PRO — KITT</title>
 <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#000;--bg2:#050505;--panel:#0a0a0a;--fg:#00ff41;--dim:#00aa2a;--muted:#006618;--red:#ff0033;--orange:#ff6600;--blue:#00ccff;--font:'VT323',monospace;--glow:0 0 12px rgba(0,255,65,.45);--red-glow:0 0 14px rgba(255,0,51,.6)}
@@ -114,7 +114,7 @@ dialog::backdrop{background:rgba(0,0,0,.93)}
 
 <dialog id="dlg">
   <div class="dh">
-    <span>PARAMÈTRES v49.2 PRO — KITT</span>
+    <span>PARAMÈTRES v49.3 PRO — KITT</span>
     <button class="btn sm" id="x" type="button" style="border:none;box-shadow:none;font-size:20px">&times;</button>
   </div>
   <div class="db">
@@ -292,7 +292,7 @@ dialog::backdrop{background:rgba(0,0,0,.93)}
 </dialog>
 
 <section id="boot">
-  <h1 id="title">SUPRA LAB v49.2 — KITT</h1>
+  <h1 id="title">SUPRA LAB v49.3 — KITT</h1>
   <p id="sub">PRO · TOUT PUISSANT · SESSION LOG</p>
   <div class="build" id="buildtag">2026-08-27</div>
   <div class="acts" id="acts">
@@ -302,7 +302,7 @@ dialog::backdrop{background:rgba(0,0,0,.93)}
 </section>
 
 <div id="app">
-  <header id="hdr" data-marquee="v49.2 PRO  •  KITT  •  TOUT PUISSANT  •  SESSION LOG">
+  <header id="hdr" data-marquee="v49.3 PRO  •  KITT  •  TOUT PUISSANT  •  SESSION LOG">
     <button class="btn sm hbtn" id="cfg2" type="button">⚙</button>
     <div class="htitle">KITT — <span id="mode">RÉEL</span> · <span id="placeTag">MAISON</span> · <span id="powerTag">PRO</span></div>
     <button class="btn sm red hbtn" id="halt" type="button">STOP</button>
@@ -352,7 +352,7 @@ dialog::backdrop{background:rgba(0,0,0,.93)}
   </main>
   <footer>
     <span id="status">En attente</span>
-    <span>v49.2 PRO · KITT · <span id="clock">--:--:--</span></span>
+    <span>v49.3 PRO · KITT · <span id="clock">--:--:--</span></span>
   </footer>
 </div>
 
@@ -363,13 +363,13 @@ dialog::backdrop{background:rgba(0,0,0,.93)}
 (function(){
 'use strict';
 
-var BUILD = { version:'49.2', date:'2026-08-27', time:'15:47', tz:'UTC', label:'v49.2 PRO — KITT — 2026-08-27 15:47 UTC' };
+var BUILD = { version:'49.3', date:'2026-08-27', time:'16:29', tz:'UTC', label:'v49.3 PRO — KITT — 2026-08-27 16:29 UTC' };
 
 var REAL_MODELS = ['openai/gpt-oss-20b','openai/gpt-oss-120b','qwen/qwen3.6-27b','groq/compound','groq/compound-mini'];
 var SAFE_MODEL = 'openai/gpt-oss-20b';
-var STORAGE_CFG = 'sl492k';
-var STORAGE_LOG = 'sl492k_log';
-var STORAGE_EXP = 'sl492k_exp';
+var STORAGE_CFG = 'sl493k';
+var STORAGE_LOG = 'sl493k_log';
+var STORAGE_EXP = 'sl493k_exp';
 
 var DEFAULT = {
   key:'', model:SAFE_MODEL, lang:'fr', tts:true, color:'#00ff41',
@@ -395,7 +395,7 @@ var st = {
   hist:[], fullLog:[], ctrl:null, reqs:0, lat:0,
   lastVol:0, lastBass:0, lastMid:0, lastHigh:0, lastNoiseAt:0,
   muted:false, loopId:0, lastWasNoise:false, resolvedPlace:'home',
-  frameN:0
+  frameN:0, micHeld:false
 };
 
 function $(s){ return document.querySelector(s); }
@@ -443,14 +443,9 @@ function nextExportNum(){
   return n;
 }
 
-function safeSet(key, val){
-  try { localStorage.setItem(key, val); } catch (e) {}
-}
+function safeSet(key, val){ try { localStorage.setItem(key, val); } catch (e) {} }
 function safeGet(key, fallback){
-  try {
-    var v = localStorage.getItem(key);
-    return v == null ? fallback : v;
-  } catch (e) { return fallback; }
+  try { var v = localStorage.getItem(key); return v == null ? fallback : v; } catch (e) { return fallback; }
 }
 
 function resolvePlace(){
@@ -491,9 +486,7 @@ function updatePlaceUI(){
     pb.classList.toggle('red', cfg.power === 'max');
   }
   var hdr = $('#hdr');
-  if (hdr) {
-    hdr.setAttribute('data-marquee', 'v' + BUILD.version + ' PRO  •  KITT  •  ' + stamp() + '  •  TOUT PUISSANT  •  SESSION LOG');
-  }
+  if (hdr) hdr.setAttribute('data-marquee', 'v' + BUILD.version + ' PRO  •  KITT  •  ' + stamp() + '  •  TOUT PUISSANT  •  SESSION LOG');
 }
 
 function placeContextText(){
@@ -690,6 +683,37 @@ function waitUntilQuiet(){
   });
 }
 
+/* ========== GESTION FOCUS AUDIO (Bluetooth / musique) ========== */
+function releaseMic(){
+  // On relâche le micro seulement si on n'est PAS en mode AUTO/24/7
+  if (st.auto || st.comp) return;
+  try {
+    if (st.stream) {
+      st.stream.getTracks().forEach(function(track){
+        try { track.stop(); } catch (e) {}
+      });
+    }
+  } catch (e) {}
+  st.stream = null;
+  st.ready = false;
+  st.micHeld = false;
+  st.an = null;
+  st.volNode = null;
+  st.fdata = null;
+  st.wdata = null;
+  st.vdata = null;
+  sys();
+  log('Micro relâché → son rendu (Bluetooth/musique)', 'info');
+}
+
+function ensureMic(){
+  if (st.stream && st.ready) {
+    resumeAudio();
+    return Promise.resolve(true);
+  }
+  return initAudio();
+}
+
 function exportFullLog(){
   var expNum = nextExportNum();
   updatePlaceUI();
@@ -786,7 +810,7 @@ function closeSettings(){ var d = $('#dlg'); if (d && d.open) d.close(); }
 
 function load(){
   try {
-    var raw = safeGet(STORAGE_CFG, null) || safeGet('sl492', null) || safeGet('sl491', null) || safeGet('sl49', null);
+    var raw = safeGet(STORAGE_CFG, null) || safeGet('sl492k', null) || safeGet('sl492', null) || safeGet('sl491', null);
     if (raw) Object.assign(cfg, JSON.parse(raw));
   } catch (e) {}
   try {
@@ -894,13 +918,14 @@ function testKey(){
 
 function initAudio(){
   try {
-    st.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    if (!st.ctx) st.ctx = new (window.AudioContext || window.webkitAudioContext)();
     return st.ctx.resume().then(function(){
       return navigator.mediaDevices.getUserMedia({
         audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
       });
     }).then(function(stream){
       st.stream = stream;
+      st.micHeld = true;
       var src = st.ctx.createMediaStreamSource(stream);
       st.an = st.ctx.createAnalyser();
       st.an.fftSize = 2048;
@@ -915,7 +940,7 @@ function initAudio(){
       st.ready = true;
       sizeCanvases();
       drawLoop();
-      log('Audio OK', 'info');
+      log('Audio OK (micro pris)', 'info');
       sys();
       return true;
     });
@@ -1012,17 +1037,20 @@ function getMime(){
 }
 
 function pttDown(e){
-  e.preventDefault(); resumeAudio();
-  if (!st.ready || st.auto || st.ptt || st.speaking) return;
-  st.ptt = true; st.pchunks = []; st.psec = 0;
-  var m = getMime(); if (!m) { st.ptt = false; return; }
-  try { st.pmr = new MediaRecorder(st.stream, { mimeType: m }); } catch (err) { st.ptt = false; return; }
-  st.pmr.ondataavailable = function(ev){ if (ev.data && ev.data.size) st.pchunks.push(ev.data); };
-  st.pmr.onstop = pttDone;
-  st.pmr.start(100);
-  var pttEl = $('#ptt'); if (pttEl) pttEl.classList.add('rec');
-  live('REC...', 'rec');
-  st.piv = setInterval(function(){ st.psec++; live('REC ' + fmt(st.psec), 'rec'); }, 1000);
+  e.preventDefault();
+  ensureMic().then(function(ok){
+    if (!ok || !st.ready || st.auto || st.ptt || st.speaking) return;
+    resumeAudio();
+    st.ptt = true; st.pchunks = []; st.psec = 0;
+    var m = getMime(); if (!m) { st.ptt = false; return; }
+    try { st.pmr = new MediaRecorder(st.stream, { mimeType: m }); } catch (err) { st.ptt = false; return; }
+    st.pmr.ondataavailable = function(ev){ if (ev.data && ev.data.size) st.pchunks.push(ev.data); };
+    st.pmr.onstop = pttDone;
+    st.pmr.start(100);
+    var pttEl = $('#ptt'); if (pttEl) pttEl.classList.add('rec');
+    live('REC...', 'rec');
+    st.piv = setInterval(function(){ st.psec++; live('REC ' + fmt(st.psec), 'rec'); }, 1000);
+  });
 }
 function pttUp(e){
   e.preventDefault(); if (!st.ptt) return;
@@ -1032,7 +1060,11 @@ function pttUp(e){
 }
 function pttDone(){
   var blob = new Blob(st.pchunks, { type: (st.pmr && st.pmr.mimeType) || getMime() });
-  if (blob.size < 600) { live('Trop court', 'idle'); return; }
+  if (blob.size < 600) {
+    live('Trop court', 'idle');
+    if (!st.auto) releaseMic();
+    return;
+  }
   var bands = analyzeBands();
   st.lastBass = bands.bass; st.lastMid = bands.mid; st.lastHigh = bands.high; st.lastVol = vol();
   updatePlaceUI();
@@ -1041,11 +1073,20 @@ function pttDone(){
     if (!text || isGarbageTranscript(text)) {
       live('Rien d’utile capté', 'idle');
       log('Ignoré (vide/sous-titre/bruit)', 'info');
+      if (!st.auto) releaseMic();
       return;
     }
-    if (handleCommand(text)) return;
+    if (handleCommand(text)) {
+      if (!st.auto) releaseMic();
+      return;
+    }
     live(text, 'ok');
-    chat(text, false);
+    chat(text, false).then(function(){
+      if (!st.auto) {
+        // Après la réponse + TTS on relâche le micro
+        waitUntilQuiet().then(function(){ releaseMic(); });
+      }
+    });
   });
 }
 
@@ -1129,93 +1170,96 @@ function autoStart(comp){
   if (st.run && st.comp === !!comp) return;
   if (st.run) autoStop();
   if (!hasKey()) { toast('Clé manquante', 'err'); openSettings(); return; }
-  resumeAudio(); updatePlaceUI();
-  st.auto = true; st.run = true; st.comp = !!comp; st.loopId++;
-  var myId = st.loopId;
-  var autoBtn = $('#auto'), compBtn = $('#comp'), modeEl = $('#mode');
-  if (autoBtn) autoBtn.classList.toggle('on', !comp);
-  if (compBtn) compBtn.classList.toggle('on', !!comp);
-  if (modeEl) modeEl.textContent = comp ? '24/7' : 'AUTO';
-  live(comp ? 'Mode 24/7' : 'Mode AUTO', 'listen');
-  status(comp ? '24/7' : 'AUTO');
-  log((comp ? '24/7' : 'AUTO') + ' démarré power=' + cfg.power + ' lieu=' + cfg.place, 'info');
+  ensureMic().then(function(ok){
+    if (!ok) { toast('Autorise le micro', 'err'); return; }
+    resumeAudio(); updatePlaceUI();
+    st.auto = true; st.run = true; st.comp = !!comp; st.loopId++;
+    var myId = st.loopId;
+    var autoBtn = $('#auto'), compBtn = $('#comp'), modeEl = $('#mode');
+    if (autoBtn) autoBtn.classList.toggle('on', !comp);
+    if (compBtn) compBtn.classList.toggle('on', !!comp);
+    if (modeEl) modeEl.textContent = comp ? '24/7' : 'AUTO';
+    live(comp ? 'Mode 24/7' : 'Mode AUTO', 'listen');
+    status(comp ? '24/7' : 'AUTO');
+    log((comp ? '24/7' : 'AUTO') + ' démarré power=' + cfg.power + ' lieu=' + cfg.place, 'info');
 
-  (function loop(){
-    if (!st.auto || st.loopId !== myId) return;
-    waitUntilQuiet().then(function(){
+    (function loop(){
       if (!st.auto || st.loopId !== myId) return;
-      return waitSpeak();
-    }).then(function(ok){
-      if (!st.auto || st.loopId !== myId || !ok) {
-        if (st.auto && st.loopId === myId) setTimeout(loop, 120);
-        return null;
-      }
-      live('Écoute...', 'rec');
-      return recUntilSilent();
-    }).then(function(blob){
-      if (!st.auto || st.loopId !== myId) return;
-      if (!blob || blob.size < 600) {
-        live('En écoute...', 'listen');
-        if (st.auto && st.loopId === myId) setTimeout(loop, 120);
-        return;
-      }
-      live('Analyse...', 'think');
-      updatePlaceUI();
-      return whisper(blob).then(function(text){
+      waitUntilQuiet().then(function(){
         if (!st.auto || st.loopId !== myId) return;
-        if (text && isGarbageTranscript(text)) {
-          log('Ignoré: ' + text.slice(0, 40), 'info');
+        return waitSpeak();
+      }).then(function(ok){
+        if (!st.auto || st.loopId !== myId || !ok) {
+          if (st.auto && st.loopId === myId) setTimeout(loop, 120);
+          return null;
+        }
+        live('Écoute...', 'rec');
+        return recUntilSilent();
+      }).then(function(blob){
+        if (!st.auto || st.loopId !== myId) return;
+        if (!blob || blob.size < 600) {
           live('En écoute...', 'listen');
           if (st.auto && st.loopId === myId) setTimeout(loop, 120);
           return;
         }
-        if (!text) {
-          var volLevel = Math.round(st.lastVol);
-          var need = effectiveNoiseVol();
-          if (volLevel < need || !cfg.noise || cfg.listenMode === 'speech') {
+        live('Analyse...', 'think');
+        updatePlaceUI();
+        return whisper(blob).then(function(text){
+          if (!st.auto || st.loopId !== myId) return;
+          if (text && isGarbageTranscript(text)) {
+            log('Ignoré: ' + text.slice(0, 40), 'info');
             live('En écoute...', 'listen');
             if (st.auto && st.loopId === myId) setTimeout(loop, 120);
             return;
           }
-          if (Date.now() - st.lastNoiseAt < (cfg.coolSec || 12) * 1000) {
+          if (!text) {
+            var volLevel = Math.round(st.lastVol);
+            var need = effectiveNoiseVol();
+            if (volLevel < need || !cfg.noise || cfg.listenMode === 'speech') {
+              live('En écoute...', 'listen');
+              if (st.auto && st.loopId === myId) setTimeout(loop, 120);
+              return;
+            }
+            if (Date.now() - st.lastNoiseAt < (cfg.coolSec || 12) * 1000) {
+              live('En écoute...', 'listen');
+              if (st.auto && st.loopId === myId) setTimeout(loop, 120);
+              return;
+            }
+            st.lastNoiseAt = Date.now(); st.lastWasNoise = true;
+            log('Bruit vol=' + volLevel + ' B/M/A=' + st.lastBass + '/' + st.lastMid + '/' + st.lastHigh + ' lieu=' + st.resolvedPlace, 'info');
+            return chat(buildNoisePrompt(volLevel), true)
+              .then(function(){ return waitUntilQuiet(); })
+              .then(function(){ if (st.auto && st.loopId === myId) { live('En écoute...', 'listen'); setTimeout(loop, 400); } });
+          }
+          if (handleCommand(text)) {
+            if (st.auto && st.loopId === myId) setTimeout(loop, 300);
+            return;
+          }
+          if (cfg.listenMode === 'noise') {
             live('En écoute...', 'listen');
             if (st.auto && st.loopId === myId) setTimeout(loop, 120);
             return;
           }
-          st.lastNoiseAt = Date.now(); st.lastWasNoise = true;
-          log('Bruit vol=' + volLevel + ' B/M/A=' + st.lastBass + '/' + st.lastMid + '/' + st.lastHigh + ' lieu=' + st.resolvedPlace, 'info');
-          return chat(buildNoisePrompt(volLevel), true)
+          if (!cfg.always) {
+            var wake = cfg.wakeWords.split(',').some(function(w){ return norm(text).indexOf(w.trim()) !== -1; });
+            if (!wake) {
+              live('En écoute...', 'listen');
+              if (st.auto && st.loopId === myId) setTimeout(loop, 120);
+              return;
+            }
+          }
+          st.lastWasNoise = false;
+          live(text, 'ok');
+          return chat(text, true)
             .then(function(){ return waitUntilQuiet(); })
-            .then(function(){ if (st.auto && st.loopId === myId) { live('En écoute...', 'listen'); setTimeout(loop, 400); } });
-        }
-        if (handleCommand(text)) {
-          if (st.auto && st.loopId === myId) setTimeout(loop, 300);
-          return;
-        }
-        if (cfg.listenMode === 'noise') {
-          live('En écoute...', 'listen');
-          if (st.auto && st.loopId === myId) setTimeout(loop, 120);
-          return;
-        }
-        if (!cfg.always) {
-          var wake = cfg.wakeWords.split(',').some(function(w){ return norm(text).indexOf(w.trim()) !== -1; });
-          if (!wake) {
-            live('En écoute...', 'listen');
-            if (st.auto && st.loopId === myId) setTimeout(loop, 120);
-            return;
-          }
-        }
-        st.lastWasNoise = false;
-        live(text, 'ok');
-        return chat(text, true)
-          .then(function(){ return waitUntilQuiet(); })
-          .then(function(){ if (st.auto && st.loopId === myId) { live('En écoute...', 'listen'); setTimeout(loop, 500); } });
+            .then(function(){ if (st.auto && st.loopId === myId) { live('En écoute...', 'listen'); setTimeout(loop, 500); } });
+        });
+      }).catch(function(e){
+        log(String(e && e.message || e), 'err');
+        if (st.auto && st.loopId === myId) setTimeout(loop, 700);
       });
-    }).catch(function(e){
-      log(String(e && e.message || e), 'err');
-      if (st.auto && st.loopId === myId) setTimeout(loop, 700);
-    });
-  })();
+    })();
+  });
 }
 
 function autoStop(){
@@ -1226,11 +1270,14 @@ function autoStop(){
   if (modeEl) modeEl.textContent = 'RÉEL';
   live('Arrêté', 'idle'); status('Prêt');
   log('Écoute arrêtée', 'info');
+  // Important : on relâche le micro pour rendre le son Bluetooth/musique
+  releaseMic();
 }
 function stopAll(){
   autoStop(); stopTTS();
   if (st.ctrl) try { st.ctrl.abort(); } catch (e) {}
   live('Stop', 'idle'); status('Stop');
+  releaseMic();
 }
 
 function whisper(blob){
@@ -1353,53 +1400,53 @@ function stopTTS(){
 }
 
 function runAmbient(){
-  if (!st.ready || st.speaking) return;
-  resumeAudio();
-  live('Capture 3s...', 'rec');
-  var chunks = [], m = getMime();
-  var rec;
-  try { rec = new MediaRecorder(st.stream, { mimeType: m }); } catch (e) { live('Erreur micro', 'idle'); return; }
-  rec.ondataavailable = function(e){ if (e.data && e.data.size) chunks.push(e.data); };
-  rec.onstop = function(){
-    var b = analyzeBands();
-    st.lastBass = b.bass; st.lastMid = b.mid; st.lastHigh = b.high; st.lastVol = vol();
-    updatePlaceUI();
-    if (Math.round(st.lastVol) < effectiveNoiseVol()) {
-      live('Rien de significatif', 'idle');
-      log('Ambiance: rien de significatif', 'info');
-      return;
-    }
-    st.lastWasNoise = true;
-    log('Ambiance vol=' + Math.round(st.lastVol) + ' lieu=' + st.resolvedPlace, 'info');
-    chat(buildAmbientPrompt(Math.round(st.lastVol)), true);
-  };
-  rec.start();
-  setTimeout(function(){ if (rec.state === 'recording') rec.stop(); }, 3000);
+  ensureMic().then(function(ok){
+    if (!ok || !st.ready || st.speaking) return;
+    resumeAudio();
+    live('Capture 3s...', 'rec');
+    var chunks = [], m = getMime();
+    var rec;
+    try { rec = new MediaRecorder(st.stream, { mimeType: m }); } catch (e) { live('Erreur micro', 'idle'); return; }
+    rec.ondataavailable = function(e){ if (e.data && e.data.size) chunks.push(e.data); };
+    rec.onstop = function(){
+      var b = analyzeBands();
+      st.lastBass = b.bass; st.lastMid = b.mid; st.lastHigh = b.high; st.lastVol = vol();
+      updatePlaceUI();
+      if (Math.round(st.lastVol) < effectiveNoiseVol()) {
+        live('Rien de significatif', 'idle');
+        log('Ambiance: rien de significatif', 'info');
+        if (!st.auto) releaseMic();
+        return;
+      }
+      st.lastWasNoise = true;
+      log('Ambiance vol=' + Math.round(st.lastVol) + ' lieu=' + st.resolvedPlace, 'info');
+      chat(buildAmbientPrompt(Math.round(st.lastVol)), true).then(function(){
+        if (!st.auto) waitUntilQuiet().then(function(){ releaseMic(); });
+      });
+    };
+    rec.start();
+    setTimeout(function(){ if (rec.state === 'recording') rec.stop(); }, 3000);
+  });
 }
 
 function launch(){
   persistKey(); fixModel();
   st.muted = false; updateMuteUI(); updatePlaceUI();
   if (!hasKey()) { toast('Mets ta clé API', 'err'); openSettings(); return; }
-  initAudio().then(function(ok){
-    if (!ok) { toast('Autorise le micro', 'err'); return; }
-    resumeAudio();
-    if (cfg.wakelock && navigator.wakeLock) {
-      try { navigator.wakeLock.request('screen').catch(function(){}); } catch (e) {}
-    }
-    var boot = $('#boot'), app = $('#app');
-    if (boot) boot.style.display = 'none';
-    if (app) app.classList.add('show');
-    setTimeout(sizeCanvases, 60);
-    if ('ontouchstart' in window) {
-      var ptt = $('#ptt'); if (ptt) ptt.classList.add('show');
-    }
-    live('KITT prêt', 'idle');
-    log(BUILD.label + ' prêt power=' + cfg.power + ' lieu=' + cfg.place, 'info');
-  }).catch(function(e){
-    toast('Erreur audio', 'err');
-    log(String(e && e.message || e), 'err');
-  });
+  // Au lancement on ne prend PAS le micro tout de suite → la musique continue
+  var boot = $('#boot'), app = $('#app');
+  if (boot) boot.style.display = 'none';
+  if (app) app.classList.add('show');
+  setTimeout(sizeCanvases, 60);
+  if ('ontouchstart' in window) {
+    var ptt = $('#ptt'); if (ptt) ptt.classList.add('show');
+  }
+  if (cfg.wakelock && navigator.wakeLock) {
+    try { navigator.wakeLock.request('screen').catch(function(){}); } catch (e) {}
+  }
+  live('KITT prêt (micro libre)', 'idle');
+  log(BUILD.label + ' prêt power=' + cfg.power + ' lieu=' + cfg.place, 'info');
+  sys();
 }
 
 function bind(){
@@ -1431,8 +1478,8 @@ function bind(){
     var s = $('#' + id), d = $('#v' + id);
     if (s && d) s.oninput = function(){ d.textContent = s.value; };
   });
-  var auto = $('#auto'); if (auto) auto.onclick = function(){ resumeAudio(); st.auto && !st.comp ? autoStop() : autoStart(false); };
-  var comp = $('#comp'); if (comp) comp.onclick = function(){ resumeAudio(); st.auto && st.comp ? autoStop() : autoStart(true); };
+  var auto = $('#auto'); if (auto) auto.onclick = function(){ st.auto && !st.comp ? autoStop() : autoStart(false); };
+  var comp = $('#comp'); if (comp) comp.onclick = function(){ st.auto && st.comp ? autoStop() : autoStart(true); };
   var amb = $('#ambBtn'); if (amb) amb.onclick = runAmbient;
   var placeBtn = $('#placeBtn'); if (placeBtn) placeBtn.onclick = cyclePlace;
   var powerBtn = $('#powerBtn'); if (powerBtn) powerBtn.onclick = cyclePower;
@@ -1450,13 +1497,13 @@ function bind(){
     log(st.muted ? 'MUET' : 'SON', 'info');
   };
   var send = $('#send'); if (send) send.onclick = function(){
-    resumeAudio();
     var inp = $('#txt'); if (!inp) return;
     var t = inp.value.trim(); if (!t) return;
     inp.value = '';
     if (isGarbageTranscript(t)) { toast('Texte ignoré', 'err'); return; }
     if (handleCommand(t)) return;
-    live(t, 'ok'); chat(t, false);
+    live(t, 'ok');
+    chat(t, false);
   };
   var txt = $('#txt'); if (txt) txt.onkeydown = function(e){
     if (e.key === 'Enter') { e.preventDefault(); if (send) send.click(); }
