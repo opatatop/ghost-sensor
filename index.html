@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#000000">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>SUPRA LAB v50.4 — KITT BT</title>
+<title>SUPRA LAB v50.6 — KITT RÉEL FULL</title>
 <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#000;--bg2:#050505;--panel:#0a0a0a;--fg:#00ff41;--dim:#00aa2a;--muted:#006618;--red:#ff0033;--orange:#ff6600;--blue:#00ccff;--font:'VT323',monospace;--glow:0 0 12px rgba(0,255,65,.45);--red-glow:0 0 14px rgba(255,0,51,.6)}
@@ -41,7 +41,7 @@ header::after{content:attr(data-marquee);position:absolute;bottom:1px;left:0;fon
 main{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:8px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:8px;align-content:start;padding-bottom:56px}
 footer{position:absolute;bottom:0;left:0;right:0;background:var(--panel);border-top:3px solid var(--fg);padding:5px 10px;font-size:12px;display:flex;justify-content:space-between;z-index:10}
 .bar{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px;justify-content:center;padding:10px 6px;background:var(--panel);border:3px solid var(--fg)}
-.bar .round{width:50px;height:50px;border-radius:12px;font-size:8px;display:flex;align-items:center;justify-content:center;text-align:center;line-height:1.05;padding:2px;border-width:3px}
+.bar .round{width:48px;height:48px;border-radius:12px;font-size:7px;display:flex;align-items:center;justify-content:center;text-align:center;line-height:1.05;padding:2px;border-width:3px}
 .live{grid-column:1/-1;background:var(--bg2);border:3px solid var(--fg);position:relative;min-height:74px}
 .live .label{position:absolute;top:-9px;left:8px;background:var(--bg2);padding:0 6px;font-size:11px}
 .live .badge{position:absolute;top:6px;right:8px;font-size:12px;padding:3px 8px;border:1px solid var(--muted);color:var(--muted)}
@@ -72,8 +72,7 @@ canvas{display:block;width:100%;height:76px;background:#000;image-rendering:pixe
 .log .info{color:var(--orange);border-color:var(--orange)}
 .log .qa{color:var(--fg);border-color:var(--fg)}
 .sys{font-size:12px;line-height:1.5}
-.stats{font-size:11px;color:var(--muted);margin-top:3px}
-#sensors{font-size:11px;color:var(--muted);margin-top:4px}
+.stats,.sensortxt{font-size:11px;color:var(--muted);margin-top:3px}
 #ptt{position:fixed;bottom:56px;left:50%;transform:translateX(-50%);width:100px;height:100px;border-radius:50%;font-size:12px;text-align:center;line-height:1.15;z-index:200;border-width:4px;display:none;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 0 22px rgba(0,255,65,.5);background:var(--bg)}
 #ptt.show{display:flex}
 #ptt:active{transform:translateX(-50%) scale(.92)}
@@ -99,7 +98,7 @@ dialog::backdrop{background:rgba(0,0,0,.93)}
 .toast.err{border-color:var(--red);color:var(--red)}
 #keystatus{font-size:12px;margin-top:6px;padding:6px;border:1px dashed var(--dim);color:var(--muted)}
 #keystatus.ok{color:var(--fg);border-color:var(--fg)}
-@media(max-width:600px){.bar .round{width:46px;height:46px;font-size:7px}main{grid-template-columns:1fr}#ptt{width:92px;height:92px;bottom:50px}}
+@media(max-width:600px){.bar .round{width:44px;height:44px;font-size:7px}main{grid-template-columns:1fr}#ptt{width:92px;height:92px;bottom:50px}}
 </style>
 </head>
 <body>
@@ -107,7 +106,7 @@ dialog::backdrop{background:rgba(0,0,0,.93)}
 <div class="toast" id="toast"></div>
 
 <dialog id="dlg">
-  <div class="dh"><span>PARAMÈTRES v50.4 BT / DEHORS</span>
+  <div class="dh"><span>PARAMÈTRES v50.6 RÉEL FULL</span>
     <button class="btn sm" id="x" type="button" style="border:none;box-shadow:none;font-size:20px">&times;</button>
   </div>
   <div class="db">
@@ -122,38 +121,32 @@ dialog::backdrop{background:rgba(0,0,0,.93)}
       <button class="btn blue sm" id="test" type="button" style="flex:1">TESTER</button>
     </div>
 
-    <div class="sec">2. Profil rapide</div>
+    <div class="sec">2. Profil</div>
     <div class="fl"><label>Profil</label>
       <select id="profile">
-        <option value="bt">Dehors + casque BT (recommandé)</option>
-        <option value="home">Maison / HP téléphone</option>
-        <option value="max">Max écoute</option>
+        <option value="bt">Dehors + casque BT</option>
+        <option value="home">Maison / HP</option>
+        <option value="max">Max réel</option>
       </select>
-      <div class="hint">BT = micro plus rare, musique moins coupée</div>
     </div>
-    <div class="fl"><label class="check"><input type="checkbox" id="agentMode" checked> Agent secret</label></div>
-    <div class="fl"><label class="check"><input type="checkbox" id="reportSpeech" checked> Dire les paroles autour dans l’oreille</label></div>
+    <div class="fl"><label class="check"><input type="checkbox" id="agentMode" checked> Agent (oreilles)</label></div>
+    <div class="fl"><label class="check"><input type="checkbox" id="reportSpeech" checked> Parole autour réelle</label></div>
     <div class="fl"><label class="check"><input type="checkbox" id="earPriority" checked> Priorité type appel</label></div>
-    <div class="fl"><label class="check"><input type="checkbox" id="btFriendly" checked> Relâcher micro fort (reprise musique)</label></div>
-    <div class="fl"><label class="check"><input type="checkbox" id="realOnly" checked> Réel strict</label></div>
+    <div class="fl"><label class="check"><input type="checkbox" id="btFriendly" checked> Relâcher micro (MP3/BT)</label></div>
+    <div class="fl"><label class="check"><input type="checkbox" id="realOnly" checked> RÉEL STRICT (sinon rien)</label></div>
     <div class="fl"><label class="check"><input type="checkbox" id="always" checked> Répondre sans mot d’appel</label></div>
-    <div class="fl"><label class="check"><input type="checkbox" id="speakNoise"> Parler sur les bruits (souvent OFF en BT)</label></div>
+    <div class="fl"><label class="check"><input type="checkbox" id="noise" checked> Bruits / sons réels</label></div>
+    <div class="fl"><label class="check"><input type="checkbox" id="speakNoise"> Parler sur bruits (souvent OFF en BT)</label></div>
     <div class="fl"><label class="check"><input type="checkbox" id="useSensors" checked> Capteurs mouvement</label></div>
 
-    <div class="sec">3. Écoute BT</div>
+    <div class="sec">3. Écoute réel</div>
     <div class="fl"><label>Sensibilité <span id="vsens">4</span></label><div class="range"><input type="range" id="sens" min="2" max="16" value="4"></div></div>
     <div class="fl"><label>Seuil bruit <span id="vnoisevol">8</span></label><div class="range"><input type="range" id="noisevol" min="3" max="20" value="8"></div></div>
-    <div class="fl"><label>Silence fin (ms) <span id="vsil">800</span></label><div class="range"><input type="range" id="sil" min="400" max="1600" step="50" value="800"></div></div>
-    <div class="fl"><label>Durée max (s) <span id="vmax">10</span></label><div class="range"><input type="range" id="max" min="4" max="20" value="10"></div></div>
-    <div class="fl"><label>Pause après alerte (ms) <span id="vgap">2800</span></label>
-      <div class="range"><input type="range" id="gap" min="1000" max="6000" step="100" value="2800"></div>
-      <div class="hint">Plus long = musique revient mieux / moins de coupures</div>
-    </div>
-    <div class="fl"><label>Marge après voix (ms) <span id="vrelease">700</span></label>
-      <div class="range"><input type="range" id="release" min="300" max="1500" step="50" value="700"></div>
-      <div class="hint">Temps avant de rendre le focus BT</div>
-    </div>
-    <div class="fl"><label>Cooldown (s) <span id="vcool">12</span></label><div class="range"><input type="range" id="cool" min="4" max="40" value="12"></div></div>
+    <div class="fl"><label>Silence fin ms <span id="vsil">800</span></label><div class="range"><input type="range" id="sil" min="400" max="1600" step="50" value="800"></div></div>
+    <div class="fl"><label>Durée max s <span id="vmax">10</span></label><div class="range"><input type="range" id="max" min="4" max="20" value="10"></div></div>
+    <div class="fl"><label>Pause après alerte ms <span id="vgap">2800</span></label><div class="range"><input type="range" id="gap" min="1000" max="6000" step="100" value="2800"></div></div>
+    <div class="fl"><label>Marge release ms <span id="vrelease">700</span></label><div class="range"><input type="range" id="release" min="300" max="1500" step="50" value="700"></div></div>
+    <div class="fl"><label>Cooldown s <span id="vcool">12</span></label><div class="range"><input type="range" id="cool" min="4" max="40" value="12"></div></div>
 
     <div class="sec">4. Modèle</div>
     <div class="fl"><label>Modèle</label>
@@ -165,8 +158,8 @@ dialog::backdrop{background:rgba(0,0,0,.93)}
         <option value="groq/compound-mini">compound-mini</option>
       </select>
     </div>
-    <div class="fl"><label>Souplesse <span id="vtemp">0.12</span></label><div class="range"><input type="range" id="temp" min="0.05" max="0.3" step="0.01" value="0.12"></div></div>
-    <div class="fl"><label>Longueur <span id="vtokens">450</span></label><div class="range"><input type="range" id="tokens" min="100" max="1200" step="50" value="450"></div></div>
+    <div class="fl"><label>Souplesse <span id="vtemp">0.1</span></label><div class="range"><input type="range" id="temp" min="0.05" max="0.25" step="0.01" value="0.1"></div></div>
+    <div class="fl"><label>Tokens <span id="vtokens">400</span></label><div class="range"><input type="range" id="tokens" min="80" max="1000" step="20" value="400"></div></div>
 
     <div class="sec">5. Commandes / mail</div>
     <div class="fl"><label>STOP</label><input type="text" id="stopw" value="stop,arrête,arrete,tais-toi,silence,assez,stoppe,arrête tout"></div>
@@ -178,7 +171,6 @@ dialog::backdrop{background:rgba(0,0,0,.93)}
     <div class="fl"><label class="check"><input type="checkbox" id="tts" checked> Voix oreilles</label></div>
     <div class="fl"><label>Vitesse <span id="vrate">0.92</span></label><div class="range"><input type="range" id="rate" min="0.7" max="1.15" step="0.01" value="0.92"></div></div>
     <div class="fl"><label>Langue</label><select id="lang"><option value="fr">Français</option><option value="en">English</option></select></div>
-    <div class="fl"><label>Couleur</label><select id="col"><option value="#00ff41">Vert</option><option value="#00ccff">Cyan</option><option value="#ff6600">Orange</option></select></div>
     <div class="fl"><label class="check"><input type="checkbox" id="wakelock" checked> Écran allumé</label></div>
     <div class="fl"><label class="check"><input type="checkbox" id="autoLog" checked> Journal</label></div>
     <div class="fl"><label class="check"><input type="checkbox" id="logAll" checked> Tout logger</label></div>
@@ -190,8 +182,8 @@ dialog::backdrop{background:rgba(0,0,0,.93)}
 </dialog>
 
 <section id="boot">
-  <h1>KITT v50.4 — BT / DEHORS</h1>
-  <p id="sub">CASQUE BT · MP3 · AGENT · REALME</p>
+  <h1>KITT v50.6 — RÉEL FULL</h1>
+  <p id="sub">PAROLE · BRUITS · SONS · ENTITÉS RÉELLES · BT</p>
   <div class="build" id="buildtag">2026-08-30</div>
   <div class="acts">
     <button class="btn" id="go" type="button" style="font-size:18px;padding:12px 26px;border-width:4px">LANCER</button>
@@ -200,7 +192,7 @@ dialog::backdrop{background:rgba(0,0,0,.93)}
 </section>
 
 <div id="app">
-  <header id="hdr" data-marquee="v50.4  •  BT  •  DEHORS  •  AGENT  •  MP3">
+  <header id="hdr" data-marquee="v50.6 RÉEL FULL · parole · bruits · sons · BT">
     <button class="btn sm hbtn" id="cfg2" type="button">⚙</button>
     <div class="htitle"><span id="nameTag">KITT</span> — <span id="mode">OFF</span> · <span id="profTag">BT</span></div>
     <button class="btn sm red hbtn" id="halt" type="button">STOP</button>
@@ -222,38 +214,38 @@ dialog::backdrop{background:rgba(0,0,0,.93)}
     <div class="live">
       <div class="label">STATUT</div>
       <div class="badge" id="badge">PRÊT</div>
-      <div class="txt dim" id="live">Micro OFF — MP3 / BT OK</div>
+      <div class="txt dim" id="live">Micro OFF — réel en attente</div>
     </div>
     <div class="input-row">
       <div class="pre">&gt;</div>
       <input id="txt" placeholder="stop = tout couper" autocomplete="off">
       <button type="button" id="send">ENVOYER</button>
     </div>
-    <div class="panel full"><div class="label">OREILLE</div><div class="out" id="out">…</div></div>
+    <div class="panel full"><div class="label">OREILLE / RÉEL</div><div class="out" id="out">…</div></div>
     <div class="panel full"><div class="label">JOURNAL</div><div class="log" id="log"></div></div>
-    <div class="panel"><div class="label">SYS</div><div class="sys" id="sys">—</div><div class="stats" id="stats">—</div><div id="sensors">—</div></div>
+    <div class="panel"><div class="label">SYS</div><div class="sys" id="sys">—</div><div class="stats" id="stats">—</div><div class="sensortxt" id="sensors">—</div></div>
   </main>
-  <footer><span id="status">OFF</span><span>v50.4 · <span id="clock">--:--:--</span></span></footer>
+  <footer><span id="status">OFF</span><span>v50.6 · <span id="clock">--:--:--</span></span></footer>
 </div>
 <button class="btn" id="ptt" type="button">PTT</button>
 
 <script>
 (function(){
 'use strict';
-var BUILD={version:'50.4',label:'v50.4 BT/DEHORS FIGÉ'};
+var BUILD={version:'50.6',label:'v50.6 RÉEL FULL'};
 var MODELS=['openai/gpt-oss-20b','openai/gpt-oss-120b','qwen/qwen3.6-27b','groq/compound','groq/compound-mini'];
 var SAFE='openai/gpt-oss-20b';
-var S_CFG='sl504k', S_LOG='sl504k_log', S_EXP='sl504k_exp';
+var S_CFG='sl506k', S_LOG='sl506k_log', S_EXP='sl506k_exp';
 var GROQ='https://api.groq.com/openai/v1';
 
 var DEFAULT={
-  key:'', model:SAFE, lang:'fr', tts:true, color:'#00ff41', aiName:'KITT',
+  key:'', model:SAFE, lang:'fr', tts:true, aiName:'KITT',
   profile:'bt',
   agentMode:true, reportSpeech:true, earPriority:true, btFriendly:true,
-  realOnly:true, always:true, speakNoise:false, useSensors:true,
+  realOnly:true, always:true, noise:true, speakNoise:false, useSensors:true,
   sens:4, noiseVol:8, silence:800, maxRecord:10, gapMs:2800, releaseMs:700, coolSec:12,
   postDelay:900, safetyMs:450,
-  temp:0.12, maxTokens:450, rate:0.92, wakelock:true, autoLog:true, logAll:true,
+  temp:0.1, maxTokens:400, rate:0.92, wakelock:true, autoLog:true, logAll:true,
   wakeWords:'kitt,supra,assistant,hey,ok',
   stopWords:'stop,arrête,arrete,tais-toi,silence,assez,stoppe,arrête tout',
   mailTo:'opatatop@protonmail.com'
@@ -279,6 +271,7 @@ function fmt(s){return pad(Math.floor(s/60))+':'+pad(s%60)}
 function cleanKey(k){return String(k||'').replace(/[\u200B-\u200D\uFEFF\u00A0\r\n\t ]+/g,'').trim()}
 function norm(t){return String(t||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim()}
 function aiName(){return (cfg.aiName||'KITT').trim()||'KITT'}
+function delay(ms){return new Promise(function(r){setTimeout(r,ms)})}
 function cleanForSpeech(t){
   return String(t||'').replace(/\*{1,}/g,' ').replace(/#{1,6}\s*/g,' ').replace(/`+/g,' ').replace(/\|+/g,' ')
     .replace(/\[([^\]]+)\]\([^)]+\)/g,'$1').replace(/[*#`_~•|]+/g,' ').replace(/\s{2,}/g,' ').trim();
@@ -299,6 +292,10 @@ function isStopPhrase(text){
   for(var i=0;i<words.length;i++){var w=norm(words[i]); if(w&&(t===w||t.indexOf(w)!==-1)) return true}
   return /^(stop|arrete|arrête|silence)/.test(t);
 }
+function looksLikeAsk(text){
+  var n=norm(text);
+  return /\?|qui |quoi |comment |pourquoi |ou |où |quand |peux|peut|fais |dis moi|dis-moi|explique|cest quoi|ca va|salut|hello|hey |combien |est-ce|est ce/.test(n);
+}
 function nextExportNum(){var n=0;try{n=parseInt(sessionStorage.getItem(S_EXP)||'0',10)||0}catch(e){}n++;try{sessionStorage.setItem(S_EXP,String(n))}catch(e){}return n}
 function safeSet(k,v){try{localStorage.setItem(k,v)}catch(e){}}
 function safeGet(k,f){try{var v=localStorage.getItem(k);return v==null?f:v}catch(e){return f}}
@@ -312,9 +309,8 @@ function applyProfile(p){
   } else if(cfg.profile==='home'){
     cfg.sens=3; cfg.noiseVol=6; cfg.gapMs=1600; cfg.releaseMs=500; cfg.coolSec=8;
     cfg.btFriendly=true; cfg.maxRecord=12;
-  } else if(cfg.profile==='max'){
-    cfg.sens=3; cfg.noiseVol=5; cfg.gapMs=1200; cfg.releaseMs=450; cfg.coolSec=6;
-    cfg.maxRecord=14;
+  } else {
+    cfg.sens=3; cfg.noiseVol=5; cfg.gapMs=1200; cfg.releaseMs=450; cfg.coolSec=6; cfg.maxRecord=14;
   }
 }
 function profLabel(){return cfg.profile==='home'?'MAISON':(cfg.profile==='max'?'MAX':'BT')}
@@ -354,16 +350,14 @@ function sys(){
   var el=$('#sys'); if(!el) return;
   el.innerHTML='Micro '+(st.stream?'<span style="color:var(--fg)">ON</span>':'OFF')+
     ' · '+(st.hardStop?'<span style="color:var(--red)">STOP</span>':(st.comp?'24/7':(st.auto?'AUTO':'OFF')))+
-    ' · '+profLabel()+
-    (cfg.agentMode?' · AGENT':'')+
-    (st.speaking?' · oreille':'');
+    ' · '+profLabel()+(cfg.agentMode?' · AGENT':'')+(cfg.realOnly?' · RÉEL':'')+(st.speaking?' · oreille':'');
   var s=$('#stats'); if(s) s.textContent=st.reqs+' req · '+(st.lat||'—')+'ms';
   updateSensorsUI();
 }
 function updateSensorsUI(){
   var el=$('#sensors'); if(!el) return;
   if(!cfg.useSensors){el.textContent='Capteurs off';return}
-  el.textContent='Mouv '+st.motionMag.toFixed(1)+(st.impact?' · choc':'');
+  el.textContent='Mouv '+st.motionMag.toFixed(1)+(st.impact?' · choc':'')+' · vol '+(st.lastVol||0).toFixed?Math.round(st.lastVol||0):(Math.round(st.lastVol||0));
 }
 function updateMuteUI(){
   var b=$('#mute'); if(!b) return;
@@ -386,20 +380,29 @@ function updateUITags(){
   var pt=$('#profTag'); if(pt) pt.textContent=profLabel();
   var ab=$('#agentBtn'); if(ab){ab.classList.toggle('on',!!cfg.agentMode); ab.classList.toggle('red',!!cfg.agentMode)}
   var pb=$('#profBtn'); if(pb){pb.textContent=profLabel(); pb.classList.toggle('on',cfg.profile==='bt')}
-  var hdr=$('#hdr'); if(hdr) hdr.setAttribute('data-marquee','v50.4 · '+profLabel()+' · '+stamp());
+  var hdr=$('#hdr'); if(hdr) hdr.setAttribute('data-marquee','v50.6 RÉEL · '+profLabel()+' · '+stamp());
 }
 
+/* ===== PROMPTS RÉEL STRICT ===== */
 function buildSystemPrompt(){
   return 'Tu es '+aiName()+'. Français, tutoiement, phrases courtes et humaines.\n'+
-    'Mode agent oreille: si on te donne des paroles autour, redis-les clairement et court.\n'+
-    'Exemple: « Quelqu’un dit qu’ils partent tout de suite. »\n'+
-    'Si pas clair → vide. Pas de *, ni |, ni peut-être.';
+    'RÈGLE DURE: uniquement du RÉEL capté (parole, bruit, son, mouvement). Sinon réponse VIDE.\n'+
+    'Si c’est une question ou une demande à toi → RÉPONDS (ne répète pas juste la phrase).\n'+
+    'Si paroles de gens autour → dis clairement ce qui a été dit, sans inventer.\n'+
+    'Si bruit/son réel → décris seulement ce qui est mesuré (fort/moyen/léger, grave/aigu si dispo).\n'+
+    'Interdit: inventer des entités, personnes, lieux, histoires. Pas de peut-être, probablement, on dirait.\n'+
+    'Pas de *, ni |, ni markdown.';
 }
 function buildAroundPrompt(t){
-  return 'Paroles autour (réel):\n« '+t+' »\n\nDis-le dans l’oreille en 1-2 phrases. Si flou → vide.';
+  return 'PAROLE RÉELLE captée autour:\n« '+t+' »\n\n'+
+    'Dis à l’oreille en 1-2 phrases ce qui a été dit. N’invente rien. Si flou → vide.';
 }
 function buildNoisePrompt(vol){
-  return 'Son capté niveau '+(vol>=12?'fort':(vol>=8?'moyen':'léger'))+'.\nSi utile, une phrase simple. Sinon vide.';
+  var force=vol>=12?'fort':(vol>=8?'moyen':'léger');
+  var bands=' grave='+Math.round(st.lastBass||0)+' medium='+Math.round(st.lastMid||0)+' aigu='+Math.round(st.lastHigh||0);
+  return 'SON RÉEL capté. Niveau '+force+'. Volume '+Math.round(vol)+'. Bandes:'+bands+'.\n'+
+    (st.impact?'Choc/mouvement téléphone détecté.\n':'')+
+    'Décris seulement ce signal réel en une phrase simple. N’invente aucune entité. Si trop vague → vide.';
 }
 
 function waitUntilQuiet(){
@@ -413,27 +416,13 @@ function waitUntilQuiet(){
     check();
   });
 }
-function delay(ms){return new Promise(function(r){setTimeout(r,ms)})}
 
-/* ===== MICRO BT : release agressif ===== */
 function releaseMic(){
-  try{
-    if(st.stream){
-      st.stream.getTracks().forEach(function(t){
-        try{ t.stop(); }catch(e){}
-      });
-    }
-  }catch(e){}
+  try{if(st.stream) st.stream.getTracks().forEach(function(t){try{t.stop()}catch(e){}})}catch(e){}
   st.stream=null; st.ready=false; st.drawOn=false;
   st.an=null; st.volNode=null; st.fdata=null; st.wdata=null; st.vdata=null;
-  try{
-    if(st.ctx){
-      var old=st.ctx; st.ctx=null;
-      if(old.state!=='closed') old.close().catch(function(){});
-    }
-  }catch(e){}
-  sys();
-  log('Focus rendu (BT/MP3 peut revenir)','info');
+  try{if(st.ctx){var old=st.ctx; st.ctx=null; if(old.state!=='closed') old.close().catch(function(){})}}catch(e){}
+  sys(); log('Focus rendu (MP3/BT peut revenir)','info');
 }
 function ensureMic(){
   if(st.hardStop) return Promise.resolve(false);
@@ -471,7 +460,7 @@ function initSensors(){
 }
 
 function buildLogText(){
-  var lines=['=== KITT v50.4 ===',stamp(),'Profil: '+cfg.profile,'Agent: '+!!cfg.agentMode,''];
+  var lines=['=== KITT v50.6 RÉEL ===',stamp(),'Profil: '+cfg.profile,'Agent: '+!!cfg.agentMode,''];
   st.hist.forEach(function(m){lines.push((m.role==='user'?'IN: ':'OUT: ')+(m.content||''))});
   lines.push('---'); st.fullLog.forEach(function(l){lines.push(l)});
   return lines.join('\n');
@@ -480,14 +469,14 @@ function exportFullLog(){
   var n=nextExportNum();
   var a=document.createElement('a');
   a.href=URL.createObjectURL(new Blob(['\uFEFF'+buildLogText()],{type:'text/plain;charset=utf-8'}));
-  a.download='kitt-504-'+n+'.txt';
+  a.download='kitt-506-'+n+'.txt';
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
   toast('LOG #'+n);
 }
 function mailFullLog(){
   var to=(cfg.mailTo||'').trim(); if(!to||to.indexOf('@')<0){toast('Email invalide','err');return}
   var body=buildLogText(); if(body.length>1800) body='…\n'+body.slice(-1700);
-  window.location.href='mailto:'+to+'?subject='+encodeURIComponent('KITT 50.4 log')+'&body='+encodeURIComponent(body);
+  window.location.href='mailto:'+to+'?subject='+encodeURIComponent('KITT 50.6 log')+'&body='+encodeURIComponent(body);
   toast('Mail');
 }
 
@@ -499,24 +488,24 @@ function updateKeyStatus(){
 }
 
 function load(){
-  try{var raw=safeGet(S_CFG,null)||safeGet('sl503k',null); if(raw) Object.assign(cfg,JSON.parse(raw))}catch(e){}
+  try{var raw=safeGet(S_CFG,null)||safeGet('sl504k',null)||safeGet('sl505k',null); if(raw) Object.assign(cfg,JSON.parse(raw))}catch(e){}
   try{var s=JSON.parse(safeGet(S_LOG,'[]')||'[]'); if(Array.isArray(s)) st.fullLog=s}catch(e){}
   st.muted=false; st.hardStop=false;
   if(!cfg.profile) cfg.profile='bt';
+  cfg.realOnly=true;
   fixModel(); applyToUI(); updateKeyStatus(); updateMuteUI(); updateUITags();
 }
 function applyToUI(){
   fixModel();
-  document.documentElement.style.setProperty('--fg',cfg.color||'#00ff41');
   function sv(id,v){var e=$('#'+id); if(e) e.value=v}
   function sc(id,v){var e=$('#'+id); if(e) e.checked=!!v}
-  sv('key',cfg.key||''); sv('model',cfg.model); sv('lang',cfg.lang); sv('col',cfg.color||'#00ff41');
+  sv('key',cfg.key||''); sv('model',cfg.model); sv('lang',cfg.lang);
   sv('profile',cfg.profile||'bt'); sv('aiName',cfg.aiName||'KITT');
   sv('wake',cfg.wakeWords); sv('stopw',cfg.stopWords); sv('mailTo',cfg.mailTo||'');
   sc('agentMode',cfg.agentMode!==false); sc('reportSpeech',cfg.reportSpeech!==false);
   sc('earPriority',cfg.earPriority!==false); sc('btFriendly',cfg.btFriendly!==false);
-  sc('realOnly',cfg.realOnly!==false); sc('always',cfg.always!==false);
-  sc('speakNoise',!!cfg.speakNoise); sc('useSensors',cfg.useSensors!==false);
+  sc('realOnly',true); sc('always',cfg.always!==false);
+  sc('noise',cfg.noise!==false); sc('speakNoise',!!cfg.speakNoise); sc('useSensors',cfg.useSensors!==false);
   sc('tts',cfg.tts); sc('wakelock',cfg.wakelock); sc('autoLog',cfg.autoLog); sc('logAll',cfg.logAll);
   [['sens','vsens',cfg.sens],['noisevol','vnoisevol',cfg.noiseVol],['sil','vsil',cfg.silence],
    ['max','vmax',cfg.maxRecord],['gap','vgap',cfg.gapMs],['release','vrelease',cfg.releaseMs],
@@ -533,14 +522,14 @@ function saveAll(){
   persistKey();
   var prev=cfg.profile;
   cfg.model=$('#model').value; fixModel();
-  cfg.lang=$('#lang').value; cfg.color=$('#col').value; cfg.tts=$('#tts').checked;
+  cfg.lang=$('#lang').value; cfg.tts=$('#tts').checked;
   cfg.aiName=($('#aiName').value||'KITT').trim();
   cfg.profile=$('#profile').value;
   if(cfg.profile!==prev) applyProfile(cfg.profile);
   cfg.agentMode=$('#agentMode').checked; cfg.reportSpeech=$('#reportSpeech').checked;
   cfg.earPriority=$('#earPriority').checked; cfg.btFriendly=$('#btFriendly').checked;
-  cfg.realOnly=$('#realOnly').checked; cfg.always=$('#always').checked;
-  cfg.speakNoise=$('#speakNoise').checked; cfg.useSensors=$('#useSensors').checked;
+  cfg.realOnly=true; cfg.always=$('#always').checked;
+  cfg.noise=$('#noise').checked; cfg.speakNoise=$('#speakNoise').checked; cfg.useSensors=$('#useSensors').checked;
   cfg.sens=+$('#sens').value; cfg.noiseVol=+$('#noisevol').value;
   cfg.silence=+$('#sil').value; cfg.maxRecord=+$('#max').value;
   cfg.gapMs=+$('#gap').value; cfg.releaseMs=+$('#release').value; cfg.coolSec=+$('#cool').value;
@@ -690,17 +679,6 @@ function handleCommand(text){
   return false;
 }
 
-function finishAndRelease(myId){
-  return waitUntilQuiet()
-    .then(function(){ return delay(cfg.releaseMs||700); })
-    .then(function(){
-      if(shouldRelease()) releaseMic();
-      if(!st.hardStop) live('Micro OFF — MP3/BT peut revenir','idle');
-      if(st.auto&&st.loopId===myId&&!st.hardStop) setTimeout(loopContinue, cfg.gapMs||2800);
-    });
-}
-function loopContinue(){ /* placeholder set by autoStart via closure — see below */ }
-
 function autoStart(comp){
   if(st.hardStop) clearHardStop();
   if(st.run&&st.comp===!!comp) return;
@@ -712,9 +690,9 @@ function autoStart(comp){
   var a=$('#auto'),c=$('#comp'),m=$('#mode');
   if(a) a.classList.toggle('on',!comp); if(c) c.classList.toggle('on',!!comp);
   if(m) m.textContent=comp?(cfg.agentMode?'AGENT 24/7':'24/7'):'AUTO';
-  live('Agent BT: MP3 OK, j’écoute autour…','listen');
+  live('Réel ON — j’écoute parole / bruits / sons','listen');
   status(comp?'24/7':'AUTO');
-  log((comp?'24/7':'AUTO')+' ON profil='+cfg.profile,'info');
+  log((comp?'24/7':'AUTO')+' ON réel profil='+cfg.profile,'info');
 
   function loop(){
     if(!st.auto||st.loopId!==myId||st.hardStop) return;
@@ -725,7 +703,7 @@ function autoStart(comp){
         return null;
       }
       resumeAudio();
-      live('Écoute autour…','listen');
+      live('Écoute réel…','listen');
       return waitForSound(myId);
     }).then(function(got){
       if(!st.auto||st.loopId!==myId||st.hardStop) return null;
@@ -740,8 +718,8 @@ function autoStart(comp){
         if(st.auto&&st.loopId===myId&&!st.hardStop) setTimeout(loop,cfg.gapMs||2800);
         return;
       }
-      log('Capté '+Math.round(blob.size/1024)+'ko vol='+Math.round(st.lastVol),'info');
-      live('Oreille…','think');
+      log('Capté '+Math.round(blob.size/1024)+'ko vol='+Math.round(st.lastVol)+' b/m/h='+st.lastBass+'/'+st.lastMid+'/'+st.lastHigh,'info');
+      live('Analyse réel…','think');
       return whisper(blob).then(function(text){
         if(!st.auto||st.loopId!==myId||st.hardStop){ if(shouldRelease()) releaseMic(); return; }
 
@@ -756,56 +734,70 @@ function autoStart(comp){
           }
 
           var forKitt=cfg.wakeWords.split(',').some(function(w){return norm(text).indexOf(norm(w))!==-1});
+          var ask=looksLikeAsk(text);
 
-          if(cfg.agentMode&&cfg.reportSpeech&&!forKitt){
+          // RÉPONDRE (pas seulement répéter)
+          if(forKitt||cfg.always||ask){
+            st.lastWasNoise=false;
+            live(text,'ok');
+            return chat(text,false)
+              .then(function(){return waitUntilQuiet()})
+              .then(function(){return delay(cfg.releaseMs||700)})
+              .then(function(){
+                if(shouldRelease()) releaseMic();
+                if(!st.hardStop) live('Micro OFF — MP3/BT peut revenir','idle');
+                if(st.auto&&st.loopId===myId&&!st.hardStop) setTimeout(loop,cfg.gapMs||2800);
+              });
+          }
+
+          // Paroles autour (agent) — réel seulement
+          if(cfg.agentMode&&cfg.reportSpeech){
             if(Date.now()-st.lastNoiseAt<(cfg.coolSec||12)*1000){
               if(shouldRelease()) releaseMic();
               if(st.auto&&st.loopId===myId&&!st.hardStop) setTimeout(loop,cfg.gapMs||2800);
               return;
             }
             st.lastNoiseAt=Date.now(); st.lastWasNoise=true;
-            live('Oreille: '+text.slice(0,48),'ok');
-            return chat(buildAroundPrompt(text),true).then(function(){
-              return waitUntilQuiet();
-            }).then(function(){ return delay(cfg.releaseMs||700); }).then(function(){
-              if(shouldRelease()) releaseMic();
-              if(!st.hardStop) live('Micro OFF — MP3/BT peut revenir','idle');
-              if(st.auto&&st.loopId===myId&&!st.hardStop) setTimeout(loop,cfg.gapMs||2800);
-            });
+            live('Parole autour: '+text.slice(0,48),'ok');
+            return chat(buildAroundPrompt(text),true)
+              .then(function(){return waitUntilQuiet()})
+              .then(function(){return delay(cfg.releaseMs||700)})
+              .then(function(){
+                if(shouldRelease()) releaseMic();
+                if(!st.hardStop) live('Micro OFF — MP3/BT peut revenir','idle');
+                if(st.auto&&st.loopId===myId&&!st.hardStop) setTimeout(loop,cfg.gapMs||2800);
+              });
           }
 
-          if(!cfg.always&&!forKitt){
+          if(shouldRelease()) releaseMic();
+          if(st.auto&&st.loopId===myId&&!st.hardStop) setTimeout(loop,cfg.gapMs||2800);
+          return;
+        }
+
+        // Bruit / son réel sans parole
+        var volLevel=Math.round(st.lastVol||0);
+        var need=Math.max(3,cfg.noiseVol||8);
+        log('Pas de parole claire | vol='+volLevel+' seuil='+need,'info');
+        if(cfg.noise&&(volLevel>=need||st.impact)){
+          if(Date.now()-st.lastNoiseAt<(cfg.coolSec||12)*1000){
             if(shouldRelease()) releaseMic();
             if(st.auto&&st.loopId===myId&&!st.hardStop) setTimeout(loop,cfg.gapMs||2800);
             return;
           }
-
-          st.lastWasNoise=false;
-          live(text,'ok');
-          return chat(text,false).then(function(){ return waitUntilQuiet(); })
-            .then(function(){ return delay(cfg.releaseMs||700); })
-            .then(function(){
-              if(shouldRelease()) releaseMic();
-              if(!st.hardStop) live('Micro OFF — MP3/BT peut revenir','idle');
-              if(st.auto&&st.loopId===myId&&!st.hardStop) setTimeout(loop,cfg.gapMs||2800);
-            });
-        }
-
-        var volLevel=Math.round(st.lastVol||0);
-        var need=Math.max(3,cfg.noiseVol||8);
-        log('Whisper flou | vol='+volLevel,'info');
-        if(cfg.speakNoise&&volLevel>=need){
-          st.lastWasNoise=true;
-          return chat(buildNoisePrompt(volLevel),true).then(function(){ return waitUntilQuiet(); })
-            .then(function(){ return delay(cfg.releaseMs||700); })
-            .then(function(){
-              if(shouldRelease()) releaseMic();
-              if(st.auto&&st.loopId===myId&&!st.hardStop) setTimeout(loop,cfg.gapMs||2800);
-            });
+          st.lastNoiseAt=Date.now(); st.lastWasNoise=true;
+          if(cfg.speakNoise||cfg.agentMode){
+            return chat(buildNoisePrompt(volLevel),true)
+              .then(function(){return waitUntilQuiet()})
+              .then(function(){return delay(cfg.releaseMs||700)})
+              .then(function(){
+                if(shouldRelease()) releaseMic();
+                if(st.auto&&st.loopId===myId&&!st.hardStop) setTimeout(loop,cfg.gapMs||2800);
+              });
+          }
         }
 
         if(shouldRelease()) releaseMic();
-        if(!st.hardStop) live('Écoute autour…','listen');
+        if(!st.hardStop) live('Rien de clair — j’écoute','listen');
         if(st.auto&&st.loopId===myId&&!st.hardStop) setTimeout(loop,cfg.gapMs||2800);
       });
     }).catch(function(e){
@@ -821,7 +813,7 @@ function autoStop(){
   st.auto=false; st.comp=false; st.run=false; st.loopId++;
   var a=$('#auto'),c=$('#comp'),m=$('#mode');
   if(a) a.classList.remove('on'); if(c) c.classList.remove('on'); if(m) m.textContent='OFF';
-  releaseMic(); live('OFF — MP3/BT OK','idle'); status('OFF'); log('OFF','info');
+  releaseMic(); live('OFF — micro libre','idle'); status('OFF'); log('OFF','info');
 }
 
 function whisper(blob){
@@ -844,14 +836,20 @@ function chat(text, around){
   st.ctrl=new AbortController();
   var out=$('#out'); if(out) out.textContent='';
   st.hist.push({role:'user',content:text});
-  if(st.hist.length>14) st.hist=st.hist.slice(-10);
-  log((around?'AUTOUR: ':'Q: ')+text,'qa');
+  if(st.hist.length>12) st.hist=st.hist.slice(-8);
+  log((around?'RÉEL: ':'Q: ')+text,'qa');
   var messages=[{role:'system',content:buildSystemPrompt()}].concat(st.hist);
   var t0=performance.now();
   return fetch(GROQ+'/chat/completions',{
     method:'POST',signal:st.ctrl.signal,
     headers:{'Content-Type':'application/json','Authorization':'Bearer '+getKey()},
-    body:JSON.stringify({model:cfg.model||SAFE,messages:messages,temperature:cfg.temp||0.12,max_tokens:cfg.maxTokens||450,stream:true})
+    body:JSON.stringify({
+      model:cfg.model||SAFE,
+      messages:messages,
+      temperature:Math.min(cfg.temp||0.1,0.12),
+      max_tokens:cfg.maxTokens||400,
+      stream:true
+    })
   }).then(function(r){
     if(!r.ok) throw new Error('HTTP '+r.status);
     var reader=r.body.getReader(),dec=new TextDecoder(),full='',buf='';
@@ -883,13 +881,18 @@ function finish(full,t0,around){
   st.hist.push({role:'assistant',content:full||''}); sys();
   var clean=cleanForSpeech(full||'');
   var out=$('#out');
-  if(cfg.realOnly&&/peut[- ]etre|probablement|on dirait/.test(norm(clean))) clean='';
-  if(!clean||clean.length<2){ if(out) out.textContent=''; live('Rien de clair','idle'); return; }
+  // filtre réel strict
+  if(cfg.realOnly){
+    var n=norm(clean);
+    if(/peut[- ]etre|probablement|on dirait|il semblerait|je pense|j imagine|j'imagine|peut etre/.test(n)) clean='';
+    if(/entit[eé]|fantome|esprit|presence (etrange|étrange)|quelque chose d invisible/.test(n)) clean='';
+  }
+  if(!clean||clean.length<2){ if(out) out.textContent=''; live('Rien de réel clair','idle'); return; }
   if(out) out.textContent=clean;
   live(clean.slice(0,60)+(clean.length>60?'…':''),'ok');
   log('OREILLE: '+clean,'qa');
   if(cfg.tts&&!st.muted){
-    if(!around||cfg.speakNoise||cfg.agentMode) speak(clean);
+    if(!around||cfg.speakNoise||cfg.agentMode||!around) speak(clean);
   }
 }
 
@@ -951,7 +954,7 @@ function launch(){
   $('#boot').style.display='none'; $('#app').classList.add('show');
   setTimeout(sizeCanvases,80);
   if('ontouchstart' in window) $('#ptt').classList.add('show');
-  live('Prêt. Profil '+profLabel()+'. 24/7 = agent BT.','idle');
+  live('Prêt RÉEL. 24/7 = écoute parole/bruits/sons.','idle');
   log(BUILD.label+' prêt','info'); sys();
 }
 
