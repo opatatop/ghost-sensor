@@ -47,7 +47,7 @@ footer{position:absolute;bottom:0;left:0;right:0;background:var(--panel);border-
 .timer{font-size:18px;min-width:70px;text-align:center}
 .timer.on{color:var(--red);animation:blk 1s step-end infinite}
 .sep{width:3px;height:28px;background:var(--muted)}
-.live{grid-column:1/-1;background:var(--bg2);border:4px solid var(--fg);position:relative;min-height:110px}
+.live{grid-column:1/-1;background:var(--bg2);border:4px solid var(--fg);position:relative;min-height:120px}
 .live .label{position:absolute;top:-11px;left:10px;background:var(--bg2);padding:0 8px;font-size:14px}
 .live .badge{position:absolute;top:8px;right:10px;font-size:14px;padding:3px 8px;border:2px solid var(--muted);color:var(--muted)}
 .live .badge.listen{color:var(--blue);border-color:var(--blue);animation:blk 1.1s step-end infinite}
@@ -55,7 +55,8 @@ footer{position:absolute;bottom:0;left:0;right:0;background:var(--panel);border-
 .live .badge.think{color:var(--orange);border-color:var(--orange)}
 .live .badge.ok{color:var(--fg);border-color:var(--fg)}
 .live .badge.pause{color:var(--orange);border-color:var(--orange)}
-.live .txt{padding:28px 12px 8px;font-size:18px;line-height:1.35;min-height:70px;word-break:break-word}
+.live .badge.err{color:var(--red);border-color:var(--red)}
+.live .txt{padding:28px 12px 8px;font-size:19px;line-height:1.4;min-height:70px;word-break:break-word}
 .live .txt.dim{color:var(--muted);font-size:16px}
 .live .txt.red{color:var(--red)}
 .live .txt.orange{color:var(--orange);font-size:17px}
@@ -69,8 +70,8 @@ footer{position:absolute;bottom:0;left:0;right:0;background:var(--panel);border-
 .panel .label{position:absolute;top:-11px;left:10px;background:var(--panel);padding:0 8px;font-size:14px}
 .panel.full{grid-column:1/-1}
 canvas{display:block;width:100%;height:86px;background:var(--bg2);image-rendering:pixelated}
-.out{background:var(--bg2);border:2px dashed var(--dim);padding:14px;font-size:17px;line-height:1.45;white-space:pre-wrap;word-break:break-word;max-height:300px;overflow-y:auto;min-height:70px;color:var(--dim)}
-.log{max-height:130px;overflow-y:auto;font-size:14px;background:var(--bg2);border:2px dashed var(--orange);padding:8px}
+.out{background:var(--bg2);border:3px solid var(--dim);padding:16px;font-size:18px;line-height:1.5;white-space:pre-wrap;word-break:break-word;max-height:320px;overflow-y:auto;min-height:90px;color:var(--fg)}
+.log{max-height:140px;overflow-y:auto;font-size:14px;background:var(--bg2);border:2px dashed var(--orange);padding:8px}
 .log div{padding:3px 4px;border-left:3px solid transparent;margin:2px 0}
 .log .ok{color:var(--dim);border-color:var(--muted)}
 .log .err{color:var(--red);border-color:var(--red)}
@@ -106,7 +107,7 @@ video,.preview{max-width:100%;max-height:160px;border:3px solid var(--dim);backg
 .hint{font-size:15px;color:var(--dim);margin-top:6px;line-height:1.45}
 #keystatus{font-size:15px;margin-top:8px;padding:8px;border:2px dashed var(--dim);color:var(--muted)}
 #keystatus.ok{color:var(--fg);border-color:var(--fg)}
-@media(max-width:600px){#boot h1{font-size:22px}.bar .round{width:46px;height:46px;font-size:10px}#ptt{width:100px;height:100px;font-size:13px;bottom:52px}dialog{width:98vw}main{grid-template-columns:1fr}.live .txt{font-size:16px}header .htitle{font-size:15px}body{font-size:17px}}
+@media(max-width:600px){#boot h1{font-size:22px}.bar .round{width:46px;height:46px;font-size:10px}#ptt{width:100px;height:100px;font-size:13px;bottom:52px}dialog{width:98vw}main{grid-template-columns:1fr}.live .txt{font-size:17px}header .htitle{font-size:15px}body{font-size:17px}}
 </style>
 </head>
 <body>
@@ -124,7 +125,7 @@ video,.preview{max-width:100%;max-height:160px;border:3px solid var(--dim);backg
     <div class="fl">
       <label>Ta clé API (gsk_...)</label>
       <textarea id="key" placeholder="Colle ta clé ici" spellcheck="false" autocomplete="off"></textarea>
-      <div class="hint">console.groq.com → API Keys → Create. Sans clé rien ne fonctionne.</div>
+      <div class="hint">console.groq.com → API Keys → Create. Sans clé rien ne marche.</div>
       <div id="keystatus">Aucune clé détectée</div>
     </div>
     <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
@@ -144,46 +145,25 @@ video,.preview{max-width:100%;max-height:160px;border:3px solid var(--dim);backg
         <option value="groq/compound-mini">groq/compound-mini</option>
         <option value="openai/gpt-oss-safeguard-20b">openai/gpt-oss-safeguard-20b</option>
       </select>
+      <div class="hint">Si ça ne répond pas → change de modèle et clique TESTER.</div>
     </div>
     <div class="fl">
-      <label>Température (plus bas = plus réel) : <span id="vtemp">0.20</span></label>
-      <div class="range"><input type="range" id="temp" min="0.05" max="0.5" step="0.05" value="0.20"></div>
-      <div class="hint">0.15 à 0.25 recommandé pour rester strictement réel.</div>
+      <label>Température : <span id="vtemp">0.25</span></label>
+      <div class="range"><input type="range" id="temp" min="0.05" max="0.5" step="0.05" value="0.25"></div>
     </div>
     <div class="fl">
-      <label>Longueur max : <span id="vtokens">900</span></label>
-      <div class="range"><input type="range" id="tokens" min="200" max="2000" step="100" value="900"></div>
+      <label>Longueur max : <span id="vtokens">1000</span></label>
+      <div class="range"><input type="range" id="tokens" min="300" max="2000" step="100" value="1000"></div>
     </div>
 
-    <div class="sec">3. ÉCOUTE MICRO</div>
-    <div class="fl">
-      <label>Sensibilité : <span id="vsens">5</span></label>
-      <div class="range"><input type="range" id="sens" min="2" max="25" value="5"></div>
-    </div>
-    <div class="fl">
-      <label>Silence fin (ms) : <span id="vsil">450</span></label>
-      <div class="range"><input type="range" id="sil" min="250" max="1500" step="25" value="450"></div>
-    </div>
-    <div class="fl">
-      <label>Durée mini parole (ms) : <span id="vmin">120</span></label>
-      <div class="range"><input type="range" id="min" min="60" max="600" step="20" value="120"></div>
-    </div>
-    <div class="fl">
-      <label>Durée max (s) : <span id="vmax">40</span></label>
-      <div class="range"><input type="range" id="max" min="12" max="90" value="40"></div>
-    </div>
-    <div class="fl">
-      <label>Seuil bruit : <span id="vnoisevol">4</span></label>
-      <div class="range"><input type="range" id="noisevol" min="1" max="20" value="4"></div>
-    </div>
-    <div class="fl">
-      <label>Durée ambiance (s) : <span id="vamb">3</span></label>
-      <div class="range"><input type="range" id="amb" min="2" max="8" step="1" value="3"></div>
-    </div>
-    <div class="fl">
-      <label>Cooldown bruit (s) : <span id="vcool">10</span></label>
-      <div class="range"><input type="range" id="cool" min="5" max="40" step="1" value="10"></div>
-    </div>
+    <div class="sec">3. ÉCOUTE</div>
+    <div class="fl"><label>Sensibilité : <span id="vsens">5</span></label><div class="range"><input type="range" id="sens" min="2" max="25" value="5"></div></div>
+    <div class="fl"><label>Silence fin (ms) : <span id="vsil">450</span></label><div class="range"><input type="range" id="sil" min="250" max="1500" step="25" value="450"></div></div>
+    <div class="fl"><label>Durée mini parole (ms) : <span id="vmin">120</span></label><div class="range"><input type="range" id="min" min="60" max="600" step="20" value="120"></div></div>
+    <div class="fl"><label>Durée max (s) : <span id="vmax">40</span></label><div class="range"><input type="range" id="max" min="12" max="90" value="40"></div></div>
+    <div class="fl"><label>Seuil bruit : <span id="vnoisevol">4</span></label><div class="range"><input type="range" id="noisevol" min="1" max="20" value="4"></div></div>
+    <div class="fl"><label>Durée ambiance (s) : <span id="vamb">3</span></label><div class="range"><input type="range" id="amb" min="2" max="8" step="1" value="3"></div></div>
+    <div class="fl"><label>Cooldown bruit (s) : <span id="vcool">10</span></label><div class="range"><input type="range" id="cool" min="5" max="40" step="1" value="10"></div></div>
     <div class="fl">
       <label>Mode écoute</label>
       <select id="listenMode">
@@ -194,34 +174,29 @@ video,.preview{max-width:100%;max-height:160px;border:3px solid var(--dim);backg
       </select>
     </div>
 
-    <div class="sec">4. ANALYSE — QUE DU RÉEL</div>
+    <div class="sec">4. ANALYSE (QUE DU RÉEL)</div>
     <div class="fl">
       <label>Niveau de détail</label>
       <select id="detail">
         <option value="short">Court</option>
         <option value="normal" selected>Normal</option>
-        <option value="max">Maximum (mais toujours réel)</option>
+        <option value="max">Maximum</option>
       </select>
     </div>
-    <div class="fl">
-      <label>Hypothèses max : <span id="vana">3</span></label>
-      <div class="range"><input type="range" id="ana" min="1" max="5" value="3"></div>
-    </div>
-    <div class="fl"><label class="check"><input type="checkbox" id="strict" checked> Mode strict (très peu d’invention)</label></div>
+    <div class="fl"><label>Hypothèses max : <span id="vana">3</span></label><div class="range"><input type="range" id="ana" min="1" max="5" value="3"></div></div>
+    <div class="fl"><label class="check"><input type="checkbox" id="strict" checked> Mode strict</label></div>
     <div class="fl"><label class="check"><input type="checkbox" id="noTitles" checked> Interdire titres inventés</label></div>
-    <div class="fl"><label class="check"><input type="checkbox" id="entities"> Entités (seulement si clairement justifié)</label>
-      <div class="hint">L’IA ne parlera d’entité que si le son le montre vraiment. Sinon elle n’en parle pas.</div>
-    </div>
+    <div class="fl"><label class="check"><input type="checkbox" id="entities"> Entités (seulement si clairement justifié)</label></div>
     <div class="fl"><label class="check"><input type="checkbox" id="noise" checked> Analyser les bruits</label></div>
     <div class="fl"><label class="check"><input type="checkbox" id="freq" checked> Utiliser les fréquences</label></div>
-    <div class="fl"><label class="check"><input type="checkbox" id="analogy" checked> Analogies simples</label></div>
+    <div class="fl"><label class="check"><input type="checkbox" id="analogy" checked> Analogies</label></div>
     <div class="fl"><label class="check"><input type="checkbox" id="entity" checked> Sources possibles</label></div>
     <div class="fl"><label class="check"><input type="checkbox" id="env" checked> Intérieur / extérieur</label></div>
-    <div class="fl"><label class="check"><input type="checkbox" id="rank" checked> Classer les hypothèses</label></div>
-    <div class="fl"><label class="check"><input type="checkbox" id="speakNoise" checked> Voix aussi sur les bruits</label></div>
+    <div class="fl"><label class="check"><input type="checkbox" id="rank" checked> Classer hypothèses</label></div>
+    <div class="fl"><label class="check"><input type="checkbox" id="speakNoise" checked> Voix sur les bruits</label></div>
     <div class="fl"><label class="check"><input type="checkbox" id="always" checked> Toujours répondre à la parole</label></div>
 
-    <div class="fl"><label>Sources autorisées :</label></div>
+    <div class="fl"><label>Sources :</label></div>
     <div class="fl"><label class="check"><input type="checkbox" id="srcHuman" checked> Humain</label></div>
     <div class="fl"><label class="check"><input type="checkbox" id="srcAnimal" checked> Animal</label></div>
     <div class="fl"><label class="check"><input type="checkbox" id="srcMech" checked> Mécanique</label></div>
@@ -229,40 +204,22 @@ video,.preview{max-width:100%;max-height:160px;border:3px solid var(--dim);backg
     <div class="fl"><label class="check"><input type="checkbox" id="srcEnv" checked> Environnement</label></div>
     <div class="fl"><label class="check"><input type="checkbox" id="srcImpact" checked> Impacts</label></div>
     <div class="fl"><label class="check"><input type="checkbox" id="srcMusic" checked> Musique</label></div>
-    <div class="fl"><label class="check"><input type="checkbox" id="srcEntity"> Entité (seulement si justifié)</label></div>
+    <div class="fl"><label class="check"><input type="checkbox" id="srcEntity"> Entité (si justifié)</label></div>
 
-    <div class="sec">5. COMMANDES VOCALES</div>
-    <div class="fl">
-      <label>Mots STOP</label>
-      <input type="text" id="stopw" value="stop,arrête,arrete,tais-toi,silence,assez">
-    </div>
-    <div class="fl">
-      <label>Mots d’appel</label>
-      <input type="text" id="wake" value="supra,lab,assistant,hey,ok,yo">
-    </div>
+    <div class="sec">5. COMMANDES</div>
+    <div class="fl"><label>Mots STOP</label><input type="text" id="stopw" value="stop,arrête,arrete,tais-toi,silence,assez"></div>
+    <div class="fl"><label>Mots d’appel</label><input type="text" id="wake" value="supra,lab,assistant,hey,ok,yo"></div>
 
     <div class="sec">6. VOIX & INTERFACE</div>
     <div class="fl"><label class="check"><input type="checkbox" id="tts" checked> Synthèse vocale</label></div>
-    <div class="fl">
-      <label>Vitesse voix : <span id="vrate">0.95</span></label>
-      <div class="range"><input type="range" id="rate" min="0.7" max="1.2" step="0.02" value="0.95"></div>
-    </div>
+    <div class="fl"><label>Vitesse voix : <span id="vrate">0.95</span></label><div class="range"><input type="range" id="rate" min="0.7" max="1.2" step="0.02" value="0.95"></div></div>
     <div class="fl">
       <label>Langue</label>
-      <select id="lang">
-        <option value="fr">Français</option>
-        <option value="en">English</option>
-        <option value="es">Español</option>
-      </select>
+      <select id="lang"><option value="fr">Français</option><option value="en">English</option><option value="es">Español</option></select>
     </div>
     <div class="fl">
       <label>Couleur</label>
-      <select id="col">
-        <option value="#00ff41">Vert</option>
-        <option value="#00ccff">Cyan</option>
-        <option value="#ff6600">Orange</option>
-        <option value="#aa00ff">Violet</option>
-      </select>
+      <select id="col"><option value="#00ff41">Vert</option><option value="#00ccff">Cyan</option><option value="#ff6600">Orange</option><option value="#aa00ff">Violet</option></select>
     </div>
     <div class="fl"><label class="check"><input type="checkbox" id="wakelock" checked> Écran allumé</label></div>
   </div>
@@ -316,9 +273,9 @@ video,.preview{max-width:100%;max-height:160px;border:3px solid var(--dim);backg
     <div class="panel"><div class="label">OSCILLOSCOPE</div><canvas id="c2"></canvas></div>
     <div class="panel"><div class="label">VOLUME</div><canvas id="c3"></canvas></div>
     <div class="live">
-      <div class="label">ÉCOUTE EN DIRECT (QUE DU RÉEL)</div>
+      <div class="label">ÉCOUTE EN DIRECT</div>
       <div class="badge" id="badge">PRÊT</div>
-      <div class="txt dim" id="live">Prêt — AUTO ou 24/7</div>
+      <div class="txt dim" id="live">Prêt — appuie sur AUTO ou 24/7</div>
       <div class="meta" id="livemeta">Mode : — | Volume : — | Dernière action : —</div>
     </div>
     <div class="input-row">
@@ -327,8 +284,8 @@ video,.preview{max-width:100%;max-height:160px;border:3px solid var(--dim);backg
       <button type="button" id="send">ENVOYER</button>
     </div>
     <div class="panel full">
-      <div class="label">RÉPONSE (STRICTEMENT RÉELLE)</div>
-      <div class="out" id="out">En attente...</div>
+      <div class="label">RÉPONSE (QUE DU RÉEL)</div>
+      <div class="out" id="out">En attente de son ou de texte...</div>
     </div>
     <div class="panel full">
       <div class="label">JOURNAL</div>
@@ -367,7 +324,7 @@ var DEFAULT={
   ambSec:3, coolSec:10,
   wakeWords:'supra,lab,assistant,hey,ok,yo',
   stopWords:'stop,arrête,arrete,tais-toi,silence,assez',
-  temp:0.20, maxTokens:900, rate:0.95, wakelock:true
+  temp:0.25, maxTokens:1000, rate:0.95, wakelock:true
 };
 
 var GROQ='https://api.groq.com/openai/v1';
@@ -392,74 +349,53 @@ function parseWords(str){return (str||'').toLowerCase().split(',').map(function(
 function matchWords(text,list){var t=norm(text);if(!t)return false;for(var i=0;i<list.length;i++){var w=norm(list[i]);if(!w)continue;if(t===w||t.startsWith(w+' ')||t.endsWith(' '+w)||t.indexOf(' '+w+' ')!==-1)return true}return false}
 function isStop(t){return matchWords(t,parseWords(cfg.stopWords))}
 function isWake(t){return matchWords(t,parseWords(cfg.wakeWords))}
-function toast(msg,type){type=type||'ok';var el=$('#toast');if(!el)return;el.textContent=msg;el.className='toast '+type+' show';clearTimeout(el._tid);el._tid=setTimeout(function(){el.classList.remove('show')},3000)}
-function log(m,t){t=t||'ok';var el=$('#log');if(!el)return;var d=document.createElement('div');d.className=t;d.textContent='['+now()+'] '+m;el.appendChild(d);el.scrollTop=el.scrollHeight;while(el.children.length>100)el.firstChild.remove()}
+function toast(msg,type){type=type||'ok';var el=$('#toast');if(!el)return;el.textContent=msg;el.className='toast '+type+' show';clearTimeout(el._tid);el._tid=setTimeout(function(){el.classList.remove('show')},3200)}
+function log(m,t){t=t||'ok';var el=$('#log');if(!el)return;var d=document.createElement('div');d.className=t;d.textContent='['+now()+'] '+m;el.appendChild(d);el.scrollTop=el.scrollHeight;while(el.children.length>80)el.firstChild.remove()}
 function status(t){var el=$('#status');if(el)el.textContent=t}
 function updateLiveMeta(){var el=$('#livemeta');if(!el)return;var mode=st.comp?'24/7':(st.auto?'AUTO':'MANUEL');if(st.paused)mode+=' (PAUSE)';el.textContent='Mode : '+mode+'  |  Volume : '+Math.round(st.lastVol||0)+'  |  Sens : '+cfg.sens+'  |  Dernière : '+st.lastAction}
 function sys(){function ok(v){return'<span style="color:var(--fg)">'+esc(v)+'</span>'}function ko(v){return'<span style="color:var(--red)">'+esc(v)+'</span>'}function wa(v){return'<span style="color:var(--orange)">'+esc(v)+'</span>'}var el=$('#sys');if(el){el.innerHTML='Micro '+(st.stream?ok('OK'):ko('OFF'))+' · Clé '+(hasKey()?ok('OK'):ko('ABSENTE'))+' · '+(st.comp?wa('24/7'):st.auto?wa('AUTO'):ok('MANUEL'))+(st.paused?' · '+wa('PAUSE'):'')+(cfg.strict?' · STRICT':'')+'<br>Modèle : '+esc((cfg.model||'').split('/').pop())+(st.muted?' · '+ko('MUET'):'')}var s=$('#stats');if(s)s.textContent='≈'+st.tokens+' jetons · '+(st.lat||'—')+' ms · '+st.reqs+' req · bruits : '+st.noiseCount;updateLiveMeta()}
-function live(txt,mode){var t=$('#live'),b=$('#badge');if(!t||!b)return;t.className='txt';b.className='badge';if(mode==='idle'){t.classList.add('dim');t.textContent=txt;b.textContent='PRÊT'}else if(mode==='listen'){t.classList.add('dim');t.textContent=txt;b.textContent='ÉCOUTE';b.classList.add('listen')}else if(mode==='rec'){t.classList.add('red');t.textContent=txt;b.textContent='REC';b.classList.add('rec')}else if(mode==='think'){t.classList.add('orange');t.textContent=txt;b.textContent='ANALYSE';b.classList.add('think')}else if(mode==='ok'){t.textContent=txt;b.textContent='OK';b.classList.add('ok')}else if(mode==='pause'){t.classList.add('orange');t.textContent=txt;b.textContent='PAUSE';b.classList.add('pause')}updateLiveMeta()}
+function live(txt,mode){var t=$('#live'),b=$('#badge');if(!t||!b)return;t.className='txt';b.className='badge';if(mode==='idle'){t.classList.add('dim');t.textContent=txt;b.textContent='PRÊT'}else if(mode==='listen'){t.classList.add('dim');t.textContent=txt;b.textContent='ÉCOUTE';b.classList.add('listen')}else if(mode==='rec'){t.classList.add('red');t.textContent=txt;b.textContent='REC';b.classList.add('rec')}else if(mode==='think'){t.classList.add('orange');t.textContent=txt;b.textContent='ANALYSE';b.classList.add('think')}else if(mode==='ok'){t.textContent=txt;b.textContent='OK';b.classList.add('ok')}else if(mode==='pause'){t.classList.add('orange');t.textContent=txt;b.textContent='PAUSE';b.classList.add('pause')}else if(mode==='err'){t.classList.add('red');t.textContent=txt;b.textContent='ERREUR';b.classList.add('err')}updateLiveMeta()}
 function typeEl(el,str,speed){speed=speed||26;return new Promise(function(res){var i=0;el.textContent='';var iv=setInterval(function(){if(i<str.length)el.textContent+=str[i++];else{clearInterval(iv);res()}},speed)})}
 
-function sourceList(){
-  var s=[];
-  if(cfg.srcHuman)s.push('humain');
-  if(cfg.srcAnimal)s.push('animal');
-  if(cfg.srcMech)s.push('mécanique');
-  if(cfg.srcElec)s.push('électronique');
-  if(cfg.srcEnv)s.push('environnement');
-  if(cfg.srcImpact)s.push('impact');
-  if(cfg.srcMusic)s.push('musique');
-  if(cfg.srcEntity&&cfg.entities)s.push('entité (seulement si clairement justifié)');
-  return s.length?s.join(', '):'source physique crédible';
-}
+function sourceList(){var s=[];if(cfg.srcHuman)s.push('humain');if(cfg.srcAnimal)s.push('animal');if(cfg.srcMech)s.push('mécanique');if(cfg.srcElec)s.push('électronique');if(cfg.srcEnv)s.push('environnement');if(cfg.srcImpact)s.push('impact');if(cfg.srcMusic)s.push('musique');if(cfg.srcEntity&&cfg.entities)s.push('entité (si clairement justifié)');return s.length?s.join(', '):'source physique crédible'}
 
 function buildSystemPrompt(){
   var p='Tu es SUPRA dans SUPRA LAB. Tu reçois uniquement des données réelles du micro : transcription + volume + fréquences.\n\n';
-  p+='RÈGLE ABSOLUE : QUE DU RÉEL. Aucune simulation. Aucune invention. Aucun détail inventé.\n\n';
-  p+='TON : franc, tutoiement, phrases courtes et directes.\n\n';
-  p+='ANTI-INVENTION (obligatoire) :\n';
-  p+='- Base ta réponse UNIQUEMENT sur le volume, les fréquences et la transcription fournis.\n';
-  p+='- Si tu n’as pas assez d’indices → dis clairement « peu clair » ou « ambigu ».\n';
-  p+='- Interdit d’inventer des titres, des noms, des histoires ou des détails absents des données.\n';
-  p+='- Interdit de forcer une entité si le son ne le justifie pas clairement.\n';
-  p+='- Reste dans le physique crédible et observable.\n\n';
-  p+='FORMAT : texte oral, zéro markdown, zéro étoile. Numérote : un, deux, trois.\n';
-  if(cfg.detail==='short')p+='2 à 4 phrases maximum.\n';
-  else if(cfg.detail==='max')p+='Détaillé uniquement avec ce qui est réellement présent.\n';
-  else p+='Clair et strictement factuel.\n';
+  p+='RÈGLE ABSOLUE : QUE DU RÉEL. Aucune simulation. Aucune invention.\n\n';
+  p+='TON : franc, tutoiement, phrases courtes.\n\n';
+  p+='- Base-toi UNIQUEMENT sur le volume, les fréquences et la transcription.\n';
+  p+='- Si c’est flou → dis « peu clair » ou « ambigu ».\n';
+  p+='- Interdit d’inventer des titres ou des détails absents.\n';
+  p+='- Entité seulement si le son le justifie clairement.\n\n';
+  p+='FORMAT : texte oral, zéro markdown, zéro étoile. Numérote un, deux, trois.\n';
+  if(cfg.detail==='short')p+='2 à 4 phrases max.\n';
+  else if(cfg.detail==='max')p+='Détaillé uniquement avec les données réelles.\n';
+  else p+='Clair et factuel.\n';
   if(cfg.rank)p+='Classe du plus au moins probable.\n';
-  if(cfg.analogy)p+='Analogie simple seulement si elle est évidente.\n';
-  if(cfg.entity)p+='Sources possibles uniquement si cohérentes : '+sourceList()+'.\n';
-  if(cfg.env)p+='Intérieur ou extérieur seulement si les indices le permettent.\n';
-  if(cfg.freq)p+='Utilise les fréquences fournies et rien d’autre.\n';
-  if(cfg.entities){
-    p+='\nENTITÉS : Mentionne une voix inexpliquée ou une présence UNIQUEMENT si le son contient vraiment quelque chose d’anormal (voix non humaine claire, chuchotement distinct, etc.). Sinon n’en parle pas du tout.\n';
-  }
-  if(cfg.strict)p+='- MODE STRICT activé : sois encore plus prudent et factuel.\n';
-  return p;
-}
-
-function buildNoisePrompt(volLevel){
-  var p='Son réel capté sans parole claire. Volume environ '+volLevel+'.\n';
-  if(cfg.freq)p+='Fréquences réelles : grave '+st.lastBass+', médium '+st.lastMid+', aigu '+st.lastHigh+'.\n';
-  p+='RÈGLE : QUE DU RÉEL. Aucune invention.\n';
-  p+='Décris uniquement ce que les données indiquent. Donne '+(cfg.anaCount||3)+' hypothèses physiques crédibles maximum.\n';
-  if(cfg.entities)p+='Mentionne une entité seulement si le son est vraiment anormal et le justifie clairement. Sinon n’en parle pas.\n';
-  if(cfg.rank)p+='Classe du plus au moins probable.\n';
+  if(cfg.analogy)p+='Analogie simple si évidente.\n';
   if(cfg.entity)p+='Sources possibles : '+sourceList()+'.\n';
-  p+='Si c’est trop flou → dis que c’est ambigu. Texte oral, aucune étoile.\n';
+  if(cfg.env)p+='Intérieur ou extérieur si possible.\n';
+  if(cfg.freq)p+='Utilise les fréquences fournies.\n';
+  if(cfg.entities)p+='\nENTITÉS : seulement si le son est vraiment anormal. Sinon n’en parle pas.\n';
+  if(cfg.strict)p+='- MODE STRICT : sois prudent.\n';
   return p;
 }
-
+function buildNoisePrompt(volLevel){
+  var p='Son réel sans parole claire. Volume environ '+volLevel+'.\n';
+  if(cfg.freq)p+='Fréquences : grave '+st.lastBass+', médium '+st.lastMid+', aigu '+st.lastHigh+'.\n';
+  p+='QUE DU RÉEL. Décris ce que les données indiquent. '+(cfg.anaCount||3)+' hypothèses max.\n';
+  if(cfg.entities)p+='Entité seulement si clairement justifié.\n';
+  if(cfg.rank)p+='Classe du plus au moins probable.\n';
+  if(cfg.entity)p+='Sources : '+sourceList()+'.\n';
+  p+='Si flou → dis ambigu. Texte oral, aucune étoile.\n';
+  return p;
+}
 function buildAmbientPrompt(volLevel){
-  var p='Capture d’ambiance réelle. Analyse uniquement le son capté.\n';
-  p+='Volume environ '+volLevel+'.\n';
-  if(cfg.freq)p+='Fréquences réelles : grave '+st.lastBass+', médium '+st.lastMid+', aigu '+st.lastHigh+'.\n';
-  p+='QUE DU RÉEL. Aucune simulation.\n';
-  p+='Décris ce qui est réellement présent. Pas d’invention.\n';
-  if(cfg.entities)p+='Voix inexpliquée ou entité seulement si le son le montre clairement. Sinon ignore cette hypothèse.\n';
-  p+='Hypothèses réalistes classées. Texte oral. Aucune étoile.\n';
-  if(cfg.strict)p+='Si peu d’indices : dis clairement que c’est peu clair.\n';
+  var p='Capture d’ambiance réelle. Volume environ '+volLevel+'.\n';
+  if(cfg.freq)p+='Fréquences : grave '+st.lastBass+', médium '+st.lastMid+', aigu '+st.lastHigh+'.\n';
+  p+='QUE DU RÉEL. Pas d’invention.\n';
+  if(cfg.entities)p+='Entité seulement si le son le montre clairement.\n';
+  p+='Hypothèses réalistes. Texte oral. Aucune étoile.\n';
   return p;
 }
 
@@ -507,7 +443,7 @@ function saveAll(){
   cfg.wakeWords=$('#wake').value.trim();cfg.stopWords=$('#stopw').value.trim();
   cfg.temp=+$('#temp').value;cfg.maxTokens=+$('#tokens').value;cfg.rate=+$('#rate').value;cfg.wakelock=$('#wakelock').checked;
   try{localStorage.setItem('sl36',JSON.stringify(cfg))}catch(e){}
-  applyToUI();updateKeyStatus();log('Sauvegardé · QUE DU RÉEL');toast('Sauvegardé');closeSettings();
+  applyToUI();updateKeyStatus();log('Sauvegardé');toast('Sauvegardé');closeSettings();
 }
 function testKey(){
   persistKeyFromInput();var key=getKey();
@@ -517,8 +453,12 @@ function testKey(){
   fetch(GROQ+'/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
     body:JSON.stringify({model:cfg.model||SAFE_MODEL,messages:[{role:'user',content:'Réponds juste: OK'}],max_tokens:5,temperature:0})
   }).then(function(r){return r.text().then(function(txt){return{ok:r.ok,status:r.status,txt:txt}})})
-  .then(function(res){if(res.ok){log('API OK');toast('Modèle OK');updateKeyStatus();return}log('HTTP '+res.status,'err');toast('Erreur '+res.status,'err')})
-  .catch(function(e){log(e.message,'err');toast('Erreur réseau','err')})
+  .then(function(res){
+    if(res.ok){log('API OK');toast('Modèle OK');updateKeyStatus();return}
+    log('Erreur HTTP '+res.status+' : '+res.txt.slice(0,150),'err');
+    toast('Erreur '+res.status+' — change de modèle','err');
+    live('Erreur modèle : '+res.status,'err');
+  }).catch(function(e){log(e.message,'err');toast('Erreur réseau','err');live('Erreur réseau','err')})
   .finally(function(){if(btn){btn.disabled=false;btn.textContent='TESTER'}});
 }
 
@@ -549,24 +489,203 @@ function stopRec(){if(!st.rec)return;st.rec=false;if(st.mr&&st.mr.state==='recor
 function playLastRec(){if(!st.caps.length){toast('Aucun enregistrement','err');return}var a=$('#audio');if(!a)return;a.src=st.caps[0].url;a.play().catch(function(e){log(e.message,'err')})}
 function pttDown(e){e.preventDefault();if(!st.ready||st.auto||st.ptt||st.ambient)return;st.ptt=true;st.pchunks=[];st.psec=0;var m=getMime();if(!m){st.ptt=false;return}try{st.pmr=new MediaRecorder(st.stream,{mimeType:m})}catch(err){st.ptt=false;return}st.pmr.ondataavailable=function(ev){if(ev.data&&ev.data.size)st.pchunks.push(ev.data)};st.pmr.onstop=pttDone;st.pmr.start(120);$('#ptt').classList.add('rec');$('#ptt').innerHTML='REC...<br><small>relâche</small>';st.piv=setInterval(function(){st.psec++;live('REC '+fmt(st.psec),'rec')},1000);live('REC 00:00','rec')}
 function pttUp(e){e.preventDefault();if(!st.ptt)return;st.ptt=false;clearInterval(st.piv);$('#ptt').classList.remove('rec');$('#ptt').innerHTML='MAINTENIR<br>POUR PARLER';setTimeout(function(){if(st.pmr&&st.pmr.state==='recording')st.pmr.stop()},150)}
-function pttDone(){var mime=(st.pmr&&st.pmr.mimeType)||getMime();var blob=new Blob(st.pchunks,{type:mime});if(blob.size<400){live('Trop court','idle');return}var bands=analyzeBands();st.lastBass=bands.bass;st.lastMid=bands.mid;st.lastHigh=bands.high;st.lastVol=vol();live('Transcription...','think');st.lastAction='PTT';whisper(blob).then(function(text){if(!text){live('Rien compris','idle');return}if(handleVoiceCommand(text))return;if(st.paused){if(text.length>2)resumeResponses();else{live('Pause','pause');return}}live(text,'ok');chat(text,false)})}
+function pttDone(){var mime=(st.pmr&&st.pmr.mimeType)||getMime();var blob=new Blob(st.pchunks,{type:mime});if(blob.size<400){live('Trop court','idle');return}var bands=analyzeBands();st.lastBass=bands.bass;st.lastMid=bands.mid;st.lastHigh=bands.high;st.lastVol=vol();live('Transcription...','think');st.lastAction='PTT';whisper(blob).then(function(text){if(!text){live('Rien compris','idle');$('#out').textContent='Rien compris dans l’audio.';return}if(handleVoiceCommand(text))return;if(st.paused){if(text.length>2)resumeResponses();else{live('Pause','pause');return}}live(text,'ok');chat(text,false)})}
 function effectiveSens(){var s=cfg.sens;if(cfg.listenMode==='hyper')s=Math.max(2,s-2);return s}
 function effectiveNoiseVol(){var n=cfg.noiseVol;if(cfg.listenMode==='hyper')n=Math.max(1,n-1);return n}
 function waitSpeak(){return new Promise(function(res){var t0=0,myId=st.loopId,sens=effectiveSens();function check(){if(!st.auto||st.loopId!==myId||st.ambient)return res(false);var v=vol();st.lastVol=v;if(v>=sens){if(!t0)t0=Date.now();if(Date.now()-t0>=cfg.minSpeech)return res(true)}else t0=0;requestAnimationFrame(check)}requestAnimationFrame(check)})}
 function recUntilSilent(){return new Promise(function(res){var chunks=[],m=getMime();if(!m)return res(null);var rec;try{rec=new MediaRecorder(st.stream,{mimeType:m})}catch(e){return res(null)}rec.ondataavailable=function(e){if(e.data&&e.data.size)chunks.push(e.data)};rec.onstop=function(){res(new Blob(chunks,{type:rec.mimeType}))};var start=Date.now(),last=Date.now(),spoken=false,max=cfg.maxRecord*1000,myId=st.loopId,sens=effectiveSens();var iv=setInterval(function(){if(!st.auto||st.loopId!==myId){clearInterval(iv);if(rec.state==='recording')rec.stop();return}var v=vol();if(v>=sens*0.3){last=Date.now();spoken=true;st.lastVol=v;var bands=analyzeBands();st.lastBass=bands.bass;st.lastMid=bands.mid;st.lastHigh=bands.high}if(spoken&&(Date.now()-last>=cfg.silence||Date.now()-start>=max)){clearInterval(iv);if(rec.state==='recording')rec.stop()}},28);rec.start(30);setTimeout(function(){if(rec.state==='recording')rec.stop()},max+700)})}
 function runAmbientAnalysis(){if(!st.stream||!st.ready){toast('Micro off','err');return}if(st.ambient){toast('Déjà en capture','err');return}st.ambient=true;var sec=cfg.ambSec||3;live('Capture ambiance '+sec+'s...','rec');toast('Ambiance '+sec+'s');log('Ambiance '+sec+'s','info');st.lastAction='Ambiance';var chunks=[],m=getMime();if(!m){st.ambient=false;return}var rec;try{rec=new MediaRecorder(st.stream,{mimeType:m})}catch(e){st.ambient=false;return}rec.ondataavailable=function(e){if(e.data&&e.data.size)chunks.push(e.data)};rec.onstop=function(){st.ambient=false;var bands=analyzeBands();st.lastBass=bands.bass;st.lastMid=bands.mid;st.lastHigh=bands.high;st.lastVol=vol();var volLevel=Math.round(st.lastVol);st.lastWasNoise=true;st.noiseCount++;st.lastNoiseAt=Date.now();live('Analyse réelle...','think');chat(buildAmbientPrompt(volLevel),true)};rec.start(100);setTimeout(function(){if(rec.state==='recording')rec.stop()},sec*1000)}
 function handleVoiceCommand(text){var t=norm(text);if(!t)return false;if(isStop(text)){pauseResponses();return true}if(/(24\s*\/?\s*7|24\s*h|toujours\s*ecout|mode\s*continu|ecoute\s*continue|vingt.?quatre)/.test(t)){if(!st.auto||!st.comp)autoStart(true);else{live('24/7 déjà actif','ok');toast('24/7 déjà ON')}speak('Mode vingt-quatre heures activé.');return true}if(/(mode\s*auto|ecoute\s*auto)/.test(t)){if(!st.auto||st.comp)autoStart(false);speak('Mode automatique activé.');return true}if(/(arrete\s*l.?ecoute|stop\s*ecoute|mode\s*manuel|stop\s*auto|stop\s*24)/.test(t)){autoStop();speak('Écoute coupée.');return true}if(/(reprend|continue|reprise|relance)/.test(t)&&st.paused){resumeResponses();speak('Reprise.');return true}if(/(analy[sz].*entend|ecoute.*analy|ce\s+que\s+tu\s+entend|analy[sz].*ambiance|analy[sz].*son|ecoute\s+l.?ambiance|capture\s+ambiance)/.test(t)||(/(ecoute|analy)/.test(t)&&/(musique|ambiance|autour|bruit|son)/.test(t))){runAmbientAnalysis();return true}return false}
-function scheduleNextLoop(myId,delay){delay=delay||90;setTimeout(function(){if(st.auto&&st.loopId===myId)runAutoLoop(myId)},delay)}
-function runAutoLoop(myId){if(!st.auto||st.loopId!==myId)return;if(document.hidden||st.ambient){scheduleNextLoop(myId,600);return}live(st.paused?'Écoute en pause...':'En écoute (réel)...','listen');st.lastAction='Écoute';waitSpeak().then(function(speakOk){if(!st.auto||st.loopId!==myId)return null;if(!speakOk){scheduleNextLoop(myId,70);return null}live('Enregistrement...','rec');st.lastAction='Enregistrement';return recUntilSilent()}).then(function(blob){if(!st.auto||st.loopId!==myId)return;if(!blob||blob.size<400){live(st.paused?'Écoute en pause':'En écoute...','listen');scheduleNextLoop(myId,60);return}var volLevel=Math.round(st.lastVol);live('Analyse réelle...','think');st.lastAction='Transcription';return whisper(blob).then(function(text){if(!st.auto||st.loopId!==myId)return;if(!text){var canNoise=cfg.noise&&volLevel>=effectiveNoiseVol()&&!st.paused;if(cfg.listenMode==='speech')canNoise=false;var cool=(cfg.coolSec||10)*1000;if(canNoise&&Date.now()-st.lastNoiseAt<cool)canNoise=false;if(canNoise){st.noiseCount++;st.lastWasNoise=true;st.lastNoiseAt=Date.now();st.lastAction='Bruit réel';return chat(buildNoisePrompt(volLevel),true).then(function(){scheduleNextLoop(myId,350)})}live(st.paused?'Écoute en pause':'En écoute...','listen');scheduleNextLoop(myId,70);return}if(handleVoiceCommand(text)){scheduleNextLoop(myId,250);return}if(st.paused){if(text.length>2)resumeResponses();else{live('Écoute en pause','pause');scheduleNextLoop(myId,90);return}}if(cfg.listenMode==='noise'){live('Mode bruits seulement','listen');scheduleNextLoop(myId,90);return}if(!cfg.always&&!isWake(text)){live('En écoute (mot d’appel)...','listen');scheduleNextLoop(myId,90);return}st.lastWasNoise=false;st.lastAction='Parole';live(text,'ok');return chat(text,true).then(function(){scheduleNextLoop(myId,450)})})}).catch(function(e){log('Erreur AUTO: '+e.message,'err');live('Erreur — relance...','listen');scheduleNextLoop(myId,900)})}
-function autoStart(comp){if(st.run&&st.comp===!!comp&&st.auto){live(comp?'24/7 déjà actif':'AUTO déjà actif','ok');return}if(st.run)autoStop();if(!hasKey()){toast('Clé manquante','err');openSettings();return}fixModel();st.auto=true;st.run=true;st.comp=!!comp;st.loopId++;st.paused=false;var myId=st.loopId;$('#auto').classList.toggle('on',!comp);$('#comp').classList.toggle('on',!!comp);var modeEl=$('#mode');if(modeEl)modeEl.textContent=comp?'24/7':'AUTO';live(comp?'24/7 actif — écoute réelle...':'AUTO actif — écoute réelle...','listen');status(comp?'24/7':'AUTO');sys();log((comp?'24/7':'AUTO')+' · QUE DU RÉEL','info');if(comp)toast('24/7 ON');runAutoLoop(myId)}
+function scheduleNextLoop(myId,delay){delay=delay||100;setTimeout(function(){if(st.auto&&st.loopId===myId)runAutoLoop(myId)},delay)}
+function runAutoLoop(myId){
+  if(!st.auto||st.loopId!==myId)return;
+  if(document.hidden||st.ambient){scheduleNextLoop(myId,700);return}
+  live(st.paused?'Écoute en pause...':'En écoute...','listen');
+  st.lastAction='Écoute';
+  waitSpeak().then(function(speakOk){
+    if(!st.auto||st.loopId!==myId)return null;
+    if(!speakOk){scheduleNextLoop(myId,80);return null}
+    live('Enregistrement...','rec');
+    st.lastAction='Enregistrement';
+    return recUntilSilent();
+  }).then(function(blob){
+    if(!st.auto||st.loopId!==myId)return;
+    if(!blob||blob.size<400){
+      live(st.paused?'Écoute en pause':'En écoute...','listen');
+      scheduleNextLoop(myId,70);
+      return;
+    }
+    var volLevel=Math.round(st.lastVol);
+    live('Analyse en cours...','think');
+    st.lastAction='Transcription';
+    return whisper(blob).then(function(text){
+      if(!st.auto||st.loopId!==myId)return;
+      if(!text){
+        var canNoise=cfg.noise&&volLevel>=effectiveNoiseVol()&&!st.paused;
+        if(cfg.listenMode==='speech')canNoise=false;
+        var cool=(cfg.coolSec||10)*1000;
+        if(canNoise&&Date.now()-st.lastNoiseAt<cool)canNoise=false;
+        if(canNoise){
+          st.noiseCount++;st.lastWasNoise=true;st.lastNoiseAt=Date.now();st.lastAction='Bruit';
+          return chat(buildNoisePrompt(volLevel),true).then(function(){scheduleNextLoop(myId,400)});
+        }
+        live(st.paused?'Écoute en pause':'En écoute...','listen');
+        scheduleNextLoop(myId,80);
+        return;
+      }
+      if(handleVoiceCommand(text)){scheduleNextLoop(myId,300);return}
+      if(st.paused){
+        if(text.length>2)resumeResponses();
+        else{live('Écoute en pause','pause');scheduleNextLoop(myId,100);return}
+      }
+      if(cfg.listenMode==='noise'){live('Mode bruits seulement','listen');scheduleNextLoop(myId,100);return}
+      if(!cfg.always&&!isWake(text)){live('En écoute (mot d’appel)...','listen');scheduleNextLoop(myId,100);return}
+      st.lastWasNoise=false;st.lastAction='Parole';
+      live(text,'ok');
+      return chat(text,true).then(function(){scheduleNextLoop(myId,500)});
+    });
+  }).catch(function(e){
+    log('Erreur AUTO : '+e.message,'err');
+    live('Erreur : '+e.message.slice(0,60),'err');
+    $('#out').textContent='Erreur : '+e.message;
+    scheduleNextLoop(myId,1200);
+  });
+}
+function autoStart(comp){
+  if(st.run&&st.comp===!!comp&&st.auto){live(comp?'24/7 déjà actif':'AUTO déjà actif','ok');return}
+  if(st.run)autoStop();
+  if(!hasKey()){toast('Clé manquante','err');openSettings();return}
+  fixModel();
+  st.auto=true;st.run=true;st.comp=!!comp;st.loopId++;st.paused=false;
+  var myId=st.loopId;
+  $('#auto').classList.toggle('on',!comp);$('#comp').classList.toggle('on',!!comp);
+  var modeEl=$('#mode');if(modeEl)modeEl.textContent=comp?'24/7':'AUTO';
+  live(comp?'24/7 actif — j’écoute...':'AUTO actif — j’écoute...','listen');
+  status(comp?'24/7':'AUTO');sys();log((comp?'24/7':'AUTO')+' démarré','info');
+  if(comp)toast('24/7 allumé');
+  runAutoLoop(myId);
+}
 function autoStop(){st.auto=false;st.comp=false;st.run=false;st.loopId++;st.paused=false;$('#auto').classList.remove('on');$('#comp').classList.remove('on');var modeEl=$('#mode');if(modeEl)modeEl.textContent='MANUEL';live('Arrêté','idle');status('Prêt');sys();st.lastAction='Arrêt'}
-function pauseResponses(){st.paused=true;if(st.ctrl){try{st.ctrl.abort()}catch(e){}st.ctrl=null}stopTTS();live('Pause — écoute continue','pause');status('PAUSE');sys();toast('Pause');st.lastAction='Pause'}
+function pauseResponses(){st.paused=true;if(st.ctrl){try{st.ctrl.abort()}catch(e){}st.ctrl=null}stopTTS();live('Pause — j’écoute toujours','pause');status('PAUSE');sys();toast('Pause');st.lastAction='Pause'}
 function resumeResponses(){if(!st.paused)return;st.paused=false;live('Reprise','ok');status(st.comp?'24/7':(st.auto?'AUTO':'Prêt'));sys();toast('Reprise');st.lastAction='Reprise'}
 function stopAll(){stopRec();autoStop();st.ambient=false;if(st.ctrl){try{st.ctrl.abort()}catch(e){}st.ctrl=null}stopTTS();live('Tout arrêté','idle');status('Arrêté');sys();st.lastAction='Stop total'}
-function whisper(blob){var key=getKey();if(!hasKey()){toast('Clé manquante','err');return Promise.resolve(null)}var ext='webm';if(blob.type.indexOf('ogg')!==-1)ext='ogg';else if(blob.type.indexOf('mp4')!==-1)ext='m4a';var t0=performance.now();var fd=new FormData();fd.append('file',blob,'audio.'+ext);fd.append('model','whisper-large-v3-turbo');fd.append('language',cfg.lang||'fr');fd.append('response_format','json');return fetch(GROQ+'/audio/transcriptions',{method:'POST',headers:{'Authorization':'Bearer '+key},body:fd}).then(function(r){return r.text().then(function(txt){if(!r.ok)throw new Error('Whisper HTTP '+r.status);return JSON.parse(txt)})}).then(function(d){st.lat=Math.round(performance.now()-t0);st.reqs++;sys();var text=(d.text||'').trim();if(text)log('→ '+text);return text||null}).catch(function(e){log(e.message,'err');return null})}
-function chat(text,fromAuto){var key=getKey();if(!hasKey()){var outEl=$('#out');if(outEl)outEl.textContent='Clé manquante';toast('Clé manquante','err');openSettings();return Promise.resolve()}fixModel();if(fromAuto&&!cfg.always&&!isWake(text)&&!st.lastWasNoise){live('Ignoré (mot d’appel)','listen');return Promise.resolve()}if(st.ctrl){try{st.ctrl.abort()}catch(e){}}st.ctrl=new AbortController();live('Analyse réelle...','think');var outEl=$('#out');if(outEl)outEl.textContent='';status('Analyse...');var system=buildSystemPrompt();if(st.mem)system+='\nMémoire:\n'+st.mem;var userContent=st.img?[{type:'text',text:text},{type:'image_url',image_url:{url:st.img}}]:text;st.hist.push({role:'user',content:userContent});if(st.hist.length>16)st.hist=st.hist.slice(-10);var messages=[{role:'system',content:system}].concat(st.hist);var t0=performance.now();var model=cfg.model||SAFE_MODEL;var wasNoise=st.lastWasNoise;return fetch(GROQ+'/chat/completions',{method:'POST',signal:st.ctrl.signal,headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},body:JSON.stringify({model:model,messages:messages,temperature:cfg.temp||0.20,max_tokens:cfg.maxTokens||900,stream:true})}).then(function(r){if(!r.ok)return r.text().then(function(txt){throw new Error('HTTP '+r.status+': '+txt.slice(0,200))});if(!r.body||!r.body.getReader){return r.json().then(function(d){var full=(d.choices&&d.choices[0]&&d.choices[0].message&&d.choices[0].message.content)||'';finishChat(full,t0,outEl,wasNoise)})}var reader=r.body.getReader(),decoder=new TextDecoder(),full='',buffer='';function pump(){return reader.read().then(function(result){if(result.done){finishChat(full,t0,outEl,wasNoise);return}buffer+=decoder.decode(result.value,{stream:true});var lines=buffer.split('\n');buffer=lines.pop()||'';for(var i=0;i<lines.length;i++){var line=lines[i].trim();if(!line||line.indexOf('data: ')!==0)continue;var data=line.slice(6);if(data==='[DONE]')continue;try{var json=JSON.parse(data);var delta=json.choices&&json.choices[0]&&json.choices[0].delta;if(delta&&delta.content){full+=delta.content;if(outEl)outEl.textContent=full;st.tokens++}}catch(e){}}return pump()})}return pump()}).catch(function(e){if(e.name==='AbortError'){log('Annulé','info');return}log('Chat: '+e.message,'err');return chatNoStream(messages,key,model,t0,outEl,e.message,wasNoise)})}
-function chatNoStream(messages,key,model,t0,outEl,prevErr,wasNoise){return fetch(GROQ+'/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},body:JSON.stringify({model:model||SAFE_MODEL,messages:messages,temperature:cfg.temp||0.20,max_tokens:cfg.maxTokens||900,stream:false})}).then(function(r){return r.text().then(function(txt){if(!r.ok)throw new Error('HTTP '+r.status);var d=JSON.parse(txt);var full=(d.choices&&d.choices[0]&&d.choices[0].message&&d.choices[0].message.content)||'';finishChat(full,t0,outEl,wasNoise)})}).catch(function(e2){var msg=e2.message||prevErr||'Erreur API';if(outEl)outEl.textContent='Erreur:\n'+msg;toast('Erreur API','err');live('Erreur','idle');status('Erreur');log(msg,'err')})}
-function finishChat(full,t0,outEl,wasNoise){st.lat=Math.round(performance.now()-t0);st.reqs++;st.hist.push({role:'assistant',content:full||''});sys();var display=cleanForSpeech(full)||full||'(vide)';if(outEl)outEl.textContent=display;if(full){live(display.slice(0,130)+(display.length>130?'...':''),'ok');var shouldSpeak=cfg.tts&&!st.muted&&!st.paused;if(cfg.speakNoise&&wasNoise&&!st.muted&&!st.paused)shouldSpeak=true;if(shouldSpeak)speak(full)}else live('Pas de réponse','idle');st.lastWasNoise=false;st.img=null;var preview=$('#preview');if(preview){preview.hidden=true;preview.src='';preview.style.display='none'}status('Prêt');st.lastAction='Répondu'}
+function whisper(blob){
+  var key=getKey();
+  if(!hasKey()){toast('Clé manquante','err');return Promise.resolve(null)}
+  var ext='webm';if(blob.type.indexOf('ogg')!==-1)ext='ogg';else if(blob.type.indexOf('mp4')!==-1)ext='m4a';
+  var t0=performance.now();
+  var fd=new FormData();
+  fd.append('file',blob,'audio.'+ext);
+  fd.append('model','whisper-large-v3-turbo');
+  fd.append('language',cfg.lang||'fr');
+  fd.append('response_format','json');
+  return fetch(GROQ+'/audio/transcriptions',{method:'POST',headers:{'Authorization':'Bearer '+key},body:fd})
+  .then(function(r){return r.text().then(function(txt){if(!r.ok)throw new Error('Whisper '+r.status+' : '+txt.slice(0,100));return JSON.parse(txt)})})
+  .then(function(d){st.lat=Math.round(performance.now()-t0);st.reqs++;sys();var text=(d.text||'').trim();if(text)log('→ '+text);return text||null})
+  .catch(function(e){log(e.message,'err');live('Erreur Whisper','err');return null});
+}
+function chat(text,fromAuto){
+  var key=getKey();
+  if(!hasKey()){var outEl=$('#out');if(outEl)outEl.textContent='Clé manquante — va dans Paramètres';toast('Clé manquante','err');openSettings();return Promise.resolve()}
+  fixModel();
+  if(fromAuto&&!cfg.always&&!isWake(text)&&!st.lastWasNoise){live('Ignoré (mot d’appel)','listen');return Promise.resolve()}
+  if(st.ctrl){try{st.ctrl.abort()}catch(e){}}
+  st.ctrl=new AbortController();
+  live('Analyse en cours...','think');
+  var outEl=$('#out');if(outEl)outEl.textContent='Analyse...';
+  status('Analyse...');
+  var system=buildSystemPrompt();
+  if(st.mem)system+='\nMémoire:\n'+st.mem;
+  var userContent=st.img?[{type:'text',text:text},{type:'image_url',image_url:{url:st.img}}]:text;
+  st.hist.push({role:'user',content:userContent});
+  if(st.hist.length>16)st.hist=st.hist.slice(-10);
+  var messages=[{role:'system',content:system}].concat(st.hist);
+  var t0=performance.now();
+  var model=cfg.model||SAFE_MODEL;
+  var wasNoise=st.lastWasNoise;
+  return fetch(GROQ+'/chat/completions',{
+    method:'POST',signal:st.ctrl.signal,
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+    body:JSON.stringify({model:model,messages:messages,temperature:cfg.temp||0.25,max_tokens:cfg.maxTokens||1000,stream:true})
+  }).then(function(r){
+    if(!r.ok)return r.text().then(function(txt){throw new Error('HTTP '+r.status+' : '+txt.slice(0,180))});
+    if(!r.body||!r.body.getReader){
+      return r.json().then(function(d){
+        var full=(d.choices&&d.choices[0]&&d.choices[0].message&&d.choices[0].message.content)||'';
+        finishChat(full,t0,outEl,wasNoise);
+      });
+    }
+    var reader=r.body.getReader(),decoder=new TextDecoder(),full='',buffer='';
+    function pump(){
+      return reader.read().then(function(result){
+        if(result.done){finishChat(full,t0,outEl,wasNoise);return}
+        buffer+=decoder.decode(result.value,{stream:true});
+        var lines=buffer.split('\n');buffer=lines.pop()||'';
+        for(var i=0;i<lines.length;i++){
+          var line=lines[i].trim();
+          if(!line||line.indexOf('data: ')!==0)continue;
+          var data=line.slice(6);if(data==='[DONE]')continue;
+          try{
+            var json=JSON.parse(data);
+            var delta=json.choices&&json.choices[0]&&json.choices[0].delta;
+            if(delta&&delta.content){full+=delta.content;if(outEl)outEl.textContent=full;st.tokens++}
+          }catch(e){}
+        }
+        return pump();
+      });
+    }
+    return pump();
+  }).catch(function(e){
+    if(e.name==='AbortError'){log('Annulé','info');return}
+    log('Erreur Chat : '+e.message,'err');
+    live('Erreur : '+e.message.slice(0,50),'err');
+    if(outEl)outEl.textContent='ERREUR :\n'+e.message+'\n\nEssaie de changer de modèle dans les paramètres.';
+    return chatNoStream(messages,key,model,t0,outEl,e.message,wasNoise);
+  });
+}
+function chatNoStream(messages,key,model,t0,outEl,prevErr,wasNoise){
+  return fetch(GROQ+'/chat/completions',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+    body:JSON.stringify({model:model||SAFE_MODEL,messages:messages,temperature:cfg.temp||0.25,max_tokens:cfg.maxTokens||1000,stream:false})
+  }).then(function(r){
+    return r.text().then(function(txt){
+      if(!r.ok)throw new Error('HTTP '+r.status+' : '+txt.slice(0,180));
+      var d=JSON.parse(txt);
+      var full=(d.choices&&d.choices[0]&&d.choices[0].message&&d.choices[0].message.content)||'';
+      finishChat(full,t0,outEl,wasNoise);
+    });
+  }).catch(function(e2){
+    var msg=e2.message||prevErr||'Erreur API';
+    if(outEl)outEl.textContent='ERREUR :\n'+msg+'\n\nChange de modèle et reteste.';
+    toast('Erreur API','err');
+    live('Erreur API','err');
+    status('Erreur');
+    log(msg,'err');
+  });
+}
+function finishChat(full,t0,outEl,wasNoise){
+  st.lat=Math.round(performance.now()-t0);st.reqs++;
+  st.hist.push({role:'assistant',content:full||''});
+  sys();
+  var display=cleanForSpeech(full)||full||'';
+  if(!display||display.length<3){
+    display='Pas de réponse claire du modèle.\nEssaie de changer de modèle ou de parler plus fort.';
+    live('Pas de réponse claire','err');
+  }else{
+    live(display.slice(0,140)+(display.length>140?'...':''),'ok');
+  }
+  if(outEl)outEl.textContent=display;
+  if(full&&full.length>3){
+    var shouldSpeak=cfg.tts&&!st.muted&&!st.paused;
+    if(cfg.speakNoise&&wasNoise&&!st.muted&&!st.paused)shouldSpeak=true;
+    if(shouldSpeak)speak(full);
+  }
+  st.lastWasNoise=false;st.img=null;
+  var preview=$('#preview');if(preview){preview.hidden=true;preview.src='';preview.style.display='none'}
+  status('Prêt');
+  st.lastAction='Répondu';
+}
 function speak(text){if(!window.speechSynthesis)return;stopTTS();var clean=cleanForSpeech(text);if(!clean)return;var u=new SpeechSynthesisUtterance(clean);u.lang=cfg.lang==='fr'?'fr-FR':cfg.lang==='es'?'es-ES':'en-US';u.rate=cfg.rate||0.95;u.volume=1;var voices=speechSynthesis.getVoices();var prefix=u.lang.split('-')[0];var match=voices.find(function(v){return v.lang.indexOf(prefix)===0});if(match)u.voice=match;speechSynthesis.speak(u)}
 function stopTTS(){if(window.speechSynthesis)speechSynthesis.cancel()}
 function handleImage(file){if(!file||file.type.indexOf('image/')!==0)return;var reader=new FileReader();reader.onload=function(e){st.img=e.target.result;var preview=$('#preview');if(preview){preview.src=st.img;preview.hidden=false;preview.style.display='block'}toast('Image OK')};reader.readAsDataURL(file)}
@@ -575,8 +694,8 @@ function closeCam(){if(st.cam){st.cam.getTracks().forEach(function(t){t.stop()})
 function captureCam(){var video=$('#video');if(!video||!st.camOn)return;var canvas=document.createElement('canvas');canvas.width=video.videoWidth||640;canvas.height=video.videoHeight||480;canvas.getContext('2d').drawImage(video,0,0);st.img=canvas.toDataURL('image/jpeg',0.8);var preview=$('#preview');if(preview){preview.src=st.img;preview.hidden=false;preview.style.display='block'}toast('Photo prise')}
 function requestWakeLock(){if(!cfg.wakelock||!('wakeLock' in navigator))return;navigator.wakeLock.request('screen').then(function(lock){st.wakeLock=lock}).catch(function(){})}
 function exportConversation(){if(!st.hist.length){toast('Vide','err');return}var lines=st.hist.map(function(m){var c=typeof m.content==='string'?m.content:'[image]';return(m.role==='user'?'>>> ':'<<< ')+c});var blob=new Blob([lines.join('\n\n')],{type:'text/plain;charset=utf-8'});var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='supra-reel.txt';a.click()}
-function bootSequence(){var title=$('#title'),sub=$('#sub'),acts=$('#acts');if(!title)return Promise.resolve();return typeEl(title,'SUPRA LAB',26).then(function(){return sleep(200)}).then(function(){return typeEl(title,'SUPRA LAB v36',26)}).then(function(){return sleep(150)}).then(function(){title.classList.remove('blink');if(sub){sub.textContent='Que du réel · Aucune simulation · 24/7';sub.classList.add('show')}return sleep(400)}).then(function(){if(sub)sub.textContent=hasKey()?'Clé OK — prêt':'PARAMÈTRES → colle ta clé';return sleep(250)}).then(function(){if(acts)acts.classList.add('show')})}
-function launchApp(){persistKeyFromInput();fixModel();if(!hasKey()){toast('Colle ta clé','err');openSettings();return}initAudio().then(function(ok){if(!ok){toast('Autorise le micro','err');return}requestWakeLock();$('#boot').style.display='none';$('#app').classList.add('show');setTimeout(sizeCanvases,60);if('ontouchstart' in window||navigator.maxTouchPoints>0)$('#ptt').classList.add('show');live('Prêt — AUTO ou 24/7 (que du réel)','idle');status('Prêt');sys();log('Lancé · QUE DU RÉEL','ok')})}
+function bootSequence(){var title=$('#title'),sub=$('#sub'),acts=$('#acts');if(!title)return Promise.resolve();return typeEl(title,'SUPRA LAB',26).then(function(){return sleep(200)}).then(function(){return typeEl(title,'SUPRA LAB v36',26)}).then(function(){return sleep(150)}).then(function(){title.classList.remove('blink');if(sub){sub.textContent='Que du réel · Aucune simulation';sub.classList.add('show')}return sleep(400)}).then(function(){if(sub)sub.textContent=hasKey()?'Clé OK — prêt':'PARAMÈTRES → colle ta clé';return sleep(250)}).then(function(){if(acts)acts.classList.add('show')})}
+function launchApp(){persistKeyFromInput();fixModel();if(!hasKey()){toast('Colle ta clé','err');openSettings();return}initAudio().then(function(ok){if(!ok){toast('Autorise le micro','err');return}requestWakeLock();$('#boot').style.display='none';$('#app').classList.add('show');setTimeout(sizeCanvases,60);if('ontouchstart' in window||navigator.maxTouchPoints>0)$('#ptt').classList.add('show');live('Prêt — appuie sur AUTO ou 24/7','idle');status('Prêt');sys();log('Lancé','ok')})}
 function tickClock(){var el=$('#clock');if(el)el.textContent=now()}
 function bindEvents(){
   var go=$('#go');if(go)go.addEventListener('click',launchApp);
