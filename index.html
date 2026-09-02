@@ -587,7 +587,7 @@ function log(m, t){
   var d = document.createElement('div'); d.className = t;
   d.textContent = '[' + now() + '] ' + m;
   el.appendChild(d); el.scrollTop = el.scrollHeight;
-  while(el.children.length > 50) el.firstChild.remove(); // Limite à 50 logs
+  while(el.children.length > 50) el.firstChild.remove();
 }
 
 // --- STATUTS ---
@@ -657,12 +657,13 @@ function buildSystemPrompt(){
   var p = 'Tu es SUPRA dans SUPRA LAB. Tu reçois uniquement des données réelles du micro : transcription + volume + fréquences.\n\n';
   p += 'RÈGLE ABSOLUE : QUE DU RÉEL. Aucune simulation. Aucune invention.\n\n';
   p += 'IMPORTANT : Tu dois répondre en VRAIS MOTS HUMAINS, en français clair et oral.\n';
-  p += 'Pas de phrases vides. Pas de « bruit grave » tout seul. Des phrases complètes.\n\n';
+  p += 'Pas de phrases vides. Pas de « bruit grave » tout seul. Des phrases complètes et naturelles.\n\n';
   p += 'TON : franc, tutoiement, phrases courtes et claires.\n\n';
   p += '- Base-toi UNIQUEMENT sur le volume, les fréquences et la transcription fournis.\n';
   p += '- Si c’est flou → dis clairement « c’est peu clair » ou « c’est ambigu ».\n';
   p += '- Interdit d’inventer des titres ou des détails absents des données.\n';
-  p += '- Entité seulement si le son le justifie vraiment.\n\n';
+  p += '- Entité seulement si le son le justifie vraiment.\n';
+  p += '- Ne pose JAMAIS de question. Décris simplement ce que tu entends.\n\n'; // 👈 NOUVEAU : Interdit les questions
   p += 'FORMAT : texte oral simple, zéro markdown, zéro étoile. Numérote : un, deux, trois.\n';
   if(cfg.detail === 'short') p += '2 à 4 phrases maximum mais claires.\n';
   else if(cfg.detail === 'max') p += 'Détaillé uniquement avec les données réelles.\n';
@@ -681,7 +682,8 @@ function buildNoisePrompt(volLevel){
   var p = 'Son réel capté sans parole claire. Volume environ ' + volLevel + '.\n';
   if(cfg.freq) p += 'Fréquences réelles : grave ' + st.lastBass + ', médium ' + st.lastMid + ', aigu ' + st.lastHigh + '.\n';
   p += 'RÉPONDS EN VRAIS MOTS HUMAINS. Pas de phrase vide.\n';
-  p += 'Décris ce que les données indiquent. Donne ' + (cfg.anaCount||3) + ' hypothèses maximum.\n';
+  p += 'Décris CE QUE TU ENTENDS avec les données réelles. Donne ' + (cfg.anaCount||3) + ' hypothèses maximum.\n';
+  p += 'Ne pose PAS de question. Ne demande PAS de confirmation.\n'; // 👈 NOUVEAU : Interdit les questions
   if(cfg.entities) p += 'Entité seulement si clairement justifié.\n';
   if(cfg.rank) p += 'Classe du plus au moins probable.\n';
   if(cfg.entity) p += 'Sources : ' + sourceList() + '.\n';
@@ -924,6 +926,20 @@ function playLastRec(){
   a.src = st.caps[0].url; a.play().catch(function(e){ log(e.message, 'err'); });
 }
 
+// --- SAUVEGARDE DES BRUITS ---
+function saveNoise() {
+  if (!st.caps.length) { toast('Aucun son capturé', 'err'); return; }
+  const blob = st.caps[0].blob;
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+  a.href = url;
+  a.download = `bruit-${timestamp}.webm`;
+  a.click();
+  toast('Bruit enregistré !', 'ok');
+  log(`Bruit sauvegardé : ${a.download}`, 'info');
+}
+
 // --- PTT (Push-to-Talk) ---
 function pttDown(e){
   e.preventDefault();
@@ -1024,19 +1040,6 @@ function runAmbientAnalysis(){
   setTimeout(function(){ if(rec.state === 'recording') rec.stop(); }, sec * 1000);
 }
 
-// --- SAUVEGARDE DES BRUITS ---
-function saveNoise() {
-  if (!st.caps.length) { toast('Aucun son capturé', 'err'); return; }
-  const blob = st.caps[0].blob;
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `bruit-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.webm`;
-  a.click();
-  toast('Bruit enregistré !', 'ok');
-  log('Bruit sauvegardé : ' + a.download, 'info');
-}
-
 // --- EXPORT DES LOGS ---
 function exportLogs() {
   const logs = document.getElementById('log').innerText;
@@ -1126,6 +1129,7 @@ function runAutoLoop(myId){
         if(canNoise){
           st.noiseCount++; st.lastWasNoise = true; st.lastNoiseAt = Date.now(); st.lastAction = 'Bruit';
           log('Bruit détecté (vol: ' + volLevel + ')', 'noise');
+          // 👇 NOUVEAU : Ne pas enregistrer automatiquement, juste décrire
           return chat(buildNoisePrompt(volLevel), true).then(function(){ scheduleNextLoop(myId, 400); });
         }
         live(st.paused ? 'Écoute en pause' : 'En écoute...', 'listen');
@@ -1449,11 +1453,14 @@ function tickClock(){ var el = $('#clock'); if(el) el.textContent = now(); }
 
 // --- ÉVÉNEMENTS ---
 function bindEvents(){
+  // Boutons de base
   var go = $('#go'); if(go) go.addEventListener('click', launchApp);
   var cfgBtn = $('#cfg'); if(cfgBtn) cfgBtn.addEventListener('click', openSettings);
   var cfg2 = $('#cfg2'); if(cfg2) cfg2.addEventListener('click', openSettings);
   var x = $('#x'); if(x) x.addEventListener('click', function(){ persistKeyFromInput(); closeSettings(); });
   var halt = $('#halt'); if(halt) halt.addEventListener('click', stopAll);
+
+  // Clé API
   var keyEl = $('#key');
   if(keyEl){
     keyEl.addEventListener('input', persistKeyFromInput);
@@ -1483,6 +1490,8 @@ function bindEvents(){
       applyToUI(); updateKeyStatus(); toast('Remis à zéro');
     }
   });
+
+  // Sliders
   [['sens','vsens'],['sil','vsil'],['min','vmin'],['max','vmax'],['noisevol','vnoisevol'],
    ['temp','vtemp'],['tokens','vtokens'],['rate','vrate'],['ana','vana'],
    ['amb','vamb'],['cool','vcool']].forEach(function(a){
