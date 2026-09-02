@@ -166,6 +166,8 @@ canvas { display: block; width: 100%; height: 90px; background: var(--bg2); imag
 .log .ok { color: var(--dim); border-color: var(--muted); }
 .log .err { color: var(--red); border-color: var(--red); }
 .log .info { color: var(--orange); border-color: var(--orange); }
+.log .noise { color: var(--orange); border-color: var(--orange); }
+.log .noise::before { content: "🔊 "; }
 .sys { font-size: 16px; line-height: 1.55; }
 .stats { font-size: 15px; color: var(--muted); margin-top: 5px; }
 
@@ -431,6 +433,8 @@ video, .preview { max-width: 100%; max-height: 180px; border: 4px solid var(--di
       <button class="btn round" id="img" type="button">IMG</button>
       <button class="btn round" id="cam" type="button">CAM</button>
       <button class="btn round" id="export" type="button">EXP</button>
+      <button class="btn round" id="saveNoise" type="button">SAVE NOISE</button>
+      <button class="btn round" id="exportLogs" type="button">EXPORT LOGS</button>
       <button class="btn round red" id="clr" type="button">CLR</button>
       <button class="btn round red" id="mute" type="button">MUTE</button>
     </div>
@@ -484,6 +488,7 @@ video, .preview { max-width: 100%; max-height: 180px; border: 4px solid var(--di
 (function(){
 'use strict';
 
+// --- CONFIGURATION ---
 var REAL_MODELS = ['openai/gpt-oss-20b','openai/gpt-oss-120b','qwen/qwen3.6-27b','groq/compound','groq/compound-mini','openai/gpt-oss-safeguard-20b'];
 var DEAD_MODELS = ['llama-3.3-70b-versatile','llama-3.1-8b-instant','llama-3.1-70b-versatile','gemma2-9b-it','mixtral-8x7b-32768','llama3-70b-8192','llama3-8b-8192','qwen/qwen3-32b','meta-llama/llama-4-scout-17b-16e-instruct','allam-2-7b'];
 var SAFE_MODEL = 'openai/gpt-oss-20b';
@@ -515,6 +520,7 @@ var st = {
   wakeLock:null, muted:false, caps:[], loopId:0, lastWasNoise:false, lastAction:'—'
 };
 
+// --- UTILITAIRES ---
 function $(s){ return document.querySelector(s); }
 function now(){ return new Date().toLocaleTimeString('fr-FR'); }
 function pad(n){ return n < 10 ? '0'+n : ''+n; }
@@ -532,6 +538,7 @@ function cleanForSpeech(text){
     .replace(/\s{2,}/g,' ').trim();
 }
 
+// --- GESTION DE LA CLÉ API ---
 function getKey(){
   var fromInput = '', el = $('#key');
   if(el && el.value) fromInput = cleanKey(el.value);
@@ -564,20 +571,26 @@ function matchWords(text, list){
 }
 function isStop(t){ return matchWords(t, parseWords(cfg.stopWords)); }
 function isWake(t){ return matchWords(t, parseWords(cfg.wakeWords)); }
+
+// --- NOTIFICATIONS ---
 function toast(msg, type){
   type = type || 'ok';
   var el = $('#toast'); if(!el) return;
   el.textContent = msg; el.className = 'toast ' + type + ' show';
   clearTimeout(el._tid); el._tid = setTimeout(function(){ el.classList.remove('show'); }, 3200);
 }
+
+// --- LOGS ---
 function log(m, t){
   t = t || 'ok';
   var el = $('#log'); if(!el) return;
   var d = document.createElement('div'); d.className = t;
   d.textContent = '[' + now() + '] ' + m;
   el.appendChild(d); el.scrollTop = el.scrollHeight;
-  while(el.children.length > 80) el.firstChild.remove();
+  while(el.children.length > 50) el.firstChild.remove(); // Limite à 50 logs
 }
+
+// --- STATUTS ---
 function status(t){ var el = $('#status'); if(el) el.textContent = t; }
 function updateLiveMeta(){
   var el = $('#livemeta'); if(!el) return;
@@ -626,6 +639,7 @@ function typeEl(el, str, speed){
   });
 }
 
+// --- PROMPTS POUR L'IA ---
 function sourceList(){
   var s = [];
   if(cfg.srcHuman) s.push('humain');
@@ -684,6 +698,7 @@ function buildAmbientPrompt(volLevel){
   return p;
 }
 
+// --- PARAMÈTRES ---
 function openSettings(){ updateKeyStatus(); var d = $('#dlg'); if(d) d.showModal(); }
 function closeSettings(){ var d = $('#dlg'); if(d && d.open) d.close(); }
 function load(){
@@ -777,6 +792,7 @@ function testKey(){
   .finally(function(){ if(btn){ btn.disabled = false; btn.textContent = 'TESTER'; } });
 }
 
+// --- AUDIO ---
 function initAudio(){
   try{
     st.ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -876,6 +892,7 @@ function getMime(){
   return '';
 }
 
+// --- ENREGISTREMENT ---
 function startRec(){
   if(st.rec || !st.stream) return;
   var m = getMime(); if(!m){ log('Format non supporté', 'err'); return; }
@@ -906,6 +923,8 @@ function playLastRec(){
   var a = $('#audio'); if(!a) return;
   a.src = st.caps[0].url; a.play().catch(function(e){ log(e.message, 'err'); });
 }
+
+// --- PTT (Push-to-Talk) ---
 function pttDown(e){
   e.preventDefault();
   if(!st.ready || st.auto || st.ptt || st.ambient) return;
@@ -939,6 +958,8 @@ function pttDone(){
     live(text, 'ok'); chat(text, false);
   });
 }
+
+// --- DÉTECTION AUTOMATIQUE ---
 function effectiveSens(){ var s = cfg.sens; if(cfg.listenMode === 'hyper') s = Math.max(2, s-2); return s; }
 function effectiveNoiseVol(){ var n = cfg.noiseVol; if(cfg.listenMode === 'hyper') n = Math.max(1, n-1); return n; }
 function waitSpeak(){
@@ -1002,10 +1023,38 @@ function runAmbientAnalysis(){
   rec.start(100);
   setTimeout(function(){ if(rec.state === 'recording') rec.stop(); }, sec * 1000);
 }
+
+// --- SAUVEGARDE DES BRUITS ---
+function saveNoise() {
+  if (!st.caps.length) { toast('Aucun son capturé', 'err'); return; }
+  const blob = st.caps[0].blob;
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `bruit-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.webm`;
+  a.click();
+  toast('Bruit enregistré !', 'ok');
+  log('Bruit sauvegardé : ' + a.download, 'info');
+}
+
+// --- EXPORT DES LOGS ---
+function exportLogs() {
+  const logs = document.getElementById('log').innerText;
+  if (!logs.trim()) { toast('Aucun log à exporter', 'err'); return; }
+  const blob = new Blob([logs], { type: 'text/plain;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `logs-supra-${new Date().toISOString().slice(0, 10)}.txt`;
+  a.click();
+  toast('Logs exportés !', 'ok');
+  log('Logs exportés : ' + a.download, 'info');
+}
+
+// --- COMMANDES VOCALES ---
 function handleVoiceCommand(text){
   var t = norm(text);
   if(!t) return false;
-  if(isStop(text)){ pauseResponses(); return true; }
+  if(isStop(t)){ pauseResponses(); return true; }
   if(/(24\s*\/?\s*7|24\s*h|toujours\s*ecout|mode\s*continu|ecoute\s*continue|vingt.?quatre)/.test(t)){
     if(!st.auto || !st.comp) autoStart(true);
     else { live('24/7 déjà actif', 'ok'); toast('24/7 déjà allumé'); }
@@ -1028,8 +1077,20 @@ function handleVoiceCommand(text){
     runAmbientAnalysis();
     return true;
   }
+  if(/(enregistre.*bruit|sauve.*bruit|save.*noise)/.test(t)){
+    saveNoise();
+    speak('Bruit sauvegardé.');
+    return true;
+  }
+  if(/(exporte.*logs|export.*logs)/.test(t)){
+    exportLogs();
+    speak('Logs exportés.');
+    return true;
+  }
   return false;
 }
+
+// --- BOUCLE AUTOMATIQUE ---
 function scheduleNextLoop(myId, delay){
   delay = delay || 100;
   setTimeout(function(){ if(st.auto && st.loopId === myId) runAutoLoop(myId); }, delay);
@@ -1064,6 +1125,7 @@ function runAutoLoop(myId){
         if(canNoise && Date.now() - st.lastNoiseAt < cool) canNoise = false;
         if(canNoise){
           st.noiseCount++; st.lastWasNoise = true; st.lastNoiseAt = Date.now(); st.lastAction = 'Bruit';
+          log('Bruit détecté (vol: ' + volLevel + ')', 'noise');
           return chat(buildNoisePrompt(volLevel), true).then(function(){ scheduleNextLoop(myId, 400); });
         }
         live(st.paused ? 'Écoute en pause' : 'En écoute...', 'listen');
@@ -1088,6 +1150,8 @@ function runAutoLoop(myId){
     scheduleNextLoop(myId, 1200);
   });
 }
+
+// --- MODES AUTO/24/7 ---
 function autoStart(comp){
   if(st.run && st.comp === !!comp && st.auto){ live(comp ? '24/7 déjà actif' : 'AUTO déjà actif', 'ok'); return; }
   if(st.run) autoStop();
@@ -1130,6 +1194,8 @@ function stopAll(){
   if(st.ctrl){ try{ st.ctrl.abort(); }catch(e){} st.ctrl = null; }
   stopTTS(); live('Tout arrêté', 'idle'); status('Arrêté'); sys(); st.lastAction = 'Stop total';
 }
+
+// --- WHISPER (TRANSCRIPTION) ---
 function whisper(blob){
   var key = getKey();
   if(!hasKey()){ toast('Clé manquante', 'err'); return Promise.resolve(null); }
@@ -1156,6 +1222,8 @@ function whisper(blob){
     return text || null;
   }).catch(function(e){ log(e.message, 'err'); live('Erreur Whisper', 'err'); return null; });
 }
+
+// --- CHAT AVEC L'IA ---
 function chat(text, fromAuto){
   var key = getKey();
   if(!hasKey()){
@@ -1266,6 +1334,8 @@ function finishChat(full, t0, outEl, wasNoise){
   status('Prêt');
   st.lastAction = 'Répondu';
 }
+
+// --- SYNTHÈSE VOCALE ---
 function speak(text){
   if(!window.speechSynthesis) return;
   stopTTS();
@@ -1281,6 +1351,8 @@ function speak(text){
   speechSynthesis.speak(u);
 }
 function stopTTS(){ if(window.speechSynthesis) speechSynthesis.cancel(); }
+
+// --- CAMÉRA ---
 function handleImage(file){
   if(!file || file.type.indexOf('image/') !== 0) return;
   var reader = new FileReader();
@@ -1317,10 +1389,14 @@ function captureCam(){
   if(preview){ preview.src = st.img; preview.hidden = false; preview.style.display = 'block'; }
   toast('Photo prise');
 }
+
+// --- WAKE LOCK (ÉCRAN ALLUMÉ) ---
 function requestWakeLock(){
   if(!cfg.wakelock || !('wakeLock' in navigator)) return;
   navigator.wakeLock.request('screen').then(function(lock){ st.wakeLock = lock; }).catch(function(){});
 }
+
+// --- EXPORT CONVERSATION ---
 function exportConversation(){
   if(!st.hist.length){ toast('Vide', 'err'); return; }
   var lines = st.hist.map(function(m){
@@ -1331,6 +1407,8 @@ function exportConversation(){
   var a = document.createElement('a'); a.href = URL.createObjectURL(blob);
   a.download = 'supra-reel.txt'; a.click();
 }
+
+// --- SÉQUENCE DE DÉMARRAGE ---
 function bootSequence(){
   var title = $('#title'), sub = $('#sub'), acts = $('#acts');
   if(!title) return Promise.resolve();
@@ -1349,6 +1427,8 @@ function bootSequence(){
     })
     .then(function(){ if(acts) acts.classList.add('show'); });
 }
+
+// --- LANCEMENT DE L'APPLI ---
 function launchApp(){
   persistKeyFromInput(); fixModel();
   if(!hasKey()){ toast('Colle ta clé', 'err'); openSettings(); return; }
@@ -1363,7 +1443,11 @@ function launchApp(){
     status('Prêt'); sys(); log('Lancé', 'ok');
   });
 }
+
+// --- HORLOGE ---
 function tickClock(){ var el = $('#clock'); if(el) el.textContent = now(); }
+
+// --- ÉVÉNEMENTS ---
 function bindEvents(){
   var go = $('#go'); if(go) go.addEventListener('click', launchApp);
   var cfgBtn = $('#cfg'); if(cfgBtn) cfgBtn.addEventListener('click', openSettings);
@@ -1405,6 +1489,8 @@ function bindEvents(){
     var s = $('#'+a[0]), d = $('#'+a[1]);
     if(s && d) s.addEventListener('input', function(){ d.textContent = s.value; });
   });
+
+  // Boutons de la barre
   var rec = $('#rec'); if(rec) rec.addEventListener('click', startRec);
   var stoprec = $('#stoprec'); if(stoprec) stoprec.addEventListener('click', stopRec);
   var play = $('#play'); if(play) play.addEventListener('click', playLastRec);
@@ -1420,6 +1506,8 @@ function bindEvents(){
   var capture = $('#capture'); if(capture) capture.addEventListener('click', captureCam);
   var camstop = $('#camstop'); if(camstop) camstop.addEventListener('click', closeCam);
   var exp = $('#export'); if(exp) exp.addEventListener('click', exportConversation);
+  var saveNoiseBtn = $('#saveNoise'); if(saveNoiseBtn) saveNoiseBtn.addEventListener('click', saveNoise);
+  var exportLogsBtn = $('#exportLogs'); if(exportLogsBtn) exportLogsBtn.addEventListener('click', exportLogs);
   var clr = $('#clr');
   if(clr) clr.addEventListener('click', function(){
     st.hist = []; st.mem = ''; st.tokens = 0; st.reqs = 0; st.noiseCount = 0;
@@ -1432,6 +1520,8 @@ function bindEvents(){
     $('#mute').textContent = st.muted ? 'SON' : 'MUTE';
     $('#mute').classList.toggle('on', st.muted); sys();
   });
+
+  // Envoi de texte
   function sendText(){
     var text = $('#txt').value.trim(); if(!text) return;
     $('#txt').value = '';
@@ -1443,6 +1533,8 @@ function bindEvents(){
   }
   var send = $('#send'); if(send) send.addEventListener('click', sendText);
   var txt = $('#txt'); if(txt) txt.addEventListener('keydown', function(e){ if(e.key === 'Enter'){ e.preventDefault(); sendText(); } });
+
+  // PTT (Push-to-Talk)
   var ptt = $('#ptt');
   if(ptt){
     ptt.addEventListener('touchstart', pttDown, {passive: false});
@@ -1452,15 +1544,23 @@ function bindEvents(){
     ptt.addEventListener('mouseup', pttUp);
     ptt.addEventListener('mouseleave', pttUp);
   }
+
+  // Raccourcis clavier
   document.addEventListener('keydown', function(e){
     if(e.key === 'Escape'){
       if($('#dlg').open){ closeSettings(); return; }
       stopAll();
     }
   });
+
+  // Redimensionnement
   window.addEventListener('resize', function(){ if(st.ready) sizeCanvases(); });
+
+  // Chargement des voix pour la synthèse vocale
   if(window.speechSynthesis) speechSynthesis.onvoiceschanged = function(){};
 }
+
+// --- INITIALISATION ---
 function init(){ load(); bindEvents(); tickClock(); setInterval(tickClock, 1000); bootSequence(); }
 if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
 else init();
