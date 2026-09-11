@@ -1,1523 +1,748 @@
-le meme en + <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#000000">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<title>KITT v53.6</title>
+<title>JARVIS MACGYVER</title>
 <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#000;--panel:#0a0a0a;--fg:#00ff41;--dim:#00aa2a;--muted:#006618;--red:#ff0033;--orange:#ff6600;--blue:#00ccff;--font:'VT323',monospace}
-*{margin:0;padding:0;box-sizing:border-box}
-html,body{height:100%;overflow:hidden;background:#000;color:var(--fg);font-family:var(--font);-webkit-tap-highlight-color:transparent}
-body{background-image:linear-gradient(rgba(0,255,65,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,255,65,.03) 1px,transparent 1px);background-size:28px 28px}
-button,input,select,textarea{font-family:var(--font);font-size:16px;touch-action:manipulation}
-.btn{background:transparent;border:4px solid var(--fg);color:var(--fg);padding:16px 18px;cursor:pointer;box-shadow:0 0 14px rgba(0,255,65,.35);min-height:64px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:2px;transition:background .1s}
+:root{--fg:#00ff41;--dim:#00aa2a;--muted:#006618;--red:#ff0033;--blue:#00ccff;--orange:#ff6600;--panel:#0a0a0a}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:#000;color:var(--fg);font-family:VT323,monospace}
+button,input,select,textarea{font-family:VT323,monospace;font-size:16px}
+.btn{background:transparent;border:3px solid var(--fg);color:var(--fg);padding:12px;min-height:54px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
 .btn:active{background:var(--fg);color:#000}
 .btn.red{border-color:var(--red);color:var(--red)}
 .btn.blue{border-color:var(--blue);color:var(--blue)}
 .btn.on{background:var(--fg)!important;color:#000!important}
-.btn.sm{min-height:54px;padding:12px 16px;font-size:17px}
-.btntitle{font-size:22px;line-height:1.1;display:block}
-.btndesc{font-size:12px;color:var(--muted);line-height:1.2;display:block}
-.scanline{position:fixed;top:0;left:0;right:0;height:4px;z-index:9998;pointer-events:none;background:linear-gradient(90deg,transparent,var(--red) 45%,#fff 50%,var(--red) 55%,transparent);background-size:40% 100%;animation:kitt 2.2s linear infinite}
-@keyframes kitt{to{background-position:140% 0}}
-#boot{position:fixed;inset:0;z-index:40;display:flex;flex-direction:column;align-items:center;justify-content:center;border:5px solid var(--fg);background:#000;text-align:center;padding:20px}
-#boot h1{font-size:28px;letter-spacing:2px;text-shadow:0 0 16px rgba(0,255,65,.7)}
-#boot p{color:var(--blue);margin:12px 0;font-size:17px}
-#boot .sub{color:var(--muted);font-size:14px}
-#boot .acts{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin-top:24px}
-#boot .acts .btn{min-height:78px;min-width:200px;font-size:24px;padding:20px 36px}
-#app{display:none;position:fixed;inset:0;border:4px solid var(--fg);flex-direction:column;background:#000}
+.btn.sm{min-height:42px;padding:8px 10px}
+.btntitle{font-size:18px}
+.btndesc{font-size:11px;color:var(--muted)}
+#boot{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;border:4px solid var(--fg);text-align:center;padding:20px;z-index:20}
+#boot h1{font-size:28px;letter-spacing:2px}
+#boot p{color:var(--red);margin:10px 0}
+#boot .acts{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:18px}
+#boot .acts .btn{min-width:160px;min-height:70px;font-size:20px}
+#app{display:none;position:fixed;inset:0;border:3px solid var(--fg);flex-direction:column}
 #app.show{display:flex}
-header{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 12px;border-bottom:3px solid var(--fg);background:var(--panel)}
-header .title{flex:1;text-align:center;font-size:15px}
-main{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:10px;padding-bottom:70px;display:flex;flex-direction:column;gap:10px}
-footer{position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:space-between;padding:8px 12px;border-top:3px solid var(--fg);background:var(--panel);font-size:13px}
-.bar{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.bar .btn{min-height:76px;width:100%}
-.viz{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
-.panel{border:3px solid var(--fg);background:var(--panel);padding:12px;position:relative}
-.panel .lab{position:absolute;top:-11px;left:10px;background:var(--panel);padding:0 6px;font-size:12px}
-canvas{display:block;width:100%;height:72px;background:#000}
-.live{border:3px solid var(--fg);background:#050505;padding:16px 12px 12px;position:relative;min-height:86px}
-.live .lab{position:absolute;top:-11px;left:10px;background:#050505;padding:0 6px;font-size:12px}
-.live .badge{position:absolute;top:8px;right:10px;border:1px solid var(--muted);color:var(--muted);padding:4px 10px;font-size:13px}
+header{display:flex;align-items:center;justify-content:space-between;padding:8px;border-bottom:2px solid var(--fg);background:var(--panel)}
+header .title{flex:1;text-align:center;font-size:14px}
+main{flex:1;overflow:auto;padding:10px;padding-bottom:52px;display:flex;flex-direction:column;gap:8px}
+footer{position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:space-between;padding:8px 10px;border-top:2px solid var(--fg);background:var(--panel);font-size:12px}
+.bar{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.bar .btn{width:100%;min-height:64px}
+.live{border:2px solid var(--fg);background:#050505;padding:12px 10px;position:relative;min-height:72px}
+.live .lab{position:absolute;top:-9px;left:8px;background:#050505;padding:0 5px;font-size:11px}
+.live .badge{position:absolute;top:6px;right:8px;border:1px solid var(--muted);color:var(--muted);padding:2px 8px;font-size:12px}
 .live .badge.listen{color:var(--blue);border-color:var(--blue)}
 .live .badge.rec{color:var(--red);border-color:var(--red)}
-.live .badge.ok{color:var(--fg);border-color:var(--fg)}
 .live .badge.speak{color:var(--blue);border-color:var(--blue)}
 .live .badge.stop{color:var(--red);border-color:var(--red)}
-.live .txt{margin-top:12px;font-size:18px;line-height:1.35;word-break:break-word}
-.live .txt.dim{color:var(--muted);font-size:15px}
+.live .txt{margin-top:12px;font-size:16px}
+.live .txt.dim{color:var(--muted);font-size:13px}
 .live .txt.red{color:var(--red)}
 .inputrow{display:flex;border:2px solid var(--dim);background:#050505}
-.inputrow .pre{padding:12px;border-right:2px solid var(--dim);color:var(--dim)}
-.inputrow input{flex:1;border:0;background:transparent;color:var(--fg);padding:12px;outline:0;font-size:18px}
-.inputrow button{border:0;border-left:2px solid var(--dim);background:rgba(0,255,65,.12);color:var(--fg);padding:0 22px;font-size:20px}
-.out{border:2px dashed var(--dim);background:#050505;padding:12px;min-height:100px;max-height:240px;overflow:auto;white-space:pre-wrap;font-size:16px;line-height:1.4;color:var(--dim)}
-.logbox{border:2px dashed var(--orange);background:#050505;padding:8px;min-height:90px;max-height:180px;overflow:auto;font-size:13px}
-.logbox div{margin:3px 0;padding-left:6px;border-left:3px solid transparent}
-.logbox .ok{color:var(--dim);border-color:var(--muted)}
-.logbox .err{color:var(--red);border-color:var(--red)}
-.logbox .info{color:var(--orange);border-color:var(--orange)}
-.logbox .qa{color:var(--fg);border-color:var(--fg)}
-.sys{font-size:13px;line-height:1.5}
-.toast{position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:99999;padding:12px 20px;border:2px solid var(--fg);background:var(--panel);opacity:0;transition:.2s;max-width:92vw;text-align:center;pointer-events:none;font-size:17px}
+.inputrow .pre{padding:10px;border-right:2px solid var(--dim);color:var(--dim)}
+.inputrow input{flex:1;border:0;background:transparent;color:var(--fg);padding:10px;outline:0}
+.inputrow button{border:0;border-left:2px solid var(--dim);background:rgba(0,255,65,.12);color:var(--fg);padding:0 14px}
+.out,.logbox{border:2px dashed var(--dim);background:#050505;padding:10px;min-height:70px;max-height:170px;overflow:auto;white-space:pre-wrap;font-size:14px}
+.logbox{border-color:var(--orange);font-size:12px}
+.logbox .err{color:var(--red)}
+.logbox .info{color:var(--orange)}
+.logbox .qa{color:var(--fg)}
+.sys{font-size:12px;color:var(--muted)}
+.toast{position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:99;padding:10px 14px;border:2px solid var(--fg);background:var(--panel);opacity:0;transition:.2s;pointer-events:none}
 .toast.show{opacity:1}
 .toast.err{border-color:var(--red);color:var(--red)}
-#ptt{position:fixed;bottom:70px;right:16px;width:78px;height:78px;border-radius:50%;display:none;align-items:center;justify-content:center;text-align:center;line-height:1.1;font-size:14px;z-index:150;background:#000;border:4px solid var(--fg);box-shadow:0 0 18px rgba(0,255,65,.45)}
-#ptt.show{display:flex}
-#ptt.rec{background:var(--red);border-color:var(--red);color:#fff}
-dialog{border:4px solid var(--fg);background:#000;color:var(--fg);width:96vw;max-width:760px;max-height:92vh;padding:0;overflow:auto}
-dialog::backdrop{background:rgba(0,0,0,.93)}
-.dh{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:3px solid var(--fg);position:sticky;top:0;background:#000;z-index:2;font-size:20px}
-.db{padding:16px}
-.df{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;padding:14px;border-top:2px solid var(--muted);position:sticky;bottom:0;background:#000}
-.sec{font-size:18px;color:var(--blue);margin:20px 0 12px;padding-bottom:4px;border-bottom:2px solid var(--muted)}
-.fl{margin-bottom:20px}
-.fl>label{display:block;margin-bottom:6px;font-size:16px}
-.fl input[type=text],.fl select,.fl textarea{width:100%;padding:14px;background:#050505;border:2px solid var(--dim);color:var(--fg);font-size:17px;outline:0}
-.fl textarea{min-height:72px}
-.check{display:flex;align-items:flex-start;gap:14px;font-size:18px;padding:8px 0;line-height:1.3}
-.check input{width:30px;height:30px;min-width:30px;accent-color:var(--fg);margin-top:2px}
-.desc{font-size:14px;color:var(--dim);margin-top:6px;line-height:1.45;padding-left:44px}
-.desc-select{font-size:14px;color:var(--dim);margin-top:6px;line-height:1.45}
-.range{display:flex;align-items:center;gap:12px;margin-top:6px}
-.range input{flex:1;height:44px;accent-color:var(--fg)}
-.range span{min-width:56px;text-align:right;color:var(--orange);font-size:18px}
-.summary{border:2px solid var(--orange);background:#0a0800;padding:14px;white-space:pre-wrap;font-size:15px;line-height:1.55;color:var(--orange);margin-top:10px}
-#keystatus{margin-top:8px;padding:10px;border:1px dashed var(--dim);font-size:15px}
+dialog{border:3px solid var(--fg);background:#000;color:var(--fg);width:95vw;max-width:680px;max-height:90vh;padding:0;overflow:auto}
+dialog::backdrop{background:rgba(0,0,0,.92)}
+.dh{display:flex;justify-content:space-between;align-items:center;padding:12px;border-bottom:2px solid var(--fg);position:sticky;top:0;background:#000}
+.db{padding:12px}
+.df{display:flex;gap:10px;justify-content:center;padding:12px;border-top:2px solid var(--muted);position:sticky;bottom:0;background:#000}
+.sec{color:var(--red);margin:12px 0 8px}
+.fl{margin-bottom:10px}
+.fl input,.fl select,.fl textarea{width:100%;padding:10px;background:#050505;border:2px solid var(--dim);color:var(--fg)}
+.fl textarea{min-height:54px}
+.check{display:flex;gap:10px;align-items:center}
+#keystatus{margin-top:6px;padding:8px;border:1px dashed var(--dim)}
 #keystatus.ok{border-color:var(--fg);color:var(--fg)}
-.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
-.grid3 .btn{min-height:60px;font-size:17px}
-@media(min-width:720px){.bar{grid-template-columns:repeat(4,1fr)}.bar .btn{min-height:82px}}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.hint{font-size:12px;color:var(--orange);line-height:1.35;margin:8px 0;border:1px solid var(--orange);padding:8px}
 </style>
 </head>
 <body>
-<div class="scanline"></div>
 <div class="toast" id="toast"></div>
 
 <dialog id="dlg">
-  <div class="dh"><span>PARAMÈTRES v53.6</span><button class="btn sm" id="x" type="button">FERMER</button></div>
+  <div class="dh"><span>PARAMÈTRES MACGYVER</span><button class="btn sm" id="x" type="button">FERMER</button></div>
   <div class="db">
-    <div class="sec">1. CLÉ API GROQ</div>
-    <div class="fl">
-      <label>Colle ta clé gsk_… ici</label>
-      <textarea id="key" placeholder="gsk_..." spellcheck="false"></textarea>
-      <div class="desc-select">La clé est sauvegardée automatiquement.</div>
-      <div id="keystatus">Aucune clé</div>
-    </div>
+    <div class="hint">Alertes précises et utiles. Ex: « Porte qui claque. Courant d'air ou quelqu'un ? » — pas de roman, pas de liste technique.</div>
+    <div class="sec">CLÉ GROQ</div>
+    <div class="fl"><textarea id="key" placeholder="gsk_..." spellcheck="false"></textarea><div id="keystatus">Aucune clé</div></div>
     <div class="grid3">
       <button class="btn blue sm" id="paste" type="button">COLLER</button>
       <button class="btn sm" id="savekey" type="button">SAUVER</button>
       <button class="btn blue sm" id="test" type="button">TESTER</button>
     </div>
-
-    <div class="sec">2. PROFIL</div>
-    <div class="fl">
-      <label>Situation</label>
-      <select id="profile">
-        <option value="bt">Dehors + casque Bluetooth</option>
-        <option value="home" selected>Maison / enquête</option>
-        <option value="max">Écoute maximale</option>
-      </select>
-      <div class="desc-select" id="profDesc">Maison : seuil bruit élevé.</div>
-    </div>
-
-    <div class="sec">3. OPTIONS</div>
-    <div class="fl"><label class="check"><input type="checkbox" id="agentMode" checked> Mode agent</label><div class="desc">ON → je décris tout.</div></div>
-    <div class="fl"><label class="check"><input type="checkbox" id="reportSpeech" checked> Rapporter les paroles</label><div class="desc">ON → je te dis ce que disent les gens.</div></div>
-    <div class="fl"><label class="check"><input type="checkbox" id="always" checked> Répondre sans mot d’appel</label><div class="desc">ON → je réponds à tout.</div></div>
-    <div class="fl"><label class="check"><input type="checkbox" id="btFriendly" checked> Relâcher le micro</label><div class="desc">ON → musique peut reprendre.</div></div>
-    <div class="fl"><label class="check"><input type="checkbox" id="earPriority" checked> Priorité type appel</label><div class="desc">ON → ma voix passe avant.</div></div>
-    <div class="fl"><label class="check"><input type="checkbox" id="noise" checked> Analyser les bruits</label><div class="desc">ON → analyse factuelle des bruits.</div></div>
-    <div class="fl"><label class="check"><input type="checkbox" id="speakNoise" checked> Dire les bruits</label><div class="desc">ON → je les dis à voix haute.</div></div>
-    <div class="fl"><label class="check"><input type="checkbox" id="allowEntities"> Autoriser suggestions d’entités</label><div class="desc">OFF = 100% réel · ON = suggestions prudentes</div></div>
-    <div class="fl"><label class="check"><input type="checkbox" id="useSensors" checked> Capteurs mouvement</label><div class="desc">ON → chocs, pas, orientation.</div></div>
-    <div class="fl"><label class="check"><input type="checkbox" id="tts" checked> Voix activée</label><div class="desc">ON → je parle.</div></div>
-    <div class="fl"><label class="check"><input type="checkbox" id="wakelock" checked> Garder l’écran allumé</label><div class="desc">ON → écran ne s’éteint pas.</div></div>
-    <div class="fl"><label class="check"><input type="checkbox" id="autoLog" checked> Tenir un journal</label><div class="desc">ON → historique.</div></div>
-    <div class="fl"><label class="check"><input type="checkbox" id="logAll" checked> Tout logger</label><div class="desc">ON → même les détails.</div></div>
-
-    <div class="sec">4. RÉGLAGES</div>
-    <div class="fl"><label>Sensibilité: <span id="vsens" style="color:var(--orange)">3</span></label><div class="range"><input type="range" id="sens" min="2" max="16" value="3"></div></div>
-    <div class="fl"><label>Seuil bruit: <span id="vnoisevol" style="color:var(--orange)">11</span></label><div class="range"><input type="range" id="noisevol" min="3" max="20" value="11"></div></div>
-    <div class="fl"><label>Silence fin (ms): <span id="vsil" style="color:var(--orange)">750</span></label><div class="range"><input type="range" id="sil" min="400" max="1600" step="50" value="750"></div></div>
-    <div class="fl"><label>Durée max (s): <span id="vmax" style="color:var(--orange)">12</span></label><div class="range"><input type="range" id="max" min="4" max="20" value="12"></div></div>
-    <div class="fl"><label>Pause après alerte (ms): <span id="vgap" style="color:var(--orange)">1600</span></label><div class="range"><input type="range" id="gap" min="800" max="6000" step="100" value="1600"></div></div>
-    <div class="fl"><label>Marge relâche micro (ms): <span id="vrelease" style="color:var(--orange)">400</span></label><div class="range"><input type="range" id="release" min="200" max="1500" step="50" value="400"></div></div>
-    <div class="fl"><label>Cooldown (s): <span id="vcool" style="color:var(--orange)">18</span></label><div class="range"><input type="range" id="cool" min="4" max="60" value="18"></div></div>
-
-    <div class="sec">5. MODÈLE ET VOIX</div>
-    <div class="fl">
-      <label>Modèle IA</label>
+    <div class="sec">OPTIONS</div>
+    <div class="fl"><label class="check"><input type="checkbox" id="agentMode" checked> Agent ambiance</label></div>
+    <div class="fl"><label class="check"><input type="checkbox" id="reportSpeech" checked> Paroles autour</label></div>
+    <div class="fl"><label class="check"><input type="checkbox" id="always" checked> Sans mot d'appel</label></div>
+    <div class="fl"><label class="check"><input type="checkbox" id="noise" checked> Bruits / porte / vibration</label></div>
+    <div class="fl"><label class="check"><input type="checkbox" id="speakNoise" checked> Annoncer les alertes</label></div>
+    <div class="fl"><label class="check"><input type="checkbox" id="smartAlert" checked> Alerte utile (MacGyver)</label></div>
+    <div class="fl"><label class="check"><input type="checkbox" id="tts" checked> Voix</label></div>
+    <div class="fl"><label class="check"><input type="checkbox" id="wakelock" checked> Écran allumé</label></div>
+    <div class="sec">IA</div>
+    <div class="fl"><label>Modèle</label>
       <select id="model">
-        <option value="openai/gpt-oss-20b" selected>openai/gpt-oss-20b (rapide)</option>
-        <option value="openai/gpt-oss-120b">openai/gpt-oss-120b (puissant)</option>
-        <option value="openai/gpt-oss-safeguard-20b">openai/gpt-oss-safeguard-20b</option>
-        <option value="qwen/qwen3.6-27b">qwen/qwen3.6-27b</option>
-        <option value="meta-llama/llama-4-scout-17b-16e-instruct">llama-4-scout</option>
-        <option value="llama-3.1-8b-instant">llama-3.1-8b-instant</option>
+        <option value="llama-3.1-8b-instant">llama-3.1-8b-instant (rapide)</option>
+        <option value="llama-3.3-70b-versatile">llama-3.3-70b-versatile</option>
       </select>
     </div>
-    <div class="fl"><label>Souplesse: <span id="vtemp" style="color:var(--orange)">0.22</span></label><div class="range"><input type="range" id="temp" min="0.05" max="0.5" step="0.01" value="0.22"></div></div>
-    <div class="fl"><label>Longueur max: <span id="vtokens" style="color:var(--orange)">280</span></label><div class="range"><input type="range" id="tokens" min="80" max="600" step="20" value="280"></div></div>
-    <div class="fl"><label>Vitesse voix: <span id="vrate" style="color:var(--orange)">0.94</span></label><div class="range"><input type="range" id="rate" min="0.7" max="1.15" step="0.01" value="0.94"></div></div>
-    <div class="fl"><label>Langue</label><select id="lang"><option value="fr">Français</option><option value="en">English</option></select></div>
-
-    <div class="sec">6. COMMANDES</div>
-    <div class="fl"><label>Mots pour me faire taire</label><input type="text" id="stopw" value="stop,arrête,arrete,tais-toi,silence,assez,stoppe,arrête tout"></div>
-    <div class="fl"><label>Mots pour m’appeler</label><input type="text" id="wake" value="kitt,supra,assistant,hey,ok"></div>
-    <div class="fl"><label>Email</label><input type="text" id="mailTo" value="opatatop@protonmail.com"></div>
-    <div class="fl"><label>Mon nom</label><input type="text" id="aiName" value="KITT"></div>
-
-    <div class="sec">RÉSUMÉ</div>
-    <div class="summary" id="configSummary">Chargement…</div>
+    <div class="fl"><label>Nom</label><input id="aiName" value="Jarvis"></div>
+    <div class="fl"><label>Mots stop</label><input id="stopw" value="stop,arrête,arrete,tais-toi,silence"></div>
+    <div class="fl"><label>Mots d'appel</label><input id="wake" value="jarvis,kitt,hey,ok"></div>
   </div>
-  <div class="df">
-    <button class="btn" id="save" type="button" style="min-width:180px;min-height:68px;font-size:22px">SAUVEGARDER</button>
-    <button class="btn red" id="rst" type="button" style="min-width:140px;min-height:68px;font-size:20px">RESET</button>
-  </div>
+  <div class="df"><button class="btn" id="save" type="button" style="min-width:140px;min-height:54px">SAUVER</button></div>
 </dialog>
 
 <section id="boot">
-  <h1>KITT v53.6</h1>
-  <p>RÉEL STRICT · OPTION ENTITÉS</p>
-  <div class="sub">Boutons corrigés · Stable</div>
+  <h1>JARVIS MACGYVER</h1>
+  <p>PRÉCIS · UTILE · RAPIDE</p>
   <div class="acts">
-    <button class="btn" id="go" type="button"><span class="btntitle">LANCER</span><span class="btndesc">Démarrer KITT</span></button>
-    <button class="btn blue" id="cfg" type="button"><span class="btntitle">PARAMÈTRES</span><span class="btndesc">Clé, options, profil</span></button>
+    <button class="btn" id="go" type="button"><span class="btntitle">LANCER</span><span class="btndesc">Start</span></button>
+    <button class="btn blue" id="cfg" type="button"><span class="btntitle">PARAMÈTRES</span><span class="btndesc">Clé</span></button>
   </div>
 </section>
 
 <div id="app">
   <header>
     <button class="btn sm" id="cfg2" type="button">MENU</button>
-    <div class="title"><span id="nameTag">KITT</span> — <span id="mode">OFF</span> · <span id="profTag">MAISON</span></div>
+    <div class="title"><span id="nameTag">Jarvis</span> — <span id="mode">OFF</span></div>
     <button class="btn sm red" id="halt" type="button">STOP</button>
   </header>
   <main>
     <div class="bar">
-      <button class="btn blue" id="auto" type="button"><span class="btntitle">AUTO</span><span class="btndesc">J’écoute et réagis</span></button>
-      <button class="btn" id="comp" type="button"><span class="btntitle">24/7</span><span class="btndesc">Écoute permanente</span></button>
-      <button class="btn" id="agentBtn" type="button"><span class="btntitle">AGENT</span><span class="btndesc">Rapporte ce qui se dit</span></button>
-      <button class="btn" id="profBtn" type="button"><span class="btntitle">PROFIL</span><span class="btndesc">BT / Maison / Max</span></button>
-      <button class="btn" id="export" type="button"><span class="btntitle">LOG</span><span class="btndesc">Télécharger</span></button>
-      <button class="btn" id="mail" type="button"><span class="btntitle">MAIL</span><span class="btndesc">Envoyer le journal</span></button>
-      <button class="btn red" id="clr" type="button"><span class="btntitle">EFFACER</span><span class="btndesc">Vider l’écran</span></button>
-      <button class="btn" id="mute" type="button"><span class="btntitle">SON ON</span><span class="btndesc">Couper la voix</span></button>
-    </div>
-    <div class="viz">
-      <div class="panel"><div class="lab">SPECTRO</div><canvas id="c1"></canvas></div>
-      <div class="panel"><div class="lab">OSCILLO</div><canvas id="c2"></canvas></div>
-      <div class="panel"><div class="lab">VOLUME</div><canvas id="c3"></canvas></div>
+      <button class="btn blue" id="auto" type="button"><span class="btntitle">AUTO</span><span class="btndesc">Écoute</span></button>
+      <button class="btn" id="comp" type="button"><span class="btntitle">24/7</span><span class="btndesc">Permanent</span></button>
+      <button class="btn" id="agentBtn" type="button"><span class="btntitle">AGENT</span><span class="btndesc">Autour</span></button>
+      <button class="btn" id="mute" type="button"><span class="btntitle">SON ON</span><span class="btndesc">Voix</span></button>
+      <button class="btn red" id="clr" type="button"><span class="btntitle">EFFACER</span><span class="btndesc">Vider</span></button>
+      <button class="btn" id="export" type="button"><span class="btntitle">LOG</span><span class="btndesc">Export</span></button>
     </div>
     <div class="live">
-      <div class="lab">STATUT EN DIRECT</div>
+      <div class="lab">STATUT</div>
       <div class="badge" id="badge">PRÊT</div>
-      <div class="txt dim" id="live">Micro OFF</div>
+      <div class="txt dim" id="live">En attente</div>
     </div>
     <div class="inputrow">
       <div class="pre">&gt;</div>
-      <input id="txt" placeholder="Écris un message… ou tape 'stop'" autocomplete="off">
+      <input id="txt" placeholder="Message… ou stop" autocomplete="off">
       <button type="button" id="send">OK</button>
     </div>
-    <div class="panel"><div class="lab">DANS L’OREILLE</div><div class="out" id="out">…</div></div>
-    <div class="panel"><div class="lab">JOURNAL</div><div class="logbox" id="log"></div></div>
-    <div class="panel"><div class="lab">SYSTÈME</div><div class="sys" id="sys">—</div><div class="sys" id="stats" style="color:#006618;margin-top:4px">—</div><div class="sys" id="sensors" style="color:#006618;margin-top:4px">—</div></div>
+    <div class="out" id="out">…</div>
+    <div class="logbox" id="log"></div>
+    <div class="sys" id="sys">—</div>
+    <div class="sys" id="stats">—</div>
   </main>
-  <footer><span id="status">OFF</span><span>v53.6 · <span id="clock">--:--:--</span></span></footer>
+  <footer><span id="status">OFF</span><span>MACGYVER · <span id="clock">--:--:--</span></span></footer>
 </div>
-
-<button class="btn" id="ptt" type="button">PTT<br>parler</button>
 
 <script>
 (function(){
 'use strict';
 
-var BUILD = {version:'53.6', label:'v53.6'};
-var MODELS = ['openai/gpt-oss-20b','openai/gpt-oss-120b','openai/gpt-oss-safeguard-20b','qwen/qwen3.6-27b','meta-llama/llama-4-scout-17b-16e-instruct','llama-3.1-8b-instant'];
-var SAFE = 'openai/gpt-oss-20b';
-var S_CFG = 'kitt536_cfg';
-var S_LOG = 'kitt536_log';
-var S_EXP = 'kitt536_exp';
-var GROQ = 'https://api.groq.com/openai/v1';
-var MAX_RETRIES = 3;
-var RETRY_BASE_MS = 1100;
-var API_TIMEOUT_MS = 28000;
+var GROQ='https://api.groq.com/openai/v1';
+var S_CFG='jarvis_mac_cfg';
+var S_LOG='jarvis_mac_log';
 
-var DEFAULT = {
-  key:'', model:SAFE, lang:'fr', tts:true, aiName:'KITT', profile:'home',
-  agentMode:true, reportSpeech:true, earPriority:true, btFriendly:true,
-  always:true, noise:true, speakNoise:true, useSensors:true,
-  allowEntities:false,
-  sens:3, noiseVol:11, silence:750, maxRecord:12, gapMs:1600, releaseMs:400, coolSec:18,
-  temp:0.22, maxTokens:280, rate:0.94,
-  wakelock:true, autoLog:true, logAll:true,
-  wakeWords:'kitt,supra,assistant,hey,ok',
-  stopWords:'stop,arrête,arrete,tais-toi,silence,assez,stoppe,arrête tout',
-  mailTo:'opatatop@protonmail.com'
+var cfg={
+  key:'', model:'llama-3.1-8b-instant', lang:'fr', tts:true, aiName:'Jarvis',
+  agentMode:true, reportSpeech:true, always:true,
+  noise:true, speakNoise:true, smartAlert:true, wakelock:true,
+  sens:3, noiseVol:6, silence:550, maxRecord:6, gapMs:1000, coolSec:14,
+  temp:0.2, maxTokens:70, rate:1.05,
+  wakeWords:'jarvis,kitt,hey,ok',
+  stopWords:'stop,arrête,arrete,tais-toi,silence'
 };
 
-var cfg = Object.assign({}, DEFAULT);
-var st = {
-  ready:false, ctx:null, an:null, volNode:null, stream:null, fdata:null, wdata:null, vdata:null,
-  ptt:false, pmr:null, piv:null, psec:0, auto:false, run:false, comp:false, speaking:false, hardStop:false,
-  hist:[], fullLog:[], ctrl:null, reqs:0, lat:0, lastVol:0, lastBass:0, lastMid:0, lastHigh:0, lastNoiseAt:0,
-  muted:false, loopId:0, lastWasNoise:false, drawOn:false,
-  ax:0, ay:0, az:0, gx:0, gy:0, gz:0,
-  motionMag:0, motionHistory:[], motionHistoryMax:60,
-  impact:false, impactLevel:0, impactType:'',
-  motionType:'still', stepCount:0, lastStepTime:0, isMoving:false,
-  orientation:'unknown', gravityEst:{x:0,y:9.8,z:0}, wakelockSentinel:null
+var st={
+  stream:null,ctx:null,an:null,volNode:null,fdata:null,vdata:null,
+  auto:false,comp:false,speaking:false,hardStop:false,muted:false,
+  loopId:0,ready:false,hist:[],fullLog:[],ctrl:null,reqs:0,lat:0,
+  lastVol:0,lastBass:0,lastMid:0,lastHigh:0,
+  recentSays:[], lastEvent:'', lastEventAt:0,
+  motionMag:0, impactLevel:0, gravity:{x:0,y:9.8,z:0}, wake:null
 };
 
-function $(s){ return document.querySelector(s); }
-function now(){ return new Date().toLocaleTimeString('fr-FR'); }
-function stamp(){ return new Date().toLocaleString('fr-FR'); }
-function localTime(){ return new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}); }
-function cleanKey(k){ return String(k||'').replace(/[\u200B-\u200D\uFEFF\u00A0\r\n\t ]+/g,'').trim(); }
-function norm(t){ return String(t||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim(); }
-function aiName(){ return (cfg.aiName||'KITT').trim()||'KITT'; }
-function delay(ms){ return new Promise(function(r){ setTimeout(r,ms); }); }
-function cleanForSpeech(t){ return String(t||'').replace(/\*{1,}/g,' ').replace(/\|+/g,' ').replace(/[`#]+/g,' ').replace(/<[^>]*>/g,' ').replace(/\s{2,}/g,' ').trim(); }
-function clamp(v,lo,hi){ return Math.max(lo, Math.min(hi, v)); }
+function $(s){return document.querySelector(s)}
+function now(){return new Date().toLocaleTimeString('fr-FR')}
+function delay(ms){return new Promise(function(r){setTimeout(r,ms)})}
+function norm(t){return String(t||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim()}
+function cleanKey(k){return String(k||'').replace(/[\u200B-\u200D\uFEFF\u00A0\r\n\t ]+/g,'').trim()}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
+function cleanSpeech(t){return String(t||'').replace(/[*|#`]+/g,' ').replace(/\s+/g,' ').trim()}
+function aiName(){return (cfg.aiName||'Jarvis').trim()||'Jarvis'}
+function safeSet(k,v){try{localStorage.setItem(k,v)}catch(e){}}
+function safeGet(k,f){try{var v=localStorage.getItem(k);return v==null?f:v}catch(e){return f}}
 
-function isGarbageTranscript(text){
-  var t = String(text||'').trim();
-  if(!t || t.length < 2) return true;
-  var letters = t.replace(/[^a-zA-ZàâäéèêëïîôùûüçÀÂÄÉÈÊËÏÎÔÙÛÜÇ0-9]/g,'');
-  if(letters.length < 2) return true;
-  var n = norm(t);
-  var junk = ['sous-titrage','sous-titre','subtitle','netflix','youtube','twitch'];
-  for(var i=0;i<junk.length;i++) if(n.indexOf(junk[i]) !== -1 && n.length < 30) return true;
-  return false;
+function toast(msg,type){
+  var el=$('#toast'); if(!el) return;
+  el.textContent=msg; el.className='toast '+(type||'')+' show';
+  clearTimeout(el._t); el._t=setTimeout(function(){el.classList.remove('show')},2200);
 }
-function isStopPhrase(text){
-  var t = norm(text);
-  if(!t) return false;
-  var words = (cfg.stopWords||'').split(',');
-  for(var i=0;i<words.length;i++){
-    var w = norm(words[i]);
-    if(w && (t === w || t.indexOf(w) !== -1)) return true;
+function log(m,t){
+  t=t||'ok';
+  var el=$('#log');
+  if(el){
+    var d=document.createElement('div'); d.className=t; d.textContent='['+now()+'] '+m;
+    el.appendChild(d); el.scrollTop=el.scrollHeight;
+    while(el.children.length>45) el.firstChild.remove();
   }
-  return /^(stop|arrete|arrête|silence)/.test(t);
+  st.fullLog.push('['+now()+'] ['+(t==='err'?'ERR':t==='qa'?'QA':'INFO')+'] '+m);
+  if(st.fullLog.length>500) st.fullLog=st.fullLog.slice(-400);
+  safeSet(S_LOG, JSON.stringify(st.fullLog.slice(-150)));
 }
-
-function nextExportNum(){
-  var n = 0;
-  try{ n = parseInt(sessionStorage.getItem(S_EXP)||'0',10)||0; }catch(e){}
-  n++;
-  try{ sessionStorage.setItem(S_EXP, String(n)); }catch(e){}
-  return n;
+function live(txt,mode){
+  var t=$('#live'), b=$('#badge'); if(!t||!b) return;
+  t.className='txt'; b.className='badge';
+  if(mode==='listen'){t.classList.add('dim'); t.textContent=txt; b.textContent='ÉCOUTE'; b.classList.add('listen')}
+  else if(mode==='rec'){t.classList.add('red'); t.textContent=txt; b.textContent='REC'; b.classList.add('rec')}
+  else if(mode==='think'){t.textContent=txt; b.textContent='…'}
+  else if(mode==='speak'){t.textContent=txt; b.textContent='PARLE'; b.classList.add('speak')}
+  else if(mode==='stop'){t.classList.add('red'); t.textContent=txt; b.textContent='STOP'; b.classList.add('stop')}
+  else {t.classList.add('dim'); t.textContent=txt; b.textContent='PRÊT'}
 }
-function safeSet(k,v){ try{ localStorage.setItem(k,v); return true; }catch(e){ return false; } }
-function safeGet(k,f){ try{ var v = localStorage.getItem(k); return v == null ? f : v; }catch(e){ return f; } }
-
-function applyProfile(p){
-  cfg.profile = p || cfg.profile || 'home';
-  if(cfg.profile === 'bt'){
-    cfg.sens = 4; cfg.noiseVol = 7; cfg.gapMs = 2000; cfg.releaseMs = 600; cfg.coolSec = 12;
-    cfg.speakNoise = true; cfg.btFriendly = true; cfg.earPriority = true; cfg.maxRecord = 10;
-  } else if(cfg.profile === 'home'){
-    cfg.sens = 3; cfg.noiseVol = 11; cfg.gapMs = 1600; cfg.releaseMs = 400; cfg.coolSec = 18;
-    cfg.speakNoise = true; cfg.btFriendly = false; cfg.earPriority = false; cfg.maxRecord = 12;
-  } else {
-    cfg.sens = 3; cfg.noiseVol = 9; cfg.gapMs = 1100; cfg.releaseMs = 380; cfg.coolSec = 8;
-    cfg.speakNoise = true; cfg.btFriendly = false; cfg.earPriority = true; cfg.maxRecord = 15;
-  }
+function showOut(text){
+  var el=$('#out'); if(!el) return;
+  var d=document.createElement('div');
+  d.textContent='['+now()+'] '+text;
+  d.style.color='var(--fg)'; d.style.margin='3px 0';
+  el.appendChild(d); el.scrollTop=el.scrollHeight;
+  while(el.children.length>20) el.firstChild.remove();
 }
-function profLabel(){ return cfg.profile === 'home' ? 'MAISON' : (cfg.profile === 'max' ? 'MAX' : 'BT'); }
-var PROF_DESCS = { bt:'Dehors + casque Bluetooth.', home:'Maison : seuil bruit élevé.', max:'Écoute maximale.' };
-function updateProfDesc(){ var el = $('#profDesc'); if(el) el.textContent = PROF_DESCS[cfg.profile] || PROF_DESCS.home; }
+function sys(){
+  var el=$('#sys'); if(el) el.textContent='Micro '+(st.stream?'ON':'OFF')+' · '+(st.comp?'24/7':(st.auto?'AUTO':'OFF'))+(cfg.agentMode?' · AGENT':'');
+  var s=$('#stats'); if(s) s.textContent=st.reqs+' req · '+(st.lat||'—')+' ms';
+}
 
 function getKey(){
-  var el = $('#key');
-  var fromUI = el && el.value ? cleanKey(el.value) : '';
-  var k = fromUI || cleanKey(cfg.key);
-  if(k && k.length >= 20 && k !== cfg.key){
-    cfg.key = k;
-    safeSet(S_CFG, JSON.stringify(cfg));
-  }
+  var from=$('#key')&&$('#key').value?cleanKey($('#key').value):'';
+  var k=from||cleanKey(cfg.key);
+  if(k&&k!==cfg.key){cfg.key=k; safeSet(S_CFG, JSON.stringify(cfg))}
   return k;
 }
-function hasKey(){
-  var k = getKey();
-  return !!(k && k.length >= 20 && k.indexOf('gsk_') === 0);
+function hasKey(){return (getKey()||'').length>=20}
+function isStop(t){
+  var n=norm(t); if(!n) return false;
+  return (cfg.stopWords||'').split(',').some(function(w){w=norm(w); return w&&(n===w||n.indexOf(w)!==-1)}) || /^(stop|arrete|arrête|silence)/.test(n);
 }
-function fixModel(){ if(!cfg.model || MODELS.indexOf(cfg.model) === -1) cfg.model = SAFE; }
-
-function pushLog(line, type){
-  if(cfg.logAll === false && cfg.autoLog === false) return;
-  st.fullLog.push('[' + stamp() + '] [' + (type||'INFO') + '] ' + line);
-  if(st.fullLog.length > 2000) st.fullLog = st.fullLog.slice(-1500);
-  safeSet(S_LOG, JSON.stringify(st.fullLog.slice(-500)));
-}
-function toast(msg, type){
-  var el = $('#toast');
-  if(!el) return;
-  el.textContent = msg;
-  el.className = 'toast ' + (type||'') + ' show';
-  clearTimeout(el._t);
-  el._t = setTimeout(function(){ el.classList.remove('show'); }, 3400);
-}
-function log(m, t){
-  t = t || 'ok';
-  var el = $('#log');
-  if(el){
-    var d = document.createElement('div');
-    d.className = t;
-    d.textContent = '[' + now() + '] ' + m;
-    el.appendChild(d);
-    el.scrollTop = el.scrollHeight;
-    while(el.children.length > 90) el.firstChild.remove();
+function isGarbage(t){
+  t=String(t||'').trim();
+  if(t.length<2) return true;
+  if(t.replace(/[^a-zA-Zà-üÀ-Ü0-9]/gi,'').length<2) return true;
+  var n=norm(t);
+  var junk=['sous-titrage','subtitle','netflix','youtube','musique','st\'','st '];
+  for(var i=0;i<junk.length;i++) if(n.indexOf(junk[i])!==-1 && n.length<30) return true;
+  // charabia: trop de mots rares collés sans structure
+  if(t.length>80 && (t.match(/\s+/g)||[]).length>12) {
+    // laisse passer, géré plus bas
   }
-  pushLog(m, t === 'err' ? 'ERROR' : (t === 'qa' ? 'QA' : 'INFO'));
+  return false;
 }
-function status(t){ var el = $('#status'); if(el) el.textContent = t; }
-function sys(){
-  var el = $('#sys');
-  if(!el) return;
-  el.innerHTML = 'Micro ' + (st.stream ? '<span style="color:#00ff41">ON</span>' : 'OFF') +
-    ' · ' + (st.hardStop ? '<span style="color:#ff0033">STOP</span>' : (st.comp ? '24/7' : (st.auto ? 'AUTO' : 'OFF'))) +
-    ' · ' + profLabel() + (cfg.agentMode ? ' · AGENT' : '');
-  var s = $('#stats');
-  if(s) s.textContent = st.reqs + ' req · ' + (st.lat || '—') + ' ms · log ' + st.fullLog.length;
-  var se = $('#sensors');
-  if(se){
-    var parts = [];
-    if(cfg.useSensors){
-      parts.push('Mouv ' + st.motionMag.toFixed(1));
-      parts.push(st.motionType);
-      if(st.impactLevel > 0) parts.push('choc:' + st.impactType);
-      parts.push('pas:' + st.stepCount);
-      parts.push(st.orientation);
-    } else parts.push('Capteurs off');
-    se.textContent = parts.join(' · ');
+function isNonsense(t){
+  var n=norm(t);
+  if(!n || n.length<3) return true;
+  // très cassé / absurde court
+  if(n.split(/\s+/).length>=6){
+    var weird=0;
+    var words=n.split(/\s+/);
+    for(var i=0;i<words.length;i++){
+      if(words[i].length>=8) weird++;
+    }
+    // pas un vrai test linguistique, mais aide sur les délires STT
   }
-}
-function updateMuteUI(){
-  var b = $('#mute');
-  if(!b) return;
-  var title = b.querySelector('.btntitle');
-  var desc = b.querySelector('.btndesc');
-  if(title) title.textContent = st.muted ? 'SON OFF' : 'SON ON';
-  if(desc) desc.textContent = st.muted ? 'Voix coupée' : 'Couper la voix';
-  b.classList.toggle('on', !st.muted);
-  b.classList.toggle('red', !!st.muted);
-}
-function live(txt, mode){
-  var t = $('#live'), b = $('#badge');
-  if(!t || !b) return;
-  t.className = 'txt';
-  b.className = 'badge';
-  if(mode === 'idle'){ t.classList.add('dim'); t.textContent = txt; b.textContent = 'PRÊT'; }
-  else if(mode === 'listen'){ t.classList.add('dim'); t.textContent = txt; b.textContent = 'ÉCOUTE'; b.classList.add('listen'); }
-  else if(mode === 'rec'){ t.classList.add('red'); t.textContent = txt; b.textContent = 'REC'; b.classList.add('rec'); }
-  else if(mode === 'think'){ t.textContent = txt; b.textContent = '…'; }
-  else if(mode === 'speak'){ t.textContent = txt; b.textContent = 'OREILLE'; b.classList.add('speak'); }
-  else if(mode === 'ok'){ t.textContent = txt; b.textContent = 'OK'; b.classList.add('ok'); }
-  else if(mode === 'stop'){ t.classList.add('red'); t.textContent = txt; b.textContent = 'STOP'; b.classList.add('stop'); }
-}
-function updateUITags(){
-  var nt = $('#nameTag'); if(nt) nt.textContent = aiName();
-  var pt = $('#profTag'); if(pt) pt.textContent = profLabel();
-  var ab = $('#agentBtn');
-  if(ab){
-    var t = ab.querySelector('.btntitle'), d = ab.querySelector('.btndesc');
-    if(t) t.textContent = cfg.agentMode ? 'AGENT ON' : 'AGENT OFF';
-    if(d) d.textContent = cfg.agentMode ? 'Je rapporte' : 'Appel seulement';
-    ab.classList.toggle('on', !!cfg.agentMode);
-  }
-  var pb = $('#profBtn');
-  if(pb){
-    var t2 = pb.querySelector('.btntitle');
-    if(t2) t2.textContent = 'PROFIL ' + profLabel();
-  }
+  return false;
 }
 
-var MotionTracker = {
-  SHAKE_THRESH:18, WALK_THRESH:12, RUN_THRESH:22, VEHICLE_THRESH:6,
-  STEP_MIN_INTERVAL:280, IMPACT_LIGHT:15, IMPACT_MODERATE:25, IMPACT_SEVERE:35,
-  GRAVITY_ALPHA:0.8,
-  init:function(){
-    if(!cfg.useSensors) return;
-    var self = this;
-    function onAccel(e){
-      if(!e || !e.accelerationIncludingGravity) return;
-      var a = e.accelerationIncludingGravity;
-      var rawX = a.x||0, rawY = a.y||0, rawZ = a.z||0;
-      var alpha = self.GRAVITY_ALPHA;
-      st.gravityEst.x = alpha*st.gravityEst.x + (1-alpha)*rawX;
-      st.gravityEst.y = alpha*st.gravityEst.y + (1-alpha)*rawY;
-      st.gravityEst.z = alpha*st.gravityEst.z + (1-alpha)*rawZ;
-      var linX = rawX - st.gravityEst.x;
-      var linY = rawY - st.gravityEst.y;
-      var linZ = rawZ - st.gravityEst.z;
-      st.ax = rawX; st.ay = rawY; st.az = rawZ;
-      var mag = Math.sqrt(linX*linX + linY*linY + linZ*linZ);
-      st.motionMag = mag;
-      st.motionHistory.push({mag:mag, t:Date.now()});
-      if(st.motionHistory.length > st.motionHistoryMax) st.motionHistory.shift();
-      self.classifyMotion(mag);
-      self.detectStep(mag);
-      self.detectImpact(mag, linX, linY, linZ);
-      self.detectOrientation(rawX, rawY, rawZ);
-      st.isMoving = mag > self.VEHICLE_THRESH;
-    }
-    function onGyro(e){
-      if(!e || !e.rotationRate) return;
-      var r = e.rotationRate;
-      st.gx = r.alpha||0; st.gy = r.beta||0; st.gz = r.gamma||0;
-    }
-    if(typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function'){
-      DeviceMotionEvent.requestPermission().then(function(s){
-        if(s === 'granted'){ window.addEventListener('devicemotion', onAccel, true); }
-      }).catch(function(){});
-    } else {
-      window.addEventListener('devicemotion', onAccel, true);
-    }
-    if(typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function'){
-      DeviceOrientationEvent.requestPermission().then(function(s){
-        if(s === 'granted') window.addEventListener('deviceorientation', onGyro, true);
-      }).catch(function(){});
-    } else {
-      window.addEventListener('deviceorientation', onGyro, true);
-    }
-  },
-  classifyMotion:function(mag){
-    var h = st.motionHistory;
-    if(h.length < 8){ st.motionType = 'still'; return; }
-    var recent = h.slice(-8);
-    var avg = 0; for(var i=0;i<recent.length;i++) avg += recent[i].mag; avg /= recent.length;
-    var variance = 0; for(var j=0;j<recent.length;j++) variance += (recent[j].mag-avg)*(recent[j].mag-avg); variance /= recent.length;
-    var stddev = Math.sqrt(variance);
-    var oscillations = 0;
-    if(recent.length >= 3){
-      for(var k=2;k<recent.length;k++){
-        var prev = recent[k-1].mag - recent[k-2].mag;
-        var curr = recent[k].mag - recent[k-1].mag;
-        if(prev * curr < 0) oscillations++;
-      }
-    }
-    var gyroTotal = Math.abs(st.gx) + Math.abs(st.gy) + Math.abs(st.gz);
-    if(avg > this.IMPACT_SEVERE && stddev > 10) st.motionType = 'shake';
-    else if(avg > this.RUN_THRESH && oscillations >= 3) st.motionType = 'running';
-    else if(avg > this.WALK_THRESH && oscillations >= 2 && stddev > 2) st.motionType = 'walking';
-    else if(avg > this.VEHICLE_THRESH && stddev < 3 && gyroTotal < 30) st.motionType = 'vehicle';
-    else if(avg > this.VEHICLE_THRESH) st.motionType = 'walking';
-    else st.motionType = 'still';
-  },
-  detectStep:function(mag){
-    var nowt = Date.now();
-    if(mag > this.WALK_THRESH && nowt - st.lastStepTime > this.STEP_MIN_INTERVAL){
-      var h = st.motionHistory;
-      if(h.length >= 3 && mag > h[h.length-2].mag * 1.15){ st.stepCount++; st.lastStepTime = nowt; }
-    }
-  },
-  detectImpact:function(mag, linX, linY, linZ){
-    if(mag > this.IMPACT_SEVERE){
-      st.impact = true; st.impactLevel = 3;
-      var ratio = Math.abs(linZ) / Math.max(0.01, Math.abs(linX)+Math.abs(linY));
-      st.impactType = ratio > 2 ? 'chute' : (mag > 40 ? 'secousse forte' : 'choc');
-      setTimeout(function(){ st.impact=false; st.impactLevel=0; st.impactType=''; }, 2000);
-    } else if(mag > this.IMPACT_MODERATE){
-      st.impact = true; st.impactLevel = 2; st.impactType = 'choc';
-      setTimeout(function(){ st.impact=false; st.impactLevel=0; st.impactType=''; }, 1500);
-    } else if(mag > this.IMPACT_LIGHT){
-      st.impact = true; st.impactLevel = 1; st.impactType = 'inclinaison';
-      setTimeout(function(){ st.impact=false; st.impactLevel=0; st.impactType=''; }, 800);
-    }
-  },
-  detectOrientation:function(gx, gy, gz){
-    var absGy = Math.abs(gy), absGz = Math.abs(gz), absGx = Math.abs(gx);
-    if(absGy > 8) st.orientation = absGx > absGz ? 'paysage' : 'portrait';
-    else if(absGz > 8) st.orientation = 'face vers le haut';
-    else st.orientation = 'face vers le bas';
-  },
-  getSummary:function(){
-    var parts = ['Mouvement: '+st.motionType, 'Amplitude: '+st.motionMag.toFixed(1)];
-    if(st.impactLevel > 0){
-      var sev = ['','léger','modéré','fort'][st.impactLevel] || '';
-      parts.push('Choc '+sev+' ('+st.impactType+')');
-    }
-    if(st.stepCount > 0) parts.push('Pas: '+st.stepCount);
-    parts.push('Orientation: '+st.orientation);
-    return parts.join('. ');
+/* anti-répétition */
+function tooSimilar(a,b){
+  a=norm(a); b=norm(b);
+  if(!a||!b) return false;
+  if(a===b) return true;
+  if(a.length>10 && b.indexOf(a)!==-1) return true;
+  if(b.length>10 && a.indexOf(b)!==-1) return true;
+  var wa=a.split(/\s+/), wb=b.split(/\s+/), hit=0;
+  for(var i=0;i<wa.length;i++) if(wa[i].length>3 && wb.indexOf(wa[i])!==-1) hit++;
+  return hit>=Math.max(2, Math.floor(wa.length*0.55));
+}
+function alreadySaid(text){
+  for(var i=0;i<st.recentSays.length;i++) if(tooSimilar(text, st.recentSays[i])) return true;
+  return false;
+}
+function rememberSay(text){
+  st.recentSays.unshift(String(text||''));
+  if(st.recentSays.length>12) st.recentSays=st.recentSays.slice(0,12);
+}
+function eventCooldown(type, ms){
+  ms=ms||(cfg.coolSec*1000);
+  if(st.lastEvent===type && Date.now()-st.lastEventAt<ms) return true;
+  st.lastEvent=type; st.lastEventAt=Date.now();
+  return false;
+}
+
+/* classification ambiance */
+function classifyRaw(){
+  if(st.impactLevel>=2 || st.motionMag>18){
+    if(st.lastVol>=cfg.noiseVol && st.lastBass>=st.lastMid) return 'door';
+    return 'vibration';
   }
-};
+  if(st.lastVol>=cfg.noiseVol+1 && st.lastBass>=st.lastMid+5 && st.lastBass>=st.lastHigh+5) return 'door';
+  if(st.lastVol>=cfg.sens && st.lastMid>=st.lastBass && st.lastMid>=st.lastHigh-2) return 'voice';
+  if(st.lastVol>=cfg.noiseVol) return 'noise';
+  return '';
+}
 
-function humanNoiseWords(vol, bass, mid, high){
-  var force = vol >= 16 ? 'très fort' : (vol >= 12 ? 'net' : (vol >= 8 ? 'modéré' : 'léger'));
-  var type = 'bruit indéterminé';
-  if(bass >= mid+8 && bass >= high+8) type = 'son grave (moteur, voix d’homme, vibration, porte lourde)';
-  else if(high >= mid+8 && high >= bass+8) type = 'son aigu (voix d’enfant, sifflement, cliquetis, verre)';
-  else if(mid >= bass+5 && mid >= high+5) type = 'son médium (voix, conversation, porte, objet)';
-  else if(bass > high+5) type = 'bruit plutôt grave';
-  else if(high > bass+5) type = 'bruit plutôt aigu';
-  var move = '';
-  if(cfg.useSensors){
-    if(st.impactLevel >= 2) move = ' Un choc physique a aussi été détecté sur l’appareil.';
-    else if(st.motionType === 'walking') move = ' Tu marches.';
-    else if(st.motionType === 'running') move = ' Tu cours.';
-    else if(st.motionType === 'vehicle') move = ' Tu sembles être en véhicule.';
+/** MacGyver: précise + utile, 1-2 phrases max */
+function macAlert(type){
+  if(!cfg.smartAlert){
+    if(type==='door') return 'Porte.';
+    if(type==='vibration') return 'Vibration.';
+    if(type==='voice') return 'Voix.';
+    return 'Bruit.';
   }
-  return { force: force, type: type, move: move, line: 'Bruit '+force+' détecté : '+type+'.'+move };
-}
-
-function buildSystemPrompt(){
-  var p = 'Tu es '+aiName()+', un assistant audio précis et factuel qui vit dans l’oreille de l’utilisateur.\n';
-  p += 'Tu parles TOUJOURS en français. Tu tutoies. Phrases courtes et claires.\n\n';
-  p += 'RÈGLES STRICTES :\n';
-  p += '1. PRIORITÉ ABSOLUE AU RÉEL. Décris d’abord ce que tu entends de façon physique et factuelle.\n';
-  p += '2. Tu n’inventes jamais d’histoires.\n';
-  if(cfg.allowEntities){
-    p += '3. Tu peux mentionner une possible présence uniquement en suggestion prudente si le son est vraiment inhabituel.\n';
-  } else {
-    p += '3. Tu ne mentionnes JAMAIS d’entité, esprit, fantôme ou poltergeist. Reste uniquement sur le réel.\n';
+  if(type==='door'){
+    // style demandé: précise ce qu'il entend + doute utile
+    if(st.impactLevel>=2 || st.lastVol>=12)
+      return "Porte qui claque. Courant d'air, ou quelqu'un ?";
+    return "Bruit de porte. Possible courant d'air, ou présence.";
   }
-  p += '4. Reste protecteur et calme.\n';
-  p += '5. Pas de markdown.\n\n';
-  if(cfg.useSensors){
-    p += 'État des capteurs :\n';
-    p += '- Mouvement : '+st.motionType+' (amplitude '+st.motionMag.toFixed(1)+')\n';
-    if(st.impactLevel > 0) p += '- Choc : '+st.impactType+'\n';
-    p += '- Orientation : '+st.orientation+'\n';
+  if(type==='vibration') return 'Vibration / choc. Je surveille.';
+  if(type==='voice') return "Voix détectée près de toi.";
+  if(type==='noise'){
+    if(st.lastBass>st.lastMid+4) return 'Bruit grave. Possible porte, moteur ou voix grave.';
+    if(st.lastMid>=st.lastBass) return 'Bruit médium. Possible voix ou objet.';
+    return 'Bruit net. Je reste attentif.';
   }
-  p += 'Heure locale : '+localTime()+'.\n';
-  return p;
+  return 'Bruit.';
 }
 
-function buildAroundPrompt(t){
-  return 'Parole entendue autour :\n« '+t+' »\n\nRésume en 1-2 phrases de façon factuelle. Si flou, dis-le. N’invente rien.\n'+(cfg.useSensors?'Contexte capteurs : '+MotionTracker.getSummary()+'\n':'');
-}
-
-function buildNoisePrompt(vol){
-  var h = humanNoiseWords(vol, st.lastBass||0, st.lastMid||0, st.lastHigh||0);
-  var p = 'Bruit détecté (pas de parole claire).\n';
-  p += 'Mesures physiques :\n';
-  p += '- Intensité : '+h.force+'\n';
-  p += '- Caractéristique : '+h.type+'\n';
-  if(st.impactLevel > 0) p += '- Choc physique sur l’appareil.\n';
-  if(st.motionType === 'still') p += '- L’utilisateur est immobile.\n';
-  if(cfg.allowEntities){
-    p += '\nRéponds en 1 ou 2 phrases. Commence par la description réelle. Suggestion de présence seulement si vraiment inhabituel.\n';
-  } else {
-    p += '\nRéponds en 1 ou 2 phrases. Reste strictement factuel. Aucune mention d’entité ou d’esprit.\n';
-  }
-  return p;
-}
-
-function detectQueryType(text){
-  var t = norm(text);
-  if(isStopPhrase(text)) return 'command';
-  if(/^(salut|hello|hey|bonjour|coucou|yo)\b/.test(t)) return 'greeting';
-  if(/\?/.test(t) || /^(qui|quoi|comment|pourquoi|où|quand|combien|est-ce|peux|peut|fais|dis|explique|raconte)/.test(t)) return 'question';
-  if(/(histoire|raconte|parle|dis moi|explique)/.test(t)) return 'longform';
-  return 'conversation';
-}
-function getAdaptiveParams(queryType){
-  var params = { temp: cfg.temp, maxTokens: cfg.maxTokens };
-  switch(queryType){
-    case 'command': params.maxTokens = 40; break;
-    case 'greeting': params.maxTokens = Math.min(70, cfg.maxTokens); break;
-    case 'question': params.temp = Math.min(0.28, cfg.temp+0.04); break;
-    case 'longform': params.maxTokens = Math.min(450, Math.round(cfg.maxTokens*1.3)); break;
-  }
-  return params;
-}
-function addToHistory(role, content){
-  st.hist.push({ role: role, content: String(content).slice(0, 1600) });
-  if(st.hist.length > 28) st.hist = st.hist.slice(-22);
-}
-function getContextMessages(){ return st.hist.slice(-10); }
-
-function callGroq(messages){
-  var key = getKey();
-  if(!key || key.length < 20) return Promise.reject(new Error('Pas de clé API valide'));
-  var ctrl = new AbortController();
-  st.ctrl = ctrl;
-  var timeoutId = setTimeout(function(){ ctrl.abort(); }, API_TIMEOUT_MS);
-  var body = JSON.stringify({
-    model: cfg.model,
-    messages: messages,
-    max_tokens: clamp(cfg.maxTokens, 20, 4096),
-    temperature: clamp(cfg.temp, 0, 1),
-    top_p: 0.85
-  });
-  return fetch(GROQ + '/chat/completions', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
-    body: body,
-    signal: ctrl.signal
-  })
-  .then(function(r){
-    clearTimeout(timeoutId);
-    if(!r.ok){
-      return r.text().then(function(txt){
-        var msg = 'Erreur API ' + r.status;
-        try{ var j = JSON.parse(txt); if(j.error && j.error.message) msg = j.error.message; }catch(e){}
-        throw new Error(msg);
-      });
-    }
-    return r.json();
-  })
-  .then(function(j){
-    if(j.choices && j.choices[0] && j.choices[0].message){
-      return cleanForSpeech(j.choices[0].message.content || '');
-    }
-    throw new Error('Réponse vide');
-  })
-  .catch(function(e){
-    clearTimeout(timeoutId);
-    if(e.name === 'AbortError') throw new Error('Timeout API');
-    throw e;
-  });
-}
-function callGroqWithRetry(messages, attempt){
-  attempt = attempt || 0;
-  return callGroq(messages).catch(function(e){
-    if(attempt >= MAX_RETRIES - 1) throw e;
-    var backoff = RETRY_BASE_MS * Math.pow(1.6, attempt);
-    log('Retry ' + (attempt+1) + '/' + MAX_RETRIES + ' → ' + e.message, 'err');
-    return delay(backoff).then(function(){ return callGroqWithRetry(messages, attempt+1); });
-  });
-}
-
+/* audio */
 function releaseMic(){
-  try{ if(st.stream) st.stream.getTracks().forEach(function(t){ try{ t.stop(); }catch(e){} }); }catch(e){}
-  st.stream = null; st.ready = false; st.drawOn = false;
-  st.an = null; st.volNode = null; st.fdata = null; st.wdata = null; st.vdata = null;
-  try{ if(st.ctx){ var old = st.ctx; st.ctx = null; if(old.state !== 'closed') old.close().catch(function(){}); } }catch(e){}
+  try{ if(st.stream) st.stream.getTracks().forEach(function(t){try{t.stop()}catch(e){}})}catch(e){}
+  st.stream=null; st.ready=false; st.an=null; st.volNode=null; st.fdata=null; st.vdata=null;
+  try{ if(st.ctx&&st.ctx.state!=='closed'){ var c=st.ctx; st.ctx=null; c.close().catch(function(){}) } }catch(e){}
   sys();
 }
 function ensureMic(){
   if(st.hardStop) return Promise.resolve(false);
-  if(st.stream && st.ready && st.ctx){ resumeAudio(); return Promise.resolve(true); }
-  return initAudio();
-}
-function resumeAudio(){ try{ if(st.ctx && st.ctx.state === 'suspended') st.ctx.resume().catch(function(){}); }catch(e){} }
-function shouldRelease(){ return !!(cfg.btFriendly || cfg.earPriority || cfg.profile === 'bt'); }
-function hardStopAll(reason){
-  st.hardStop = true; st.auto = false; st.comp = false; st.run = false; st.loopId++;
-  stopTTS();
-  if(st.ctrl) try{ st.ctrl.abort(); }catch(e){}
-  if(st.pmr && st.pmr.state === 'recording') try{ st.pmr.stop(); }catch(e){}
-  st.ptt = false; clearInterval(st.piv);
-  releaseMic(); releaseWakeLock();
-  var a = $('#auto'), c = $('#comp'), m = $('#mode');
-  if(a) a.classList.remove('on'); if(c) c.classList.remove('on'); if(m) m.textContent = 'STOP';
-  live(reason || 'Stop.', 'stop'); status('STOP'); log('STOP','info'); toast('Stop'); sys();
-}
-function clearHardStop(){ st.hardStop = false; }
-function requestWakeLock(){
-  if(!cfg.wakelock) return;
-  if('wakeLock' in navigator){
-    navigator.wakeLock.request('screen').then(function(s){
-      st.wakelockSentinel = s;
-      s.addEventListener('release', function(){ st.wakelockSentinel = null; });
-    }).catch(function(){});
-  }
-}
-function releaseWakeLock(){ if(st.wakelockSentinel){ st.wakelockSentinel.release().catch(function(){}); st.wakelockSentinel = null; } }
-
-function initAudio(){
+  if(st.stream&&st.ready&&st.ctx){ try{ if(st.ctx.state==='suspended') st.ctx.resume() }catch(e){} return Promise.resolve(true); }
   try{
-    if(!st.ctx || st.ctx.state === 'closed') st.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    if(!st.ctx||st.ctx.state==='closed') st.ctx=new (window.AudioContext||window.webkitAudioContext)();
     return st.ctx.resume().then(function(){
-      return navigator.mediaDevices.getUserMedia({ audio: { echoCancellation:false, noiseSuppression:false, autoGainControl:true } });
+      return navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:true}});
     }).then(function(stream){
-      st.stream = stream;
-      var src = st.ctx.createMediaStreamSource(stream);
-      st.an = st.ctx.createAnalyser(); st.an.fftSize = 2048; st.an.smoothingTimeConstant = 0.7; src.connect(st.an);
-      st.fdata = new Uint8Array(st.an.frequencyBinCount); st.wdata = new Uint8Array(st.an.fftSize);
-      st.volNode = st.ctx.createAnalyser(); st.volNode.fftSize = 256; src.connect(st.volNode); st.vdata = new Uint8Array(st.volNode.frequencyBinCount);
-      st.ready = true; st.drawOn = true; sizeCanvases(); drawLoop(); sys(); return true;
-    });
-  }catch(e){ log(String(e && e.message || e),'err'); return Promise.resolve(false); }
+      st.stream=stream;
+      var src=st.ctx.createMediaStreamSource(stream);
+      st.an=st.ctx.createAnalyser(); st.an.fftSize=2048; st.an.smoothingTimeConstant=0.6; src.connect(st.an);
+      st.fdata=new Uint8Array(st.an.frequencyBinCount);
+      st.volNode=st.ctx.createAnalyser(); st.volNode.fftSize=256; src.connect(st.volNode);
+      st.vdata=new Uint8Array(st.volNode.frequencyBinCount);
+      st.ready=true; sys(); return true;
+    }).catch(function(e){ log('Micro: '+(e.message||e),'err'); return false; });
+  }catch(e){ log('Micro: '+(e.message||e),'err'); return Promise.resolve(false); }
 }
-function vol(){ if(!st.volNode || !st.vdata) return 0; st.volNode.getByteFrequencyData(st.vdata); var s=0; for(var i=0;i<st.vdata.length;i++) s+=st.vdata[i]; return s/st.vdata.length; }
-function analyzeBands(){
-  if(!st.an || !st.fdata) return {bass:0,mid:0,high:0};
+function vol(){
+  if(!st.volNode||!st.vdata) return 0;
+  st.volNode.getByteFrequencyData(st.vdata);
+  var s=0; for(var i=0;i<st.vdata.length;i++) s+=st.vdata[i];
+  return s/st.vdata.length;
+}
+function bands(){
+  if(!st.an||!st.fdata) return {bass:0,mid:0,high:0};
   st.an.getByteFrequencyData(st.fdata);
-  var n = st.fdata.length, b1 = Math.floor(n*0.1), b2 = Math.floor(n*0.4);
-  var bass=0, mid=0, high=0, cB=0, cM=0, cH=0;
+  var n=st.fdata.length,a=Math.floor(n*0.1),b=Math.floor(n*0.4);
+  var bass=0,mid=0,high=0,c1=0,c2=0,c3=0;
   for(var i=0;i<n;i++){
-    var v = st.fdata[i];
-    if(i < b1){ bass+=v; cB++; } else if(i < b2){ mid+=v; cM++; } else { high+=v; cH++; }
+    var v=st.fdata[i];
+    if(i<a){bass+=v;c1++} else if(i<b){mid+=v;c2++} else {high+=v;c3++}
   }
-  return { bass: cB ? Math.round(bass/cB) : 0, mid: cM ? Math.round(mid/cM) : 0, high: cH ? Math.round(high/cH) : 0 };
+  return {bass:c1?Math.round(bass/c1):0, mid:c2?Math.round(mid/c2):0, high:c3?Math.round(high/c3):0};
 }
-function drawLoop(){
-  if(!st.drawOn || !st.ready) return;
-  requestAnimationFrame(drawLoop);
-  try{
-    st.an.getByteFrequencyData(st.fdata); st.an.getByteTimeDomainData(st.wdata); st.volNode.getByteFrequencyData(st.vdata);
-    var c1 = $('#c1');
-    if(c1){
-      var x = c1.getContext('2d'), w = c1.width, h = c1.height;
-      x.fillStyle = '#000'; x.fillRect(0,0,w,h);
-      var n = st.fdata.length, bw = Math.max(1, w/n);
-      for(var i=0;i<n;i++){
-        var v = st.fdata[i]; if(v < 3) continue;
-        x.fillStyle = 'hsl('+Math.max(0,110-v*0.35)+',100%,'+Math.max(18,v*0.28)+'%)';
-        x.fillRect(i*bw, h-Math.log10(v+1)*14, bw+0.3, Math.log10(v+1)*14);
-      }
-    }
-    var c2 = $('#c2');
-    if(c2){
-      var x2 = c2.getContext('2d'), w2 = c2.width, h2 = c2.height;
-      x2.fillStyle = '#000'; x2.fillRect(0,0,w2,h2);
-      x2.strokeStyle = '#00ff41'; x2.beginPath();
-      var step = w2 / st.wdata.length;
-      for(var j=0;j<st.wdata.length;j++){
-        var y = (st.wdata[j]/128 - 0.5) * h2 * 0.7 + h2/2;
-        j ? x2.lineTo(j*step, y) : x2.moveTo(0, y);
-      }
-      x2.stroke();
-    }
-    var c3 = $('#c3');
-    if(c3){
-      var x3 = c3.getContext('2d'), w3 = c3.width, h3 = c3.height;
-      x3.fillStyle = '#000'; x3.fillRect(0,0,w3,h3);
-      var s = 0; for(var k=0;k<st.vdata.length;k++) s += st.vdata[k];
-      var p = s / st.vdata.length / 255;
-      x3.fillStyle = 'hsl('+Math.max(0,120-p*150)+',100%,40%)';
-      x3.fillRect(w3*0.3, h3-Math.max(3,p*h3*0.75), w3*0.4, Math.max(3,p*h3*0.75));
-    }
-  }catch(e){}
-}
-function sizeCanvases(){
-  document.querySelectorAll('canvas').forEach(function(c){
-    var r = c.parentElement.getBoundingClientRect();
-    c.width = Math.max(40, Math.floor(r.width-16));
-    c.height = 72;
-  });
-}
-
 function getMime(){
-  var m = ['audio/webm;codecs=opus','audio/webm','audio/mp4'];
-  for(var i=0;i<m.length;i++) if(MediaRecorder.isTypeSupported(m[i])) return m[i];
+  var list=['audio/webm;codecs=opus','audio/webm','audio/mp4'];
+  for(var i=0;i<list.length;i++) if(window.MediaRecorder&&MediaRecorder.isTypeSupported(list[i])) return list[i];
   return '';
 }
-function waitForSound(myId){
-  return new Promise(function(resolve){
-    var t0 = 0, sens = Math.max(2, cfg.sens||4);
-    function tick(){
-      if(!st.auto || st.loopId !== myId || st.hardStop || st.speaking) return resolve(false);
-      var v = vol();
-      if(v >= sens || st.impactLevel >= 2){
-        if(!t0) t0 = Date.now();
-        if(Date.now() - t0 >= 90) return resolve(true);
-      } else t0 = 0;
-      requestAnimationFrame(tick);
-    }
-    requestAnimationFrame(tick);
-  });
+function initMotion(){
+  function onAccel(e){
+    if(!e||!e.accelerationIncludingGravity) return;
+    var a=e.accelerationIncludingGravity,rx=a.x||0,ry=a.y||0,rz=a.z||0,α=0.8;
+    st.gravity.x=α*st.gravity.x+(1-α)*rx;
+    st.gravity.y=α*st.gravity.y+(1-α)*ry;
+    st.gravity.z=α*st.gravity.z+(1-α)*rz;
+    var lx=rx-st.gravity.x,ly=ry-st.gravity.y,lz=rz-st.gravity.z;
+    var mag=Math.sqrt(lx*lx+ly*ly+lz*lz);
+    st.motionMag=mag;
+    if(mag>28){ st.impactLevel=3; setTimeout(function(){st.impactLevel=0},1200); }
+    else if(mag>16){ st.impactLevel=2; setTimeout(function(){st.impactLevel=0},900); }
+  }
+  if(typeof DeviceMotionEvent!=='undefined'&&DeviceMotionEvent.requestPermission){
+    DeviceMotionEvent.requestPermission().then(function(s){ if(s==='granted') window.addEventListener('devicemotion',onAccel,true); }).catch(function(){});
+  } else window.addEventListener('devicemotion',onAccel,true);
 }
-function recUntilSilent(myId){
-  return new Promise(function(resolve){
-    if(!st.stream) return resolve(null);
-    var chunks = [], mime = getMime();
-    if(!mime) return resolve(null);
-    var rec;
-    try{ rec = new MediaRecorder(st.stream, { mimeType: mime }); }catch(e){ return resolve(null); }
-    rec.ondataavailable = function(e){ if(e.data && e.data.size) chunks.push(e.data); };
-    rec.onstop = function(){
-      st.lastVol = vol();
-      var b = analyzeBands();
-      st.lastBass = b.bass; st.lastMid = b.mid; st.lastHigh = b.high;
-      resolve(new Blob(chunks, { type: rec.mimeType }));
-    };
-    var start = Date.now(), last = Date.now(), spoken = false;
-    var maxMs = (cfg.maxRecord||10)*1000, sil = cfg.silence||750;
-    rec.start(40);
-    var iv = setInterval(function(){
-      if(!st.auto || st.loopId !== myId || st.hardStop){ clearInterval(iv); if(rec.state==='recording') rec.stop(); return; }
-      var v = vol();
-      if(v >= Math.max(2,(cfg.sens||4)*0.28) || st.impactLevel >= 2){ last = Date.now(); spoken = true; st.lastVol = v; }
-      if(spoken && (Date.now()-last >= sil || Date.now()-start >= maxMs)){ clearInterval(iv); if(rec.state==='recording') rec.stop(); }
-      if(!spoken && Date.now()-start > 1800){ clearInterval(iv); if(rec.state==='recording') rec.stop(); }
-    }, 35);
-  });
-}
-function transcribe(blob){
-  var key = getKey();
-  if(!key) return Promise.resolve('');
-  var fd = new FormData();
-  fd.append('file', blob, 'rec.webm');
-  fd.append('model', 'whisper-large-v3');
-  fd.append('language', cfg.lang||'fr');
-  fd.append('response_format', 'json');
-  fd.append('temperature', 0);
-  return fetch(GROQ + '/audio/transcriptions', {
-    method: 'POST',
-    headers: { 'Authorization': 'Bearer ' + key },
-    body: fd
-  })
-  .then(function(r){ if(!r.ok) throw new Error('STT '+r.status); return r.json(); })
-  .then(function(j){ return (j.text||'').trim(); })
-  .catch(function(e){ log('STT: '+e.message,'err'); return ''; });
-}
-function stopTTS(){ try{ if(window.speechSynthesis){ speechSynthesis.cancel(); speechSynthesis.getVoices().length; } }catch(e){} st.speaking = false; }
+
+function stopTTS(){ try{ if(window.speechSynthesis) speechSynthesis.cancel(); }catch(e){} st.speaking=false; }
 function speak(text){
-  if(!cfg.tts || st.muted || st.hardStop) return Promise.resolve();
-  var cleaned = cleanForSpeech(text);
-  if(!cleaned) return Promise.resolve();
+  if(!cfg.tts||st.muted||st.hardStop) return Promise.resolve();
+  var cleaned=cleanSpeech(text); if(!cleaned) return Promise.resolve();
   return new Promise(function(resolve){
     if(!window.speechSynthesis){ resolve(); return; }
     stopTTS();
-    var utt = new SpeechSynthesisUtterance(cleaned);
-    utt.lang = cfg.lang === 'en' ? 'en-US' : 'fr-FR';
-    utt.rate = clamp(cfg.rate||0.94, 0.5, 2);
-    utt.pitch = 1.0; utt.volume = 1.0;
-    var voices = speechSynthesis.getVoices();
-    var preferred = cfg.lang === 'en' ? 'Google US English' : 'Google français';
-    var found = false;
-    for(var i=0;i<voices.length;i++) if(voices[i].name.indexOf(preferred) !== -1){ utt.voice = voices[i]; found = true; break; }
-    if(!found) for(var j=0;j<voices.length;j++) if(voices[j].lang.startsWith(cfg.lang==='en'?'en':'fr')){ utt.voice = voices[j]; break; }
-    st.speaking = true;
-    var safety = setTimeout(function(){ st.speaking=false; resolve(); }, Math.min(28000, cleaned.length*170+2200));
-    utt.onend = function(){ clearTimeout(safety); st.speaking=false; resolve(); };
-    utt.onerror = function(){ clearTimeout(safety); st.speaking=false; resolve(); };
-    speechSynthesis.speak(utt);
+    var u=new SpeechSynthesisUtterance(cleaned);
+    u.lang='fr-FR'; u.rate=clamp(cfg.rate||1.05,0.7,1.3);
+    st.speaking=true;
+    var safety=setTimeout(function(){ st.speaking=false; resolve(); }, Math.min(14000, cleaned.length*130+1200));
+    u.onend=function(){ clearTimeout(safety); st.speaking=false; resolve(); };
+    u.onerror=function(){ clearTimeout(safety); st.speaking=false; resolve(); };
+    speechSynthesis.speak(u);
   });
 }
 
-function handleCommand(text){
-  var t = norm(text);
-  if(!t) return false;
-  if(isStopPhrase(text)){ hardStopAll('Stop.'); return true; }
-  if(/24\s*\/?\s*7|mode agent/.test(t)){ clearHardStop(); cfg.agentMode=true; updateUITags(); autoStart(true); return true; }
-  if(/mode auto/.test(t)){ clearHardStop(); autoStart(false); return true; }
-  if(/profil bt|mode bt|casque/.test(t)){ applyProfile('bt'); safeSet(S_CFG,JSON.stringify(cfg)); applyToUI(); toast('Profil BT'); return true; }
-  if(/profil maison|mode maison/.test(t)){ applyProfile('home'); safeSet(S_CFG,JSON.stringify(cfg)); applyToUI(); toast('Profil MAISON'); return true; }
-  if(/profil max|mode max/.test(t)){ applyProfile('max'); safeSet(S_CFG,JSON.stringify(cfg)); applyToUI(); toast('Profil MAX'); return true; }
-  if(/tais.toi|silence|mute|coupe le son/.test(t)){ st.muted=true; updateMuteUI(); toast('Voix coupée'); return true; }
-  if(/remets le son|son on|unmute/.test(t)){ st.muted=false; updateMuteUI(); toast('Voix rétablie'); return true; }
-  return false;
+function transcribe(blob){
+  var key=getKey(); if(!key) return Promise.resolve('');
+  var fd=new FormData();
+  fd.append('file', blob, 'a.webm');
+  fd.append('model','whisper-large-v3');
+  fd.append('language','fr');
+  fd.append('response_format','json');
+  fd.append('temperature','0');
+  return fetch(GROQ+'/audio/transcriptions',{method:'POST', headers:{Authorization:'Bearer '+key}, body:fd})
+    .then(function(r){ if(!r.ok) throw new Error('STT '+r.status); return r.json(); })
+    .then(function(j){ return (j.text||'').trim(); })
+    .catch(function(e){ log('STT: '+e.message,'err'); return ''; });
+}
+
+function systemPrompt(){
+  return 'Tu es '+aiName()+', style MacGyver: concret, calme, utile, rapide.\n'+
+    'RÈGLES:\n'+
+    '- 1 à 2 phrases max.\n'+
+    '- Pas de listes, pas de markdown, pas de roman.\n'+
+    '- Si transcript incohérent/charabia: réponds seulement « J\'ai mal saisi. »\n'+
+    '- N\'invente JAMAIS « je n\'entends rien » si un message audio vient d\'arriver.\n'+
+    '- Si on te demande de l\'aide: réponse directe et pratique.\n'+
+    '- Ambiance déjà gérée à part: ne refais pas un rapport technique.';
+}
+
+function callAI(messages, maxTokens){
+  var key=getKey(); if(!key) return Promise.reject(new Error('Pas de clé'));
+  var ctrl=new AbortController(); st.ctrl=ctrl;
+  var tid=setTimeout(function(){ ctrl.abort(); }, 16000);
+  return fetch(GROQ+'/chat/completions',{
+    method:'POST',
+    headers:{'Content-Type':'application/json', Authorization:'Bearer '+key},
+    body:JSON.stringify({
+      model:cfg.model,
+      messages:messages,
+      max_tokens:clamp(maxTokens||cfg.maxTokens,15,120),
+      temperature:clamp(cfg.temp,0,0.5),
+      top_p:0.85
+    }),
+    signal:ctrl.signal
+  }).then(function(r){
+    clearTimeout(tid);
+    if(!r.ok) throw new Error('API '+r.status);
+    return r.json();
+  }).then(function(j){
+    return cleanSpeech((j.choices&&j.choices[0]&&j.choices[0].message&&j.choices[0].message.content)||'');
+  }).catch(function(e){
+    clearTimeout(tid);
+    if(e.name==='AbortError') throw new Error('Timeout');
+    throw e;
+  });
+}
+
+function addHist(role,content){
+  st.hist.push({role:role, content:String(content).slice(0,700)});
+  if(st.hist.length>14) st.hist=st.hist.slice(-10);
+}
+
+function announce(text){
+  text=cleanSpeech(text);
+  if(!text) return Promise.resolve();
+  if(alreadySaid(text)){ log('Skip répéta: '+text,'info'); return Promise.resolve(); }
+  rememberSay(text);
+  showOut(text);
+  log(text, text.indexOf('?')!==-1 || text.length>40 ? 'qa' : 'info');
+  if(cfg.tts && !st.muted){
+    live(text.slice(0,48),'speak');
+    return speak(text);
+  }
+  return Promise.resolve();
+}
+
+function hardStop(){
+  st.hardStop=true; st.auto=false; st.comp=false; st.loopId++;
+  stopTTS();
+  try{ if(st.ctrl) st.ctrl.abort(); }catch(e){}
+  releaseMic();
+  try{ if(st.wake){ st.wake.release(); st.wake=null; } }catch(e){}
+  if($('#auto')) $('#auto').classList.remove('on');
+  if($('#comp')) $('#comp').classList.remove('on');
+  live('STOP','stop'); if($('#status')) $('#status').textContent='STOP'; if($('#mode')) $('#mode').textContent='STOP';
+  log('STOP'); toast('Stop'); sys();
+}
+
+function waitSound(myId){
+  return new Promise(function(resolve){
+    var t0=0, sens=Math.max(2,cfg.sens||3);
+    (function tick(){
+      if(!st.auto||st.loopId!==myId||st.hardStop||st.speaking) return resolve(false);
+      var v=vol();
+      if(v>=sens || st.impactLevel>=2){
+        if(!t0) t0=Date.now();
+        if(Date.now()-t0>=70) return resolve(true);
+      } else t0=0;
+      requestAnimationFrame(tick);
+    })();
+  });
+}
+
+function recordUntilSilent(myId){
+  return new Promise(function(resolve){
+    if(!st.stream) return resolve(null);
+    var mime=getMime(); if(!mime) return resolve(null);
+    var rec; try{ rec=new MediaRecorder(st.stream,{mimeType:mime}); }catch(e){ return resolve(null); }
+    var chunks=[];
+    rec.ondataavailable=function(e){ if(e.data&&e.data.size) chunks.push(e.data); };
+    rec.onstop=function(){
+      st.lastVol=vol();
+      var b=bands(); st.lastBass=b.bass; st.lastMid=b.mid; st.lastHigh=b.high;
+      resolve(new Blob(chunks,{type:rec.mimeType}));
+    };
+    var start=Date.now(), last=Date.now(), spoken=false;
+    var maxMs=(cfg.maxRecord||6)*1000, sil=cfg.silence||550;
+    rec.start(30);
+    var iv=setInterval(function(){
+      if(!st.auto||st.loopId!==myId||st.hardStop){ clearInterval(iv); if(rec.state==='recording') rec.stop(); return; }
+      var v=vol();
+      if(v>=Math.max(2,(cfg.sens||3)*0.25) || st.impactLevel>=2){ last=Date.now(); spoken=true; st.lastVol=v; }
+      if(spoken && (Date.now()-last>=sil || Date.now()-start>=maxMs)){ clearInterval(iv); if(rec.state==='recording') rec.stop(); }
+      if(!spoken && Date.now()-start>1300){ clearInterval(iv); if(rec.state==='recording') rec.stop(); }
+    },30);
+  });
+}
+
+function processUser(text){
+  if(isStop(text)){ hardStop(); return Promise.resolve(); }
+  if(!hasKey()){ toast('Clé manquante','err'); openSettings(); return Promise.resolve(); }
+
+  // charabia STT → sec
+  if(isNonsense(text) || (norm(text).split(/\s+/).length>=8 && /tarzan|barracuda|coteau|my guy/i.test(text))){
+    // si clairement absurde
+  }
+  // heuristique simple: si ça ressemble à du bruit de mots collés sans ponctuation utile
+  var words=norm(text).split(/\s+/).filter(Boolean);
+  if(words.length>=7){
+    var alpha=text.replace(/[^a-zA-Zà-üÀ-Ü]/gi,'').length;
+    if(alpha>0 && text.length>40){
+      // on laisse l'IA, mais avec ordre strict mal saisi si incohérent
+    }
+  }
+
+  live('…','think');
+  addHist('user', text);
+  var sys=systemPrompt();
+  if(st.recentSays.length) sys+='\nNe répète pas: '+st.recentSays.slice(0,4).join(' | ');
+  var msgs=[{role:'system',content:sys}].concat(st.hist.slice(-8));
+  var t0=Date.now();
+  return callAI(msgs, 70).then(function(resp){
+    st.lat=Date.now()-t0; st.reqs++;
+    var r=resp||"J'ai mal saisi.";
+    // bloque le délire "je n'entends rien"
+    if(/n['’]entends? (aucun|pas|rien)|capteur reste immobile|je ne comprends pas bien ta demande/i.test(r)){
+      r="J'ai mal saisi.";
+    }
+    if(alreadySaid(r)) r='Compris.';
+    addHist('assistant', r);
+    log('Entendu: « '+text+' »','qa');
+    log('Réponse: '+r,'qa');
+    return announce(r);
+  }).catch(function(e){ log('API: '+e.message,'err'); toast('Erreur IA','err'); });
+}
+
+function handleAmbient(blob){
+  var type=classifyRaw();
+
+  // alerte locale d'abord (rapide, précis, MacGyver)
+  if(type && cfg.noise && cfg.speakNoise){
+    if(!eventCooldown('amb_'+type, (cfg.coolSec||14)*1000)){
+      var line=macAlert(type);
+      // si blob tout petit: que l'alerte
+      if(!blob || blob.size<750){
+        return announce(line).then(function(){ return delay(cfg.gapMs||1000); });
+      }
+      // sinon on annonce l'alerte bruit, puis on regarde s'il y a de la parole
+      return announce(line).then(function(){
+        return transcribe(blob).then(function(text){
+          if(isGarbage(text) || !text) return;
+          log('Entendu: « '+text+' »','qa');
+          var addressed=cfg.always;
+          if(!cfg.always){
+            var wakes=(cfg.wakeWords||'').split(',');
+            var tn=norm(text);
+            addressed=wakes.some(function(w){w=norm(w); return w&&tn.indexOf(w)!==-1});
+          }
+          if(addressed) return processUser(text);
+          if(cfg.agentMode && cfg.reportSpeech){
+            // paroles autour: une ligne utile, pas un roman
+            if(eventCooldown('speech', (cfg.coolSec||14)*1000)) return;
+            return announce('Parole autour: « '+text.slice(0,80)+(text.length>80?'…':'')+' »');
+          }
+        });
+      });
+    }
+  }
+
+  if(!blob || blob.size<750) return delay(100);
+
+  live('STT…','think');
+  return transcribe(blob).then(function(text){
+    if(isGarbage(text)){
+      log('Transcript ignoré: ['+text+']','info');
+      return;
+    }
+    log('Entendu: « '+text+' »','qa');
+    var addressed=cfg.always;
+    if(!cfg.always){
+      var wakes=(cfg.wakeWords||'').split(',');
+      var tn=norm(text);
+      addressed=wakes.some(function(w){w=norm(w); return w&&tn.indexOf(w)!==-1});
+    }
+    if(addressed) return processUser(text);
+    if(cfg.agentMode && cfg.reportSpeech){
+      if(eventCooldown('speech', (cfg.coolSec||14)*1000)) return;
+      return announce('Parole autour: « '+text.slice(0,80)+(text.length>80?'…':'')+' »');
+    }
+  });
 }
 
 function autoStart(comp){
-  if(st.hardStop) clearHardStop();
-  if(st.run && st.comp === !!comp) return;
-  if(st.run) autoStop();
-  if(!hasKey()){ toast('Mets ta clé API d’abord','err'); openSettings(); return; }
-
-  st.auto = true; st.run = true; st.comp = !!comp; st.loopId++; st.hardStop = false;
-  var myId = st.loopId;
-
-  var a = $('#auto'), c = $('#comp'), m = $('#mode');
-  if(a) a.classList.toggle('on', !comp);
-  if(c) c.classList.toggle('on', !!comp);
-  if(m) m.textContent = comp ? '24/7' : 'AUTO';
-
-  live(comp ? '24/7 — écoute permanente' : 'AUTO — j’écoute et réagis', 'listen');
-  status(comp ? '24/7' : 'AUTO');
-  log((comp?'24/7':'AUTO')+' démarré','info');
-  requestWakeLock();
+  if(st.hardStop) st.hardStop=false;
+  if(st.auto && st.comp===!!comp) return;
+  if(st.auto) autoStop();
+  if(!hasKey()){ toast('Mets ta clé','err'); openSettings(); return; }
+  st.auto=true; st.comp=!!comp; st.loopId++;
+  var myId=st.loopId;
+  if($('#auto')) $('#auto').classList.toggle('on', !comp);
+  if($('#comp')) $('#comp').classList.toggle('on', !!comp);
+  live(comp?'24/7':'AUTO','listen');
+  if($('#status')) $('#status').textContent=comp?'24/7':'AUTO';
+  if($('#mode')) $('#mode').textContent=comp?'24/7':'AUTO';
+  log((comp?'24/7':'AUTO')+' ON');
+  if(cfg.wakelock && navigator.wakeLock) navigator.wakeLock.request('screen').then(function(s){st.wake=s}).catch(function(){});
 
   (function loop(){
-    if(!st.auto || st.loopId !== myId || st.hardStop) return;
-
+    if(!st.auto||st.loopId!==myId||st.hardStop) return;
     ensureMic().then(function(ok){
-      if(!ok || !st.auto || st.loopId !== myId || st.hardStop){
-        if(st.auto && st.loopId === myId && !st.hardStop) setTimeout(loop, 1400);
-        return null;
-      }
-      live('En veille — j’attends un son…','listen');
-      return waitForSound(myId);
-    }).then(function(soundDetected){
-      if(!soundDetected || !st.auto || st.loopId !== myId || st.hardStop) return null;
-      live('Son détecté — enregistrement…','rec');
-      return recUntilSilent(myId);
+      if(!ok) return delay(1000).then(function(){ if(st.auto&&st.loopId===myId&&!st.hardStop) loop(); });
+      live('Veille…','listen');
+      return waitSound(myId);
+    }).then(function(heard){
+      if(!heard||!st.auto||st.loopId!==myId||st.hardStop){ if(st.auto&&st.loopId===myId&&!st.hardStop) setTimeout(loop,150); return; }
+      live('Rec…','rec');
+      return recordUntilSilent(myId);
     }).then(function(blob){
-      if(!blob || !st.auto || st.loopId !== myId || st.hardStop) return null;
-
-      if(blob.size < 700){
-        if(cfg.noise && cfg.speakNoise && Date.now() - st.lastNoiseAt > cfg.coolSec*1000){
-          var v = st.lastVol;
-          if(v >= cfg.noiseVol){
-            st.lastNoiseAt = Date.now(); st.lastWasNoise = true;
-            live('Bruit détecté…','think');
-            log('Bruit vol='+v.toFixed(0)+' bass='+st.lastBass+' mid='+st.lastMid+' high='+st.lastHigh,'info');
-            var msgs = [{role:'system',content:buildSystemPrompt()},{role:'user',content:buildNoisePrompt(v)}];
-            var t0 = Date.now();
-            return callGroqWithRetry(msgs).then(function(resp){
-              st.lat = Date.now()-t0; st.reqs++;
-              var r = resp || 'Bruit détecté.';
-              log('Bruit: '+r,'info'); addToHistory('assistant',r); showResponse(r);
-              if(cfg.tts && !st.muted){ live('Je décris…','speak'); return speak(r).then(function(){ return delay(cfg.releaseMs||400); }); }
-              return delay(cfg.gapMs||1600);
-            }).catch(function(e){
-              log('API bruit: '+e.message,'err');
-              var h = humanNoiseWords(v, st.lastBass, st.lastMid, st.lastHigh);
-              log('Fallback: '+h.line,'info'); showResponse(h.line);
-              if(cfg.tts && !st.muted) return speak(h.line).then(function(){ return delay(cfg.releaseMs||400); });
-              return delay(cfg.gapMs||1600);
-            });
-          }
-        }
-        if(shouldRelease()) releaseMic();
-        return delay(180);
-      }
-
-      live('Transcription…','think');
-      return transcribe(blob).then(function(text){
-        if(!st.auto || st.loopId !== myId || st.hardStop) return null;
-
-        if(isGarbageTranscript(text)){
-          if(cfg.logAll) log('Transcript ignoré: ['+text+']','info');
-          st.lastWasNoise = true;
-          if(cfg.noise && cfg.speakNoise && Date.now()-st.lastNoiseAt > cfg.coolSec*1000){
-            var nv = st.lastVol;
-            if(nv >= cfg.noiseVol){
-              st.lastNoiseAt = Date.now();
-              var h = humanNoiseWords(nv, st.lastBass, st.lastMid, st.lastHigh);
-              log('Bruit (pas de parole): '+h.line,'info'); showResponse(h.line);
-              if(cfg.tts && !st.muted) return speak(h.line).then(function(){ return delay(cfg.releaseMs||400); });
-            }
-          }
-          if(shouldRelease()) releaseMic();
-          return delay(250);
-        }
-
-        log('Entendu: « '+text+' »','qa'); st.lastWasNoise = false;
-        if(handleCommand(text)){ if(shouldRelease()) releaseMic(); return delay(400); }
-
-        if(!cfg.always){
-          var wakeList = (cfg.wakeWords||'').split(',');
-          var hasWake = false, tNorm = norm(text);
-          for(var i=0;i<wakeList.length;i++){
-            var w = norm(wakeList[i]);
-            if(w && tNorm.indexOf(w) !== -1){ hasWake = true; break; }
-          }
-          if(!hasWake){
-            if(cfg.agentMode && cfg.reportSpeech){
-              live('Parole autour…','think');
-              var msgs = [{role:'system',content:buildSystemPrompt()},{role:'user',content:buildAroundPrompt(text)}];
-              var t0 = Date.now();
-              return callGroqWithRetry(msgs).then(function(resp){
-                st.lat = Date.now()-t0; st.reqs++;
-                var r = resp || '';
-                if(r){
-                  log('Autour: '+r,'info');
-                  addToHistory('user','[autour] '+text); addToHistory('assistant',r); showResponse(r);
-                  if(cfg.tts && !st.muted){ live('Je rapporte…','speak'); return speak(r).then(function(){ return delay(cfg.releaseMs||400); }); }
-                }
-                return delay(cfg.gapMs||1600);
-              }).catch(function(e){ log('API autour: '+e.message,'err'); return delay(900); });
-            }
-            if(shouldRelease()) releaseMic();
-            return delay(180);
-          }
-        }
-
-        live('Je réfléchis…','think');
-        addToHistory('user', text);
-        var queryType = detectQueryType(text);
-        var adaptiveParams = getAdaptiveParams(queryType);
-        var contextMsgs = [{role:'system',content:buildSystemPrompt()}];
-        var history = getContextMessages();
-        for(var h=0;h<history.length;h++) contextMsgs.push({role:history[h].role, content:history[h].content});
-        var savedTemp = cfg.temp, savedTokens = cfg.maxTokens;
-        cfg.temp = adaptiveParams.temp; cfg.maxTokens = adaptiveParams.maxTokens;
-        var t1 = Date.now();
-        return callGroqWithRetry(contextMsgs).then(function(resp){
-          cfg.temp = savedTemp; cfg.maxTokens = savedTokens;
-          st.lat = Date.now()-t1; st.reqs++;
-          var r = resp || 'Je n’ai pas de réponse.';
-          log('Réponse: '+r,'qa'); addToHistory('assistant',r); showResponse(r);
-          if(cfg.tts && !st.muted){ live('Je parle…','speak'); return speak(r).then(function(){ return delay(cfg.releaseMs||400); }); }
-          return delay(cfg.gapMs||1600);
-        }).catch(function(e){
-          cfg.temp = savedTemp; cfg.maxTokens = savedTokens;
-          log('API chat: '+e.message,'err');
-          toast('Erreur IA : '+e.message,'err');
-          return delay(1800);
-        });
-      });
+      if(!st.auto||st.loopId!==myId||st.hardStop) return;
+      return handleAmbient(blob);
     }).then(function(){
-      if(!st.auto || st.loopId !== myId || st.hardStop) return null;
-      if(shouldRelease()) releaseMic();
+      if(!st.auto||st.loopId!==myId||st.hardStop) return;
       sys();
-      return delay(cfg.gapMs||1600);
+      return delay(cfg.gapMs||1000);
     }).then(function(){
-      if(st.auto && st.loopId === myId && !st.hardStop) loop();
+      if(st.auto&&st.loopId===myId&&!st.hardStop) loop();
     }).catch(function(e){
-      log('Boucle: '+(e && e.message || e),'err');
-      if(st.auto && st.loopId === myId && !st.hardStop) setTimeout(loop, 1800);
+      log('Loop: '+(e.message||e),'err');
+      if(st.auto&&st.loopId===myId&&!st.hardStop) setTimeout(loop,1000);
     });
   })();
 }
 function autoStop(){
-  st.auto = false; st.run = false; st.comp = false; st.loopId++;
-  if(st.ctrl) try{ st.ctrl.abort(); }catch(e){}
-  var a = $('#auto'), c = $('#comp'), m = $('#mode');
-  if(a) a.classList.remove('on'); if(c) c.classList.remove('on'); if(m) m.textContent = 'OFF';
-  live('Arrêté.','idle'); status('OFF'); log('Arrêté','info');
-  stopTTS(); releaseWakeLock();
-  if(shouldRelease()) releaseMic();
-  sys();
-}
-
-function showResponse(text){
-  var el = $('#out');
-  if(!el) return;
-  var d = document.createElement('div');
-  d.textContent = '['+now()+'] '+text;
-  d.style.color = 'var(--fg)'; d.style.margin = '4px 0';
-  el.appendChild(d); el.scrollTop = el.scrollHeight;
-  while(el.children.length > 35) el.firstChild.remove();
-}
-
-function sendText(text){
-  if(!text || !text.trim()) return;
-  text = text.trim();
-  if(isStopPhrase(text)){ hardStopAll('Stop.'); return; }
-  if(handleCommand(text)) return;
-  if(!hasKey()){ toast('Mets ta clé API','err'); openSettings(); return; }
-
-  log('Texte: « '+text+' »','qa');
-  addToHistory('user', text);
-  live('Je réfléchis…','think');
-
-  var queryType = detectQueryType(text);
-  var adaptiveParams = getAdaptiveParams(queryType);
-  var contextMsgs = [{role:'system',content:buildSystemPrompt()}];
-  var history = getContextMessages();
-  for(var h=0;h<history.length;h++) contextMsgs.push({role:history[h].role, content:history[h].content});
-
-  var savedTemp = cfg.temp, savedTokens = cfg.maxTokens;
-  cfg.temp = adaptiveParams.temp; cfg.maxTokens = adaptiveParams.maxTokens;
-  var t0 = Date.now();
-
-  callGroqWithRetry(contextMsgs).then(function(resp){
-    cfg.temp = savedTemp; cfg.maxTokens = savedTokens;
-    st.lat = Date.now()-t0; st.reqs++;
-    var r = resp || 'Pas de réponse.';
-    log('Réponse: '+r,'qa'); addToHistory('assistant',r); showResponse(r);
-    live(r.slice(0,80)+(r.length>80?'…':''),'ok');
-    if(cfg.tts && !st.muted) return speak(r).then(function(){ delay(250); });
-  }).catch(function(e){
-    cfg.temp = savedTemp; cfg.maxTokens = savedTokens;
-    log('API: '+e.message,'err');
-    toast('Erreur IA : '+e.message,'err');
-    live('Erreur: '+e.message,'stop');
-  });
-}
-
-function pttStart(){
-  if(st.ptt || st.hardStop) return;
-  if(!hasKey()){ toast('Clé API manquante','err'); openSettings(); return; }
-  st.ptt = true;
-  var pttEl = $('#ptt'); if(pttEl) pttEl.classList.add('rec');
-  live('PTT — parle…','rec');
-  ensureMic().then(function(ok){
-    if(!ok){ st.ptt=false; return; }
-    var chunks = [], mime = getMime();
-    if(!mime){ st.ptt=false; return; }
-    try{ st.pmr = new MediaRecorder(st.stream, {mimeType:mime}); }catch(e){ st.ptt=false; return; }
-    st.pmr.ondataavailable = function(e){ if(e.data && e.data.size) chunks.push(e.data); };
-    st.pmr.onstop = function(){
-      st.ptt = false;
-      var pttEl = $('#ptt'); if(pttEl) pttEl.classList.remove('rec');
-      var blob = new Blob(chunks, {type: st.pmr.mimeType});
-      if(blob.size < 450){ live('Trop court','idle'); return; }
-      live('Transcription…','think');
-      transcribe(blob).then(function(text){
-        if(isGarbageTranscript(text)){ live('Rien compris','idle'); return; }
-        sendText(text);
-      });
-    };
-    st.pmr.start(40); st.psec = 0;
-    st.piv = setInterval(function(){
-      st.psec++;
-      if(st.psec >= (cfg.maxRecord||10)*25){ clearInterval(st.piv); if(st.pmr && st.pmr.state==='recording') st.pmr.stop(); }
-    }, 40);
-  });
-}
-function pttStop(){
-  clearInterval(st.piv);
-  if(st.pmr && st.pmr.state === 'recording') try{ st.pmr.stop(); }catch(e){}
-  st.ptt = false;
-  var pttEl = $('#ptt'); if(pttEl) pttEl.classList.remove('rec');
-}
-
-function buildLogText(){
-  var lines = ['=== KITT v53.6 ===', stamp(), 'Profil: '+cfg.profile, 'Agent: '+!!cfg.agentMode, 'Entités: '+(cfg.allowEntities?'ON':'OFF'), 'Modèle: '+cfg.model, ''];
-  st.hist.forEach(function(m){ lines.push((m.role==='user'?'IN: ':'OUT: ')+(m.content||'')); });
-  lines.push('---');
-  st.fullLog.forEach(function(l){ lines.push(l); });
-  return lines.join('\n');
-}
-function exportFullLog(){
-  var n = nextExportNum();
-  var a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob(['\uFEFF'+buildLogText()], {type:'text/plain;charset=utf-8'}));
-  a.download = 'kitt-536-'+n+'.txt';
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  toast('LOG #'+n);
-}
-function mailFullLog(){
-  var to = (cfg.mailTo||'').trim();
-  if(!to || to.indexOf('@') < 0){ toast('Email invalide','err'); return; }
-  var body = buildLogText();
-  if(body.length > 1800) body = '…\n'+body.slice(-1700);
-  window.location.href = 'mailto:'+to+'?subject='+encodeURIComponent('KITT log')+'&body='+encodeURIComponent(body);
-  toast('Mail ouvert');
+  st.auto=false; st.comp=false; st.loopId++;
+  try{ if(st.ctrl) st.ctrl.abort(); }catch(e){}
+  if($('#auto')) $('#auto').classList.remove('on');
+  if($('#comp')) $('#comp').classList.remove('on');
+  live('OFF','idle'); if($('#status')) $('#status').textContent='OFF'; if($('#mode')) $('#mode').textContent='OFF';
+  stopTTS(); releaseMic();
+  try{ if(st.wake){ st.wake.release(); st.wake=null; } }catch(e){}
+  log('OFF'); sys();
 }
 
 function openSettings(){
-  updateKeyStatus();
-  updateSummary();
-  var d = $('#dlg');
-  if(d){
-    try{ d.showModal(); }catch(e){ console.log(e); }
-  }
-}
-function closeSettings(){
-  var d = $('#dlg');
-  if(d && d.open) d.close();
-}
-function updateKeyStatus(){
-  var el = $('#keystatus');
-  if(!el) return;
-  el.textContent = hasKey() ? 'Clé présente et sauvegardée' : 'Aucune clé';
-  el.className = hasKey() ? 'ok' : '';
-}
-function updateSummary(){
-  var lines = ['Profil: '+profLabel()+' | Modèle: '+cfg.model, ''];
-  if(cfg.agentMode && cfg.reportSpeech) lines.push('→ Tout : paroles + bruits factuels.');
-  else if(cfg.agentMode) lines.push('→ Mode agent.');
-  else lines.push('→ Mode passif.');
-  if(cfg.always) lines.push('→ Répond sans mot d’appel.');
-  if(cfg.noise && cfg.speakNoise) lines.push('→ Bruits décrits de façon réelle.');
-  lines.push(cfg.allowEntities ? '→ Suggestions d’entités : AUTORISÉES' : '→ Suggestions d’entités : MASQUÉES (100% réel)');
-  if(cfg.tts) lines.push('→ Voix activée.');
-  if(cfg.useSensors) lines.push('→ Capteurs actifs.');
-  var el = $('#configSummary');
-  if(el) el.textContent = lines.join('\n');
-}
-
-function load(){
-  try{
-    var raw = safeGet(S_CFG, null);
-    if(raw){
-      var parsed = JSON.parse(raw);
-      Object.assign(cfg, parsed);
-    }
-  }catch(e){}
-  try{
-    var s = JSON.parse(safeGet(S_LOG,'[]')||'[]');
-    if(Array.isArray(s)) st.fullLog = s;
-  }catch(e){}
-  st.muted = false; st.hardStop = false;
-  if(!cfg.profile) cfg.profile = 'home';
-  if(typeof cfg.allowEntities === 'undefined') cfg.allowEntities = false;
-  fixModel();
-  applyToUI();
-  updateKeyStatus();
-  updateMuteUI();
-  updateUITags();
-}
-function applyToUI(){
-  fixModel();
-  function sv(id,v){ var e = $('#'+id); if(e) e.value = v; }
-  function sc(id,v){ var e = $('#'+id); if(e) e.checked = !!v; }
-  sv('key', cfg.key||'');
-  sv('model', cfg.model);
-  sv('lang', cfg.lang);
-  sv('profile', cfg.profile||'home');
-  sv('aiName', cfg.aiName||'KITT');
-  sv('wake', cfg.wakeWords);
-  sv('stopw', cfg.stopWords);
-  sv('mailTo', cfg.mailTo||'');
-  sc('agentMode', cfg.agentMode!==false);
-  sc('reportSpeech', cfg.reportSpeech!==false);
-  sc('earPriority', cfg.earPriority!==false);
-  sc('btFriendly', cfg.btFriendly!==false);
-  sc('always', cfg.always!==false);
-  sc('noise', cfg.noise!==false);
-  sc('speakNoise', cfg.speakNoise!==false);
-  sc('allowEntities', !!cfg.allowEntities);
-  sc('useSensors', cfg.useSensors!==false);
-  sc('tts', cfg.tts);
-  sc('wakelock', cfg.wakelock);
-  sc('autoLog', cfg.autoLog);
-  sc('logAll', cfg.logAll);
-  [['sens','vsens',cfg.sens],['noisevol','vnoisevol',cfg.noiseVol],['sil','vsil',cfg.silence],['max','vmax',cfg.maxRecord],
-   ['gap','vgap',cfg.gapMs],['release','vrelease',cfg.releaseMs],['cool','vcool',cfg.coolSec],
-   ['temp','vtemp',cfg.temp],['tokens','vtokens',cfg.maxTokens],['rate','vrate',cfg.rate]].forEach(function(a){
-    sv(a[0], a[2]); var e = $('#'+a[1]); if(e) e.textContent = a[2];
-  });
-  updateUITags(); updateProfDesc(); updateSummary(); sys();
-}
-function persistKey(){
-  var k = cleanKey($('#key') ? $('#key').value : '');
-  if(k.length >= 20){
-    cfg.key = k;
-    safeSet(S_CFG, JSON.stringify(cfg));
-    updateKeyStatus();
-    return true;
-  }
-  return false;
+  var el=$('#keystatus'); if(el){ el.textContent=hasKey()?'Clé OK':'Aucune clé'; el.className=hasKey()?'ok':''; }
+  try{$('#dlg').showModal()}catch(e){}
 }
 function saveAll(){
-  persistKey();
-  var prev = cfg.profile;
-  cfg.model = $('#model').value; fixModel();
-  cfg.lang = $('#lang').value;
-  cfg.tts = $('#tts').checked;
-  cfg.aiName = ($('#aiName').value||'KITT').trim();
-  cfg.profile = $('#profile').value;
-  if(cfg.profile !== prev) applyProfile(cfg.profile);
-  cfg.agentMode = $('#agentMode').checked;
-  cfg.reportSpeech = $('#reportSpeech').checked;
-  cfg.earPriority = $('#earPriority').checked;
-  cfg.btFriendly = $('#btFriendly').checked;
-  cfg.always = $('#always').checked;
-  cfg.noise = $('#noise').checked;
-  cfg.speakNoise = $('#speakNoise').checked;
-  cfg.allowEntities = $('#allowEntities').checked;
-  cfg.useSensors = $('#useSensors').checked;
-  cfg.sens = +$('#sens').value;
-  cfg.noiseVol = +$('#noisevol').value;
-  cfg.silence = +$('#sil').value;
-  cfg.maxRecord = +$('#max').value;
-  cfg.gapMs = +$('#gap').value;
-  cfg.releaseMs = +$('#release').value;
-  cfg.coolSec = +$('#cool').value;
-  cfg.temp = +$('#temp').value;
-  cfg.maxTokens = +$('#tokens').value;
-  cfg.rate = +$('#rate').value;
-  cfg.wakelock = $('#wakelock').checked;
-  cfg.autoLog = $('#autoLog').checked;
-  cfg.logAll = $('#logAll').checked;
-  cfg.wakeWords = $('#wake').value.trim();
-  cfg.stopWords = $('#stopw').value.trim();
-  cfg.mailTo = $('#mailTo').value.trim();
+  var k=cleanKey(($('#key')&&$('#key').value)||''); if(k.length>=10) cfg.key=k;
+  cfg.model=$('#model').value;
+  cfg.aiName=($('#aiName').value||'Jarvis').trim();
+  cfg.agentMode=$('#agentMode').checked;
+  cfg.reportSpeech=$('#reportSpeech').checked;
+  cfg.always=$('#always').checked;
+  cfg.noise=$('#noise').checked;
+  cfg.speakNoise=$('#speakNoise').checked;
+  cfg.smartAlert=$('#smartAlert').checked;
+  cfg.tts=$('#tts').checked;
+  cfg.wakelock=$('#wakelock').checked;
+  cfg.wakeWords=$('#wake').value.trim();
+  cfg.stopWords=$('#stopw').value.trim();
   safeSet(S_CFG, JSON.stringify(cfg));
-  applyToUI();
-  toast('Tout sauvegardé');
-  closeSettings();
-  if(cfg.useSensors) MotionTracker.init();
+  if($('#nameTag')) $('#nameTag').textContent=aiName();
+  toast('Sauvé'); $('#dlg').close();
 }
-function testKey(){
-  if(!persistKey()){ toast('Clé trop courte ou invalide','err'); return; }
-  if(!hasKey()){ toast('Mets une clé d’abord','err'); return; }
-  fetch(GROQ+'/chat/completions', {
-    method:'POST',
-    headers:{'Content-Type':'application/json','Authorization':'Bearer '+getKey()},
-    body:JSON.stringify({model:cfg.model, messages:[{role:'user',content:'OK'}], max_tokens:5, temperature:0})
-  }).then(function(r){
-    if(r.ok) toast('Clé validée et sauvegardée ✓');
-    else return r.text().then(function(t){
-      var msg = 'Erreur '+r.status;
-      try{ var j = JSON.parse(t); if(j.error && j.error.message) msg = j.error.message; }catch(e){}
-      toast(msg,'err');
-    });
-  }).catch(function(){ toast('Pas de réseau','err'); });
-}
-function resetAll(){
-  if(!confirm('Reset usine ?')) return;
-  Object.assign(cfg, DEFAULT);
-  safeSet(S_CFG, JSON.stringify(cfg));
-  try{ localStorage.removeItem(S_LOG); }catch(e){}
-  st.fullLog = []; st.hist = [];
-  applyToUI();
-  toast('Reset fait');
-  closeSettings();
-}
-function tickClock(){ var el = $('#clock'); if(el) el.textContent = now(); }
-
-function startApp(){
-  var boot = $('#boot');
-  var app = $('#app');
-  if(boot) boot.style.display = 'none';
-  if(app) app.classList.add('show');
-  sizeCanvases();
-  if(cfg.useSensors) MotionTracker.init();
-  log('Application démarrée','info');
-}
-
-function bindUI(){
-  // Bouton LANCER
-  var goBtn = $('#go');
-  if(goBtn){
-    goBtn.addEventListener('click', function(e){
-      e.preventDefault();
-      e.stopPropagation();
-      startApp();
-    });
-  }
-
-  // Bouton PARAMÈTRES (écran de démarrage)
-  var cfgBtn = $('#cfg');
-  if(cfgBtn){
-    cfgBtn.addEventListener('click', function(e){
-      e.preventDefault();
-      e.stopPropagation();
-      openSettings();
-    });
-  }
-
-  // Bouton MENU (dans l'app)
-  var cfg2Btn = $('#cfg2');
-  if(cfg2Btn){
-    cfg2Btn.addEventListener('click', function(e){
-      e.preventDefault();
-      openSettings();
-    });
-  }
-
-  // Bouton STOP
-  var haltBtn = $('#halt');
-  if(haltBtn){
-    haltBtn.addEventListener('click', function(){ hardStopAll('Stop manuel'); });
-  }
-
-  // Boutons principaux
-  var autoBtn = $('#auto');
-  if(autoBtn) autoBtn.addEventListener('click', function(){ if(st.auto && !st.comp) autoStop(); else autoStart(false); });
-
-  var compBtn = $('#comp');
-  if(compBtn) compBtn.addEventListener('click', function(){ if(st.comp) autoStop(); else autoStart(true); });
-
-  var agentBtn = $('#agentBtn');
-  if(agentBtn) agentBtn.addEventListener('click', function(){ cfg.agentMode = !cfg.agentMode; safeSet(S_CFG,JSON.stringify(cfg)); updateUITags(); toast(cfg.agentMode?'Agent ON':'Agent OFF'); });
-
-  var profBtn = $('#profBtn');
-  if(profBtn) profBtn.addEventListener('click', function(){
-    var next = cfg.profile==='bt'?'home':(cfg.profile==='home'?'max':'bt');
-    applyProfile(next); safeSet(S_CFG,JSON.stringify(cfg)); applyToUI(); toast('Profil '+profLabel());
+function load(){
+  try{ var raw=safeGet(S_CFG,null); if(raw){ var p=JSON.parse(raw); for(var k in p) cfg[k]=p[k]; } }catch(e){}
+  try{ var s=JSON.parse(safeGet(S_LOG,'[]')||'[]'); if(Array.isArray(s)) st.fullLog=s; }catch(e){}
+  if($('#key')) $('#key').value=cfg.key||'';
+  if($('#model')) $('#model').value=cfg.model;
+  if($('#aiName')) $('#aiName').value=cfg.aiName||'Jarvis';
+  ['agentMode','reportSpeech','always','noise','speakNoise','smartAlert','tts','wakelock'].forEach(function(id){
+    var e=$('#'+id); if(e) e.checked=cfg[id]!==false;
   });
-
-  var exportBtn = $('#export');
-  if(exportBtn) exportBtn.addEventListener('click', exportFullLog);
-
-  var mailBtn = $('#mail');
-  if(mailBtn) mailBtn.addEventListener('click', mailFullLog);
-
-  var clrBtn = $('#clr');
-  if(clrBtn) clrBtn.addEventListener('click', function(){ var o=$('#out'), l=$('#log'); if(o) o.textContent='…'; if(l) l.textContent=''; st.hist=[]; toast('Effacé'); });
-
-  var muteBtn = $('#mute');
-  if(muteBtn) muteBtn.addEventListener('click', function(){ st.muted = !st.muted; updateMuteUI(); toast(st.muted?'Voix coupée':'Voix ON'); });
-
-  // Input texte
-  var sendBtn = $('#send');
-  if(sendBtn) sendBtn.addEventListener('click', function(){ var el=$('#txt'); if(el){ sendText(el.value); el.value=''; } });
-
-  var txtInput = $('#txt');
-  if(txtInput) txtInput.addEventListener('keydown', function(e){ if(e.key==='Enter'){ e.preventDefault(); sendText(this.value); this.value=''; } });
-
-  // PTT
-  var pttEl = $('#ptt');
-  if(pttEl){
-    pttEl.addEventListener('mousedown', pttStart);
-    pttEl.addEventListener('mouseup', pttStop);
-    pttEl.addEventListener('touchstart', function(e){ e.preventDefault(); pttStart(); });
-    pttEl.addEventListener('touchend', function(e){ e.preventDefault(); pttStop(); });
-  }
-
-  // Dialog
-  var xBtn = $('#x');
-  if(xBtn) xBtn.addEventListener('click', closeSettings);
-
-  var pasteBtn = $('#paste');
-  if(pasteBtn) pasteBtn.addEventListener('click', function(){
-    if(navigator.clipboard && navigator.clipboard.readText){
-      navigator.clipboard.readText().then(function(t){
-        var el=$('#key');
-        if(el) el.value=t;
-        persistKey();
-        toast('Clé collée et sauvegardée');
-      }).catch(function(){ toast('Presse-papiers refusé','err'); });
-    } else toast('Non supporté','err');
-  });
-
-  var savekeyBtn = $('#savekey');
-  if(savekeyBtn) savekeyBtn.addEventListener('click', function(){
-    if(persistKey()) toast('Clé sauvegardée définitivement');
-    else toast('Clé invalide','err');
-  });
-
-  var testBtn = $('#test');
-  if(testBtn) testBtn.addEventListener('click', testKey);
-
-  var saveBtn = $('#save');
-  if(saveBtn) saveBtn.addEventListener('click', saveAll);
-
-  var rstBtn = $('#rst');
-  if(rstBtn) rstBtn.addEventListener('click', resetAll);
-
-  // Ranges
-  [['sens','vsens'],['noisevol','vnoisevol'],['sil','vsil'],['max','vmax'],['gap','vgap'],['release','vrelease'],['cool','vcool'],['temp','vtemp'],['tokens','vtokens'],['rate','vrate']].forEach(function(pair){
-    var el = $('#'+pair[0]);
-    if(el) el.addEventListener('input', function(){ var v=$('#'+pair[1]); if(v) v.textContent=this.value; });
-  });
-
-  var profEl = $('#profile');
-  if(profEl) profEl.addEventListener('change', function(){ cfg.profile=this.value; updateProfDesc(); });
-
-  document.addEventListener('keydown', function(e){
-    if(e.key==='Escape'){
-      var d=$('#dlg');
-      if(d && d.open) d.close();
-    }
-  });
-
-  document.addEventListener('visibilitychange', function(){
-    if(document.visibilityState==='visible' && st.auto) requestWakeLock();
-  });
-
-  window.addEventListener('resize', sizeCanvases);
+  if($('#wake')) $('#wake').value=cfg.wakeWords;
+  if($('#stopw')) $('#stopw').value=cfg.stopWords;
+  if($('#nameTag')) $('#nameTag').textContent=aiName();
+}
+function bind(){
+  $('#go').onclick=function(){ $('#boot').style.display='none'; $('#app').classList.add('show'); initMotion(); };
+  $('#cfg').onclick=openSettings; $('#cfg2').onclick=openSettings; $('#x').onclick=function(){$('#dlg').close()};
+  $('#halt').onclick=hardStop;
+  $('#auto').onclick=function(){ if(st.auto&&!st.comp) autoStop(); else autoStart(false); };
+  $('#comp').onclick=function(){ if(st.comp) autoStop(); else autoStart(true); };
+  $('#agentBtn').onclick=function(){ cfg.agentMode=!cfg.agentMode; safeSet(S_CFG,JSON.stringify(cfg)); toast(cfg.agentMode?'Agent ON':'Agent OFF'); };
+  $('#mute').onclick=function(){ st.muted=!st.muted; var t=$('#mute .btntitle'); if(t) t.textContent=st.muted?'SON OFF':'SON ON'; toast(st.muted?'Mute':'Son'); };
+  $('#clr').onclick=function(){ $('#out').textContent='…'; $('#log').textContent=''; st.hist=[]; st.recentSays=[]; toast('Effacé'); };
+  $('#export').onclick=function(){
+    var a=document.createElement('a');
+    a.href=URL.createObjectURL(new Blob([st.fullLog.join('\n')],{type:'text/plain'}));
+    a.download='jarvis-mac-log.txt'; a.click();
+  };
+  $('#send').onclick=function(){ var el=$('#txt'); var v=el.value; el.value=''; if(v.trim()) processUser(v.trim()); };
+  $('#txt').onkeydown=function(e){ if(e.key==='Enter'){ e.preventDefault(); var v=e.target.value; e.target.value=''; if(v.trim()) processUser(v.trim()); } };
+  $('#paste').onclick=function(){ navigator.clipboard&&navigator.clipboard.readText().then(function(t){ $('#key').value=t; toast('Collé'); }).catch(function(){toast('Refusé','err')}); };
+  $('#savekey').onclick=function(){ var k=cleanKey($('#key').value||''); if(k){cfg.key=k; safeSet(S_CFG,JSON.stringify(cfg)); toast('Clé');} };
+  $('#test').onclick=function(){
+    if(!hasKey()){toast('Clé?','err');return;}
+    fetch(GROQ+'/chat/completions',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+getKey()},body:JSON.stringify({model:cfg.model,messages:[{role:'user',content:'OK'}],max_tokens:3,temperature:0})})
+      .then(function(r){toast(r.ok?'Clé OK':'Erreur')}).catch(function(){toast('Réseau','err')});
+  };
+  $('#save').onclick=saveAll;
+  setInterval(function(){ var el=$('#clock'); if(el) el.textContent=now(); },1000);
 }
 
-function boot(){
-  try{
-    load();
-    bindUI();
-  }catch(e){
-    console.error(e);
-    document.body.innerHTML = '<pre style="color:red;background:#000;font-size:16px;padding:20px;white-space:pre-wrap;">ERREUR:\n'+e.message+'\n\n'+e.stack+'</pre>';
-    return;
-  }
-
-  setInterval(tickClock, 1000);
-  setInterval(sys, 1400);
-  tickClock();
-  sys();
-
-  if(window.speechSynthesis){
-    speechSynthesis.getVoices();
-    if(speechSynthesis.onvoiceschanged !== undefined){
-      speechSynthesis.onvoiceschanged = function(){ speechSynthesis.getVoices(); };
-    }
-  }
-
-  if('ontouchstart' in window){
-    var pttEl = $('#ptt');
-    if(pttEl) pttEl.classList.add('show');
-  }
-
-  log('KITT v53.6 prêt','info');
-  log('Modèle: '+cfg.model,'info');
-  log('Profil: '+profLabel(),'info');
-  log('Suggestions entités: '+(cfg.allowEntities?'ON':'OFF'),'info');
-  if(hasKey()) log('Clé API chargée','info');
-}
-
-if(document.readyState === 'loading'){
-  document.addEventListener('DOMContentLoaded', boot);
-} else {
-  boot();
-}
-
+load(); bind(); log('Jarvis MacGyver prêt');
 })();
 </script>
 </body>
