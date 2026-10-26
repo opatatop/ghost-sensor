@@ -384,6 +384,15 @@ dialog::backdrop { background: rgba(0,0,0,.93); }
     <div class="panel"><div class="lab">OREILLE</div><div class="out" id="out">…</div></div>
     <div class="panel"><div class="lab">JOURNAL</div><div class="logbox" id="log"></div></div>
     <div class="panel">
+      <div class="lab">OPAT GENESIS</div>
+      <div class="sys" id="opatBox" style="white-space:pre-wrap;font-size:12px;line-height:1.35;color:var(--orange);min-height:40px">Connexion OPAT…</div>
+      <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
+        <button class="btn sm" id="btnRefreshAlerts" type="button" style="flex:1;min-width:90px"><span class="btntitle">RAFRAICHIR</span></button>
+        <button class="btn sm blue" id="btnTestRelay" type="button" style="flex:1;min-width:90px"><span class="btntitle">TEST RELAY</span></button>
+        <button class="btn sm" id="btnToggleRelay" type="button" style="flex:1;min-width:90px"><span class="btntitle">RELAY ON</span></button>
+      </div>
+    </div>
+    <div class="panel">
       <div class="lab">SYS</div>
       <div class="sys" id="sys">—</div>
       <div class="sys" id="stats">—</div>
@@ -401,7 +410,33 @@ dialog::backdrop { background: rgba(0,0,0,.93); }
 (function () {
   'use strict';
 
-  var GROQ = 'https://api.groq.com/openai/v1';
+  // ========================================================================
+  // VERSION GITHUB PAGES — configurable backend URL
+  // ========================================================================
+  // Si tu héberges ce HTML sur GitHub Pages ( https://username.github.io/repo/ )
+  // laisse BACKEND_URL vide → les appels API vont sur github.com → ERREUR.
+  //
+  // Pour que ça marche, tu DOIS mettre l'URL de ton backend VPS ici :
+  //   var BACKEND_URL = 'https://195.15.214.116:8080';
+  //
+  // ⚠️ IMPORTANT : le backend doit accepter le CORS depuis github.io.
+  //    Le jarvis_server.py fourni active déjà Access-Control-Allow-Origin: *
+  //    → OK pour GitHub Pages.
+  //
+  // ⚠️ Si tu utilises HTTPS sur GitHub Pages, le backend DOIT aussi être en HTTPS
+  //    (mixed content blocking sinon). Solutions :
+  //    - Mettre Caddy/nginx devant jarvis_server.py avec un certbot Let's Encrypt
+  //    - Ou utiliser un tunnel Cloudflare sur le VPS (cloudflared)
+  //
+  // Astuce : pour tester en local sans backend, mets BACKEND_URL = '' et le
+  // simulateur tournera en mode démo (pas de /alerts, pas de relay IRC, juste
+  // l'UI JARVIS).
+  // ========================================================================
+  var BACKEND_URL = ''; // ← METS TON URL VPS ICI, ex: 'https://ton-vps:8080'
+
+  // MOD INTÉGRATION OPAT: GROQ devient relatif → proxy backend (clé cachée)
+  // Si BACKEND_URL est défini, on préfixe toutes les routes API.
+  var GROQ = BACKEND_URL ? (BACKEND_URL + '/groq') : '/groq';
   var MODELS = [
     'llama-3.1-8b-instant',
     'llama-3.3-70b-versatile',
@@ -418,6 +453,19 @@ dialog::backdrop { background: rgba(0,0,0,.93); }
   var SAFE = 'llama-3.1-8b-instant';
   var S_CFG = 'jarvis_createur_complet_cfg';
   var S_LOG = 'jarvis_createur_complet_log';
+
+  // Helper : préfixe une route API avec BACKEND_URL si défini
+  function apiURL(path) { return BACKEND_URL ? (BACKEND_URL + path) : path; }
+  // MOD INTÉGRATION OPAT: état OPAT (alertes Genesis + relay IRC)
+  var OPAT = {
+    alertsSeen: 0,           // nb d'alertes déjà vues (pour détection nouvelles)
+    alertsList: [],          // cache des dernières alertes
+    lastPollAt: 0,           // timestamp dernier poll /alerts
+    pollEveryMs: 5000,       // intervale de polling
+    relayTarget: 'opatatop', // pseudo par défaut du bot IRC (destinataire du relay)
+    relayEnabled: true,      // si true, alertes Genesis → TTS auto + relay IRC
+    pollTimer: null
+  };
 
   var DEFAULT = {
     key: '',
@@ -566,16 +614,16 @@ dialog::backdrop { background: rgba(0,0,0,.93); }
     if (cfg.profile === 'dehors') return 'Dehors: seuil haut · rue filtree · presence';
     return 'Maison: sensible · portes · voix · paroles autour';
   }
+  // MOD INTÉGRATION OPAT: la clé est sur le backend. On teste la santé serveur.
   function getKey() {
-    var from = $('#key') && $('#key').value ? cleanKey($('#key').value) : '';
-    var k = from || cleanKey(cfg.key);
-    if (k && k !== cfg.key) {
-      cfg.key = k;
-      safeSet(S_CFG, JSON.stringify(cfg));
-    }
-    return k;
+    // Plus besoin de clé côté client → le backend la fournit.
+    return 'backend';
   }
-  function hasKey() { return (getKey() || '').length >= 20; }
+  function hasKey() {
+    // Toujours true car le backend gère la clé. Le serveur renverra une erreur
+    // claire si GROQ_API_KEY est manquante côté backend.
+    return true;
+  }
 
   function toast(msg, type) {
     var el = $('#toast');
@@ -741,6 +789,13 @@ dialog::backdrop { background: rgba(0,0,0,.93); }
     return 'Bruit.';
   }
   function buildContextBlock() {
+    // MOD INTÉGRATION OPAT: ajoute le contexte Genesis (alertes récentes)
+    var lastAlerts = (OPAT.alertsList || []).slice(-3).map(function (a) {
+      return '  - ' + a;
+    }).join('\n');
+    var genesisBlock = OPAT.alertsList.length
+      ? 'Genesis alertes (' + OPAT.alertsList.length + '):\n' + lastAlerts
+      : 'Genesis: aucune alerte récente';
     return [
       'Date: ' + nowDate(),
       'Heure: ' + nowTime(),
@@ -754,8 +809,97 @@ dialog::backdrop { background: rgba(0,0,0,.93); }
       'Audio: vol=' + Math.round(st.lastVol || 0) + ' bass=' + (st.lastBass || 0) + ' mid=' + (st.lastMid || 0) + ' high=' + (st.lastHigh || 0),
       'Reponses longues: ' + (cfg.longAnswers ? 'ON' : 'OFF'),
       'Agent: ' + (cfg.agentMode ? 'ON' : 'OFF') + ' | Paroles autour: ' + (cfg.reportSpeech ? 'ON' : 'OFF'),
-      'Alertes: ' + (cfg.speakNoise ? 'ON' : 'OFF') + ' | Animaux: ' + (cfg.animalAlerts ? 'ON' : 'OFF') + ' | Presence: ' + (cfg.humanThreat ? 'ON' : 'OFF')
+      'Alertes: ' + (cfg.speakNoise ? 'ON' : 'OFF') + ' | Animaux: ' + (cfg.animalAlerts ? 'ON' : 'OFF') + ' | Presence: ' + (cfg.humanThreat ? 'ON' : 'OFF'),
+      genesisBlock
     ].join('\n');
+  }
+
+  // MOD INTÉGRATION OPAT: nouvelles fonctions pour polling /alerts et relay IRC
+
+  // Récupère les dernières alertes depuis le backend
+  function pollAlerts() {
+    OPAT.lastPollAt = Date.now();
+    fetch(apiURL('/alerts?limit=20'))
+      .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(function (j) {
+        var alerts = (j && j.alerts) || [];
+        // Détecter les nouvelles alertes ( celles qui n'étaient pas dans OPAT.alertsList )
+        var prev = (OPAT.alertsList || []).slice();
+        var prevSet = {};
+        prev.forEach(function (a) { prevSet[a] = true; });
+        var fresh = alerts.filter(function (a) { return !prevSet[a]; });
+        OPAT.alertsList = alerts;
+        OPAT.alertsSeen = alerts.length;
+        // Mettre à jour l'affichage OPAT
+        var el = $('#opatBox');
+        if (el) {
+          var count = alerts.length;
+          var recent = alerts.slice(-3).join('\n') || '(aucune alerte)';
+          el.textContent = 'GENESIS ' + count + ' alertes\n' + recent;
+        }
+        // Si on a de nouvelles alertes et que le relay est activé → TTS + relay IRC
+        if (fresh.length && OPAT.relayEnabled && !st.hardStop && !st.muted) {
+          fresh.forEach(function (a) {
+            // Annonce vocale
+            if (cfg.tts && cfg.speakNoise) {
+              announce('[Genesis] ' + a);
+            }
+            log('Genesis alert: ' + a, 'info');
+            // Relay IRC optionnel (silencieux : juste log si échec)
+            if (OPAT.relayTarget) {
+              relayToIRC(OPAT.relayTarget, '[JARVIS] ' + a, /*silent*/ true);
+            }
+          });
+        }
+      })
+      .catch(function (e) {
+        // Backend injoignable → on log sans spam
+        if (!st._opatWarnedAt || Date.now() - st._opatWarnedAt > 60000) {
+          st._opatWarnedAt = Date.now();
+          log('OPAT poll: ' + (e.message || e), 'err');
+        }
+      });
+  }
+
+  // Envoie un message au bot IRC via le backend /relay
+  function relayToIRC(target, message, silent) {
+    return fetch(apiURL('/relay'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ target: target || OPAT.relayTarget, message: message })
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (j) {
+        if (!silent) {
+          if (j.status === 'sent') {
+            toast('Relay OK → ' + (target || OPAT.relayTarget));
+            log('Relay IRC OK', 'qa');
+          } else {
+            toast('Relay KO: ' + (j.error || '?'), 'err');
+            log('Relay IRC KO: ' + (j.error || '?'), 'err');
+          }
+        }
+        return j;
+      })
+      .catch(function (e) {
+        if (!silent) {
+          toast('Relay réseau KO', 'err');
+          log('Relay réseau KO: ' + (e.message || e), 'err');
+        }
+        return null;
+      });
+  }
+
+  // Démarre le polling périodique des alertes Genesis
+  function startAlertPolling() {
+    if (OPAT.pollTimer) return;
+    // Première récupération immédiate
+    pollAlerts();
+    OPAT.pollTimer = setInterval(pollAlerts, OPAT.pollEveryMs);
+    log('Polling Genesis démarré (toutes les ' + (OPAT.pollEveryMs / 1000) + 's)', 'info');
+  }
+  function stopAlertPolling() {
+    if (OPAT.pollTimer) { clearInterval(OPAT.pollTimer); OPAT.pollTimer = null; }
   }
 
   function initMotion() {
@@ -1005,18 +1149,18 @@ dialog::backdrop { background: rgba(0,0,0,.93); }
     return 'Probleme API: ' + m.slice(0, 140);
   }
 
+  // MOD INTÉGRATION OPAT: transcribe via backend /groq/transcribe (pas de clé JS)
   function transcribe(blob) {
-    var key = getKey();
-    if (!key) return Promise.resolve('');
+    if (!hasKey()) return Promise.resolve('');
     var fd = new FormData();
     fd.append('file', blob, 'a.webm');
     fd.append('model', 'whisper-large-v3');
     fd.append('language', cfg.lang || 'fr');
     fd.append('response_format', 'json');
     fd.append('temperature', '0');
-    return fetch(GROQ + '/audio/transcriptions', {
+    // NE PAS mettre Authorization header : le backend l'ajoute.
+    return fetch(GROQ + '/transcribe', {
       method: 'POST',
-      headers: { Authorization: 'Bearer ' + key },
       body: fd
     }).then(function (r) {
       if (!r.ok) {
@@ -1033,9 +1177,13 @@ dialog::backdrop { background: rgba(0,0,0,.93); }
     });
   }
 
+  // MOD INTÉGRATION OPAT: systemPrompt enrichi avec contexte Genesis (alertes IRC bot)
   function systemPrompt() {
     var long = cfg.longAnswers !== false;
     return 'Tu es ' + aiName() + ', assistant complet en francais, mode createur.\n' +
+      'Tu es connecte au systeme OPAT (bot IRC Eggdrop + dashboard Python) qui surveille\n' +
+      'le serveur en temps reel. Tu peux voir les alertes Genesis (PARE-FEU, SYSTEM_BAN,\n' +
+      'SSH, scan, anomaly) dans le CONTEXTE ci-dessous.\n' +
       'Date/heure locales fournies dans le contexte.\n' +
       'REGLES:\n' +
       '- Reponds TOUJOURS en francais clair.\n' +
@@ -1045,24 +1193,24 @@ dialog::backdrop { background: rgba(0,0,0,.93); }
           '- Si on demande toutes les options / exhaustif / combinaisons: sois large et structure (listes a tirets).\n' +
           '- 2 a 6 petits paragraphes OK. Pas un roman infini.\n'
         : '- 1 a 3 phrases max.\n') +
-      '- Utilise le CONTEXTE capteurs si pertinent.\n' +
+      '- Utilise le CONTEXTE capteurs ET les alertes Genesis si pertinent.\n' +
+      '- Si une alerte Genesis est recente (< 60s), tu peux la mentionner naturellement.\n' +
       '- Interdit: « je n\'entends rien », « capteur immobile ».\n' +
       '- Pas de markdown lourd (pas de #). Tirets OK.\n\n' +
       'CONTEXTE TEMPS REEL:\n' + buildContextBlock();
   }
 
+  // MOD INTÉGRATION OPAT: callAI via backend /groq/chat (pas de clé JS)
   function callAI(messages, maxTokens) {
-    var key = getKey();
-    if (!key) return Promise.reject(new Error('Pas de cle'));
     function once() {
       var ctrl = new AbortController();
       st.ctrl = ctrl;
       var tid = setTimeout(function () { ctrl.abort(); }, 28000);
-      return fetch(GROQ + '/chat/completions', {
+      return fetch(GROQ + '/chat', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          Authorization: 'Bearer ' + key
+          'Content-Type': 'application/json'
+          // Pas d'Authorization header : le backend l'ajoute.
         },
         body: JSON.stringify({
           model: cfg.model,
@@ -1414,10 +1562,10 @@ dialog::backdrop { background: rgba(0,0,0,.93); }
       sel.appendChild(o);
     });
   }
+  // MOD INTÉGRATION OPAT: loadModelsLive via backend /groq/models
   function loadModelsLive() {
-    if (!hasKey()) { toast('Cle?', 'err'); return; }
     toast('Chargement…');
-    fetch(GROQ + '/models', { headers: { Authorization: 'Bearer ' + getKey() } })
+    fetch(apiURL('/groq/models'))
       .then(function (r) {
         if (!r.ok) throw new Error('HTTP ' + r.status);
         return r.json();
@@ -1444,11 +1592,21 @@ dialog::backdrop { background: rgba(0,0,0,.93); }
     var d = $('#dlg');
     if (d && d.open) d.close();
   }
+  // MOD INTÉGRATION OPAT: keystatus interroge le backend /health plutôt qu'une clé JS
   function updateKeyStatus() {
     var el = $('#keystatus');
     if (!el) return;
-    el.textContent = hasKey() ? 'Cle OK' : 'Aucune cle';
-    el.className = hasKey() ? 'ok' : '';
+    el.textContent = 'Vérification backend…';
+    el.className = '';
+    fetch(apiURL('/health')).then(function (r) { return r.json(); }).then(function (j) {
+      var okG = !!j.groq_key;
+      var okA = !!j.alerts_file;
+      el.textContent = 'Backend OK · Groq ' + (okG ? 'OK' : 'MANQUANT') + ' · Genesis ' + (okA ? 'OK' : 'NA');
+      el.className = (okG && okA) ? 'ok' : '';
+    }).catch(function (e) {
+      el.textContent = 'Backend down';
+      el.className = '';
+    });
   }
   function updateSummary() {
     var lines = [
@@ -1574,25 +1732,23 @@ dialog::backdrop { background: rgba(0,0,0,.93); }
     closeSettings();
     if (cfg.useSensors) initMotion();
   }
+  // MOD INTÉGRATION OPAT: testKey interroge /health du backend plutôt que Groq direct
   function testKey() {
-    persistKey();
-    if (!hasKey()) { toast('Cle?', 'err'); return; }
-    fetch(GROQ + '/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: 'Bearer ' + getKey()
-      },
-      body: JSON.stringify({
-        model: cfg.model,
-        messages: [{ role: 'user', content: 'OK' }],
-        max_tokens: 3,
-        temperature: 0
-      })
-    }).then(function (r) {
-      toast(r.ok ? 'Cle OK · ' + stamp() : 'Erreur ' + r.status, r.ok ? '' : 'err');
-    }).catch(function () {
-      toast('Reseau', 'err');
+    fetch(apiURL('/health')).then(function (r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    }).then(function (j) {
+      var okG = !!j.groq_key;
+      var okA = !!j.alerts_file;
+      var okB = !!j.bot_reachable;
+      toast(
+        (okG ? 'Groq OK' : 'Groq MANQUANT') + ' · ' +
+        (okA ? 'Genesis OK' : 'Genesis NA') + ' · ' +
+        (okB ? 'Bot OK' : 'Bot KO') + ' · ' + stamp(),
+        (okG && okB) ? '' : 'err'
+      );
+    }).catch(function (e) {
+      toast('Backend down', 'err');
     });
   }
   function resetAll() {
@@ -1674,6 +1830,24 @@ dialog::backdrop { background: rgba(0,0,0,.93); }
       updateTags();
       toast(st.muted ? 'Mute' : 'Son');
     };
+    // MOD INTÉGRATION OPAT: bind des boutons OPAT
+    $('#btnRefreshAlerts').onclick = function () {
+      pollAlerts();
+      toast('Rafraichi');
+    };
+    $('#btnTestRelay').onclick = function () {
+      relayToIRC(OPAT.relayTarget, '[JARVIS] Test relay ' + now(), /*silent*/ false);
+    };
+    $('#btnToggleRelay').onclick = function () {
+      OPAT.relayEnabled = !OPAT.relayEnabled;
+      var b = $('#btnToggleRelay');
+      if (b) {
+        var t = b.querySelector('.btntitle');
+        if (t) t.textContent = OPAT.relayEnabled ? 'RELAY ON' : 'RELAY OFF';
+        b.classList.toggle('on', OPAT.relayEnabled);
+      }
+      toast(OPAT.relayEnabled ? 'Relay auto ON' : 'Relay auto OFF');
+    };
     $('#send').onclick = function () {
       var el = $('#txt');
       var v = el.value;
@@ -1745,7 +1919,9 @@ dialog::backdrop { background: rgba(0,0,0,.93); }
       speechSynthesis.onvoiceschanged = function () { speechSynthesis.getVoices(); };
     }
     if ('ontouchstart' in window && $('#ptt')) $('#ptt').classList.add('show');
-    log('Jarvis CREATEUR COMPLET pret · ' + stamp());
+    // MOD INTÉGRATION OPAT: démarrer le polling des alertes Genesis dès le boot
+    startAlertPolling();
+    log('Jarvis CREATEUR COMPLET pret · ' + stamp() + ' · OPAT bridge actif');
   }
 
   if (document.readyState === 'loading') {
