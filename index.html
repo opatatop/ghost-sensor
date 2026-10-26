@@ -5,10 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#000000">
 <meta name="mobile-web-app-capable" content="yes">
-<title>JARVIS CREATEUR COMPLET</title>
+<title>JARVIS PRO v2</title>
 <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
 <style>
-:root {
+/* ===== 3 THÈMES PRO ===== */
+:root, [data-theme="matrix"] {
   --fg: #00ff41;
   --dim: #00aa2a;
   --muted: #006618;
@@ -16,20 +17,43 @@
   --blue: #00ccff;
   --orange: #ff6600;
   --panel: #0a0a0a;
+  --bg: #000;
+  --font: 'VT323', monospace;
+}
+[data-theme="cyberpunk"] {
+  --fg: #ff0099;
+  --dim: #cc0066;
+  --muted: #660033;
+  --red: #ff3333;
+  --blue: #00ffff;
+  --orange: #ffaa00;
+  --panel: #1a0010;
+  --bg: #0a0005;
+  --font: 'VT323', monospace;
+}
+[data-theme="minimalist"] {
+  --fg: #333333;
+  --dim: #666666;
+  --muted: #999999;
+  --red: #cc0000;
+  --blue: #0066cc;
+  --orange: #cc6600;
+  --panel: #f5f5f5;
+  --bg: #ffffff;
   --font: 'VT323', monospace;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body {
   height: 100%;
   overflow: hidden;
-  background: #000;
+  background: var(--bg);
   color: var(--fg);
   font-family: var(--font);
 }
 body {
   background-image:
-    linear-gradient(rgba(0,255,65,.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0,255,65,.03) 1px, transparent 1px);
+    linear-gradient(rgba(128,128,128,.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(128,128,128,.03) 1px, transparent 1px);
   background-size: 28px 28px;
 }
 button, input, select, textarea {
@@ -227,6 +251,37 @@ dialog::backdrop { background: rgba(0,0,0,.93); }
   border: 1px solid var(--orange); color: var(--orange);
   padding: 8px; font-size: 12px; line-height: 1.35; margin: 8px 0;
 }
+/* === PRO : panneau commandes rapides === */
+.quick {
+  display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 4px;
+  margin-top: 4px;
+}
+.quick .btn {
+  min-height: 38px; padding: 4px; font-size: 12px;
+}
+@media (max-width: 480px) { .quick { grid-template-columns: 1fr 1fr; } }
+/* === PRO : indicateur streaming === */
+.streamBox {
+  border: 2px solid var(--blue); background: #001520;
+  padding: 8px; min-height: 40px; max-height: 120px;
+  overflow: auto; font-size: 14px; white-space: pre-wrap;
+  color: var(--blue); display: none;
+}
+.streamBox.active { display: block; }
+.streamBox .cursor { animation: blink 0.8s steps(2) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+/* === PRO : barre de statut mobile === */
+.connbar {
+  display: flex; gap: 6px; font-size: 10px; padding: 3px 6px;
+  border-top: 1px solid var(--muted); color: var(--muted);
+}
+.connbar .dot {
+  width: 8px; height: 8px; border-radius: 50%; background: var(--muted);
+}
+.connbar .dot.ok { background: var(--fg); }
+.connbar .dot.warn { background: var(--orange); }
+.connbar .dot.err { background: var(--red); animation: pulse 1s infinite; }
+@keyframes pulse { 50% { opacity: 0.4; } }
 </style>
 </head>
 <body>
@@ -382,7 +437,21 @@ dialog::backdrop { background: rgba(0,0,0,.93); }
       <button type="button" id="send">OK</button>
     </div>
     <div class="panel"><div class="lab">OREILLE</div><div class="out" id="out">…</div></div>
+    <div class="streamBox" id="streamBox"><span id="streamText"></span><span class="cursor">▌</span></div>
     <div class="panel"><div class="lab">JOURNAL</div><div class="logbox" id="log"></div></div>
+    <div class="panel">
+      <div class="lab">⚡ COMMANDES RAPIDES (PRO)</div>
+      <div class="quick">
+        <button class="btn sm" id="qcStatus" type="button">STATUS</button>
+        <button class="btn sm" id="qcMenaces" type="button">MENACES</button>
+        <button class="btn sm" id="qcBan" type="button">DERNIER BAN</button>
+        <button class="btn sm" id="qcHeure" type="button">HEURE</button>
+        <button class="btn sm" id="qcResume" type="button">RAPPORT</button>
+        <button class="btn sm" id="qcStop" type="button">STOP</button>
+        <button class="btn sm blue" id="qcTheme" type="button">THEME</button>
+        <button class="btn sm blue" id="qcHour" type="button">HORLOGE</button>
+      </div>
+    </div>
     <div class="panel">
       <div class="lab">OPAT GENESIS</div>
       <div class="sys" id="opatBox" style="white-space:pre-wrap;font-size:12px;line-height:1.35;color:var(--orange);min-height:40px">Connexion OPAT…</div>
@@ -399,6 +468,13 @@ dialog::backdrop { background: rgba(0,0,0,.93); }
       <div class="sys" id="sensors">—</div>
     </div>
   </main>
+  <div class="connbar">
+    <div><span class="dot" id="dotBackend"></span>BE</div>
+    <div><span class="dot" id="dotGroq"></span>GROQ</div>
+    <div><span class="dot" id="dotBot"></span>BOT</div>
+    <div><span class="dot" id="dotMic"></span>MIC</div>
+    <div style="margin-left:auto" id="connStats">—</div>
+  </div>
   <footer>
     <span id="status">OFF</span>
     <span id="clock">--/--/---- --:--:--</span>
@@ -410,33 +486,14 @@ dialog::backdrop { background: rgba(0,0,0,.93); }
 (function () {
   'use strict';
 
-  // ========================================================================
-  // VERSION GITHUB PAGES — configurable backend URL
-  // ========================================================================
-  // Si tu héberges ce HTML sur GitHub Pages ( https://username.github.io/repo/ )
-  // laisse BACKEND_URL vide → les appels API vont sur github.com → ERREUR.
-  //
-  // Pour que ça marche, tu DOIS mettre l'URL de ton backend VPS ici :
-  //   var BACKEND_URL = 'https://195.15.214.116:8080';
-  //
-  // ⚠️ IMPORTANT : le backend doit accepter le CORS depuis github.io.
-  //    Le jarvis_server.py fourni active déjà Access-Control-Allow-Origin: *
-  //    → OK pour GitHub Pages.
-  //
-  // ⚠️ Si tu utilises HTTPS sur GitHub Pages, le backend DOIT aussi être en HTTPS
-  //    (mixed content blocking sinon). Solutions :
-  //    - Mettre Caddy/nginx devant jarvis_server.py avec un certbot Let's Encrypt
-  //    - Ou utiliser un tunnel Cloudflare sur le VPS (cloudflared)
-  //
-  // Astuce : pour tester en local sans backend, mets BACKEND_URL = '' et le
-  // simulateur tournera en mode démo (pas de /alerts, pas de relay IRC, juste
-  // l'UI JARVIS).
-  // ========================================================================
-  var BACKEND_URL = ''; // ← METS TON URL VPS ICI, ex: 'https://ton-vps:8080'
+  // ============================================================
+  // JARVIS PRO v2 — version GitHub Pages + backend
+  // Configure BACKEND_URL si tu héberges le HTML ailleurs que sur le VPS
+  // ============================================================
+  var BACKEND_URL = ''; // ex: 'https://jarvis.tondomaine.com' (vide = same-origin)
 
-  // MOD INTÉGRATION OPAT: GROQ devient relatif → proxy backend (clé cachée)
-  // Si BACKEND_URL est défini, on préfixe toutes les routes API.
   var GROQ = BACKEND_URL ? (BACKEND_URL + '/groq') : '/groq';
+  function apiURL(path) { return BACKEND_URL ? (BACKEND_URL + path) : path; }
   var MODELS = [
     'llama-3.1-8b-instant',
     'llama-3.3-70b-versatile',
@@ -454,8 +511,52 @@ dialog::backdrop { background: rgba(0,0,0,.93); }
   var S_CFG = 'jarvis_createur_complet_cfg';
   var S_LOG = 'jarvis_createur_complet_log';
 
-  // Helper : préfixe une route API avec BACKEND_URL si défini
-  function apiURL(path) { return BACKEND_URL ? (BACKEND_URL + path) : path; }
+  // === PRO : thèmes ===
+  var THEMES = ['matrix', 'cyberpunk', 'minimalist'];
+  var THEME_LABELS = { matrix: 'MATRIX', cyberpunk: 'CYBERPUNK', minimalist: 'MINIMAL' };
+
+  // === PRO : patterns vibration mobile ===
+  var VIB_PATTERNS = {
+    door: [100, 50, 100],
+    voice: [50, 30, 50],
+    human_bad: [200, 100, 200, 100, 200],
+    ban: [150, 50, 150],
+    ssh: [80, 40, 80],
+    scan: [60, 30, 60, 30, 60],
+    error: [500]
+  };
+  function vibrate(pattern) {
+    try { if (navigator.vibrate) navigator.vibrate(pattern); } catch (e) {}
+  }
+
+  // === PRO : sound effects via Web Audio ===
+  var audioCtx = null;
+  function beep(freq, duration, type) {
+    try {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      var o = audioCtx.createOscillator();
+      var g = audioCtx.createGain();
+      o.type = type || 'square';
+      o.frequency.value = freq;
+      g.gain.value = 0.06;
+      o.connect(g); g.connect(audioCtx.destination);
+      o.start();
+      setTimeout(function () { o.stop(); }, duration);
+    } catch (e) {}
+  }
+  function sfx(name) {
+    if (!cfg.sfx) return;
+    switch (name) {
+      case 'rec':   beep(800, 100, 'square'); break;
+      case 'think': beep(400, 200, 'sine'); break;
+      case 'speak': beep(600, 80, 'sine'); break;
+      case 'alert': beep(1200, 300, 'sawtooth'); setTimeout(function(){beep(800,300,'sawtooth');},350); break;
+      case 'error': beep(200, 600, 'sawtooth'); break;
+      case 'door':  beep(300, 150, 'triangle'); setTimeout(function(){beep(400,150,'triangle');},200); break;
+      case 'ban':   beep(1000, 100, 'square'); setTimeout(function(){beep(1500,100,'square');},120); break;
+    }
+  }
   // MOD INTÉGRATION OPAT: état OPAT (alertes Genesis + relay IRC)
   var OPAT = {
     alertsSeen: 0,           // nb d'alertes déjà vues (pour détection nouvelles)
@@ -472,6 +573,12 @@ dialog::backdrop { background: rgba(0,0,0,.93); }
     model: SAFE,
     lang: 'fr',
     tts: true,
+    sfx: true,                          // PRO : sound effects
+    vibrate: true,                      // PRO : vibration mobile
+    stream: true,                       // PRO : streaming responses
+    bargeIn: true,                      // PRO : interrompre TTS en parlant
+    hourlyChime: false,                 // PRO : annonce horaire auto
+    theme: 'matrix',                    // PRO : 'matrix' | 'cyberpunk' | 'minimalist'
     aiName: 'Jarvis',
     profile: 'maison',
     agentMode: true,
@@ -823,13 +930,15 @@ dialog::backdrop { background: rgba(0,0,0,.93); }
       .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
       .then(function (j) {
         var alerts = (j && j.alerts) || [];
-        // Détecter les nouvelles alertes ( celles qui n'étaient pas dans OPAT.alertsList )
         var prev = (OPAT.alertsList || []).slice();
         var prevSet = {};
         prev.forEach(function (a) { prevSet[a] = true; });
         var fresh = alerts.filter(function (a) { return !prevSet[a]; });
         OPAT.alertsList = alerts;
         OPAT.alertsSeen = alerts.length;
+        // Update connbar
+        var d = $('#dotBackend'); if (d) { d.className = 'dot ok'; }
+        var cs = $('#connStats'); if (cs) cs.textContent = alerts.length + ' alertes';
         // Mettre à jour l'affichage OPAT
         var el = $('#opatBox');
         if (el) {
@@ -837,9 +946,19 @@ dialog::backdrop { background: rgba(0,0,0,.93); }
           var recent = alerts.slice(-3).join('\n') || '(aucune alerte)';
           el.textContent = 'GENESIS ' + count + ' alertes\n' + recent;
         }
-        // Si on a de nouvelles alertes et que le relay est activé → TTS + relay IRC
+        // Si on a de nouvelles alertes et que le relay est activé → TTS + vibration + sfx + relay IRC
         if (fresh.length && OPAT.relayEnabled && !st.hardStop && !st.muted) {
           fresh.forEach(function (a) {
+            // PRO : vibration + sfx adaptés au type d'alerte
+            var lowerA = (a || '').toLowerCase();
+            var vibKey = 'alert';
+            var sfxKey = 'alert';
+            if (lowerA.indexOf('ssh') !== -1) { vibKey = 'ssh'; sfxKey = 'ban'; }
+            else if (lowerA.indexOf('scan') !== -1) { vibKey = 'scan'; sfxKey = 'alert'; }
+            else if (lowerA.indexOf('ban') !== -1) { vibKey = 'ban'; sfxKey = 'ban'; }
+            else if (lowerA.indexOf('anomal') !== -1) { vibKey = 'alert'; sfxKey = 'alert'; }
+            if (cfg.vibrate) vibrate(VIB_PATTERNS[vibKey] || VIB_PATTERNS.error);
+            sfx(sfxKey);
             // Annonce vocale
             if (cfg.tts && cfg.speakNoise) {
               announce('[Genesis] ' + a);
@@ -853,7 +972,7 @@ dialog::backdrop { background: rgba(0,0,0,.93); }
         }
       })
       .catch(function (e) {
-        // Backend injoignable → on log sans spam
+        var d = $('#dotBackend'); if (d) { d.className = 'dot err'; }
         if (!st._opatWarnedAt || Date.now() - st._opatWarnedAt > 60000) {
           st._opatWarnedAt = Date.now();
           log('OPAT poll: ' + (e.message || e), 'err');
@@ -890,16 +1009,59 @@ dialog::backdrop { background: rgba(0,0,0,.93); }
       });
   }
 
-  // Démarre le polling périodique des alertes Genesis
+  // === PRO : polling adaptatif — 2s si actif, 5s idle, 10s en background ===
+  function getPollInterval() {
+    if (document.hidden) return 10000;
+    if (st.auto || st.comp) return 2000;   // actif
+    return 5000;                           // idle
+  }
   function startAlertPolling() {
     if (OPAT.pollTimer) return;
-    // Première récupération immédiate
     pollAlerts();
-    OPAT.pollTimer = setInterval(pollAlerts, OPAT.pollEveryMs);
-    log('Polling Genesis démarré (toutes les ' + (OPAT.pollEveryMs / 1000) + 's)', 'info');
+    function scheduleNext() {
+      OPAT.pollTimer = setTimeout(function () {
+        pollAlerts();
+        scheduleNext();
+      }, getPollInterval());
+    }
+    scheduleNext();
+    log('Polling Genesis adaptatif démarré (actif=2s / idle=5s / bg=10s)', 'info');
   }
   function stopAlertPolling() {
-    if (OPAT.pollTimer) { clearInterval(OPAT.pollTimer); OPAT.pollTimer = null; }
+    if (OPAT.pollTimer) { clearTimeout(OPAT.pollTimer); OPAT.pollTimer = null; }
+  }
+
+  // === PRO : annonce horaire automatique ===
+  function startHourlyChime() {
+    setInterval(function () {
+      if (!cfg.hourlyChime) return;
+      var d = new Date();
+      if (d.getMinutes() === 0 && d.getSeconds() < 3) {
+        var msg = 'Il est ' + d.getHours() + ' heure. ' +
+                  OPAT.alertsList.length + ' alertes Genesis en mémoire.';
+        if (OPAT.alertsList.length > 0) {
+          msg += ' Dernière: ' + (OPAT.alertsList[OPAT.alertsList.length - 1] || '').slice(0, 80);
+        }
+        announce(msg);
+        sfx('alert');
+        if (cfg.vibrate) vibrate(VIB_PATTERNS.ban);
+      }
+    }, 5000);
+  }
+
+  // === PRO : changer de thème ===
+  function applyTheme(theme) {
+    if (THEMES.indexOf(theme) === -1) theme = 'matrix';
+    cfg.theme = theme;
+    if (document.body) document.body.setAttribute('data-theme', theme);
+    if (document.documentElement) document.documentElement.setAttribute('data-theme', theme);
+    safeSet(S_CFG, JSON.stringify(cfg));
+    toast('Thème: ' + (THEME_LABELS[theme] || theme));
+  }
+  function cycleTheme() {
+    var idx = THEMES.indexOf(cfg.theme || 'matrix');
+    idx = (idx + 1) % THEMES.length;
+    applyTheme(THEMES[idx]);
   }
 
   function initMotion() {
@@ -1201,6 +1363,118 @@ dialog::backdrop { background: rgba(0,0,0,.93); }
   }
 
   // MOD INTÉGRATION OPAT: callAI via backend /groq/chat (pas de clé JS)
+  // === PRO : streaming responses — le texte apparaît au fur et à mesure ===
+  function callAIStream(messages, maxTokens, onChunk) {
+    function once() {
+      var ctrl = new AbortController();
+      st.ctrl = ctrl;
+      var tid = setTimeout(function () { ctrl.abort(); }, 60000);
+      return fetch(GROQ + '/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'text/event-stream'
+        },
+        body: JSON.stringify({
+          model: cfg.model,
+          messages: messages,
+          max_tokens: clamp(maxTokens || cfg.maxTokens, 40, 900),
+          temperature: clamp(cfg.temp, 0, 0.8),
+          top_p: 0.95,
+          stream: true
+        }),
+        signal: ctrl.signal
+      }).then(function (r) {
+        clearTimeout(tid);
+        if (!r.ok) {
+          return r.text().then(function (t) {
+            var err = new Error(friendlyApiError(t, r.status));
+            err.status = r.status;
+            throw err;
+          });
+        }
+        // Lecture du flux SSE
+        var reader = r.body.getReader();
+        var decoder = new TextDecoder();
+        var fullText = '';
+        var buffer = '';
+        var sb = $('#streamBox');
+        var st_t = $('#streamText');
+        if (sb) sb.classList.add('active');
+
+        function pump() {
+          return reader.read().then(function (res) {
+            if (res.done) {
+              if (sb) sb.classList.remove('active');
+              return cleanSpeech(fullText);
+            }
+            buffer += decoder.decode(res.value, { stream: true });
+            var lines = buffer.split('\n');
+            buffer = lines.pop() || '';
+            for (var i = 0; i < lines.length; i++) {
+              var line = lines[i].trim();
+              if (!line || !line.startsWith('data:')) continue;
+              var data = line.substring(5).trim();
+              if (data === '[DONE]') continue;
+              try {
+                var chunk = JSON.parse(data);
+                var delta = chunk.choices && chunk.choices[0] && chunk.choices[0].delta && chunk.choices[0].delta.content;
+                if (delta) {
+                  fullText += delta;
+                  if (onChunk) onChunk(fullText, false);
+                  if (st_t) st_t.textContent = fullText.slice(-500);
+                }
+              } catch (e) {}
+            }
+            return pump();
+          });
+        }
+        return pump();
+      }).catch(function (e) {
+        clearTimeout(tid);
+        var sb = $('#streamBox');
+        if (sb) sb.classList.remove('active');
+        if (e.name === 'AbortError') throw new Error(friendlyApiError('Timeout'));
+        if (e.status) throw e;
+        throw new Error(friendlyApiError(e));
+      });
+    }
+    return once().catch(function (e1) {
+      if (e1.status === 401 || e1.status === 429) throw e1;
+      log('Retry stream 1…', 'info');
+      return delay(1200).then(once).catch(function (e2) {
+        if (e2.status === 401 || e2.status === 429) throw e2;
+        log('Retry stream 2…', 'info');
+        return delay(2500).then(once);
+      });
+    });
+  }
+
+  // === PRO : barge-in watcher — surveille le micro pendant TTS pour interrupt ===
+  var bargeInTimer = null;
+  function startBargeInWatcher() {
+    if (!cfg.bargeIn || !st.speaking) return;
+    if (bargeInTimer) clearInterval(bargeInTimer);
+    bargeInTimer = setInterval(function () {
+      if (!st.speaking) { clearInterval(bargeInTimer); bargeInTimer = null; return; }
+      var v = vol();
+      // Si le volume dépasse le seuil pendant > 150ms, on interrupt
+      if (v > cfg.sens + 3) {
+        if (!st._bargeAt || Date.now() - st._bargeAt > 100) {
+          st._bargeAt = Date.now();
+        } else if (Date.now() - st._bargeAt > 150) {
+          log('Barge-in détecté (vol=' + Math.round(v) + ')', 'info');
+          try { if (window.speechSynthesis) speechSynthesis.cancel(); } catch (e) {}
+          st.speaking = false;
+          clearInterval(bargeInTimer);
+          bargeInTimer = null;
+        }
+      } else {
+        st._bargeAt = 0;
+      }
+    }, 50);
+  }
+
   function callAI(messages, maxTokens) {
     function once() {
       var ctrl = new AbortController();
@@ -1348,6 +1622,7 @@ dialog::backdrop { background: rgba(0,0,0,.93); }
     if (isStop(text)) { hardStop('Stop'); return Promise.resolve(); }
     if (!hasKey()) { toast('Cle manquante', 'err'); openSettings(); return Promise.resolve(); }
     live('…', 'think');
+    sfx('think');
     addHist('user', text);
     var sys = systemPrompt();
     if (st.recentSays.length) sys += '\nEvite de recopier mot pour mot tes dernieres phrases.';
@@ -1358,7 +1633,12 @@ dialog::backdrop { background: rgba(0,0,0,.93); }
       if (looksLikeQuestion(text)) tokens = Math.max(tokens, 500);
       if (wantsExhaustive(text)) tokens = Math.min(900, Math.max(tokens, 750));
     }
-    return callAI(msgs, tokens).then(function (resp) {
+    // === PRO : streaming si activé ===
+    var aiCall = cfg.stream ? callAIStream(msgs, tokens, function (partial, done) {
+      // onChunk : affiche le texte partiel dans le live status
+      if (!done) live('⏳ ' + partial.slice(-48), 'think');
+    }) : callAI(msgs, tokens);
+    return aiCall.then(function (resp) {
       st.lat = Date.now() - t0;
       st.reqs++;
       var r = cleanSpeech(resp || '');
@@ -1369,11 +1649,18 @@ dialog::backdrop { background: rgba(0,0,0,.93); }
       addHist('assistant', r);
       log('Entendu: « ' + text + ' »', 'qa');
       log('Reponse: ' + r.slice(0, 400) + (r.length > 400 ? '…' : ''), 'qa');
-      return announce(r);
+      var sb = $('#streamBox');
+      if (sb) sb.classList.remove('active');
+      return announce(r).then(function () {
+        startBargeInWatcher();
+      });
     }).catch(function (e) {
       var msg = friendlyApiError(e, e.status);
       log('API: ' + msg, 'err');
       toast(msg, 'err');
+      sfx('error');
+      var sb = $('#streamBox');
+      if (sb) sb.classList.remove('active');
       return announce(msg);
     });
   }
@@ -1599,6 +1886,9 @@ dialog::backdrop { background: rgba(0,0,0,.93); }
     el.textContent = 'Vérification backend…';
     el.className = '';
     fetch(apiURL('/health')).then(function (r) { return r.json(); }).then(function (j) {
+      var dotBE = $('#dotBackend'); if (dotBE) dotBE.className = 'dot ok';
+      var dotG  = $('#dotGroq');   if (dotG)  dotG.className  = j.groq_key ? 'dot ok' : 'dot err';
+      var dotB  = $('#dotBot');    if (dotB)  dotB.className  = j.bot_reachable ? 'dot ok' : 'dot warn';
       var okG = !!j.groq_key;
       var okA = !!j.alerts_file;
       el.textContent = 'Backend OK · Groq ' + (okG ? 'OK' : 'MANQUANT') + ' · Genesis ' + (okA ? 'OK' : 'NA');
@@ -1848,6 +2138,19 @@ dialog::backdrop { background: rgba(0,0,0,.93); }
       }
       toast(OPAT.relayEnabled ? 'Relay auto ON' : 'Relay auto OFF');
     };
+    // === PRO : quick commands bindings ===
+    $('#qcStatus').onclick = function () { processUser('Donne-moi le status du serveur : CPU, RAM, alertes.'); };
+    $('#qcMenaces').onclick = function () { processUser('Quelles sont les menaces actives Genesis ?'); };
+    $('#qcBan').onclick   = function () { processUser('Quel est le dernier ban Genesis ? Donne IP et raison.'); };
+    $('#qcHeure').onclick = function () { processUser('Quelle heure est-il et quelle date ?'); };
+    $('#qcResume').onclick = function () { processUser('Donne-moi un rapport complet : systeme + menaces + alertes récentes.'); };
+    $('#qcStop').onclick   = function () { hardStop('Stop'); };
+    $('#qcTheme').onclick  = cycleTheme;
+    $('#qcHour').onclick   = function () {
+      cfg.hourlyChime = !cfg.hourlyChime;
+      safeSet(S_CFG, JSON.stringify(cfg));
+      toast('Horloge auto: ' + (cfg.hourlyChime ? 'ON' : 'OFF'));
+    };
     $('#send').onclick = function () {
       var el = $('#txt');
       var v = el.value;
@@ -1919,9 +2222,11 @@ dialog::backdrop { background: rgba(0,0,0,.93); }
       speechSynthesis.onvoiceschanged = function () { speechSynthesis.getVoices(); };
     }
     if ('ontouchstart' in window && $('#ptt')) $('#ptt').classList.add('show');
-    // MOD INTÉGRATION OPAT: démarrer le polling des alertes Genesis dès le boot
+    // === PRO : appliquer thème + démarrer polling adaptatif + hourly chime ===
+    applyTheme(cfg.theme || 'matrix');
     startAlertPolling();
-    log('Jarvis CREATEUR COMPLET pret · ' + stamp() + ' · OPAT bridge actif');
+    startHourlyChime();
+    log('Jarvis PRO v2 pret · ' + stamp() + ' · OPAT bridge + streaming + barge-in actifs');
   }
 
   if (document.readyState === 'loading') {
