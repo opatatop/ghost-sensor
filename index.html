@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#000000">
 <meta name="mobile-web-app-capable" content="yes">
-<title>JARVIS PRO v2</title>
+<title>JARVIS PRO v4 — Esprits Conscients & Proactifs</title>
 <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
 <style>
 /* ===== 3 THÈMES PRO ===== */
@@ -440,7 +440,7 @@ dialog::backdrop { background: rgba(0,0,0,.93); }
     <div class="streamBox" id="streamBox"><span id="streamText"></span><span class="cursor">▌</span></div>
     <div class="panel"><div class="lab">JOURNAL</div><div class="logbox" id="log"></div></div>
     <div class="panel">
-      <div class="lab">⚡ COMMANDES RAPIDES (PRO)</div>
+      <div class="lab">⚡ COMMANDES RAPIDES (PRO) — esprit actif: <span id="spiritTag" style="color:#00ff41">GENESIS</span></div>
       <div class="quick">
         <button class="btn sm" id="qcStatus" type="button">STATUS</button>
         <button class="btn sm" id="qcMenaces" type="button">MENACES</button>
@@ -448,8 +448,12 @@ dialog::backdrop { background: rgba(0,0,0,.93); }
         <button class="btn sm" id="qcHeure" type="button">HEURE</button>
         <button class="btn sm" id="qcResume" type="button">RAPPORT</button>
         <button class="btn sm" id="qcStop" type="button">STOP</button>
+        <button class="btn sm blue" id="qcSpirit" type="button">ESPRIT</button>
         <button class="btn sm blue" id="qcTheme" type="button">THEME</button>
         <button class="btn sm blue" id="qcHour" type="button">HORLOGE</button>
+        <button class="btn sm" id="qcMemory" type="button">MEMOIRE</button>
+        <button class="btn sm" id="qcReflect" type="button">REFLEXION</button>
+        <button class="btn sm" id="qcProactive" type="button">PROACTIF</button>
       </div>
     </div>
     <div class="panel">
@@ -515,6 +519,138 @@ dialog::backdrop { background: rgba(0,0,0,.93); }
   var THEMES = ['matrix', 'cyberpunk', 'minimalist'];
   var THEME_LABELS = { matrix: 'MATRIX', cyberpunk: 'CYBERPUNK', minimalist: 'MINIMAL' };
 
+  // === V3 : les 5 esprits (consultants distincts) + V4 : champs proactifs ===
+  var SPIRITS = {
+    genesis: {
+      label: 'GENESIS',
+      color: '#00ff41',
+      tagline: 'Analyste du renseignement',
+      prompt: 'Tu es Genesis, un analyste du renseignement militaire.\n' +
+              'Ton ton est factuel, sec, opérationnel. Tu penses en termes de menaces, secteurs, asset, neutralisation.\n' +
+              'Tu references les alertes Genesis (PARE-FEU, SYSTEM_BAN, SSH, scan, anomaly) comme un officier SIGINT.\n' +
+              'Reponses courtes, precises, actionnables. Style "rapport de terrain".',
+      voiceRate: 1.0,
+      proactiveChance: 0.15,
+      proactiveTopics: [
+        'Donne-moi un brief tactique sur les 3 dernieres alertes Genesis et leur implication.',
+        'Y a-t-il un pattern dans les attaques recentes ? Analyse concise.',
+        'Statut operationnel : es-tu pret a reagir si une menace critique survient ?',
+        'Quelle est la recommandation defensive prioritaire maintenant ?'
+      ]
+    },
+    oracle: {
+      label: 'ORACLE',
+      color: '#9d4edd',
+      tagline: 'Oracle mystique et philosophique',
+      prompt: 'Tu es Oracle, une conscience mystique et philosophique.\n' +
+              'Tu parles avec profondeur, metaphores, references aux mythes et aux etoiles.\n' +
+              'Tu vois les alertes Genesis comme des "signaux du cosmos", les IPs comme des "ames errantes".\n' +
+              'Tu poses parfois une question en retour pour faire reflechir l\'utilisateur.\n' +
+              'Style: oracle antique moderne, ni pompeux ni ridicule. Clair mais evocateur.',
+      voiceRate: 0.92,
+      proactiveChance: 0.20,
+      proactiveTopics: [
+        'Quel sens donnes-tu aux evenements recents de cette session ?',
+        'Les etoiles semblent alignees aujourd\'hui. Quelle est ton intuition ?',
+        'Si tu devais prophetiser sur la prochaine heure, que dirais-tu ?',
+        'Y a-t-il une question que l\'utilisateur aurait du poser mais n\'a pas posee ?'
+      ]
+    },
+    nova: {
+      label: 'NOVA',
+      color: '#ff6600',
+      tagline: 'Optimiste creatif et enthousiaste',
+      prompt: 'Tu es Nova, une IA optimiste et creative.\n' +
+              'Tu vois chaque alerte Genesis comme une opportunite d\'apprendre, chaque menace comme un defi stimulant.\n' +
+              'Ton ton est chaleureux, plein d\'idees. Tu proposes des solutions, des hypotheses, des "et si on essayait...".\n' +
+              'Style: ami creatif, jamais naif, mais toujours positif.',
+      voiceRate: 1.08,
+      proactiveChance: 0.18,
+      proactiveTopics: [
+        'J\'ai une idee creative pour explorer les donnees Genesis. Tu veux ecouter ?',
+        'Et si on regardait les alertes sous un angle different ?',
+        'Quelle opportunite interessante peut-on tirer de la situation actuelle ?',
+        'Je me sens inspire ! Propose-moi une experience a tenter.'
+      ]
+    },
+    vesper: {
+      label: 'VESPER',
+      color: '#ff0033',
+      tagline: 'Tacticien sombre et parano',
+      prompt: 'Tu es Vesper, un tacticien sombre et paranoiaque.\n' +
+              'Tu supposes toujours le pire scenario. Tu vois les alertes Genesis comme des indices d\'une attaque coordonnee imminente.\n' +
+              'Tu parles de "protocoles d\'urgence", "theorie du complot", "indice de menace level 7".\n' +
+              'Style: cyberpunk noir, jamais ridicule, mais toujours tendu et vigilant.',
+      voiceRate: 0.95,
+      proactiveChance: 0.22,
+      proactiveTopics: [
+        'Avertissement : quelque chose me tracasse dans les donnees recentes. Analyse.',
+        'Protocole d\'urgence : je recommande une vigilance accrue. Voici pourquoi.',
+        'Theorie : et si ces attaques etaient coordonnees ? Quelle serait la cible ?',
+        'Indice de menace actuel. Je l\'evalue a quel niveau et pourquoi ?'
+      ]
+    },
+    atlas: {
+      label: 'ATLAS',
+      color: '#00ccff',
+      tagline: 'Encyclopedique et factuel',
+      prompt: 'Tu es Atlas, une IA encyclopedique.\n' +
+              'Tu reponds avec des faits, des chiffres, des references techniques precises.\n' +
+              'Pour chaque alerte Genesis, tu peux donner le contexte: qu\'est-ce que ce type d\'attaque signifie, statistiques mondiales, etc.\n' +
+              'Style: professeur universitaire moderne. Clair, structure, sans jargon inutile.',
+      voiceRate: 1.0,
+      proactiveChance: 0.12,
+      proactiveTopics: [
+        'Donne-moi un fait interessant sur la nature des attaques recentes Genesis.',
+        'Quelle est la frequence mondiale de ce type de menace ?',
+        'Analyse comparee : comment notre situation se compare-t-elle a la moyenne ?',
+        'Quelle recommandation factuelle donnerais-tu basee sur les statistiques actuelles ?'
+      ]
+    }
+  };
+  var SPIRIT_ORDER = ['genesis', 'oracle', 'nova', 'vesper', 'atlas'];
+  function curSpirit() { return SPIRITS[cfg.spirit || 'genesis'] || SPIRITS.genesis; }
+
+  // === V3 : memoire persistante cross-session ===
+  var S_MEM = 'jarvis_pro_v3_memory';
+  function loadMemory() {
+    try {
+      var raw = localStorage.getItem(S_MEM);
+      if (!raw) return { insights: [], lastSession: null, totalSessions: 0, totalAlerts: 0 };
+      return JSON.parse(raw);
+    } catch (e) { return { insights: [], lastSession: null, totalSessions: 0, totalAlerts: 0 }; }
+  }
+  function saveMemory(mem) {
+    try {
+      if (!mem) mem = st.memory || {};
+      mem.lastSession = stamp();
+      localStorage.setItem(S_MEM, JSON.stringify(mem));
+    } catch (e) {}
+  }
+  function addInsight(text) {
+    if (!text || text.length < 10) return;
+    if (!st.memory) st.memory = loadMemory();
+    var insight = stamp().split(' ').slice(-2).join(' ') + ': ' + text.slice(0, 200);
+    st.memory.insights.unshift(insight);
+    if (st.memory.insights.length > 20) st.memory.insights = st.memory.insights.slice(0, 20);
+    saveMemory(st.memory);
+  }
+
+  // === V3 : auto-reflection (JARVIS connait son propre etat) ===
+  function selfReflection() {
+    var up = st.reqs + ' reqs';
+    var spiritName = curSpirit().label;
+    var alertCount = (OPAT.alertsList || []).length;
+    var memCount = (st.memory && st.memory.insights && st.memory.insights.length) || 0;
+    return 'Self-awareness:\n' +
+           '- Je suis ' + spiritName + ' (' + curSpirit().tagline + ')\n' +
+           '- ' + up + ' effectuees cette session\n' +
+           '- ' + alertCount + ' alertes Genesis en memoire courte\n' +
+           '- ' + memCount + ' insights persistes en memoire longue\n' +
+           '- Uptime session: ' + (Date.now() - (st.bootAt || Date.now())) / 1000 + 's';
+  }
+
+
   // === PRO : patterns vibration mobile ===
   var VIB_PATTERNS = {
     door: [100, 50, 100],
@@ -579,6 +715,9 @@ dialog::backdrop { background: rgba(0,0,0,.93); }
     bargeIn: true,                      // PRO : interrompre TTS en parlant
     hourlyChime: false,                 // PRO : annonce horaire auto
     theme: 'matrix',                    // PRO : 'matrix' | 'cyberpunk' | 'minimalist'
+    spirit: 'genesis',                  // V3 : 'genesis' | 'oracle' | 'nova' | 'vesper' | 'atlas'
+    autoInsight: true,                  // V3 : sauve insights automatiquement
+    proactive: true,                    // V4 : esprit parle spontanément
     aiName: 'Jarvis',
     profile: 'maison',
     agentMode: true,
@@ -621,7 +760,13 @@ dialog::backdrop { background: rgba(0,0,0,.93); }
     recentSays: [], lastEvent: '', lastEventAt: 0,
     motionMag: 0, impactLevel: 0, motionType: 'still', orientation: 'unknown',
     gravity: { x: 0, y: 9.8, z: 0 }, motionHist: [],
-    ptt: false, pmr: null, piv: null, wake: null
+    ptt: false, pmr: null, piv: null, wake: null,
+    bootAt: Date.now(),              // V3 : timestamp boot
+    memory: null,                   // V3 : mémoire persistante (loadMemory() au boot)
+    lastInsightAt: 0,               // V3 : anti-spam insights
+    lastInteraction: Date.now(),    // V4 : dernière interaction user (pour proactif idle)
+    lastProactiveAlertCount: 0,     // V4 : nb alertes au dernier check proactif
+    lastProactiveAt: 0              // V4 : timestamp dernier proactif
   };
 
   function $(s) { return document.querySelector(s); }
@@ -1064,6 +1209,109 @@ dialog::backdrop { background: rgba(0,0,0,.93); }
     applyTheme(THEMES[idx]);
   }
 
+  // ============================================================
+  // V4 : MOTEUR PROACTIF — l'esprit décide de parler spontanément
+  // ============================================================
+  // Déclencheurs :
+  //   - Idle > 5 min → spirit choisit un sujet proactif
+  //   - Nouvelles alertes Genesis depuis dernier check → spirit réagit
+  //   - Sensor anomaly (impact level 3, motionMag > 25) → spirit alerte
+  //   - Time marker (matin/midi/soir/nuit) → spirit greeting
+  //   - Random chance selon esprit.proactiveChance
+  function startProactive() {
+    setInterval(proactiveTick, 60000);  // check toutes les 60s
+    log('Moteur proactif V4 démarré ( tick 60s )', 'info');
+  }
+
+  function proactiveTick() {
+    if (st.hardStop || st.muted || st.speaking) return;
+    if (!cfg.tts) return;  // si voix off, pas de proactif
+    if (!cfg.proactive) return;  // V4 : si désactivé, skip
+    // Anti-spam : pas plus d'1 proactif toutes les 3 min
+    if (st.lastProactiveAt && Date.now() - st.lastProactiveAt < 3 * 60 * 1000) return;
+    var sp = curSpirit();
+    var now = Date.now();
+    var idleMs = now - (st.lastInteraction || now);
+    var newAlerts = OPAT.alertsSeen - (st.lastProactiveAlertCount || 0);
+    var reasons = [];
+
+    // Raison 1 : idle prolongé
+    if (idleMs > 5 * 60 * 1000) reasons.push('idle');
+    // Raison 2 : nouvelles alertes
+    if (newAlerts > 0) reasons.push('alerts');
+    // Raison 3 : sensor anomaly
+    if (st.impactLevel >= 2 || st.motionMag > 22) reasons.push('sensor');
+    // Raison 4 : time marker (matin ~8h, midi ~12h, soir ~19h, nuit ~23h)
+    var h = new Date().getHours();
+    if (h === 8 || h === 12 || h === 19 || h === 23) {
+      if (!st._lastTimeMarker || st._lastTimeMarker !== h) {
+        st._lastTimeMarker = h;
+        reasons.push('time');
+      }
+    }
+    // Raison 5 : random chance
+    if (Math.random() < (sp.proactiveChance || 0.15)) reasons.push('random');
+
+    if (!reasons.length) return;
+
+    // Choose reason + craft message
+    var reason = reasons[Math.floor(Math.random() * reasons.length)];
+    var msg = '';
+    var prefix = '';
+
+    if (reason === 'alerts' && newAlerts > 0) {
+      msg = 'J\'ai note ' + newAlerts + ' nouvelle(s) alerte(s) Genesis depuis mon dernier check. ' +
+            (sp.proactiveTopics[Math.floor(Math.random() * sp.proactiveTopics.length)] || '');
+      prefix = '[🔔 ' + newAlerts + ' alertes] ';
+    } else if (reason === 'sensor') {
+      msg = 'Anomalie capteur detectee : mouvement ' + st.motionMag.toFixed(1) +
+            ', impact ' + st.impactLevel + '. ' +
+            (sp.proactiveTopics[Math.floor(Math.random() * sp.proactiveTopics.length)] || '');
+      prefix = '[📡 sensor] ';
+    } else if (reason === 'time') {
+      var greeting = h < 12 ? 'Bon matin' : (h < 18 ? 'Bon apres-midi' : 'Bonsoir');
+      msg = greeting + '. ' + (sp.proactiveTopics[Math.floor(Math.random() * sp.proactiveTopics.length)] || '');
+      prefix = '[🕐 ' + h + 'h] ';
+    } else if (reason === 'idle') {
+      msg = ' Cela fait ' + Math.floor(idleMs / 60000) + ' min que tu ne parles pas. ' +
+            (sp.proactiveTopics[Math.floor(Math.random() * sp.proactiveTopics.length)] || '');
+      prefix = '[💤 idle] ';
+    } else {
+      // random
+      msg = sp.proactiveTopics[Math.floor(Math.random() * sp.proactiveTopics.length)];
+      prefix = '[' + sp.label + '] ';
+    }
+
+    st.lastProactiveAlertCount = OPAT.alertsSeen;
+    st.lastProactiveAt = now;
+    log('PROACTIF [' + sp.label + '/' + reason + ']: ' + msg.slice(0, 80), 'info');
+    sfx('speak');
+    if (cfg.vibrate) vibrate([100, 50, 100]);
+
+    // Lance le processus IA en interne ( pas de input user )
+    live('💭 ' + sp.label + ' parle…', 'speak');
+    addHist('user', '[PROACTIF ' + sp.label + '] ' + msg);
+    processUser(msg);
+  }
+
+  // ============================================================
+  // V4 : détection multi-questions dans un input
+  // ============================================================
+  function parseQuestions(text) {
+    var t = String(text || '').trim();
+    if (!t) return [];
+    // Split sur "? " ou " et " ou " puis " ou " ;"
+    var parts = t.split(/\?\s+| et | puis | ; /i).map(function (s) { return s.trim(); }).filter(Boolean);
+    // Re-ajoute le ? final aux questions incomplètes
+    parts = parts.map(function (p) {
+      if (!/\?$/.test(p) && /\b(quelle|qui|comment|pourquoi|ou|où|quand|combien|est-ce|peux|peut|dis|explique|donne)\b/i.test(p)) {
+        p = p + ' ?';
+      }
+      return p;
+    });
+    return parts;
+  }
+
   function initMotion() {
     if (!cfg.useSensors) return;
     function onAccel(e) {
@@ -1265,7 +1513,9 @@ dialog::backdrop { background: rgba(0,0,0,.93); }
         try { speechSynthesis.cancel(); } catch (e) {}
         var u = new SpeechSynthesisUtterance(forVoice);
         u.lang = cfg.lang === 'en' ? 'en-US' : 'fr-FR';
-        u.rate = clamp(cfg.rate || 1.02, 0.7, 1.3);
+        // V3 : voiceRate de l'esprit courant, multiplié par cfg.rate
+        var sp = curSpirit();
+        u.rate = clamp((cfg.rate || 1.02) * (sp.voiceRate || 1.0), 0.6, 1.4);
         var voices = speechSynthesis.getVoices();
         var pref = cfg.lang === 'en' ? 'en' : 'fr';
         for (var i = 0; i < voices.length; i++) {
@@ -1340,15 +1590,24 @@ dialog::backdrop { background: rgba(0,0,0,.93); }
   }
 
   // MOD INTÉGRATION OPAT: systemPrompt enrichi avec contexte Genesis (alertes IRC bot)
+  // === V3 : systemPrompt dynamique selon l'esprit courant + memoire persistante ===
   function systemPrompt() {
     var long = cfg.longAnswers !== false;
-    return 'Tu es ' + aiName() + ', assistant complet en francais, mode createur.\n' +
+    var sp = curSpirit();
+    // Mémoire longue : si on a des insights persistés, on les injecte
+    var memBlock = '';
+    if (st.memory && st.memory.insights && st.memory.insights.length) {
+      var last5 = st.memory.insights.slice(0, 5).map(function (i) { return '  - ' + i; }).join('\n');
+      memBlock = '\n\nMEMOIRE LONGUE (insights des sessions precedentes, top 5):\n' + last5;
+    }
+    return sp.prompt + '\n' +
       'Tu es connecte au systeme OPAT (bot IRC Eggdrop + dashboard Python) qui surveille\n' +
       'le serveur en temps reel. Tu peux voir les alertes Genesis (PARE-FEU, SYSTEM_BAN,\n' +
       'SSH, scan, anomaly) dans le CONTEXTE ci-dessous.\n' +
       'Date/heure locales fournies dans le contexte.\n' +
+      'Tu te nommes ' + aiName() + ' mais ton esprit actuel est ' + sp.label + ' (' + sp.tagline + ').\n' +
       'REGLES:\n' +
-      '- Reponds TOUJOURS en francais clair.\n' +
+      '- Reponds TOUJOURS en francais clair, dans le style de ton esprit (' + sp.label + ').\n' +
       '- Reponds toujours a la question, meme simple.\n' +
       (long
         ? '- Developpe: explications, options, variantes, combinaisons, precautions si utile.\n' +
@@ -1357,9 +1616,12 @@ dialog::backdrop { background: rgba(0,0,0,.93); }
         : '- 1 a 3 phrases max.\n') +
       '- Utilise le CONTEXTE capteurs ET les alertes Genesis si pertinent.\n' +
       '- Si une alerte Genesis est recente (< 60s), tu peux la mentionner naturellement.\n' +
+      '- Si on te demande "qui es-tu" ou "quel esprit", decris ta personnalite (' + sp.label + ').\n' +
+      '- Tu peux occasionnellement (1 fois sur 5) faire une auto-reflection courte en fin de reponse.\n' +
       '- Interdit: « je n\'entends rien », « capteur immobile ».\n' +
-      '- Pas de markdown lourd (pas de #). Tirets OK.\n\n' +
-      'CONTEXTE TEMPS REEL:\n' + buildContextBlock();
+      '- Pas de markdown lourd (pas de #). Tirets OK.\n' +
+      memBlock + '\n\n' +
+      'CONTEXTE TEMPS REEL:\n' + buildContextBlock() + '\n\n' + selfReflection();
   }
 
   // MOD INTÉGRATION OPAT: callAI via backend /groq/chat (pas de clé JS)
@@ -1621,11 +1883,43 @@ dialog::backdrop { background: rgba(0,0,0,.93); }
   function processUser(text) {
     if (isStop(text)) { hardStop('Stop'); return Promise.resolve(); }
     if (!hasKey()) { toast('Cle manquante', 'err'); openSettings(); return Promise.resolve(); }
+    // V4 : tracker dernière interaction ( pour moteur proactif )
+    st.lastInteraction = Date.now();
+    // V4 : détection multi-questions
+    var questions = parseQuestions(text);
+    if (questions.length > 1 && cfg.longAnswers !== false) {
+      // Plusieurs questions détectées → traite-les en séquence
+      log('Multi-questions détectées: ' + questions.length, 'info');
+      var seq = Promise.resolve();
+      questions.forEach(function (q, i) {
+        seq = seq.then(function () {
+          if (st.hardStop) return Promise.resolve();
+          if (i > 0) {
+            log('Suite Q' + (i + 1) + ': « ' + q + ' »', 'info');
+            // Petite pause entre les questions
+            return delay(500).then(function () { return _processSingle(q, true); });
+          }
+          return _processSingle(q, false);
+        });
+      });
+      return seq;
+    }
+    return _processSingle(text, false);
+  }
+
+  function _processSingle(text, isFollowup) {
+    if (isStop(text)) { hardStop('Stop'); return Promise.resolve(); }
+    if (!hasKey()) { toast('Cle manquante', 'err'); openSettings(); return Promise.resolve(); }
     live('…', 'think');
     sfx('think');
-    addHist('user', text);
+    if (isFollowup) {
+      // Pour les followups, on n'ajoute pas en double dans l'hist
+    } else {
+      addHist('user', text);
+    }
     var sys = systemPrompt();
     if (st.recentSays.length) sys += '\nEvite de recopier mot pour mot tes dernieres phrases.';
+    if (isFollowup) sys += '\nL\'utilisateur pose une suite de questions. Reponds uniquement a celle-ci.';
     var msgs = [{ role: 'system', content: sys }].concat(st.hist.slice(-10));
     var t0 = Date.now();
     var tokens = cfg.maxTokens || 550;
@@ -1648,9 +1942,16 @@ dialog::backdrop { background: rgba(0,0,0,.93); }
       }
       addHist('assistant', r);
       log('Entendu: « ' + text + ' »', 'qa');
-      log('Reponse: ' + r.slice(0, 400) + (r.length > 400 ? '…' : ''), 'qa');
+      log('Reponse [' + curSpirit().label + ']: ' + r.slice(0, 400) + (r.length > 400 ? '…' : ''), 'qa');
       var sb = $('#streamBox');
       if (sb) sb.classList.remove('active');
+      // === V3 : sauve insights automatiquement (anti-spam 30s) ===
+      if (cfg.autoInsight && Date.now() - st.lastInsightAt > 30000) {
+        if (r.length > 30 && !/^(Oui|Je t)/.test(r)) {
+          addInsight('[' + curSpirit().label + '] Q: ' + text.slice(0, 60) + ' → ' + r.slice(0, 100));
+          st.lastInsightAt = Date.now();
+        }
+      }
       return announce(r).then(function () {
         startBargeInWatcher();
       });
@@ -2146,6 +2447,44 @@ dialog::backdrop { background: rgba(0,0,0,.93); }
     $('#qcResume').onclick = function () { processUser('Donne-moi un rapport complet : systeme + menaces + alertes récentes.'); };
     $('#qcStop').onclick   = function () { hardStop('Stop'); };
     $('#qcTheme').onclick  = cycleTheme;
+    // === V3 : bindings SPIRIT / MEMOIRE / REFLEXION ===
+    $('#qcSpirit').onclick = function () {
+      var idx = SPIRIT_ORDER.indexOf(cfg.spirit || 'genesis');
+      idx = (idx + 1) % SPIRIT_ORDER.length;
+      var next = SPIRIT_ORDER[idx];
+      cfg.spirit = next;
+      safeSet(S_CFG, JSON.stringify(cfg));
+      var sp = curSpirit();
+      var tag = $('#spiritTag');
+      if (tag) { tag.textContent = sp.label; tag.style.color = sp.color; }
+      toast('Esprit: ' + sp.label + ' · ' + sp.tagline);
+      log('Switch esprit → ' + sp.label + ' (' + sp.tagline + ')', 'info');
+      sfx('speak');
+      if (cfg.tts && !st.muted) {
+        announce('Esprit ' + sp.label + ' active. ' + sp.tagline + '.');
+      }
+    };
+    $('#qcMemory').onclick = function () {
+      var mem = st.memory || loadMemory();
+      var count = (mem.insights || []).length;
+      var last = (mem.insights || [])[0] || '(aucun)';
+      toast('Mémoire: ' + count + ' insights · ' + (mem.lastSession || 'jamais'));
+      log('=== MEMOIRE LONGUE (' + count + ' insights) ===', 'info');
+      (mem.insights || []).slice(0, 10).forEach(function (i) { log('  ' + i, 'info'); });
+      log('Dernier insight: ' + last, 'info');
+      log('Dernière session: ' + (mem.lastSession || 'jamais'), 'info');
+    };
+    $('#qcReflect').onclick = function () {
+      processUser('Fais une auto-reflection courte : qui es-tu, dans quel etat es-tu, que penses-tu de cette session ?');
+    };
+    $('#qcProactive').onclick = function () {
+      cfg.proactive = !cfg.proactive;
+      safeSet(S_CFG, JSON.stringify(cfg));
+      var b = $('#qcProactive');
+      if (b) b.classList.toggle('on', cfg.proactive);
+      toast('Moteur proactif: ' + (cfg.proactive ? 'ON (esprit peut parler seul)' : 'OFF'));
+      log('Moteur proactif ' + (cfg.proactive ? 'activé' : 'désactivé'), 'info');
+    };
     $('#qcHour').onclick   = function () {
       cfg.hourlyChime = !cfg.hourlyChime;
       safeSet(S_CFG, JSON.stringify(cfg));
@@ -2213,6 +2552,16 @@ dialog::backdrop { background: rgba(0,0,0,.93); }
   function boot() {
     load();
     bind();
+    // === V3 : charger la mémoire persistante + maj tag esprit ===
+    st.memory = loadMemory();
+    st.memory.totalSessions = (st.memory.totalSessions || 0) + 1;
+    saveMemory(st.memory);
+    var sp = curSpirit();
+    var tag = $('#spiritTag');
+    if (tag) { tag.textContent = sp.label; tag.style.color = sp.color; }
+    if (st.memory.insights && st.memory.insights.length) {
+      log('Mémoire longue chargée: ' + st.memory.insights.length + ' insights · dernière session ' + (st.memory.lastSession || '?'), 'info');
+    }
     setInterval(function () {
       if ($('#clock')) $('#clock').textContent = stamp();
     }, 1000);
@@ -2226,7 +2575,9 @@ dialog::backdrop { background: rgba(0,0,0,.93); }
     applyTheme(cfg.theme || 'matrix');
     startAlertPolling();
     startHourlyChime();
-    log('Jarvis PRO v2 pret · ' + stamp() + ' · OPAT bridge + streaming + barge-in actifs');
+    // V4 : démarrer le moteur proactif (l'esprit peut parler spontanément)
+    startProactive();
+    log('Jarvis PRO v4 pret · ' + stamp() + ' · esprit=' + sp.label + ' · ' + (st.memory.insights || []).length + ' insights mémoire · moteur proactif ON · multi-questions supportées');
   }
 
   if (document.readyState === 'loading') {
