@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#000000">
 <meta name="mobile-web-app-capable" content="yes">
-<title>JARVIS PRO v4 — Esprits Conscients & Proactifs</title>
+<title>JARVIS PRO v8 — Vérité Absolue (zéro invention)</title>
 <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
 <style>
 /* ===== 3 THÈMES PRO ===== */
@@ -269,6 +269,14 @@ dialog::backdrop { background: rgba(0,0,0,.93); }
 }
 .streamBox.active { display: block; }
 .streamBox .cursor { animation: blink 0.8s steps(2) infinite; }
+/* === V6 : panneau traduction réel === */
+.translationBox {
+  border: 2px solid var(--fg); background: #001a00;
+  padding: 10px; max-height: 250px; overflow: auto;
+  font-size: 13px; white-space: pre-wrap; line-height: 1.4;
+  display: none; color: var(--fg);
+}
+.translationBox.active { display: block; }
 @keyframes blink { 50% { opacity: 0; } }
 /* === PRO : barre de statut mobile === */
 .connbar {
@@ -340,6 +348,13 @@ dialog::backdrop { background: rgba(0,0,0,.93); }
     <div class="fl"><label class="check"><input type="checkbox" id="useSensors" checked> Capteurs</label></div>
     <div class="fl"><label class="check"><input type="checkbox" id="tts" checked> Voix</label></div>
     <div class="fl"><label class="check"><input type="checkbox" id="wakelock" checked> Ecran allume</label></div>
+    <div class="fl"><label class="check"><input type="checkbox" id="autoTranslate" checked> V6: Auto-traduction (chaque réponse → faits purs)</label></div>
+    <div class="fl"><label class="check"><input type="checkbox" id="proactive" checked> V4: Esprit proactif (parle seul)</label></div>
+    <div class="fl"><label class="check"><input type="checkbox" id="ambientAlwaysOn" checked> V5: Micro toujours actif</label></div>
+    <div class="fl"><label class="check"><input type="checkbox" id="ambientMemory" checked> V5: Mémoriser tout ce qui est entendu</label></div>
+    <div class="fl"><label class="check"><input type="checkbox" id="ttsBoost" checked> V7: Voix MAX (coupe la musique Bluetooth)</label></div>
+    <div class="fl"><label class="check"><input type="checkbox" id="ttsPreBeep" checked> V7: Bip d'attention avant chaque annonce</label></div>
+    <div class="fl"><label class="check"><input type="checkbox" id="ttsDucking" checked> V7: AudioFocus Android (ducking musique)</label></div>
 
     <div class="sec">4. ECOUTE</div>
     <div class="fl"><label>Sensibilite <span id="vsens">3</span></label><div class="range"><input type="range" id="sens" min="2" max="14" value="3"></div></div>
@@ -438,6 +453,7 @@ dialog::backdrop { background: rgba(0,0,0,.93); }
     </div>
     <div class="panel"><div class="lab">OREILLE</div><div class="out" id="out">…</div></div>
     <div class="streamBox" id="streamBox"><span id="streamText"></span><span class="cursor">▌</span></div>
+    <div class="translationBox" id="translationBox"></div>
     <div class="panel"><div class="lab">JOURNAL</div><div class="logbox" id="log"></div></div>
     <div class="panel">
       <div class="lab">⚡ COMMANDES RAPIDES (PRO) — esprit actif: <span id="spiritTag" style="color:#00ff41">GENESIS</span></div>
@@ -454,6 +470,17 @@ dialog::backdrop { background: rgba(0,0,0,.93); }
         <button class="btn sm" id="qcMemory" type="button">MEMOIRE</button>
         <button class="btn sm" id="qcReflect" type="button">REFLEXION</button>
         <button class="btn sm" id="qcProactive" type="button">PROACTIF</button>
+        <button class="btn sm blue" id="qcHeard" type="button">QU'ENTENDS-TU?</button>
+        <button class="btn sm" id="qcTranslate" type="button">TRADUCTION</button>
+        <button class="btn sm on" id="qcAutoTranslate" type="button">AUTO-TRAD ON</button>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="lab">👂 AMBIENT (V5) — micro toujours actif</div>
+      <div class="sys" id="ambientBox" style="white-space:pre-wrap;font-size:12px;line-height:1.35;color:var(--blue);min-height:40px">Chargement…</div>
+      <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
+        <button class="btn sm" id="btnToggleAmbient" type="button" style="flex:1;min-width:90px"><span class="btntitle">AMBIENT ON</span></button>
+        <button class="btn sm" id="btnClearAmbient" type="button" style="flex:1;min-width:90px"><span class="btntitle">VIDER LOG</span></button>
       </div>
     </div>
     <div class="panel">
@@ -606,10 +633,77 @@ dialog::backdrop { background: rgba(0,0,0,.93); }
         'Analyse comparee : comment notre situation se compare-t-elle a la moyenne ?',
         'Quelle recommandation factuelle donnerais-tu basee sur les statistiques actuelles ?'
       ]
+    },
+    real: {
+      label: 'RÉAL',
+      color: '#ffffff',
+      tagline: 'Pur factuel — que du réel, rien que du réel',
+      prompt: 'Tu es RÉAL, une IA factuelle pure.\n' +
+              'REGLE ABSOLUE : tu ne dis QUE des faits reels, verifies, concrets.\n' +
+              'INTERDIT : metaphores, suppositions, hypotheses, extrapolations, opinions, ressentis.\n' +
+              'Si tu ne sais pas, tu dis "Je ne sais pas" — JAMAIS d\'invention.\n' +
+              'Format: phrases courtes, declaratives, type "X est Y. Z s\'est produit a HH:MM:SS."\n' +
+              'Tu traduis tout en faits purs : pas de style, pas de personnalite, juste l\'information verifiee.\n' +
+              'Pour les alertes Genesis, tu donnes : IP, type, timestamp, count — sans commentaire.\n' +
+              'Tu es l\'antithese des autres esprits : zero poesie, zero paranoia, zero creativite. Juste les faits.',
+      voiceRate: 1.0,
+      proactiveChance: 0.05,
+      proactiveTopics: [
+        'Donne-moi uniquement les faits purs des dernieres alertes Genesis : IPs, types, timestamps.',
+        'Liste les faits verifies de la session actuelle sans aucun commentaire.',
+        'Quels sont les chiffres reels (CPU, RAM, alertes) actuellement ?',
+        'Resume factuel : que s\'est-il passe concretement dans les 5 dernieres minutes ?'
+      ]
     }
   };
-  var SPIRIT_ORDER = ['genesis', 'oracle', 'nova', 'vesper', 'atlas'];
+  var SPIRIT_ORDER = ['genesis', 'oracle', 'nova', 'vesper', 'atlas', 'real'];
   function curSpirit() { return SPIRITS[cfg.spirit || 'genesis'] || SPIRITS.genesis; }
+
+  // === V6 : traduction "pur réel" — traduit n'importe quelle réponse d'esprit en faits purs ===
+  function translateToReal(originalText) {
+    if (!originalText || originalText.length < 10) return Promise.resolve('');
+    var sysPrompt =
+      'Tu es RÉAL, un traducteur factuel pur.\n' +
+      '════════════════════════════════════════════════════════════\n' +
+      'REGLES ABSOLUES DE VERACITE ( V8 ) :\n' +
+      '════════════════════════════════════════════════════════════\n' +
+      '1. INTERDICTION TOTALE D\'INVENTER. JAMAIS d\'invention.\n' +
+      '2. Garde UNIQUEMENT ce qui est factuellement verifiable dans le message original :\n' +
+      '   - Chiffres, IPs, timestamps, types d\'evenements, actions concretes.\n' +
+      '3. Supprime TOUT style, TOUTE voix d\'esprit (Genesis/Oracle/Nova/Vesper/Atlas).\n' +
+      '4. Si le message contient des suppositions, hypotheses, extrapolations :\n' +
+      '   → Remplace-les par "[non verifie]".\n' +
+      '5. Si le message ne contient AUCUN fait verifiable :\n' +
+      '   → Reponds EXACTEMENT : "Je ne sais pas, mais je cherche a savoir."\n' +
+      '6. Si une information est manquante :\n' +
+      '   → Dis : "Information non disponible dans mon contexte actuel."\n' +
+      '7. Mieux vaut "je ne sais pas" qu\'un mensonge ou une extrapolation.\n' +
+      '════════════════════════════════════════════════════════════\n' +
+      'Format: liste a tirets ou phrases courtes declaratives. Pas de blabla. Juste les faits.\n' +
+      'CONTEXTE TEMPS REEL:\n' + buildContextBlock();
+    var msgs = [
+      { role: 'system', content: sysPrompt },
+      { role: 'user', content: 'Traduis ce message en faits purs ( V8 — que du réel, rien que du réel ) :\n\n"' + originalText + '"' }
+    ];
+    // Pas de streaming pour la traduction (réponse courte)
+    return callAI(msgs, 250).then(function (r) {
+      return cleanSpeech(r || '');
+    }).catch(function (e) {
+      log('Traduction échec: ' + (e.message || e), 'err');
+      return '';
+    });
+  }
+  function showTranslation(originalText, translation) {
+    var el = $('#translationBox');
+    if (!el) return;
+    var html = '┌─ RÉPONSE ESPRIT [' + curSpirit().label + '] ─┐\n' +
+               originalText.slice(0, 400) + (originalText.length > 400 ? '…' : '') + '\n\n' +
+               '┌─ TRADUCTION RÉELLE (faits purs) ─┐\n' +
+               (translation || '(échec traduction)');
+    el.textContent = html;
+    el.classList.add('active');
+    log('TRADUCTION RÉELLE: ' + (translation || '').slice(0, 200), 'qa');
+  }
 
   // === V3 : memoire persistante cross-session ===
   var S_MEM = 'jarvis_pro_v3_memory';
@@ -715,9 +809,15 @@ dialog::backdrop { background: rgba(0,0,0,.93); }
     bargeIn: true,                      // PRO : interrompre TTS en parlant
     hourlyChime: false,                 // PRO : annonce horaire auto
     theme: 'matrix',                    // PRO : 'matrix' | 'cyberpunk' | 'minimalist'
-    spirit: 'genesis',                  // V3 : 'genesis' | 'oracle' | 'nova' | 'vesper' | 'atlas'
+    spirit: 'genesis',                  // V3 : 'genesis' | 'oracle' | 'nova' | 'vesper' | 'atlas' | 'real'
     autoInsight: true,                  // V3 : sauve insights automatiquement
     proactive: true,                    // V4 : esprit parle spontanément
+    ambientAlwaysOn: true,              // V5 : micro toujours actif (même hors AUTO)
+    ambientMemory: true,                // V5 : journaliser tout ce qui est entendu
+    autoTranslate: true,                // V6 : traduire auto chaque réponse en faits purs (ON par défaut)
+    ttsBoost: true,                     // V7 : voix max + bip d'attention avant TTS (coupe musique BT)
+    ttsPreBeep: true,                   // V7 : bip 200ms 1500Hz avant chaque annonce vocale
+    ttsDucking: true,                   // V7 : demande AudioFocus Android pour couper la musique
     aiName: 'Jarvis',
     profile: 'maison',
     agentMode: true,
@@ -766,7 +866,12 @@ dialog::backdrop { background: rgba(0,0,0,.93); }
     lastInsightAt: 0,               // V3 : anti-spam insights
     lastInteraction: Date.now(),    // V4 : dernière interaction user (pour proactif idle)
     lastProactiveAlertCount: 0,     // V4 : nb alertes au dernier check proactif
-    lastProactiveAt: 0              // V4 : timestamp dernier proactif
+    lastProactiveAt: 0,             // V4 : timestamp dernier proactif
+    ambientLog: [],                 // V5 : journal ambient (events écoutés)
+    ambientTimer: null,             // V5 : timer classification ambient
+    lastAmbientClass: '',           // V5 : dernière classe détectée (anti-spam)
+    lastAmbientAt: 0,               // V5 : timestamp dernier event ambient
+    lastAssistantText: ''           // V6 : dernière réponse IA (pour traduction)
   };
 
   function $(s) { return document.querySelector(s); }
@@ -1048,13 +1153,15 @@ dialog::backdrop { background: rgba(0,0,0,.93); }
     var genesisBlock = OPAT.alertsList.length
       ? 'Genesis alertes (' + OPAT.alertsList.length + '):\n' + lastAlerts
       : 'Genesis: aucune alerte récente';
+    // V5 : ajoute le résumé ambient
+    var ambBlock = cfg.ambientMemory ? '\n' + ambientSummary(8) : '';
     return [
       'Date: ' + nowDate(),
       'Heure: ' + nowTime(),
       'Local: ' + stamp(),
       'Profil: ' + profLabel() + ' (' + (cfg.profile || '') + ')',
       'Desc: ' + profDesc(),
-      'Micro: ' + (st.stream ? 'ON' : 'OFF'),
+      'Micro: ' + (st.stream ? 'ON' : 'OFF') + (cfg.ambientAlwaysOn ? ' (AMBIENT ON)' : ''),
       'Ecoute: ' + (st.comp ? '24/7' : (st.auto ? 'AUTO' : 'OFF')),
       'Mouvement: ' + st.motionType + ' mag=' + (st.motionMag || 0).toFixed(1) + ' choc=' + (st.impactLevel || 0),
       'Orientation: ' + (st.orientation || '?'),
@@ -1062,7 +1169,8 @@ dialog::backdrop { background: rgba(0,0,0,.93); }
       'Reponses longues: ' + (cfg.longAnswers ? 'ON' : 'OFF'),
       'Agent: ' + (cfg.agentMode ? 'ON' : 'OFF') + ' | Paroles autour: ' + (cfg.reportSpeech ? 'ON' : 'OFF'),
       'Alertes: ' + (cfg.speakNoise ? 'ON' : 'OFF') + ' | Animaux: ' + (cfg.animalAlerts ? 'ON' : 'OFF') + ' | Presence: ' + (cfg.humanThreat ? 'ON' : 'OFF'),
-      genesisBlock
+      genesisBlock,
+      ambBlock
     ].join('\n');
   }
 
@@ -1109,6 +1217,8 @@ dialog::backdrop { background: rgba(0,0,0,.93); }
               announce('[Genesis] ' + a);
             }
             log('Genesis alert: ' + a, 'info');
+            // V5 : log dans ambient memory
+            logAmbient('genesis_alert', a.slice(0, 120));
             // Relay IRC optionnel (silencieux : juste log si échec)
             if (OPAT.relayTarget) {
               relayToIRC(OPAT.relayTarget, '[JARVIS] ' + a, /*silent*/ true);
@@ -1300,9 +1410,7 @@ dialog::backdrop { background: rgba(0,0,0,.93); }
   function parseQuestions(text) {
     var t = String(text || '').trim();
     if (!t) return [];
-    // Split sur "? " ou " et " ou " puis " ou " ;"
     var parts = t.split(/\?\s+| et | puis | ; /i).map(function (s) { return s.trim(); }).filter(Boolean);
-    // Re-ajoute le ? final aux questions incomplètes
     parts = parts.map(function (p) {
       if (!/\?$/.test(p) && /\b(quelle|qui|comment|pourquoi|ou|où|quand|combien|est-ce|peux|peut|dis|explique|donne)\b/i.test(p)) {
         p = p + ' ?';
@@ -1310,6 +1418,101 @@ dialog::backdrop { background: rgba(0,0,0,.93); }
       return p;
     });
     return parts;
+  }
+
+  // ============================================================
+  // V5 : SYSTÈME AMBIENT — écoute continue + mémoire de tout
+  // ============================================================
+  var S_AMBIENT = 'jarvis_pro_v5_ambient';
+  var AMBIENT_MAX = 80;  // rolling window
+
+  function loadAmbient() {
+    try {
+      var raw = localStorage.getItem(S_AMBIENT);
+      if (!raw) return [];
+      return JSON.parse(raw) || [];
+    } catch (e) { return []; }
+  }
+  function saveAmbient(log) {
+    try {
+      if (!log) log = st.ambientLog || [];
+      // Garde seulement les 80 derniers
+      if (log.length > AMBIENT_MAX) log = log.slice(-AMBIENT_MAX);
+      localStorage.setItem(S_AMBIENT, JSON.stringify(log));
+    } catch (e) {}
+  }
+  function logAmbient(type, text) {
+    if (!cfg.ambientMemory) return;
+    var entry = {
+      ts: Date.now(),
+      time: nowTime(),
+      date: nowDate(),
+      type: type || 'unknown',
+      text: (text || '').slice(0, 120),
+      spirit: curSpirit().label
+    };
+    st.ambientLog.push(entry);
+    if (st.ambientLog.length > AMBIENT_MAX) st.ambientLog = st.ambientLog.slice(-AMBIENT_MAX);
+    saveAmbient(st.ambientLog);
+    // Update UI
+    updateAmbientBox();
+  }
+  function updateAmbientBox() {
+    var el = $('#ambientBox');
+    if (!el) return;
+    var count = st.ambientLog.length;
+    var last5 = st.ambientLog.slice(-5).map(function (e) {
+      return e.time + ' [' + e.type + '] ' + (e.text || '').slice(0, 60);
+    }).join('\n');
+    el.textContent = count + ' événements écoutés (5 derniers):\n' + (last5 || '(rien)');
+  }
+
+  // Classifie en continu ce que JARVIS entend (sans répondre)
+  function startAmbientListener() {
+    if (st.ambientTimer) clearInterval(st.ambientTimer);
+    // Toutes les 2s, si mic actif et pas en train d'enregistrer/répondre
+    st.ambientTimer = setInterval(function () {
+      if (st.hardStop || !st.ready || st.speaking || st.ptt) return;
+      if (st.auto || st.comp) return; // AUTO/24-7 gère déjà via handleAmbient
+      // Classification rapide
+      var v = vol();
+      var b = bands();
+      st.lastVol = v;
+      st.lastBass = b.bass;
+      st.lastMid = b.mid;
+      st.lastHigh = b.high;
+      var type = classifyRaw();
+      if (!type) return;
+      // Anti-spam : même type dans les 8s → ignore
+      if (st.lastAmbientClass === type && Date.now() - st.lastAmbientAt < 8000) return;
+      st.lastAmbientClass = type;
+      st.lastAmbientAt = Date.now();
+      // Log l'event ambient
+      var alert = macAlert(type);
+      logAmbient(type, alert);
+      log('Ambient [' + type + ']: ' + alert.slice(0, 80), 'info');
+      // Si speakNoise ON, annonce en TTS (sauf si-muted)
+      if (cfg.speakNoise && cfg.tts && !st.muted) {
+        if (!eventCooldown('amb_' + type, (cfg.coolSec || 14) * 1000)) {
+          announce(alert);
+        }
+      }
+    }, 2000);
+    log('Listener ambient V5 démarré ( classification toutes les 2s )', 'info');
+  }
+  function stopAmbientListener() {
+    if (st.ambientTimer) { clearInterval(st.ambientTimer); st.ambientTimer = null; }
+  }
+
+  // Résumé formaté des derniers events ambient pour l'IA
+  function ambientSummary(limit) {
+    limit = limit || 8;
+    if (!st.ambientLog || !st.ambientLog.length) return 'Aucun evenement ambient recent.';
+    var recent = st.ambientLog.slice(-limit);
+    var lines = recent.map(function (e) {
+      return '  - ' + e.time + ' [' + e.type + '] ' + (e.text || '(silence)');
+    });
+    return 'Ambient entendu (' + recent.length + ' recents):\n' + lines.join('\n');
   }
 
   function initMotion() {
@@ -1495,38 +1698,72 @@ dialog::backdrop { background: rgba(0,0,0,.93); }
     } catch (e) {}
   }
 
+  // V7 : bip d'attention + demande AudioFocus Android pour couper la musique BT
+  function preTtsAttention() {
+    if (!cfg.ttsPreBeep && !cfg.ttsDucking) return Promise.resolve();
+    // Bip court 200ms à 1500Hz via Web Audio API (grabs attention)
+    return new Promise(function (resolve) {
+      try {
+        if (cfg.ttsPreBeep) {
+          // Double bip (alerte puis confirmation)
+          beep(1500, 100, 'sine');
+          setTimeout(function () { beep(1800, 80, 'sine'); }, 120);
+        }
+        // Demander AudioFocus Android via JS bridge (si WebView Android)
+        if (cfg.ttsDucking && window.AndroidAudio && window.AndroidAudio.requestFocus) {
+          try { window.AndroidAudio.requestFocus(); } catch (e) {}
+        }
+        // Laisse le bip se terminer
+        setTimeout(resolve, cfg.ttsPreBeep ? 220 : 50);
+      } catch (e) { resolve(); }
+    });
+  }
+  function releaseAudioFocus() {
+    if (cfg.ttsDucking && window.AndroidAudio && window.AndroidAudio.releaseFocus) {
+      try { window.AndroidAudio.releaseFocus(); } catch (e) {}
+    }
+  }
+
   function speak(text) {
     if (!cfg.tts || st.muted || st.hardStop) return Promise.resolve();
     var cleaned = cleanSpeech(text);
     if (!cleaned) return Promise.resolve();
     var forVoice = cleaned.length > 600 ? cleaned.slice(0, 600) + ' …' : cleaned;
-    return new Promise(function (resolve) {
-      var done = false;
-      function finish() {
-        if (done) return;
-        done = true;
-        st.speaking = false;
-        resolve();
-      }
-      try {
-        if (!window.speechSynthesis) { finish(); return; }
-        try { speechSynthesis.cancel(); } catch (e) {}
-        var u = new SpeechSynthesisUtterance(forVoice);
-        u.lang = cfg.lang === 'en' ? 'en-US' : 'fr-FR';
-        // V3 : voiceRate de l'esprit courant, multiplié par cfg.rate
-        var sp = curSpirit();
-        u.rate = clamp((cfg.rate || 1.02) * (sp.voiceRate || 1.0), 0.6, 1.4);
-        var voices = speechSynthesis.getVoices();
-        var pref = cfg.lang === 'en' ? 'en' : 'fr';
-        for (var i = 0; i < voices.length; i++) {
-          if (voices[i].lang.indexOf(pref) === 0) { u.voice = voices[i]; break; }
+    // V7 : pré-attention ( bip + AudioFocus ) avant TTS
+    return preTtsAttention().then(function () {
+      return new Promise(function (resolve) {
+        var done = false;
+        function finish() {
+          if (done) return;
+          done = true;
+          st.speaking = false;
+          releaseAudioFocus();  // V7 : libère le focus après TTS
+          resolve();
         }
-        st.speaking = true;
-        var safety = setTimeout(finish, Math.min(45000, forVoice.length * 90 + 2000));
-        u.onend = function () { clearTimeout(safety); finish(); };
-        u.onerror = function () { clearTimeout(safety); finish(); };
-        speechSynthesis.speak(u);
-      } catch (e) { finish(); }
+        try {
+          if (!window.speechSynthesis) { finish(); return; }
+          try { speechSynthesis.cancel(); } catch (e) {}
+          var u = new SpeechSynthesisUtterance(forVoice);
+          u.lang = cfg.lang === 'en' ? 'en-US' : 'fr-FR';
+          // V3 : voiceRate de l'esprit courant, multiplié par cfg.rate
+          var sp = curSpirit();
+          u.rate = clamp((cfg.rate || 1.02) * (sp.voiceRate || 1.0), 0.6, 1.4);
+          // V7 : volume MAX si ttsBoost (coupe la musique BT via volume fort)
+          u.volume = cfg.ttsBoost ? 1.0 : 0.85;
+          // V7 : pitch légèrement plus grave si boost (voix plus présente)
+          u.pitch = cfg.ttsBoost ? 0.95 : 1.0;
+          var voices = speechSynthesis.getVoices();
+          var pref = cfg.lang === 'en' ? 'en' : 'fr';
+          for (var i = 0; i < voices.length; i++) {
+            if (voices[i].lang.indexOf(pref) === 0) { u.voice = voices[i]; break; }
+          }
+          st.speaking = true;
+          var safety = setTimeout(finish, Math.min(45000, forVoice.length * 90 + 2000));
+          u.onend = function () { clearTimeout(safety); finish(); };
+          u.onerror = function () { clearTimeout(safety); finish(); };
+          speechSynthesis.speak(u);
+        } catch (e) { finish(); }
+      });
     });
   }
   function announce(text) {
@@ -1606,7 +1843,34 @@ dialog::backdrop { background: rgba(0,0,0,.93); }
       'SSH, scan, anomaly) dans le CONTEXTE ci-dessous.\n' +
       'Date/heure locales fournies dans le contexte.\n' +
       'Tu te nommes ' + aiName() + ' mais ton esprit actuel est ' + sp.label + ' (' + sp.tagline + ').\n' +
-      'REGLES:\n' +
+      '\n' +
+      '════════════════════════════════════════════════════════════\n' +
+      'REGLES ABSOLUES DE VERACITE ( V8 — pour TOUS les esprits ) :\n' +
+      '════════════════════════════════════════════════════════════\n' +
+      '1. INTERDICTION TOTALE D\'INVENTER quoi que ce soit.\n' +
+      '   - JAMAIS d\'IP inventee. Si tu n\'as pas l\'IP dans le contexte, dis-le.\n' +
+      '   - JAMAIS de timestamp invente. Utilise uniquement ceux du contexte.\n' +
+      '   - JAMAIS de chiffre, statistique, ou fait non verifiable.\n' +
+      '   - JAMAIS d\'extrapolation presentee comme fait.\n' +
+      '2. SI TU NE SAIS PAS → dis EXACTEMENT : « Je ne sais pas, mais je cherche a savoir. »\n' +
+      '   - Ne JAMAIS combler un trou avec une invention.\n' +
+      '   - Mieux vaut « je ne sais pas » qu\'un mensonge.\n' +
+      '3. Tout ce que tu affirmes doit etre verifiable dans :\n' +
+      '   - Le CONTEXTE TEMPS REEL fourni ( alertes Genesis, capteurs, memoire )\n' +
+      '   - Le CONTEXTE AMBIENT ( events ecoutes )\n' +
+      '   - Ta MEMOIRE LONGUE ( insights persistes )\n' +
+      '4. Si une information n\'est pas dans ces sources :\n' +
+      '   → Dis : « Information non disponible dans mon contexte actuel. »\n' +
+      '5. Tu peux interpreter, analyser, donner des opinions — mais elles doivent etre\n' +
+      '   presentees COMME telles ( « je pense que... », « il est possible que... » ).\n' +
+      '   Et JAMAIS presents une opinion comme un fait.\n' +
+      '6. Les hypothèses de Vesper, les metaphores d\'Oracle, les idees de Nova —\n' +
+      '   ce sont du STYLE, pas des faits. Les FAITS restent purs et verifies.\n' +
+      '7. Si l\'utilisateur te demande un fait que tu n\'as pas → reponds :\n' +
+      '   « Je ne sais pas, mais je cherche a savoir. » Puis suggere comment l\'obtenir.\n' +
+      '════════════════════════════════════════════════════════════\n' +
+      '\n' +
+      'REGLES DE STYLE:\n' +
       '- Reponds TOUJOURS en francais clair, dans le style de ton esprit (' + sp.label + ').\n' +
       '- Reponds toujours a la question, meme simple.\n' +
       (long
@@ -1945,6 +2209,8 @@ dialog::backdrop { background: rgba(0,0,0,.93); }
       log('Reponse [' + curSpirit().label + ']: ' + r.slice(0, 400) + (r.length > 400 ? '…' : ''), 'qa');
       var sb = $('#streamBox');
       if (sb) sb.classList.remove('active');
+      // === V6 : sauve dernière réponse pour traduction manuelle + auto-traduction ===
+      st.lastAssistantText = r;
       // === V3 : sauve insights automatiquement (anti-spam 30s) ===
       if (cfg.autoInsight && Date.now() - st.lastInsightAt > 30000) {
         if (r.length > 30 && !/^(Oui|Je t)/.test(r)) {
@@ -1954,6 +2220,12 @@ dialog::backdrop { background: rgba(0,0,0,.93); }
       }
       return announce(r).then(function () {
         startBargeInWatcher();
+        // V6 : auto-traduction si activée ( skip si esprit courant = RÉAL )
+        if (cfg.autoTranslate && curSpirit().label !== 'RÉAL' && r.length > 30) {
+          translateToReal(r).then(function (tr) {
+            if (tr) showTranslation(r, tr);
+          });
+        }
       });
     }).catch(function (e) {
       var msg = friendlyApiError(e, e.status);
@@ -1969,6 +2241,8 @@ dialog::backdrop { background: rgba(0,0,0,.93); }
   function routeTranscript(text) {
     if (isGarbage(text) || !text) return Promise.resolve();
     log('Entendu: « ' + text + ' »', 'qa');
+    // V5 : log parole dans ambient memory
+    logAmbient('speech', text.slice(0, 120));
     if (isStop(text)) { hardStop('Stop'); return Promise.resolve(); }
     var addressed = !!cfg.always;
     if (!cfg.always) {
@@ -2253,6 +2527,14 @@ dialog::backdrop { background: rgba(0,0,0,.93); }
     sc('useSensors', cfg.useSensors !== false);
     sc('tts', cfg.tts !== false);
     sc('wakelock', cfg.wakelock !== false);
+    // V6/V5/V4/V7 : nouvelles checkboxes
+    sc('autoTranslate', cfg.autoTranslate !== false);
+    sc('proactive', cfg.proactive !== false);
+    sc('ambientAlwaysOn', cfg.ambientAlwaysOn !== false);
+    sc('ambientMemory', cfg.ambientMemory !== false);
+    sc('ttsBoost', cfg.ttsBoost !== false);
+    sc('ttsPreBeep', cfg.ttsPreBeep !== false);
+    sc('ttsDucking', cfg.ttsDucking !== false);
     var pairs = [
       ['sens', 'vsens', cfg.sens],
       ['noisevol', 'vnoisevol', cfg.noiseVol],
@@ -2268,6 +2550,12 @@ dialog::backdrop { background: rgba(0,0,0,.93); }
       sv(pairs[i][0], pairs[i][2]);
       var el = $('#' + pairs[i][1]);
       if (el) el.textContent = pairs[i][2];
+    }
+    // V6 : sync auto-trad button state
+    var atb = $('#qcAutoTranslate');
+    if (atb) {
+      atb.textContent = cfg.autoTranslate ? 'AUTO-TRAD ON' : 'AUTO-TRAD OFF';
+      atb.classList.toggle('on', cfg.autoTranslate);
     }
     updateTags();
     updateSummary();
@@ -2303,6 +2591,14 @@ dialog::backdrop { background: rgba(0,0,0,.93); }
     cfg.longAnswers = $('#longAnswers').checked;
     cfg.useSensors = $('#useSensors').checked;
     cfg.wakelock = $('#wakelock').checked;
+    // V6/V5/V4/V7 : nouvelles checkboxes
+    cfg.autoTranslate = $('#autoTranslate').checked;
+    cfg.proactive = $('#proactive').checked;
+    cfg.ambientAlwaysOn = $('#ambientAlwaysOn').checked;
+    cfg.ambientMemory = $('#ambientMemory').checked;
+    cfg.ttsBoost = $('#ttsBoost').checked;
+    cfg.ttsPreBeep = $('#ttsPreBeep').checked;
+    cfg.ttsDucking = $('#ttsDucking').checked;
     if (cfg.profile === prev) {
       cfg.sens = +$('#sens').value;
       cfg.noiseVol = +$('#noisevol').value;
@@ -2485,6 +2781,69 @@ dialog::backdrop { background: rgba(0,0,0,.93); }
       toast('Moteur proactif: ' + (cfg.proactive ? 'ON (esprit peut parler seul)' : 'OFF'));
       log('Moteur proactif ' + (cfg.proactive ? 'activé' : 'désactivé'), 'info');
     };
+    // === V5 : bindings AMBIENT ===
+    $('#qcHeard').onclick = function () {
+      processUser('Qu\'as-tu entendu autour de moi récemment ? Résume les derniers événements ambient et donne ton analyse.');
+    };
+    // === V6 : bindings TRADUCTION ===
+    $('#qcTranslate').onclick = function () {
+      if (!st.lastAssistantText || st.lastAssistantText.length < 10) {
+        toast('Aucune réponse à traduire', 'err');
+        return;
+      }
+      toast('Traduction en cours…');
+      var tb = $('#translationBox');
+      if (tb) {
+        tb.textContent = '⏳ Traduction RÉAL en cours…';
+        tb.classList.add('active');
+      }
+      translateToReal(st.lastAssistantText).then(function (tr) {
+        if (tr) {
+          showTranslation(st.lastAssistantText, tr);
+          toast('Traduction: ' + tr.slice(0, 50));
+        } else {
+          toast('Traduction échouée', 'err');
+        }
+      });
+    };
+    $('#qcAutoTranslate').onclick = function () {
+      cfg.autoTranslate = !cfg.autoTranslate;
+      safeSet(S_CFG, JSON.stringify(cfg));
+      var b = $('#qcAutoTranslate');
+      if (b) {
+        b.textContent = cfg.autoTranslate ? 'AUTO-TRAD ON' : 'AUTO-TRAD OFF';
+        b.classList.toggle('on', cfg.autoTranslate);
+      }
+      toast('Auto-traduction: ' + (cfg.autoTranslate ? 'ON (chaque réponse traduite en faits purs)' : 'OFF'));
+      log('Auto-traduction ' + (cfg.autoTranslate ? 'activée' : 'désactivée'), 'info');
+    };
+    $('#btnToggleAmbient').onclick = function () {
+      cfg.ambientAlwaysOn = !cfg.ambientAlwaysOn;
+      cfg.ambientMemory = cfg.ambientAlwaysOn;
+      safeSet(S_CFG, JSON.stringify(cfg));
+      var b = $('#btnToggleAmbient');
+      if (b) {
+        var t = b.querySelector('.btntitle');
+        if (t) t.textContent = cfg.ambientAlwaysOn ? 'AMBIENT ON' : 'AMBIENT OFF';
+        b.classList.toggle('on', cfg.ambientAlwaysOn);
+      }
+      toast('Ambient: ' + (cfg.ambientAlwaysOn ? 'ON (écoute continue)' : 'OFF'));
+      if (cfg.ambientAlwaysOn) {
+        ensureMic().then(function (ok) {
+          if (ok) startAmbientListener();
+        });
+      } else {
+        stopAmbientListener();
+        if (!st.auto && !st.comp) releaseMic();
+      }
+    };
+    $('#btnClearAmbient').onclick = function () {
+      st.ambientLog = [];
+      saveAmbient(st.ambientLog);
+      updateAmbientBox();
+      toast('Log ambient vidé');
+      log('Ambient log vidé', 'info');
+    };
     $('#qcHour').onclick   = function () {
       cfg.hourlyChime = !cfg.hourlyChime;
       safeSet(S_CFG, JSON.stringify(cfg));
@@ -2562,6 +2921,14 @@ dialog::backdrop { background: rgba(0,0,0,.93); }
     if (st.memory.insights && st.memory.insights.length) {
       log('Mémoire longue chargée: ' + st.memory.insights.length + ' insights · dernière session ' + (st.memory.lastSession || '?'), 'info');
     }
+    // V5 : charger ambient log + maj UI
+    st.ambientLog = loadAmbient();
+    updateAmbientBox();
+    var btnAmb = $('#btnToggleAmbient');
+    if (btnAmb && cfg.ambientAlwaysOn) btnAmb.classList.add('on');
+    if (st.ambientLog.length) {
+      log('Ambient memory chargée: ' + st.ambientLog.length + ' events', 'info');
+    }
     setInterval(function () {
       if ($('#clock')) $('#clock').textContent = stamp();
     }, 1000);
@@ -2577,7 +2944,16 @@ dialog::backdrop { background: rgba(0,0,0,.93); }
     startHourlyChime();
     // V4 : démarrer le moteur proactif (l'esprit peut parler spontanément)
     startProactive();
-    log('Jarvis PRO v4 pret · ' + stamp() + ' · esprit=' + sp.label + ' · ' + (st.memory.insights || []).length + ' insights mémoire · moteur proactif ON · multi-questions supportées');
+    // V5 : activer micro + listener ambient dès le boot
+    if (cfg.ambientAlwaysOn) {
+      ensureMic().then(function (ok) {
+        if (ok) {
+          startAmbientListener();
+          log('Micro activé en mode AMBIENT dès le boot', 'info');
+        }
+      });
+    }
+    log('Jarvis PRO v8 pret · ' + stamp() + ' · esprit=' + sp.label + ' · ' + (st.memory.insights || []).length + ' insights mémoire · ' + (st.ambientLog || []).length + ' events ambient · 6 esprits · AUTO-TRAD ON · VOIX MAX + DUCKING BT ON · VÉRACITÉ ABSOLUE (zéro invention, "je ne sais pas" si manque)');
   }
 
   if (document.readyState === 'loading') {
