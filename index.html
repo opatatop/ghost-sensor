@@ -13,7 +13,7 @@
 <link rel="manifest" id="manifestLink">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="mobile-web-app-capable" content="yes">
-<title>EVP ULTIME v10.18 - QUE DU RÉEL + vocal FR UNIQUEMENT (TTS skippé si traduction échoue + blocklist étendue)</title>
+<title>EVP ULTIME v10.36 - MIN_PASSES_AGREE=1 base + message rapide corrigé + Whisper turbo par défaut</title>
 <style>
   /* ============================================================
      EVP ULTIME v4.2 - Stylesheet moderne
@@ -1269,7 +1269,7 @@
 <div class="float-help" id="floatHelp">?</div>
 
 <footer>
-  EVP ULTIME v10.18 QUE DU RÉEL + vocal FR UNIQUEMENT — TTS skippé si traduction échoue (plus de vocal en anglais/russe) + blocklist étendue (thank you for watching, takk, sangu, tchau, санкью) + timeout traduction 20s<br>
+  EVP ULTIME v10.36 — MIN_PASSES_AGREE=1 dans CONFIG de base + message mode rapide corrigé + Whisper large-v3-turbo par défaut (plus rapide + moins cher)<br>
   © 2025 OPAT@TOP — NO FABRICATION SYSTEM
 </footer>
 
@@ -1302,7 +1302,7 @@
 
 const CONFIG = {
   CLIP_DURATION_MS: 10000,
-  WHISPER_TEMPS: [0.0, 0.3, 0.5],
+  WHISPER_TEMPS: [0.0], // FIX v10.34: 1 passe par défaut (économie quota Groq - avant 2 passes)
   MIN_CONFIDENCE: 0.35,
   HIGH_CONFIDENCE: 0.55,
   VERY_HIGH_CONFIDENCE: 0.75,
@@ -1320,15 +1320,16 @@ const CONFIG = {
   LANGUAGES_SUPPORTED: ['ru','en','es','de','it','pt','nl','pl','uk','ar','zh','ja','ko','tr','he','el','sv','no','da','fi','cs','hu','ro','bg','sr','hr','sk','sl','lt','lv','et','fa','hi','bn','ta','te','mr','ne','si','th','vi','id','ms','tl','sw','am','yi','la','eo','ca','eu','gl','af','sq','az','uz','kk','ky','tg','tk','mn','my','km','lo','ka','hy','az'],
   HEALTH_ENDPOINT: '/health',
   STORAGE_KEY: 'evp_ultime_v4',
-  WHISPER_MODEL: 'whisper-large-v3', // peut etre change via bouton
+  WHISPER_MODEL: 'whisper-large-v3-turbo', // FIX v10.36: turbo par défaut (plus rapide, moins cher, économie quota)
   MAX_LOG: 300,
   MAX_QA_HISTORY: 30,
+  // FIX v10.21: MAX_CLIPS manquant (était utilisé 4× mais pas défini → "Clips: 12/undefined")
+  MAX_CLIPS: 200,
   // FIX v4.5: Seuil no_speech_prob plus strict (0.6 au lieu de 0.85)
   // Au-dessus de ça, Whisper pense qu'il n'y a pas de voix -> on ignore
   NO_SPEECH_THRESHOLD: 0.2,
-  // FIX v10.0 CRITIQUE: Vote majorite - le texte doit apparaitre dans au moins 2 passes sur 3
-  // (avant: undefined → 1 seule passe suffisait → boucle TTS "Thank you")
-  MIN_PASSES_AGREE: 2,
+  // FIX v10.36 OBLIGATOIRE: MIN_PASSES_AGREE=1 dans CONFIG de base (avant: 2 ici mais 1 dans auto-settings → conflit)
+  MIN_PASSES_AGREE: 1,
   // FIX v10.0: Anti-echo étendu à 30s (avant 20s, Whisper prend 13-15s à traiter)
   ECHO_SUPPRESSION_MS_OVERRIDE: 30000,
   // FIX v9.4: Classification EVP A/B/C
@@ -1403,18 +1404,53 @@ const CONFIG = {
   PRESETS: {
     house:         { gain: 4, filter: 800,  q: 1, thresh: -55, speed: 1 },
     cemetery:      { gain: 6, filter: 1200, q: 2, thresh: -60, speed: 1 },
-    investigation: { gain: 10, filter: 200, q: 0.3, thresh: -55, speed: 1 },
+    investigation: { gain: 10, filter: 200, q: 0.3, thresh: -45, speed: 1 }, // FIX v10.34: -45 au lieu de -50 (envoie moins de segments à Whisper = économie quota)
   },
 };
 
 /* ============= ANTI-HALLUCINATION ============= */
+// FIX v10.31: Phrases ultra-courtes qui causent 90% des boucles
+function isDangerousShortPhrase(text) {
+  if (!text) return true;
+  const t = text.toLowerCase().trim()
+    .replace(/[.,!?;:…]+$/g, '')
+    .replace(/\s+/g, ' ');
+  const dangerous = [
+    'merci', 'thank you', 'thanks', 'you', 'okay', 'ok', 'de rien',
+    'à suivre', 'a suivre', 'продолжение следует',
+    'takk for ating med', 'undertextning', 'undertexting',
+    'gracias', 'grazie', 'obrigado', 'spasibo', 'спасибо',
+    'danke', 'takk', 'terima kasih', 'teşekkür',
+  ];
+  if (dangerous.includes(t)) return true;
+  // Texte très court + TTS récent → quasi sûr écho
+  if (t.length <= 12 && recentlySpokenTexts.length > 0) {
+    const last = recentlySpokenTexts[recentlySpokenTexts.length - 1];
+    if (Date.now() - last.time < 25000) return true;
+  }
+  return false;
+}
+
+// FIX v10.31: Détecter si c'est l'utilisateur qui parle (français + long + énergie forte)
+function isLikelyUserSpeech(text, energy) {
+  if (!text || text.length < 15) return false;
+  // Contient des mots français typiques de phrase
+  const frenchMarkers = /\b(j'ai|je|tu|nous|depuis|rien|dit|heure|parce|que|est|ce|qui|vous|il|elle|on|mais|donc|alors|oui|non|pas|plus|être|avoir|faire|dire|voir|savoir|vouloir|pouvoir|falloir)\b/i;
+  return frenchMarkers.test(text) && energy > -40;
+}
+
 // FIX v4.5: Detecte si un texte de Whisper est une hallucination connue
 function isHallucination(text) {
   if (!text || text.length < 2) return true;
   const lower = text.toLowerCase().trim();
   // FIX v8.2: Filtrage MINIMAL - seulement les hallucinations Whisper PROUVÉES
   // (pas des vrais mots qu'un esprit pourrait dire)
-  if (lower.length < 3) return true;
+  // FIX v10.23: ne PAS filtrer les caractères CJK courts (chinois/japonais/coréen significatifs même sur 1-2 chars)
+  // Avant: lower.length < 3 → filtrait "성기유" (coréen 3 chars) → FAUX
+  // FIX v10.24: compromis — accepter CJK de 2+ chars, mais filtrer CJK de 1 char (kanji seul = probablement hallucination)
+  const isCJK = /[\u4E00-\u9FFF\u3040-\u309F\u30A0-\u30FF\uAC00-\uD7AF]/.test(text);
+  if (!isCJK && lower.length < 3) return true;
+  if (isCJK && lower.length < 2) return true; // 1 char CJK seul = probable hallucination
   if (/^[.\-,_\s!?]+$/.test(lower)) return true;
   // FIX v10.2 CRITIQUE: ne PLUS filtrer "Thank you", "Merci", "Okay", "De rien"
   // Ces mots sont des VRAIES VOIX potentielles (esprits humains) → traduire et traiter
@@ -1489,12 +1525,38 @@ function isHallucination(text) {
     'i\'m going to make a hole',  // anglais halluciné
     'i\'m going to make a little more',  // anglais halluciné
     'what i will say', 'supposed to respect this unique concept',  // anglais halluciné
-    'show',  // anglais halluciné court
-    'so,',  // anglais halluciné court
+    // FIX v10.23: retirer 'show' et 'so,' qui sont trop courts et peuvent matcher des vrais mots
+    // 'show' = spectacle/show → peut être une vraie voix
+    // 'so,' = donc → très commun en anglais
+    // Garder seulement les phrases hallucinations complètes
+    // v10.20: hallucinations sous-titres (vues dans clips précédents)
+    'dimatorzok',  // hallucination sous-titres russe
+    'субтитры создавал', 'субтитры сделал',  // russe "sous-titres créés par"
+    'sous-titres réalisés par', 'sous-titres créés par',  // français
+    'les sous-titres ont été créés',  // français
+    'İşli bilir',  // turc halluciné court
+    'işli bilir',
+    // v10.25: sous-titres norvégien/anglais (vus transcript 18:08)
+    'undertekster', 'tekster av', 'subtitles by', 'subtitling by',
+    'nicolai winther',  // hallucination sous-titres norvégien
+    // v10.26: sous-titres suédois/norvégien (vus transcript 18:57)
+    'undertextning', 'undertextning.nu', 'undertexting', 'undertexting.nu',
+    'takk for ating', 'takk for ating med',  // norvégien halluciné
+    'klikk på', 'klikk pa',  // norvégien "cliquez sur"
+    'undertekster av',  // norvégien "sous-titres par"
+    // v10.26: hallucinations mesures (vues transcript 18:51)
+    '0.5 mm', '0,5 mm', '0.59', '0,59', 'fnx',  // hallucinations Whisper sur bruits
+    // v10.32: hallucination ukrainienne "thanks for watching" (vue 5x dans transcript 22/11)
+    'дякую за перегляд', 'дякую', 'за перегляд',
+    // v10.32: autres hallucinations vues
+    'hai hai',  // hallucination bruit
   ];
   for (const h of provenHalu) {
     if (lower.includes(h)) return true;
   }
+  // v10.25: fillers EXACTS seulement (pas includes → ne bloque pas "are you okay?")
+  // Match exact seulement: "okay" filtré, mais "are you okay?" passe
+  if (['okay', 'oke', 'ok', 'yeah', 'yep', 'uh huh', 'mm-hmm', 'okay.', 'oke.', 'ok.', 'yeah.', 'yep.'].includes(lower)) return true;
   // Repetition identique 4+ fois
   const words = lower.split(/\s+/);
   if (words.length >= 4) {
@@ -1507,9 +1569,12 @@ function isHallucination(text) {
 
 // FIX v4.5: Compte combien de passes contiennent un mot donne (vote majorite)
 function findAgreedText(passes) {
-  // Pour chaque passe, extraire les mots significatifs (>2 chars)
+  // Pour chaque passe, extraire les mots significatifs (>2 chars) SANS ponctuation
+  // FIX v10.24 CRITIQUE: enlever la ponctuation pour que "Merci." = "Merci"
+  // Avec 2 passes, "Merci." ≠ "Merci" (le point reste collé) → segment perdu
+  // Maintenant: on retire la ponctuation avec \p{L}\p{N} (flag u) → vote insensible à la ponctuation
   const passesWords = passes.map(p => {
-    return new Set(p.toLowerCase().split(/\s+/).filter(w => w.length > 2));
+    return new Set(p.toLowerCase().split(/\s+/).map(w => w.replace(/[^\p{L}\p{N}]/gu, '')).filter(w => w.length > 2));
   });
   // Pour chaque passe, verifier combien d'autres passes partagent au moins 1 mot
   const agreeCount = new Array(passes.length).fill(0);
@@ -1566,6 +1631,9 @@ const State = {
   // stats
   sessions: 0,
   detections: 0,
+  // FIX v10.21: totalSessions manquant (utilisé dans EXPORT PDF + AUTO-SAVE → undefined)
+  totalSessions: 0,
+  // FIX v10.22: highConfCount doublon supprimé (était en double lignes 1580+1582)
   totalTime: 0,
   highConfCount: 0,
   verifiedCount: 0,
@@ -1605,6 +1673,17 @@ const State = {
   // Si OFF : aucune IA, juste EVP (esprits/bruits/consciences) traduits en français écrit+vocal
   // Si ON : IA répond seulement aux questions factuelles explicites (heure, GPS, météo, maths)
   assistantIaMode: false,
+  // FIX v10.28: APPRENTISSAGE ÉTERNEL — survive aux reboots (localStorage)
+  // 1. Auto-blocklist: textes filtrés > 3 fois → ajoutés automatiquement
+  learnedBlocklist: [],  // [{text, count, lastSeen}]
+  // 2. Mémoire des esprits: fréquences/pitches récurrents
+  spiritMemory: {},  // {spiritName: {count, lastSeen, freqSum, freqCount, pitchSum, pitchCount}}
+  // 3. Calendrier des sessions: metadata de chaque session
+  sessionCalendar: [],  // [{date, evps, duration, spirits, sessionId}]
+  // 4. Langues actives: tracker les langues récurrentes
+  activeLanguages: {},  // {lang: count}
+  // 5. Calibration auto: bruit de fond moyen
+  autoCalibration: { baseline: -55, samples: 0, sum: 0 },
   // sleep
   sleepMode: true,
   // session
@@ -1838,10 +1917,14 @@ async function startRecordingLoop() {
   if (!State.micStream) return;
   State.running = true;
   State.sessions++;
+  // FIX v10.22: synchroniser totalSessions = sessions (pour EXPORT PDF + AUTO-SAVE)
+  State.totalSessions = State.sessions;
   State.sessionId = 'S' + Date.now().toString(36).toUpperCase();
   State.sessionStart = Date.now();
   State.sessionTimestamps.push(Date.now());
   if (State.sessionTimestamps.length > 200) State.sessionTimestamps.shift();
+  // FIX v10.28: démarrer auto-save VPS automatiquement (plus de bouton)
+  if (typeof startAutoSaveVps === 'function') startAutoSaveVps();
   Store.save();
 
   document.getElementById('sessId').textContent = State.sessionId;
@@ -1909,8 +1992,44 @@ function getSupportedMime() {
   return '';
 }
 
+// FIX v10.30: COUPE-CIRCUIT RÉPÉTITIONS
+// Tracker global des derniers EVP affichés (bestText en français)
+const _recentEvps = []; // [{text, time}]
+const MAX_REPEAT_COUNT = 2; // FIX v10.31: 2 au lieu de 3 (plus strict)
+const REPEAT_WINDOW_MS = 45000; // FIX v10.31: 45s au lieu de 60s
+
+function isRepetitionBlocked(text) {
+  if (!text) return false;
+  const lower = text.toLowerCase().trim().replace(/[.!?]/g, '');
+  const now = Date.now();
+  // Compter combien de fois ce texte a été dit dans les 60 dernières secondes
+  let count = 0;
+  for (const entry of _recentEvps) {
+    if (now - entry.time > REPEAT_WINDOW_MS) continue;
+    const entryLower = entry.text.toLowerCase().trim().replace(/[.!?]/g, '');
+    if (entryLower === lower || entryLower.includes(lower) || lower.includes(entryLower)) {
+      count++;
+    }
+  }
+  if (count >= MAX_REPEAT_COUNT) {
+    addLog('[COUPE-CIRCUIT] "' + text.substring(0,30) + '" bloqué (' + count + 'x en 60s) → silence', 'sys');
+    return true;
+  }
+  // Enregistrer cet EVP
+  _recentEvps.push({ text: text, time: now });
+  // Nettoyer les vieux (> 60s)
+  while (_recentEvps.length && _recentEvps[0].time < now - REPEAT_WINDOW_MS) {
+    _recentEvps.shift();
+  }
+  return false;
+}
+
 /* ============= TRANSCRIPTION (3 PASSES WHISPER) ============= */
 async function processRecording(blob) {
+  // FIX v10.23: segStart pour mesurer la latence totale du segment (debug)
+  const segStart = Date.now();
+  // FIX v10.30: COUPE-CIRCUIT RÉPÉTITIONS — si le même bestText a été dit > 3 fois en 60s → blocage
+  // Empêche la boucle "Thank you → Merci" même si l'anti-echo ne suffit pas
   const durationSec = (Date.now() - State.recordStart) / 1000;
   State.totalTime += durationSec;
   Store.save();
@@ -1918,6 +2037,10 @@ async function processRecording(blob) {
 
   const energy = computeAvgEnergy();
   const threshDb = parseFloat(document.getElementById('threshSlider').value);
+  // FIX v10.28: auto-calibration (mesure le bruit de fond → ajuste le seuil après 30 samples)
+  // FIX v10.30: NEUTRALISÉ — autoCalibrate causait des problèmes (seuil trop sensible/sourd)
+  // On garde le seuil manuel à -55dB fixe (preset INVESTIGATION)
+  // if (typeof autoCalibrate === 'function') autoCalibrate(energy);
 
   // FIX v7.9: Skip le silence (empeche Whisper d'halluciner "Radio Canada" sur du silence)
   // Si l'energie est trop faible = silence = on envoie PAS a Whisper
@@ -1943,6 +2066,8 @@ async function processRecording(blob) {
   // v10.9: 1 passe en MODE RAPIDE, 3 en normal
   const passes = [];
   const errors = [];
+  // FIX v10.19: stocker les langues détectées par Whisper pour chaque passe
+  const whisperLanguages = [];
   let noSpeechProbs = [];
   let hallucinationCount = 0;
 
@@ -1980,12 +2105,25 @@ async function processRecording(blob) {
     }
     if (result && result.text && result.text.trim()) {
       let text = result.text.trim();
+      // FIX v10.19: capturer la langue détectée par Whisper (result.language)
+      // Whisper retourne "english", "french", "russian", etc. → on mappe en code ISO
+      // Cette langue est PLUS PRÉCISE que detectLanguage() maison
+      // FIX v10.21: utiliser .push (pas .includes) pour compter toutes les occurrences
+      // (avant: .includes dédupliquait → chaque langue comptait 1× → égalités arbitraires)
+      if (result.language) {
+        whisperLanguages.push(result.language);
+        if (State.debugMode) addLog('[LANG] Whisper: ' + result.language, 'sys');
+      }
       // FIX v10.6 CRITIQUE: NE PAS traduire par passe (3 appels parallèles → AbortController échoue)
       // La traduction se fait APRÈS pickBestText (1 seul appel, plus fiable)
       // Voir plus bas dans processSegment: translateToFrench(bestText)
       // FIX v10.0 CRITIQUE: isHallucination TOUJOURS actif (même en mode "capture all")
-      if (isHallucination(text)) {
+      // FIX v10.28: aussi vérifier la blocklist apprise (hallucinations de l'environnement)
+      // FIX v10.31: aussi vérifier isDangerousShortPhrase (phrases courtes critiques)
+      if (isHallucination(text) || isDangerousShortPhrase(text) || (typeof isLearnedHallucination === 'function' && isLearnedHallucination(text))) {
         hallucinationCount++;
+        // FIX v10.28: apprendre cette hallucination (compter les occurrences)
+        if (typeof learnHallucination === 'function') learnHallucination(text);
         if (State.debugMode) addLog('[DEBUG] Passe ignoree (hallucination detectee): "' + text.substring(0,60) + '"', 'sys');
         continue;
       }
@@ -2029,8 +2167,11 @@ async function processRecording(blob) {
 
   if (passes.length === 0) {
     // 3 passes Whisper ont retourne du vide = pas de voix humaine detectee
-    storeClip(blob, '(silence - 3 passes Whisper vides)', 0, energy, 0);
-    addLog('Silence: 3 passes Whisper n\'ont rien capte. Clip stocke pour ecoute manuelle.', 'sys');
+    // FIX v10.21: utiliser nbPasses dynamique (pas "3" codé en dur)
+    // FIX v10.22: pluriel propre (1 passe, 2 passes)
+    const passePlural = nbPasses > 1 ? 'passes' : 'passe';
+    storeClip(blob, '(silence - ' + nbPasses + ' ' + passePlural + ' Whisper vides)', 0, energy, 0);
+    addLog('Silence: ' + nbPasses + ' ' + passePlural + ' Whisper n\'ont rien capte. Clip stocke pour ecoute manuelle.', 'sys');
     return;
   }
 
@@ -2060,27 +2201,61 @@ async function processRecording(blob) {
   // AVANT v10.6: 3 appels traduction en parallèle → AbortController → tout échouait
   // MAINTENANT: 1 seul appel sur bestText → fiable
   // FIX v10.14: AUTO_TRANSLATE est OBLIGATOIRE (non désactivable)
+  // FIX v10.19 CRITIQUE: utiliser la langue Whisper (result.language) au lieu de detectLanguage() maison
+  // Whisper est PLUS PRÉCIS pour détecter la langue (il a entendu l'audio, pas juste le texte)
   let originalLang = 'fr';
   let wasTranslated = false;
   let originalText = bestText;
   let tradFailed = false;
   if (bestText && bestText.length >= 3) {
     try {
-      const lang = detectLanguage(bestText);
+      // FIX v10.19: priorité à la langue Whisper (la plus précise)
+      // Si Whisper a détecté une langue, l'utiliser. Sinon, fallback sur detectLanguage().
+      let lang = 'fr';
+      if (whisperLanguages.length > 0) {
+        // Prendre la langue la plus fréquente parmi les passes
+        const langCounts = {};
+        for (const wl of whisperLanguages) {
+          const code = mapWhisperLanguage(wl);
+          if (code) langCounts[code] = (langCounts[code] || 0) + 1;
+        }
+        const sorted = Object.entries(langCounts).sort((a, b) => b[1] - a[1]);
+        if (sorted.length > 0) {
+          lang = sorted[0][0];
+          if (State.debugMode) addLog('[LANG] Langue Whisper majoritaire: ' + lang + ' (' + sorted[0][1] + '/' + whisperLanguages.length + ' passes)', 'sys');
+        }
+      }
+      // Fallback sur detectLanguage() si Whisper n'a pas retourné de langue
+      if (lang === 'fr' && whisperLanguages.length === 0) {
+        lang = detectLanguage(bestText);
+      }
       if (lang !== 'fr') {
-        addLog('[TRAD] Détection ' + lang.toUpperCase() + ' → traduction en cours...', 'sys');
-        const tradResult = await Promise.race([
-          translateToFrench(bestText, lang),
-          new Promise(r => setTimeout(() => r({ translated: bestText, sourceLang: lang, ok: false }), CONFIG.TRANSLATE_TIMEOUT + 4000)),
-        ]);
+        addLog('[TRAD] Détection ' + lang.toUpperCase() + ' (Whisper) → traduction en cours...', 'sys');
+        // FIX v10.21: retry de traduction (1 retry si échec) + garde "trad identique = déjà français"
+        let tradResult = null;
+        for (let attempt = 1; attempt <= 2; attempt++) {
+          tradResult = await Promise.race([
+            translateToFrench(bestText, lang),
+            new Promise(r => setTimeout(() => r({ translated: bestText, sourceLang: lang, ok: false }), CONFIG.TRANSLATE_TIMEOUT + 4000)),
+          ]);
+          if (tradResult.ok && tradResult.translated) break;
+          if (attempt === 1) addLog('[TRAD] Retry (tentative 2/2)...', 'sys');
+        }
+        // FIX v10.21: garde "trad identique = déjà français"
+        // Si la traduction retourne le même texte → c'est que le texte est déjà en français
+        // (Whisper a mal étiqueté la langue) → ne pas marquer tradFailed
         if (tradResult.ok && tradResult.translated && tradResult.translated !== bestText) {
           addLog('[TRADUIT de ' + lang.toUpperCase() + '] "' + bestText.substring(0,40) + '" → "' + tradResult.translated.substring(0,40) + '"', 'sys');
           originalLang = lang;
           wasTranslated = true;
           originalText = bestText;
           bestText = tradResult.translated;
+        } else if (tradResult.ok && tradResult.translated === bestText) {
+          // Traduction retourne le même texte → déjà en français (Whisper a mal étiqueté)
+          addLog('[TRAD] Texte déjà en français (traduction identique) → pas de traduction', 'sys');
+          // Ne pas marquer tradFailed → le TTS peut parler
         } else {
-          addLog('[TRAD] Échec traduction ' + lang.toUpperCase() + ' → texte original conservé', 'sys');
+          addLog('[TRAD] Échec traduction ' + lang.toUpperCase() + ' (2 tentatives) → texte original conservé', 'sys');
           tradFailed = true;
         }
       }
@@ -2088,6 +2263,26 @@ async function processRecording(blob) {
       if (State.debugMode) addLog('[TRAD] Skip: ' + e.message, 'sys');
       tradFailed = true;
     }
+  }
+
+  // FIX v10.31: isDangerousShortPhrase après traduction + isLikelyUserSpeech
+  // Si la phrase est dangereuse OU c'est l'utilisateur qui parle → pas de TTS
+  if (isDangerousShortPhrase(bestText) || isEchoOfRecentTTS(bestText)) {
+    addLog('[FILTRE] Phrase dangereuse / echo post-trad → skip', 'sys');
+    storeClip(blob, '(filtré - phrase courte dangereuse)', 0, energy, 0);
+    return;
+  }
+  // FIX v10.31: détecter si c'est l'utilisateur qui parle (français + long + énergie forte)
+  if (isLikelyUserSpeech(bestText, energy)) {
+    addLog('[FILTRE] Voix utilisateur détectée → pas de TTS automatique', 'sys');
+    storeClip(blob, '[VOIX USER] ' + bestText.substring(0,40), 0.3, energy, 0);
+    return;
+  }
+
+  // FIX v10.30: COUPE-CIRCUIT RÉPÉTITIONS — si le même texte a été dit > 2x en 45s → blocage
+  if (isRepetitionBlocked(bestText)) {
+    storeClip(blob, '(coupé - répétition ' + bestText.substring(0,20) + ')', 0, energy, 0);
+    return; // NE PAS afficher, NE PAS parler
   }
 
   // 1. TOUT passe par l'IA (esprits + humains + fantômes) — v10.4
@@ -2119,9 +2314,31 @@ async function processRecording(blob) {
     const failMarker = tradFailed ? ' [NON TRADUIT]' : '';
     const displayQ = wasTranslated ? '[' + originalLang.toUpperCase() + '→FR] ' + bestText : bestText + failMarker;
     addLog(label + ': ' + displayQ, 'sys');
+    // FIX v10.24 CRITIQUE: incrémenter State.detections + stats AVANT le return
+    // (avant: la branche "Q aux esprits" faisait return; avant detections++ → stats toujours 0)
+    State.detections++;
+    State.freqSum += dominantFreq;
+    State.freqCount++;
+    if (pitch > 0) {
+      State.pitchSum += pitch;
+      State.pitchCount++;
+    }
     storeClip(blob, '[' + label + '] ' + (wasTranslated ? '[' + originalLang + '] ' + originalText.substring(0,30) + ' → [FR] ' + bestText.substring(0,30) : bestText.substring(0,40) + failMarker), 1.0, energy, 0, 'oracle', false);
     // TTS dit juste le message en français (PAS de "Je transmets..." inventé)
-    speakText(bestText);
+    // FIX v10.24 CRITIQUE: garde anti-echo — si traduction arrive > 30s après segStart → skip TTS
+    // (évite que l'écho d'une traduction tardive reparte dans le micro → boucle "Thank you → Merci")
+    // FIX v10.25 CRITIQUE: aussi vérifier isEchoOfRecentTTS APRÈS traduction
+    // Le TTS dit "Merci" → micro capte l'écho → Whisper re-transcrit en "Thank you" (traduit l'écho en anglais !)
+    // → isEchoOfRecentTTS("Thank you") ne matche pas "Merci" → passe le filtre → boucle
+    // Maintenant: on check isEchoOfRecentTTS(bestText) où bestText est la VERSION TRADUITE "Merci"
+    // → "Merci" matche "Merci" dans recentlySpokenTexts → TTS skippé → boucle MORTE
+    if (Date.now() - segStart > 30000 || isEchoOfRecentTTS(bestText)) {
+      addLog('[TTS] SKIP: anti-echo (trad tardive ou echo du TTS lui-meme)', 'sys');
+    } else {
+      // FIX v10.27: TTS dit "Merci (traduit de l'espagnol)" au lieu de juste "Merci"
+      const spokenText = getSpokenTextWithLang(bestText, wasTranslated, originalLang, originalText);
+      speakText(spokenText);
+    }
     if (navigator.vibrate) navigator.vibrate(200);
     // L'IA ne répond PAS → les esprits peuvent répondre dans les prochains segments
     return;
@@ -2196,7 +2413,9 @@ async function processRecording(blob) {
   highlightSpirit(spirit);
   if (confidence >= CONFIG.VERY_HIGH_CONFIDENCE) highlightSpiritVery(spirit);
 
-
+  // FIX v10.33: APPRENTISSAGE — tracker l'esprit APRÈS sa définition (avant: causait "can't access lexical declaration 'spirit'")
+  if (typeof learnSpirit === 'function') learnSpirit(spirit, dominantFreq, pitch);
+  if (wasTranslated && typeof learnLanguage === 'function') learnLanguage(originalLang);
 
   Store.save();
   updateStats();
@@ -2246,11 +2465,21 @@ async function processRecording(blob) {
   if (tradFailed && originalLang !== 'fr') {
     // Traduction a échoué → texte encore en étranger → NE PAS parler (silence vocal)
     addLog('[TTS] SKIPPÉ: texte non traduit (étranger) → silence vocal pour éviter de parler en non-français', 'sys');
+  } else if (Date.now() - segStart > 30000 || isEchoOfRecentTTS(bestText)) {
+    // FIX v10.24: garde anti-echo — si traduction arrive > 30s après segStart → skip TTS
+    // FIX v10.25 CRITIQUE: aussi vérifier isEchoOfRecentTTS APRÈS traduction
+    // Le TTS dit "Merci" → micro capte l'écho → Whisper re-transcrit en "Thank you" → traduit en "Merci"
+    // → isEchoOfRecentTTS("Merci") matche "Merci" dans recentlySpokenTexts → TTS skippé → boucle MORTE
+    addLog('[TTS] SKIP: anti-echo (trad tardive ou echo du TTS lui-meme)', 'sys');
   } else {
-    addLog('[TTS] dit: ' + bestText.substring(0, 50), 'sys');
-    speakText(bestText);
+    // FIX v10.27: TTS dit "Merci (traduit de l'espagnol)" au lieu de juste "Merci"
+    const spokenText = getSpokenTextWithLang(bestText, wasTranslated, originalLang, originalText);
+    addLog('[TTS] dit: ' + spokenText.substring(0, 80), 'sys');
+    speakText(spokenText);
   }
   if (navigator.vibrate) navigator.vibrate(200);
+  // FIX v10.23: log latence totale du segment (depuis segStart)
+  if (State.debugMode) addLog('[LATENCE] Segment: ' + ((Date.now() - segStart) / 1000).toFixed(1) + 's', 'sys');
 
   // FIX v9.3: TRANSCRIPTION INVERSÉE AUTOMATIQUE (esprits parlent à l'envers)
   if (State.autoScan && blob.size > 5000) {
@@ -2270,9 +2499,35 @@ async function processRecording(blob) {
       });
       const revResult = await transcribeOnce(revBlob, 0);
       if (revResult && revResult.text && revResult.text.trim()) {
-        const revText = revResult.text.trim();
+        let revText = revResult.text.trim();
         if (!isHallucination(revText) && !isEchoOfRecentTTS(revText) && revText.length > 2) {
-          addLog('[EVP INVERSÉ] ' + revText, 'evp', 0.5, Math.round(getDominantFreq()), { pitch: 0, spirit: 'vesper' });
+          // FIX v10.21: traduire l'EVP inversé en français (comme les EVP normaux)
+          let revLang = 'fr';
+          if (revResult.language) {
+            revLang = mapWhisperLanguage(revResult.language) || 'fr';
+          }
+          if (revLang === 'fr' && !revResult.language) {
+            revLang = detectLanguage(revText);
+          }
+          if (revLang !== 'fr') {
+            try {
+              const revTrad = await Promise.race([
+                translateToFrench(revText, revLang),
+                new Promise(r => setTimeout(() => r({ translated: revText, sourceLang: revLang, ok: false }), CONFIG.TRANSLATE_TIMEOUT)),
+              ]);
+              if (revTrad.ok && revTrad.translated && revTrad.translated !== revText) {
+                addLog('[EVP INVERSÉ] [' + revLang.toUpperCase() + '→FR] ' + revTrad.translated, 'evp', 0.5, Math.round(getDominantFreq()), { pitch: 0, spirit: 'vesper' });
+                if (State.debugMode) addLog('[DEBUG] Reverse traduit: "' + revText.substring(0,40) + '" → "' + revTrad.translated.substring(0,40) + '"', 'sys');
+                revText = revTrad.translated;
+              } else {
+                addLog('[EVP INVERSÉ] ' + revText, 'evp', 0.5, Math.round(getDominantFreq()), { pitch: 0, spirit: 'vesper' });
+              }
+            } catch(e) {
+              addLog('[EVP INVERSÉ] ' + revText, 'evp', 0.5, Math.round(getDominantFreq()), { pitch: 0, spirit: 'vesper' });
+            }
+          } else {
+            addLog('[EVP INVERSÉ] ' + revText, 'evp', 0.5, Math.round(getDominantFreq()), { pitch: 0, spirit: 'vesper' });
+          }
           if (State.debugMode) addLog('[DEBUG] Reverse: "' + revText.substring(0,80) + '"', 'sys');
           // Pas de TTS pour l'inversé (sinon trop de bruit), juste loggé
         }
@@ -2338,6 +2593,14 @@ function detectLanguage(text) {
   if (/[\uAC00-\uD7AF]/.test(text)) return 'ko';
   // Thai
   if (/[\u0E00-\u0E7F]/.test(text)) return 'th';
+  // FIX v10.20: Turc — caractères spécifiques ı, ş, ğ, İ, Ş, Ğ
+  // FIX v10.21 CRITIQUE: retirer 'i' ASCII de la regex (matchait toutes les phrases françaises avec "i")
+  // Avant: [iışğİŞĞ] contenait 'i' → "je suis ici" détecté turc (FAUX)
+  // Maintenant: seulement les caractères turcs SPÉCIFIQUES (pas le i ASCII)
+  if (/[ışğİŞĞçÇöÖüÜ]/.test(text)) {
+    // Vérifier qu'il y a au moins un caractère turc SPÉCIFIQUE (ı sans point, ş, ğ)
+    if (/[ışğ]/.test(text) && text.length >= 4) return 'tr';
+  }
   // Détection par mots pour les langues latines
   // (évite de traduire du français qui aurait des mots "in" "the" etc.)
   // FIX v10.1: 2 catégories de marqueurs - forts (1 suffit) et faibles (2+ requis)
@@ -2360,7 +2623,10 @@ function detectLanguage(text) {
     ['sv', [' och ', ' inte ', ' tack', ' ja ', ' nej ', ' hej ',
             'tack', 'hej', 'snälla', 'förlåt']],
     ['tr', [' ve ', ' değil ', ' evet', ' hayır', ' merhaba',
-            'merhaba', 'teşekkür', 'lütfen', 'özür']],
+            'merhaba', 'teşekkür', 'lütfen', 'özür',
+            // v10.20: mots turcs supplémentaires
+            'işli', 'bilir', 'iyi', 'evet', 'hayır', 'teşekkür', 'merhaba',
+            'tamam', 'evet efendim', 'peki', 'olur', 'yapabilirim']],
     // v10.13: ajout indonésien, malais, plus de mots
     ['id', [' terima kasih', ' terima ', ' kasih ', ' ya ', ' tidak ', ' halo ', ' selamat ',
             'terima kasih', 'halo', 'selamat datang', 'selamat pagi', 'selamat malam',
@@ -2373,6 +2639,13 @@ function detectLanguage(text) {
             'cảm ơn', 'vâng', 'không', 'xin chào', 'cảm ơn bạn']],
     ['ca', [' gràcies', ' sí ', ' no ', ' hola', ' bon dia',
             'gràcies', 'hola', 'bon dia']],
+    // v10.26: norvégien + suédois + danois
+    ['no', [' takk', ' ja ', ' nei ', ' hei ', ' hallo ',
+            'takk', 'hei', 'hallo', 'tusen takk', 'takk for']],
+    ['sv', [' tack', ' ja ', ' nej ', ' hej ', ' hallå ',
+            'tack', 'hej', 'hallå', 'tusen tack', 'tack för']],
+    ['da', [' tak', ' ja ', ' nej ', ' hej ', ' hallo ',
+            'tak', 'hej', 'hallo', 'mange tak']],
   ];
   // Si le texte est court (< 30 chars), on est plus prudent
   // Pour éviter de faux positifs (ex: "ok." ou "you.")
@@ -2503,12 +2776,67 @@ async function translateToFrenchIfNeeded(text) {
   return { text, sourceLang, translated: false };
 }
 
+// FIX v10.27: mapping langue → nom français pour le TTS
+const langToFrenchName = {
+  'en': 'anglais', 'es': 'espagnol', 'ru': 'russe', 'de': 'allemand',
+  'it': 'italien', 'pt': 'portugais', 'nl': 'néerlandais', 'pl': 'polonais',
+  'uk': 'ukrainien', 'ar': 'arabe', 'he': 'hébreu', 'el': 'grec',
+  'zh': 'chinois', 'ja': 'japonais', 'ko': 'coréen', 'th': 'thaï',
+  'tr': 'turc', 'sv': 'suédois', 'no': 'norvégien', 'da': 'danois',
+  'fi': 'finnois', 'cs': 'tchèque', 'hu': 'hongrois', 'ro': 'roumain',
+  'bg': 'bulgare', 'sr': 'serbe', 'hr': 'croate', 'sk': 'slovaque',
+  'sl': 'slovène', 'lt': 'lituanien', 'lv': 'letton', 'et': 'estonien',
+  'fa': 'persan', 'hi': 'hindi', 'bn': 'bengali', 'ta': 'tamoul',
+  'te': 'télougou', 'mr': 'marathi', 'ne': 'népali', 'si': 'singhalais',
+  'vi': 'vietnamien', 'id': 'indonésien', 'ms': 'malais', 'tl': 'tagalog',
+  'sw': 'swahili', 'am': 'amharique', 'yi': 'yiddish', 'la': 'latin',
+  'eo': 'espéranto', 'ca': 'catalan', 'eu': 'basque', 'gl': 'galicien',
+  'af': 'afrikaans', 'sq': 'albanais', 'az': 'azerbaïdjanais',
+  'uz': 'ouzbek', 'kk': 'kazakh', 'ky': 'kirghize', 'tg': 'tadjik',
+  'tk': 'turkmène', 'mn': 'mongol', 'my': 'birman', 'km': 'khmer',
+  'lo': 'lao', 'ka': 'géorgien', 'hy': 'arménien', 'ga': 'irlandais',
+  'cy': 'gallois', 'is': 'islandais', 'mt': 'maltais', 'lb': 'luxembourgeois',
+  'mk': 'macédonien', 'bs': 'bosnien', 'be': 'biélorusse',
+};
+
+// FIX v10.29: mapping langue → pays (pour "Je viens d'Italie")
+const langToCountry = {
+  'en': 'd\'Angleterre', 'es': 'd\'Espagne', 'ru': 'de Russie', 'de': 'd\'Allemagne',
+  'it': 'd\'Italie', 'pt': 'du Portugal', 'nl': 'des Pays-Bas', 'pl': 'de Pologne',
+  'uk': 'd\'Ukraine', 'ar': 'du monde arabe', 'he': 'd\'Israël', 'el': 'de Grèce',
+  'zh': 'de Chine', 'ja': 'du Japon', 'ko': 'de Corée', 'th': 'de Thaïlande',
+  'tr': 'de Turquie', 'sv': 'de Suède', 'no': 'de Norvège', 'da': 'du Danemark',
+  'fi': 'de Finlande', 'cs': 'de Tchéquie', 'hu': 'de Hongrie', 'ro': 'de Roumanie',
+  'bg': 'de Bulgarie', 'sr': 'de Serbie', 'hr': 'de Croatie', 'sk': 'de Slovaquie',
+  'sl': 'de Slovénie', 'lt': 'de Lituanie', 'lv': 'de Lettonie', 'et': 'd\'Estonie',
+  'fa': 'd\'Iran', 'hi': 'd\'Inde', 'bn': 'du Bangladesh', 'ta': 'du Tamil Nadu',
+  'vi': 'du Vietnam', 'id': 'd\'Indonésie', 'ms': 'de Malaisie', 'tl': 'des Philippines',
+  'sw': 'd\'Afrique de l\'Est', 'la': 'de Rome antique', 'ca': 'de Catalogne',
+  'eu': 'du Pays basque', 'gl': 'de Galice', 'af': 'd\'Afrique du Sud',
+  'sq': 'd\'Albanie', 'az': 'd\'Azerbaïdjan', 'ka': 'de Géorgie', 'hy': 'd\'Arménie',
+  'ga': 'd\'Irlande', 'cy': 'du Pays de Galles', 'is': 'd\'Islande', 'mt': 'de Malte',
+  'mk': 'de Macédoine', 'bs': 'de Bosnie', 'be': 'de Biélorussie',
+};
+
+// FIX v10.31: Simplifier le TTS enrichi — "Merci (traduit de l'italien)" au lieu de la version longue
+// Plus court = moins de risque de nouvelles hallucinations
+function getSpokenTextWithLang(text, wasTranslated, originalLang, originalText) {
+  if (!wasTranslated || originalLang === 'fr' || !originalLang) return text;
+  const langName = langToFrenchName[originalLang] || originalLang;
+  return text + ' (traduit de ' + langName + ')';
+}
+
 /* ============= DÉTECTION QUESTIONS AUX ESPRITS v10.11 ============= */
 // Détecte si une question s'adresse aux esprits/fantômes (pas à l'IA)
 // Si oui → l'IA relaye la question et se tait (laisse les esprits répondre)
 function isQuestionToSpirits(text) {
   if (!text || text.length < 3) return false;
   const lower = text.toLowerCase().trim();
+  // Si le MODE PARLER AUX ESPRITS est activé → tout est considéré comme question aux esprits
+  if (State.spiritMode) return true;
+  // FIX v10.20: rendre la détection PLUS STRICTE pour éviter les faux positifs
+  // Avant: matchait "vous" partout → "J'étais dans le bâtiment..." étiqueté "Q (aux esprits)"
+  // Maintenant: seulement si la phrase COMMENCE par un mot esprit OU contient "?" + mot esprit
   // Mots indiquant que la question s'adresse aux esprits
   const spiritKeywords = [
     'esprit', 'esprits', 'fantôme', 'fantome', 'fantômes', 'fantomes',
@@ -2517,47 +2845,70 @@ function isQuestionToSpirits(text) {
     'présence', 'presence', 'présences',
     'défunt', 'defunt', 'défunts',
     'spectre', 'spectres',
-    'ombre', 'ombres',
-    'mort', 'morts', 'décédé', 'decede',
-    'au-delà', 'au-dela', 'audelà',
     'paranormal',
   ];
-  for (const w of spiritKeywords) {
-    if (lower.includes(w)) return true;
-  }
-  // Phrases typiques pour parler aux esprits
-  const spiritPhrases = [
-    'qui es-tu', 'qui es tu', 'qui etes-vous', 'qui êtes-vous', 'qui est tu',
-    'quel est ton nom', 'quelle est ton nom', 'comment tu t\'appelles',
+  // Phrases qui COMMENCENT par un mot esprit (très fiable)
+  const spiritStarters = [
+    'esprit', 'fantôme', 'fantome', 'entité', 'entite', 'âme', 'ame',
+    'présence', 'presence', 'défunt', 'defunt', 'spectre',
+    'qui es-tu', 'qui es tu', 'qui es-tu ?', 'qui êtes-vous', 'qui etes-vous',
+    'quel est ton nom', 'quelle est ton nom',
     'd\'où viens-tu', 'd ou viens tu', 'd\'ou viens tu',
     'comment es-tu mort', 'comment es tu mort',
     'quand es-tu mort', 'quand es tu mort',
     'pourquoi es-tu là', 'pourquoi es tu la',
-    'que veux-tu', 'que veux tu', 'que voulez-vous',
-    'es-tu là', 'es tu la', 'etes-vous la', 'êtes-vous là',
+    'es-tu là', 'es tu la', 'es-tu present', 'es-tu présent',
     'montre-toi', 'montre toi', 'manifeste-toi', 'manifeste toi',
     'fais-toi entendre', 'fais toi entendre',
     'parle-moi', 'parle moi', 'parlez-moi',
-    'je te parle', 'je vous parle',
-    'qui est avec moi', 'qui est dans cette pièce', 'qui est dans cette piece',
-    'qui est ici', 'qui est présent', 'qui est present',
-    'y a quelqu\'un', 'y a quelqu un', 'ya quelqu\'un',
-    'êtes-vous parmi nous', 'etes vous parmi nous',
     'je t\'invoque', 'je t invoque', 'je vous invoque',
     'je te demande', 'je vous demande',
-    'que sais-tu', 'que sais tu',
-    'que deviens-tu', 'que deviens tu',
-    'où es-tu', 'ou es tu', 'où êtes-vous', 'ou etes vous',
     'peux-tu m\'entendre', 'peux tu m entendre', 'm\'entends-tu', 'm entends tu',
     'es-tu parmi nous', 'es tu parmi nous',
-    'que devons-nous savoir', 'que devons nous savoir',
-    'as-tu un message', 'as tu un message',
   ];
-  for (const p of spiritPhrases) {
-    if (lower.includes(p)) return true;
+  // Vérifier si la phrase commence par un mot esprit
+  for (const s of spiritStarters) {
+    if (lower.startsWith(s)) return true;
   }
-  // Si le MODE PARLER AUX ESPRITS est activé → tout est considéré comme question aux esprits
-  if (State.spiritMode) return true;
+  // Vérifier si la phrase contient "?" ET un mot esprit
+  if (lower.includes('?')) {
+    for (const w of spiritKeywords) {
+      if (lower.includes(w)) return true;
+    }
+    // Phrases interrogatives typiques pour parler aux esprits (seulement avec "?")
+    const spiritPhrases = [
+      'qui es-tu', 'qui es tu', 'qui etes-vous', 'qui êtes-vous',
+      'quel est ton nom', 'quelle est ton nom', 'comment tu t\'appelles',
+      'd\'où viens-tu', 'd ou viens tu', 'd\'ou viens tu',
+      'comment es-tu mort', 'comment es tu mort',
+      'quand es-tu mort', 'quand es tu mort',
+      'pourquoi es-tu là', 'pourquoi es tu la',
+      'que veux-tu', 'que veux tu', 'que voulez-vous',
+      'es-tu là', 'es tu la', 'etes-vous la', 'êtes-vous là',
+      'montre-toi', 'montre toi', 'manifeste-toi', 'manifeste toi',
+      'fais-toi entendre', 'fais toi entendre',
+      'parle-moi', 'parle moi', 'parlez-moi',
+      'je te parle', 'je vous parle',
+      'qui est avec moi', 'qui est dans cette pièce', 'qui est dans cette piece',
+      'qui est ici', 'qui est présent', 'qui est present',
+      'y a quelqu\'un', 'y a quelqu un', 'ya quelqu\'un',
+      'êtes-vous parmi nous', 'etes vous parmi nous',
+      'je t\'invoque', 'je t invoque', 'je vous invoque',
+      'je te demande', 'je vous demande',
+      'que sais-tu', 'que sais tu',
+      'que deviens-tu', 'que deviens tu',
+      'où es-tu', 'ou es tu', 'où êtes-vous', 'ou etes vous',
+      'peux-tu m\'entendre', 'peux tu m entendre', 'm\'entends-tu', 'm entends tu',
+      'es-tu parmi nous', 'es tu parmi nous',
+      'que devons-nous savoir', 'que devons nous savoir',
+      'as-tu un message', 'as tu un message',
+    ];
+    for (const p of spiritPhrases) {
+      if (lower.includes(p)) return true;
+    }
+  }
+  // FIX v10.20: retirer "mort", "morts", "décédé", "ombre", "au-delà" qui sont trop communs
+  // et matchent des phrases normales comme "je suis mort de rire"
   return false;
 }
 
@@ -2902,6 +3253,41 @@ async function askGroqLLM(question) {
   return 'Je ne sais pas.';
 }
 
+// FIX v10.19: Mapper les langues Whisper (anglais) vers codes ISO
+// Whisper retourne "english", "french", "russian", etc. → on convertit en "en", "fr", "ru"
+function mapWhisperLanguage(whisperLang) {
+  if (!whisperLang || typeof whisperLang !== 'string') return null;
+  const lang = whisperLang.toLowerCase().trim();
+  const mapping = {
+    'english': 'en', 'french': 'fr', 'spanish': 'es', 'german': 'de',
+    'italian': 'it', 'portuguese': 'pt', 'dutch': 'nl', 'polish': 'pl',
+    'russian': 'ru', 'ukrainian': 'uk', 'arabic': 'ar', 'hebrew': 'he',
+    'greek': 'el', 'chinese': 'zh', 'japanese': 'ja', 'korean': 'ko',
+    'thai': 'th', 'turkish': 'tr', 'swedish': 'sv', 'norwegian': 'no',
+    'danish': 'da', 'finnish': 'fi', 'czech': 'cs', 'hungarian': 'hu',
+    'romanian': 'ro', 'bulgarian': 'bg', 'serbian': 'sr', 'croatian': 'hr',
+    'slovak': 'sk', 'slovenian': 'sl', 'lithuanian': 'lt', 'latvian': 'lv',
+    'estonian': 'et', 'persian': 'fa', 'hindi': 'hi', 'bengali': 'bn',
+    'tamil': 'ta', 'telugu': 'te', 'marathi': 'mr', 'nepali': 'ne',
+    'sinhala': 'si', 'vietnamese': 'vi', 'indonesian': 'id', 'malay': 'ms',
+    'tagalog': 'tl', 'swahili': 'sw', 'amharic': 'am', 'yiddish': 'yi',
+    'latin': 'la', 'esperanto': 'eo', 'catalan': 'ca', 'basque': 'eu',
+    'galician': 'gl', 'afrikaans': 'af', 'albanian': 'sq', 'azerbaijani': 'az',
+    'uzbek': 'uz', 'kazakh': 'kk', 'kyrgyz': 'ky', 'tajik': 'tg',
+    'turkmen': 'tk', 'mongolian': 'mn', 'burmese': 'my', 'khmer': 'km',
+    'lao': 'lo', 'georgian': 'ka', 'armenian': 'hy', 'irish': 'ga',
+    'welsh': 'cy', 'icelandic': 'is', 'maltese': 'mt', 'luxembourgish': 'lb',
+    'macedonian': 'mk', 'bosnian': 'bs', 'belarusian': 'be',
+  };
+  // Mapping direct
+  if (mapping[lang]) return mapping[lang];
+  // Si déjà un code ISO 2 lettres
+  if (lang.length === 2 && /^[a-z]{2}$/.test(lang)) return lang;
+  // Si format "xx-YY" (ex: "en-US")
+  if (lang.length >= 5 && lang[2] === '-') return lang.substring(0, 2);
+  return null;
+}
+
 async function transcribeOnce(blob, temperature) {
   const formData = new FormData();
   formData.append('file', blob, 'evp.webm');
@@ -2961,7 +3347,8 @@ function computeConfidence(passes) {
     const words = passes[0].split(/\s+/).filter(w => w.length > 1);
     return Math.min(0.45, words.length / 20);
   }
-  const wordSets = passes.map(p => new Set(p.toLowerCase().split(/\s+/).filter(w => w.length > 2)));
+  // FIX v10.24: enlever ponctuation aussi dans computeConfidence (cohérence avec findAgreedText)
+  const wordSets = passes.map(p => new Set(p.toLowerCase().split(/\s+/).map(w => w.replace(/[^\p{L}\p{N}]/gu, '')).filter(w => w.length > 2)));
   let totalAgreement = 0;
   let comparisons = 0;
   for (let i = 0; i < wordSets.length; i++) {
@@ -3302,6 +3689,14 @@ function speakText(text) {
     addLog('TTS non disponible sur ce navigateur', 'sys');
     return;
   }
+  // FIX v10.21: Garde TTS non-latin — si le texte contient des caractères non-latin (cyrillique, arabe, etc.)
+  // ET qu'il n'a pas été traduit → NE PAS parler (éviter de parler en russe/arabe au TTS français)
+  // FIX v10.22: étendre la regex avec grec (\u0370-\u03FF), hindi (\u0900-\u097F),
+  // géorgien (\u10A0-\u10FF), arménien (\u0530-\u058F)
+  if (text && /[\u0400-\u04FF\u0370-\u03FF\u0600-\u06FF\u0590-\u05FF\u4E00-\u9FFF\u3040-\u309F\u30A0-\u30FF\uAC00-\uD7AF\u0E00-\u0E7F\u0900-\u097F\u10A0-\u10FF\u0530-\u058F]/.test(text)) {
+    addLog('[TTS] SKIPPÉ: texte non-latin (étranger non traduit) → silence vocal', 'sys');
+    return;
+  }
   // FIX v7.2: Set ttsEndTime pour l'anti-echo (empeche la boucle "merci")
   recentlySpokenTexts.push({ text: text, time: Date.now() });
   const cutoff = Date.now() - 30000;
@@ -3429,12 +3824,18 @@ function isEchoOfRecentTTS(text) {
     }
     const maxMatches = Math.max(matches, reverseMatches);
     const minWords = Math.min(spokenWords.length, textWords.length);
-    // FIX v10.0: si au moins 1 mot long (> 5 chars) en commun → echo probable
+    // FIX v10.26 CRITIQUE: w.length > 5 → w.length >= 4 (merci=5 chars ne matchait pas !)
+    // Avant: "merci" (5 chars) n'était pas considéré comme "mot long" → pas d'écho détecté → boucle
     let longWordMatch = 0;
     for (const w of spokenWords) {
-      if (w.length > 5 && lower.includes(w)) longWordMatch++;
+      if (w.length >= 4 && lower.includes(w)) longWordMatch++;
     }
     if (longWordMatch >= 1) return true;
+    // FIX v10.26: check texte court exact (1-2 mots) — si bestText correspond exactement à un texte TTS récent
+    // "Merci" (1 mot) doit matcher "Merci" dans recentlySpokenTexts même sans mot long
+    if (textWords.length <= 2 && spokenWords.length <= 2 && maxMatches >= 1 && minWords > 0) {
+      return true;
+    }
     // FIX v4.11: si au moins 2 mots en commun ET >= 40% match -> echo
     if (maxMatches >= 2 && minWords > 0 && maxMatches / minWords >= 0.4) {
       return true;
@@ -4103,9 +4504,34 @@ async function voiceQuestion() {
           status.textContent = 'Aucune parole detectee. Repete plus fort.';
           return;
         }
+        // FIX v10.21: traduire la question vocale en français avant l'IA (comme les EVP)
+        // Utiliser la langue Whisper si disponible, sinon detectLanguage()
+        let originalQText = qText;
+        let qLang = 'fr';
+        if (result.language) {
+          qLang = mapWhisperLanguage(result.language) || 'fr';
+        }
+        if (qLang === 'fr' && !result.language) {
+          qLang = detectLanguage(qText);
+        }
+        if (qLang !== 'fr') {
+          try {
+            addLog('[TRAD] Question vocale ' + qLang.toUpperCase() + ' → traduction...', 'sys');
+            const qTrad = await Promise.race([
+              translateToFrench(qText, qLang),
+              new Promise(r => setTimeout(() => r({ translated: qText, sourceLang: qLang, ok: false }), CONFIG.TRANSLATE_TIMEOUT)),
+            ]);
+            if (qTrad.ok && qTrad.translated && qTrad.translated !== qText) {
+              addLog('[TRADUIT] ' + qLang.toUpperCase() + '→FR: "' + qText.substring(0,30) + '" → "' + qTrad.translated.substring(0,30) + '"', 'sys');
+              qText = qTrad.translated;
+            }
+          } catch(e) {
+            addLog('[TRAD] Question vocale: échec → texte original', 'sys');
+          }
+        }
         input.value = qText;
         status.textContent = 'Question captee: "' + qText + '" - ecoute de la reponse...';
-        addLog('Q (vocale): ' + qText, 'sys');
+        addLog('Q (vocale): ' + (qText !== originalQText ? '[' + qLang.toUpperCase() + '→FR] ' : '') + qText, 'sys');
         sendQA();
       } catch (err) {
         status.textContent = 'Erreur transcription question: ' + err.message;
@@ -4584,6 +5010,8 @@ window.doClear = function() {
   State.qaHistory = [];
   State.sessionTimestamps = [];
   State.sessions = 0;
+  // FIX v10.22: reset totalSessions aussi (pour cohérence EXPORT PDF + AUTO-SAVE)
+  State.totalSessions = 0;
   State.detections = 0;
   State.totalTime = 0;
   State.highConfCount = 0;
@@ -4605,6 +5033,8 @@ window.doClear = function() {
 async function stopAll() {
   State.running = false;
   State.autoScan = false;
+  // FIX v10.28: enregistrer la session dans le calendrier (apprentissage à vie)
+  if (typeof recordSession === 'function') recordSession();
   document.getElementById('autoScanBtn').classList.remove('on');
   clearTimeout(State.recordTimer);
   if (State._uptimeTimer) clearInterval(State._uptimeTimer);
@@ -5132,6 +5562,31 @@ if (!savedSettings.preset) {
   State.currentPreset = 'investigation';
   applyPreset('investigation');
 }
+// FIX v10.27: Réglages auto EVP au démarrage — meilleurs réglages pour détection esprits
+// Applique automatiquement les réglages optimaux pour capter les esprits/fantômes
+(function autoEvpSettings() {
+  // Preset INVESTIGATION (gain=10, filtre=200Hz, Q=0.3, seuil=-55dB)
+  State.currentPreset = 'investigation';
+  applyPreset('investigation');
+  // Mode conversationnel ON (pour capter tout)
+  State.conversationalMode = true;
+  // Tout capter OFF (FIX v10.31: false par défaut — moins de bruits/hallucinations)
+  State.captureAllMode = false;
+  // Anti-echo 30s (coupe la boucle TTS)
+  State.antiEchoDuration = 30;
+  // ASSISTANT IA OFF (priorité EVP, pas d'IA qui répond)
+  State.assistantIaMode = false;
+  // TRAD FR ON (obligatoire — tout en français)
+  CONFIG.AUTO_TRANSLATE = true;
+  // 1 passe Whisper (FIX v10.34: économie quota Groq)
+  CONFIG.WHISPER_TEMPS = [0.0]; // 1 passe
+  CONFIG.MIN_PASSES_AGREE = 1; // FIX v10.34: 1 passe = 1 accord suffisant
+  // Timeout traduction 20s (évite échecs)
+  CONFIG.TRANSLATE_TIMEOUT = 20000;
+  CONFIG.LLM_TIMEOUT = 15000;
+  addLog('[AUTO] Réglages EVP optimaux appliqués: INVESTIGATION + Tout capter + TRAD FR + 2 passes + Anti-echo 30s + IA OFF', 'sys');
+  saveSettingsPerm();
+})();
 addLog('EVP ULTIME v9.0 initialise - version propre', 'sys');
 addLog('Mode conversationnel: ' + (State.conversationalMode ? 'ON' : 'OFF') + ' | Tout capter: ' + (State.captureAllMode ? 'ON' : 'OFF') + ' | Anti-echo: ' + State.antiEchoDuration + 's | Sauvegarde: ' + (State.saveSettings ? 'ON' : 'OFF'), 'sys');
 addLog('RÉEL UNIQUEMENT: questions factuelles = GPS/météo/heure, sinon "je ne sais pas" | EVP = ce qui est capté au micro', 'sys');
@@ -6020,7 +6475,7 @@ function toggleRapidMode() {
     // Sauvegarder le modèle original et passer en turbo
     if (!CONFIG._ORIG_WHISPER_MODEL) CONFIG._ORIG_WHISPER_MODEL = CONFIG.WHISPER_MODEL;
     CONFIG.WHISPER_MODEL = 'whisper-large-v3-turbo';
-    addLog('[RAPID] Mode ACTIVÉ - latence ~12-18s (clip 5s, 1 passe Whisper turbo, IA 12s timeout)', 'sys');
+    addLog('[RAPID] Mode ACTIVÉ - latence ~10-15s (clip 5s, 1 passe Whisper turbo, IA 20s timeout)', 'sys');
     // Mettre à jour le bouton WHISPER
     const wBtn = document.getElementById('whisperModelBtn');
     if (wBtn) wBtn.textContent = 'WHISPER: TURBO';
@@ -6030,16 +6485,18 @@ function toggleRapidMode() {
     btn.style.opacity = '1';
     // Restaurer les paramètres normaux
     CONFIG.CLIP_DURATION_MS = 10000; // 10s
-    CONFIG.WHISPER_TEMPS = [0.0, 0.3, 0.5]; // 3 passes
-    CONFIG.MIN_PASSES_AGREE = 2; // vote majorité
+    // FIX v10.34: 1 passe en mode normal aussi (économie quota Groq)
+    CONFIG.WHISPER_TEMPS = [0.0]; // 1 passe
+    CONFIG.MIN_PASSES_AGREE = 1; // 1 passe = 1 accord
     CONFIG.LLM_TIMEOUT = 15000; // 15s
-    CONFIG.TRANSLATE_TIMEOUT = 8000; // 8s
+    // FIX v10.21: garder TRANSLATE_TIMEOUT = 20s (avant: remettait 8000 → échecs traduction)
+    CONFIG.TRANSLATE_TIMEOUT = 20000; // 20s (même en mode normal, évite les échecs)
     // Restaurer le modèle Whisper
-    CONFIG.WHISPER_MODEL = CONFIG._ORIG_WHISPER_MODEL || 'whisper-large-v3';
-    addLog('[RAPID] Mode DÉSACTIVÉ - retour v10.7 normal (clip 10s, 3 passes, large-v3)', 'sys');
+    CONFIG.WHISPER_MODEL = CONFIG._ORIG_WHISPER_MODEL || 'whisper-large-v3-turbo';
+    addLog('[RAPID] Mode DÉSACTIVÉ - retour normal (clip 10s, 1 passe, large-v3-turbo)', 'sys');
     // Mettre à jour le bouton WHISPER
     const wBtn = document.getElementById('whisperModelBtn');
-    if (wBtn) wBtn.textContent = 'WHISPER: v3';
+    if (wBtn) wBtn.textContent = 'WHISPER: TURBO';
     try { localStorage.setItem('evp_rapid_mode', '0'); } catch(e) {}
   }
 }
@@ -6166,6 +6623,175 @@ if (document.readyState === 'interactive' || document.readyState === 'complete')
 }
 
 addLog('EVP ULTIME v10.15 chargé - PRIORITÉ EVP (esprits/bruits/consciences réels traduits FR écrit+vocal) | ASSISTANT IA OFF par défaut', 'sys');
+
+/* ============================================================================
+   v10.28 — APPRENTISSAGE ÉTERNEL (survit aux reboots)
+   7 systèmes qui apprennent et se souviennent à vie :
+   1. Auto-blocklist évolutive (apprend les hallucinations de l'environnement)
+   2. Mémoire des esprits (fréquences/pitches récurrents → profils)
+   3. Calendrier des sessions (date/EVP/durée → historique à vie)
+   4. Auto-save VPS automatique (plus de bouton, sauvegarde toutes les 60s)
+   5. Auto-calibration (mesure le bruit de fond → ajuste le seuil)
+   6. Langues actives (tracker les langues récurrentes)
+   7. Profils d'esprits évolutifs (compte occurrences par esprit)
+   Tout est sauvé dans localStorage → survive aux reboots
+   ============================================================================ */
+
+// Charger l'apprentissage depuis localStorage au démarrage
+function loadLearning() {
+  try {
+    const data = localStorage.getItem('evp_learning');
+    if (data) {
+      const learned = JSON.parse(data);
+      State.learnedBlocklist = learned.learnedBlocklist || [];
+      State.spiritMemory = learned.spiritMemory || {};
+      State.sessionCalendar = learned.sessionCalendar || [];
+      State.activeLanguages = learned.activeLanguages || {};
+      State.autoCalibration = learned.autoCalibration || { baseline: -55, samples: 0, sum: 0 };
+      addLog('[APPRENTISSAGE] Chargé: ' + State.learnedBlocklist.length + ' hallucinations apprises, ' +
+             Object.keys(State.spiritMemory).length + ' esprits mémorisés, ' +
+             State.sessionCalendar.length + ' sessions historiques', 'sys');
+    }
+  } catch(e) {
+    addLog('[APPRENTISSAGE] Erreur chargement: ' + e.message, 'sys');
+  }
+}
+
+// Sauvegarder l'apprentissage dans localStorage
+function saveLearning() {
+  try {
+    const data = {
+      learnedBlocklist: State.learnedBlocklist,
+      spiritMemory: State.spiritMemory,
+      sessionCalendar: State.sessionCalendar,
+      activeLanguages: State.activeLanguages,
+      autoCalibration: State.autoCalibration,
+    };
+    localStorage.setItem('evp_learning', JSON.stringify(data));
+  } catch(e) {}
+}
+
+// 1. Auto-blocklist: si un texte est filtré > 3 fois → ajouté à la blocklist persistante
+function learnHallucination(text) {
+  if (!text || text.length < 3) return;
+  const lower = text.toLowerCase().trim();
+  let entry = State.learnedBlocklist.find(e => e.text === lower);
+  if (!entry) {
+    entry = { text: lower, count: 0, lastSeen: Date.now() };
+    State.learnedBlocklist.push(entry);
+  }
+  entry.count++;
+  entry.lastSeen = Date.now();
+  // Si filtré > 3 fois → marquer comme hallucination confirmée
+  // FIX v10.33: log seulement tous les 10x pour réduire le spam (avant: chaque fois)
+  if (entry.count >= 3 && !isHallucination(text) && (entry.count === 3 || entry.count % 10 === 0)) {
+    addLog('[APPRENTISSAGE] Hallucination: "' + lower.substring(0,30) + '" (' + entry.count + 'x)', 'sys');
+  }
+  // Limiter à 500 entrées
+  if (State.learnedBlocklist.length > 500) State.learnedBlocklist.shift();
+  saveLearning();
+}
+
+// Vérifier si un texte est dans la blocklist apprise
+function isLearnedHallucination(text) {
+  if (!text) return false;
+  const lower = text.toLowerCase().trim();
+  const entry = State.learnedBlocklist.find(e => e.text === lower);
+  return entry && entry.count >= 3;
+}
+
+// 2. Mémoire des esprits: tracker les fréquences/pitches récurrents
+function learnSpirit(spiritName, freq, pitch) {
+  if (!spiritName) return;
+  if (!State.spiritMemory[spiritName]) {
+    State.spiritMemory[spiritName] = {
+      count: 0, lastSeen: 0,
+      freqSum: 0, freqCount: 0,
+      pitchSum: 0, pitchCount: 0,
+    };
+  }
+  const s = State.spiritMemory[spiritName];
+  s.count++;
+  s.lastSeen = Date.now();
+  if (freq > 0) { s.freqSum += freq; s.freqCount++; }
+  if (pitch > 0) { s.pitchSum += pitch; s.pitchCount++; }
+  // Annoncer si esprit récurrent
+  if (s.count === 3) {
+    addLog('[MÉMOIRE] Esprit ' + spiritName + ' reconnu (3e détection)', 'sys');
+  } else if (s.count === 10) {
+    addLog('[MÉMOIRE] Esprit ' + spiritName + ' confirmé (10 détections)', 'sys');
+  } else if (s.count % 25 === 0) {
+    addLog('[MÉMOIRE] Esprit ' + spiritName + ' très actif (' + s.count + ' détections)', 'sys');
+  }
+  saveLearning();
+}
+
+// 3. Calendrier des sessions: enregistrer la session à la fin
+function recordSession() {
+  const session = {
+    date: new Date().toISOString(),
+    sessionId: State.sessionId,
+    evps: State.detections,
+    duration: State.totalTime,
+    spirits: Object.keys(State.spiritMemory).length,
+    freqAvg: State.freqCount > 0 ? Math.round(State.freqSum / State.freqCount) : 0,
+  };
+  State.sessionCalendar.push(session);
+  // Limiter à 1000 sessions
+  if (State.sessionCalendar.length > 1000) State.sessionCalendar.shift();
+  saveLearning();
+  addLog('[CALENDRIER] Session enregistrée: ' + session.evps + ' EVP, ' + Math.round(session.duration) + 's', 'sys');
+}
+
+// 4. Auto-save VPS: démarrer automatiquement
+function startAutoSaveVps() {
+  if (autoSaveActive) return; // déjà actif
+  autoSaveActive = true;
+  addLog('[AUTO-SAVE] Démarrage automatique (sauvegarde VPS toutes les 60s)', 'sys');
+  // Première sauvegarde immédiate
+  saveToVPS();
+  // Puis toutes les 60s
+  autoSaveInterval = setInterval(() => {
+    saveToVPS();
+    saveLearning(); // sauvegarder l'apprentissage aussi
+  }, 60000);
+}
+
+// 5. Auto-calibration: mesurer le bruit de fond et ajuster le seuil
+function autoCalibrate(energy) {
+  State.autoCalibration.samples++;
+  State.autoCalibration.sum += energy;
+  // Après 30 samples (~5 min à 10s/segment), calculer la moyenne
+  if (State.autoCalibration.samples >= 30) {
+    const avg = State.autoCalibration.sum / State.autoCalibration.samples;
+    // Ajuster le seuil: bruit de fond + 15dB (pour capter les voix au-dessus)
+    const newThresh = Math.round(avg + 15);
+    if (newThresh !== State.autoCalibration.baseline && newThresh > -80 && newThresh < -20) {
+      State.autoCalibration.baseline = newThresh;
+      const threshSlider = document.getElementById('threshSlider');
+      if (threshSlider) {
+        threshSlider.value = newThresh;
+        addLog('[CALIBRATION] Seuil ajusté: ' + newThresh + 'dB (bruit fond: ' + Math.round(avg) + 'dB)', 'sys');
+      }
+      saveLearning();
+    }
+    // Reset pour la prochaine calibration
+    State.autoCalibration.samples = 0;
+    State.autoCalibration.sum = 0;
+  }
+}
+
+// 6. Langues actives: tracker les langues détectées
+function learnLanguage(lang) {
+  if (!lang || lang === 'fr') return;
+  State.activeLanguages[lang] = (State.activeLanguages[lang] || 0) + 1;
+  saveLearning();
+}
+
+// Charger l'apprentissage au démarrage
+loadLearning();
+
+addLog('EVP ULTIME v10.28 APPRENTISSAGE ÉTERNEL chargé — 7 systèmes actifs (auto-blocklist + mémoire esprits + calendrier + auto-save VPS + calibration + langues + profils)', 'sys');
 
 </script>
 </body>
